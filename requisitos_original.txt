@@ -1,0 +1,98 @@
+rf01: el sistema debe permitir al usuario iniciar sesión 
+rf02: el sistema debe permitir al usuario ver su elo 
+rf03: el sistema debe permitir al usuario ver su safety rating 
+rf04: el sistema debe permitir al usuario ver las categorías 
+rf05: el sistema debe permitir al usuario ver las próximas carreras de cada categorías 
+rf06: el sistema debe permitir al usuario ver los resultados de las carreras pasadas 
+rf07: el sistema debe permitir al usuario ver elo ganado 
+rf08: el sistema debe permitir al usuario ver safety rating ganado 
+RF09: El sistema debe calcular el Elo estimado que el usuario ganará o perderá según su posición final. 
+RF10: El sistema debe mostrar al usuario el Elo estimado antes del inicio de la carrera. 
+rf11: el sistema debe permitir al usuario hacer setup y publicarlos 
+rf12: el sistema debe permitir al usuario tener categorías con setup abierto 
+rf13: el sistema debe permitir al usuario tener categoría con el mismo setup 
+rf14: el sistema debe permitir al usuario ver sus propias stats 
+rf15: el sistema debe permitir al usuario ver campeonato de pilotos por categorías 
+rf16: el sistema debe permitir al usuario ver y descargar archivos para poder correr la carrera 
+rf17: el sistema debe permitir al usuario poder inscribirse a la carrera 
+rf18: el sistema debe permitir al usuario bajarse de la carrera 
+rf19: el sistema debe permitir al usuario mostrar sesiones de practicas 
+rf20: el sistema debe permitir al usuario ver su perfil 
+rf21: el sistema debe permitir al usuario iniciar sesión con steam 
+rf22: [ELIMINADO] el sistema debia permitir al usuario abm de chats con gente de las carreras 
+rf23: el sistema debe permitir al usuario ver sus penalizaciones 
+rf24: el sistema debe permitir al usuario ver logros 
+rf25: el sistema debe permitir al usuario ver recompesas 
+rf26: el sistema debe permitir al usuario obtener las recompensas 
+rf27: el sistema debe permitir al usuario de elo menos de (5000 por ejemplo) ver categorías disponibles 
+rf28: el sistema debe permitir al usuario de elo mas de (5000 por ejemplo) ver categorías disponibles 
+rf29: el sistema debe permitir al admin abm de usuarios 
+rf30: el sistema debe permitir al admin ver estadisticas de la paginas 
+rf31: el sistema debe permitir al admin ver historial de carreras 
+rf32: el sistema debe permitir al admin editar categorías 
+rf33: el sistema debe permitir al admin ver categorías 
+rf34: el sistema debe permitir al admin penalizar pilotos con puestos 
+rf35: el sistema debe permitir al admin penalizar pilotos con segundos 
+rf36: el sistema debe permitir al admin editar las carreras 
+rf37: el sistema debe permitir al admin abm de carreras 
+rf38: el sistema debe permitir al admin abm de logros 
+rf39: el sistema debe permitir al admin editar logros 
+rf40: el sistema debe permitir al admin agregar recompensas al terminar los logros 
+rf41: el sistema debe permitir al admin dar o quitar elo 
+rf42: el sistema debe permitir al comisario iniciar sesión 
+rf43: el sistema debe permitir al comisario ver los incidentes reportados 
+rf44: el sistema debe permitir al comisario ver la repetición o video del incidente 
+rf45: el sistema debe permitir al comisario ver la información de la carrera donde ocurrió el incidente 
+rf46: el sistema debe permitir al comisario ver los pilotos involucrados en el incidente 
+rf47: el sistema debe permitir al comisario analizar el incidente 
+rf48: el sistema debe permitir al comisario asignar una penalización al piloto 
+rf49: el sistema debe permitir al comisario quitar o agregar puntos de elo según la resolución 
+rf50: el sistema debe permitir al comisario quitar o agregar Safety Rating según la resolución 
+rf51: el sistema debe permitir al comisario agregar una explicación o comentario sobre la sanción aplicada 
+rf52: el sistema debe permitir al comisario guardar la resolución del incidente 
+rf53: el sistema debe permitir al comisario consultar el historial de incidentes resueltos 
+rf54: el sistema debe permitir al usuario reportar un incidente al comisario 
+rf55: el sistema debe permitir al usuario subir un video o enlace como evidencia del incidente 
+rf56: el sistema debe permitir al usuario consultar el estado de su reporte 
+rf57: el sistema debe permitir al usuario ver la resolución emitida por el comisario 
+rf58: el sistema debe permitir al usuario entrar a una lista de espera cuando la carrera esté completa 
+rf59: el sistema debe permitir al usuario cancelar su inscripción antes del cierre de inscripciones 
+rf60: el sistema debe permitir al usuario ver la cantidad de pilotos inscriptos en cada carrera 
+rf61: el sistema debe permitir al usuario ver el servidor asignado para la carrera 
+rf62: el sistema debe permitir al usuario ver la contraseña del servidor antes del inicio de la carrera 
+rf63: el sistema debe permitir al usuario consultar el historial de cambios de Elo r
+f64: el sistema debe permitir al usuario consultar el historial de cambios de Safety Rating 
+rf65: el sistema debe recalcular automáticamente el Elo al finalizar una carrera 
+rf66: el sistema debe recalcular automáticamente el Safety Rating al finalizar una carrera 
+rf67: el sistema debe permitir al usuario editar su perfil 
+rf68: el sistema debe permitir al usuario cambiar su foto de perfil 
+rf69: el sistema debe permitir al usuario cambiar su contraseña 
+rf70: el sistema debe permitir al usuario vincular y desvincular su cuenta de Steam 
+rf71: el sistema debe permitir al usuario ver la cantidad total de carreras disputadas 
+rf72: el sistema debe permitir al usuario ver la cantidad de victorias 
+rf73: el sistema debe permitir al usuario ver la cantidad de podios r
+f74: el sistema debe permitir al usuario ver la cantidad de poles 
+rf75: el sistema debe permitir al usuario ver la cantidad de vueltas rápidas 
+rf76: el sistema debe permitir al usuario ver su porcentaje de finalización de carreras 
+rf77: el sistema debe permitir al usuario descargar setups publicados 
+rf78: el sistema debe permitir al usuario calificar setups 
+rf79: el sistema debe permitir al usuario comentar setups 
+rf80: el sistema debe permitir al usuario buscar setups por circuito y vehículo 
+rf81: el sistema debe notificar al usuario cuando una carrera esté por comenzar 
+rf82: el sistema debe notificar al usuario cuando reciba una penalización 
+rf83: el sistema debe notificar al usuario cuando obtenga un logro 
+rf84: el sistema debe notificar al usuario cuando obtenga una recompensa 
+rf85: el sistema debe permitir al administrador crear categorías 
+rf86: el sistema debe permitir al administrador crear campeonatos 
+rf87: el sistema debe permitir al administrador asignar pilotos a servidores 
+rf88: el sistema debe permitir al administrador cerrar las inscripciones de una carrera 5 min antes de arrancar la carrera automaticamente 
+rf89: el sistema debe permitir al administrador publicar anuncios para los usuarios 
+rf90: el sistema debe permitir asignar un incidente a un comisario 
+rf91: el sistema debe permitir que varios comisarios voten una resolución 
+rf92: el sistema debe registrar el historial de decisiones de cada comisario 
+rf93: el sistema debe permitir apelar una penalización 
+rf94: el sistema debe permitir al administrador aprobar o rechazar una apelación 
+rf95: el sistema debe otorgar logros automáticamente 
+rf96: el sistema debe mostrar el progreso de cada logro 
+rf97: el sistema debe permitir reclamar una recompensa obtenida 
+rf98: el sistema debe mostrar un análisis detallado de la carrera del piloto

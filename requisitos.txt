@@ -1,0 +1,1074 @@
+===============================================================================
+ESPECIFICACION DE REQUISITOS - LOW FUEL MOTORSPORT
+===============================================================================
+
+PROPOSITO
+---------------------------------------------------------------------------
+Plataforma web para una liga de sim racing. Gestiona pilotos, categorias,
+campeonatos, carreras, sistema de puntuacion (Elo y Safety Rating),
+setups, logros, recompensas y un flujo de incidentes resuelto por
+comisarios.
+
+ACTORES
+---------------------------------------------------------------------------
+- USUARIO   : piloto que participa de la liga.
+- ADMIN     : administrador de la plataforma (usuarios, categorias,
+              carreras, campeonatos, logros, anuncios).
+- COMISARIO : encargado de analizar y resolver incidentes reportados.
+
+LEVENDA DE PRIORIDAD
+---------------------------------------------------------------------------
+1 = Critico (sin esto el sistema no funciona / es el core del negocio)
+2 = Alto    (funcionalidad principal, debe estar en la 1ra entrega)
+3 = Medio   (mejora relevante, puede ir en una 2da entrega)
+4 = Bajo    (complemento deseable)
+5 = Cosmetico (ajuste menor de presentacion)
+
+LEVENDA DE NOTAS
+---------------------------------------------------------------------------
+[NUEVO] Requisito agregado en esta reescritura (no estaba en el original).
+[TBD]   Ambiguedad detectada; se propone una interpretacion, falta validar
+        con el cliente. Detalle en la seccion "PENDIENTES TBD".
+
+NOTA SOBRE EL DOCUMENTO ORIGINAL
+---------------------------------------------------------------------------
+- La version original se conserva en "requisitos_original.txt".
+- rf63/rf64 y rf73/rf74 estaban partidos en dos lineas; se corrigieron.
+- Los requisitos duplicados se unificaron (ver seccion REDUNDANCIAS).
+
+===============================================================================
+REQUISITOS FUNCIONALES
+===============================================================================
+
+-------------------------------------------------------------------------------
+A. USUARIO - CUENTA, SESION Y REGISTRO
+-------------------------------------------------------------------------------
+
+RF-001 | Registro de usuario | Usuario | Prioridad 1
+  Desc: El sistema debe permitir crear una cuenta de usuario (email y
+        contrasena y/o cuenta de Steam).
+  Criterios:
+    - El usuario puede registrarse con email y contrasena.
+    - El usuario puede registrarse o vincular su cuenta con Steam.
+    - El sistema valida datos unicos (email / SteamID).
+  Dependencias: -
+  Nota: [NUEVO]
+
+RF-002 | Inicio de sesion | Usuario | Prioridad 1
+  Desc: El sistema debe permitir al usuario iniciar sesion.
+  Criterios:
+    - El usuario inicia sesion con email y contrasena.
+    - El sistema valida credenciales y rechaza las invalidas.
+    - El sistema mantiene la sesion del usuario mientras dure la misma.
+  Dependencias: RF-001
+  Nota: Unifica rf01 y rf42 (inicio de sesion del comisario usa el mismo
+        mecanismo).
+
+RF-003 | Inicio de sesion con Steam | Usuario | Prioridad 1
+  Desc: El sistema debe permitir iniciar sesion mediante cuenta de Steam.
+  Criterios:
+    - El usuario puede iniciar sesion a traves de OAuth de Steam.
+    - La cuenta queda vinculada a su perfil.
+  Dependencias: RF-002, NFR-002
+  Nota: -
+
+RF-004 | Cambio de contrasena | Usuario | Prioridad 2
+  Desc: El sistema debe permitir al usuario cambiar su contrasena.
+  Criterios:
+    - Se pide la contrasena actual antes de permitir el cambio.
+    - Se valida la nueva contrasena (minimo de caracteres).
+  Dependencias: RF-002
+  Nota: -
+
+RF-005 | Vincular y desvincular cuenta de Steam | Usuario | Prioridad 2
+  Desc: El sistema debe permitir al usuario vincular y desvincular su
+        cuenta de Steam.
+  Criterios:
+    - El usuario puede vincular una cuenta Steam a su perfil.
+    - El usuario puede desvincularla.
+    - El historial de cambios de Elo/Safety Rating no se pierde al
+      desvincular.
+  Dependencias: RF-003
+  Nota: -
+
+RF-006 | Editar perfil | Usuario | Prioridad 2
+  Desc: El sistema debe permitir al usuario editar su perfil (nombre de
+        piloto, preferencias, datos publicos).
+  Criterios:
+    - El usuario puede modificar sus datos de perfil.
+    - Los cambios se reflejan en su ficha publica.
+  Dependencias: RF-002
+  Nota: -
+
+RF-007 | Cambiar foto de perfil | Usuario | Prioridad 3
+  Desc: El sistema debe permitir al usuario cambiar su foto de perfil.
+  Criterios:
+    - El usuario puede subir o quitar una imagen de perfil.
+    - El sistema valida formato y tamano de la imagen.
+  Dependencias: RF-006
+  Nota: -
+
+-------------------------------------------------------------------------------
+B. USUARIO - PERFIL Y ESTADISTICAS
+-------------------------------------------------------------------------------
+
+RF-008 | Ver perfil propio | Usuario | Prioridad 1
+  Desc: El sistema debe permitir al usuario ver su perfil.
+  Criterios:
+    - El perfil muestra datos del piloto, Elo, Safety Rating y stats.
+  Dependencias: RF-009, RF-010, RF-011
+  Nota: -
+
+RF-009 | Ver Elo actual | Usuario | Prioridad 1
+  Desc: El sistema debe mostrar al usuario su Elo actual.
+  Criterios:
+    - El valor se muestra en el perfil y se actualiza tras cada carrera.
+  Dependencias: RF-040
+  Nota: -
+
+RF-010 | Ver Safety Rating actual | Usuario | Prioridad 1
+  Desc: El sistema debe mostrar al usuario su Safety Rating actual.
+  Criterios:
+    - El valor se muestra en el perfil y se actualiza tras cada carrera.
+  Dependencias: RF-041
+  Nota: -
+
+RF-011 | Ver estadisticas propias | Usuario | Prioridad 2
+  Desc: El sistema debe permitir al usuario ver sus propias estadisticas.
+  Criterios:
+    - Se muestran las metricas de RF-012 a RF-017 en la seccion de stats.
+  Dependencias: RF-012..RF-017
+  Nota: -
+
+RF-012 | Cantidad de carreras disputadas | Usuario | Prioridad 3
+  Desc: El sistema debe mostrar al usuario la cantidad total de carreras
+        disputadas.
+  Criterios:
+    - El contador incluye toda carrera finalizada con participacion.
+  Dependencias: RF-075
+  Nota: -
+
+RF-013 | Cantidad de victorias | Usuario | Prioridad 3
+  Desc: El sistema debe mostrar la cantidad de victorias del usuario.
+  Criterios:
+    - Cuenta posiciones finales = 1 en carreras disputadas.
+  Dependencias: RF-075
+  Nota: -
+
+RF-014 | Cantidad de podios | Usuario | Prioridad 3
+  Desc: El sistema debe mostrar la cantidad de podios del usuario.
+  Criterios:
+    - Cuenta posiciones finales 1, 2 o 3.
+  Dependencias: RF-075
+  Nota: -
+
+RF-015 | Cantidad de poles | Usuario | Prioridad 3
+  Desc: El sistema debe mostrar la cantidad de poles del usuario.
+  Criterios:
+    - Cuenta clasificaciones con posicion 1 en la sesion de clasificacion.
+  Dependencias: RF-075
+  Nota: -
+
+RF-016 | Cantidad de vueltas rapidas | Usuario | Prioridad 3
+  Desc: El sistema debe mostrar la cantidad de vueltas rapidas del usuario.
+  Criterios:
+    - Cuenta la vuelta mas rapida registrada por el piloto en cada carrera.
+  Dependencias: RF-075
+  Nota: -
+
+RF-017 | Porcentaje de finalizacion | Usuario | Prioridad 3
+  Desc: El sistema debe mostrar el porcentaje de finalizacion de carreras.
+  Criterios:
+    - Se calcula como carreras finalizadas / carreras iniciadas * 100.
+  Dependencias: RF-075
+  Nota: -
+
+RF-018 | Historial de cambios de Elo | Usuario | Prioridad 2
+  Desc: El sistema debe permitir consultar el historial de cambios de Elo.
+  Criterios:
+    - Se muestra cada cambio con valor y carrera/incidente que lo origino.
+  Dependencias: RF-040
+  Nota: -
+
+RF-019 | Historial de cambios de Safety Rating | Usuario | Prioridad 2
+  Desc: El sistema debe permitir consultar el historial de cambios de
+        Safety Rating.
+  Criterios:
+    - Se muestra cada cambio con valor y carrera/incidente que lo origino.
+  Dependencias: RF-041
+  Nota: -
+
+RF-020 | Ver penalizaciones | Usuario | Prioridad 2
+  Desc: El sistema debe permitir al usuario ver sus penalizaciones.
+  Criterios:
+    - Se listan penalizaciones activas y pasadas con motivo y duracion.
+  Dependencias: RF-095, RF-098
+  Nota: -
+
+-------------------------------------------------------------------------------
+C. USUARIO - CATEGORIAS
+-------------------------------------------------------------------------------
+
+RF-021 | Ver categorias | Usuario | Prioridad 1
+  Desc: El sistema debe permitir al usuario ver las categorias.
+  Criterios:
+    - Se listan las categorias con nombre y detalle basico.
+  Dependencias: RF-067
+  Nota: -
+
+RF-022 | Ver categorias disponibles segun Elo (minimo) | Usuario | Prioridad 2
+  Desc: El sistema debe mostrar al usuario de Elo bajo las categorias
+        disponibles para el.
+  Criterios:
+    - Solo se muestran categorias cuyo requisito minimo de Elo cumple.
+  Dependencias: RF-021, RF-027
+  Nota: [TBD] El umbral "5000" del original es un ejemplo; debe definirse
+        un minimo por categoria. Ver TBD-3.
+
+RF-023 | Ver categorias disponibles segun Elo (maximo) | Usuario | Prioridad 2
+  Desc: El sistema debe mostrar al usuario de Elo alto las categorias
+        disponibles para el.
+  Criterios:
+    - Solo se muestran categorias cuyo requisito maximo de Elo cumple.
+  Dependencias: RF-021, RF-027
+  Nota: [TBD] Ver TBD-3.
+
+-------------------------------------------------------------------------------
+D. USUARIO - CARRERAS
+-------------------------------------------------------------------------------
+
+RF-024 | Ver proximas carreras por categoria | Usuario | Prioridad 1
+  Desc: El sistema debe permitir al usuario ver las proximas carreras de
+        cada categoria.
+  Criterios:
+    - Se listan fecha, circuito, categoria, hora y estado de la carrera.
+  Dependencias: RF-070
+  Nota: -
+
+RF-025 | Ver resultados de carreras pasadas | Usuario | Prioridad 1
+  Desc: El sistema debe permitir ver los resultados de carreras pasadas.
+  Criterios:
+    - Se muestra la clasificacion final con posiciones y tiempos.
+    - Se muestra el impacto en Elo/Safety Rating de los pilotos.
+  Dependencias: RF-075
+  Nota: -
+
+RF-026 | Cantidad de pilotos inscriptos | Usuario | Prioridad 3
+  Desc: El sistema debe mostrar la cantidad de pilotos inscriptos en cada
+        carrera.
+  Criterios:
+    - Se muestra el numero de inscritos y el cupo maximo.
+  Dependencias: RF-030
+  Nota: -
+
+RF-027 | Ver servidor asignado | Usuario | Prioridad 2
+  Desc: El sistema debe mostrar al usuario el servidor asignado para la
+        carrera.
+  Criterios:
+    - El usuario inscrito ve el nombre/servidor de su carrera.
+  Dependencias: RF-030, RF-073
+  Nota: -
+
+RF-028 | Ver contrasena del servidor | Usuario | Prioridad 2
+  Desc: El sistema debe mostrar al usuario la contrasena del servidor de
+        la carrera.
+  Criterios:
+    - Solo la ven los usuarios inscriptos y a partir de un momento
+      definido (ej. previo al inicio).
+  Dependencias: RF-027
+  Nota: [TBD] Definir el momento exacto de visibilidad y si los de lista
+        de espera la ven. Ver TBD-4.
+
+RF-029 | Ver y descargar archivos de la carrera | Usuario | Prioridad 1
+  Desc: El sistema debe permitir al usuario ver y descargar los archivos
+        necesarios para correr la carrera.
+  Criterios:
+    - Se listan los archivos publicados para cada carrera.
+    - El usuario puede descargarlos desde la pagina de la carrera.
+  Dependencias: RF-070
+  Nota: -
+
+RF-030 | Inscribirse a una carrera | Usuario | Prioridad 1
+  Desc: El sistema debe permitir al usuario inscribirse a una carrera.
+  Criterios:
+    - El usuario puede inscribirse mientras las inscripciones esten
+      abiertas.
+    - El sistema valida que cumpla los requisitos (categoria/Elo).
+  Dependencias: RF-022, RF-023, RF-074
+  Nota: -
+
+RF-031 | Bajarse de una carrera | Usuario | Prioridad 2
+  Desc: El sistema debe permitir al usuario bajarse de una carrera.
+  Criterios:
+    - El usuario puede darse de baja de la carrera.
+    - Si estaba en lista de espera, el cupo pasa al siguiente.
+  Dependencias: RF-030
+  Nota: -
+
+RF-032 | Cancelar inscripcion antes del cierre | Usuario | Prioridad 2
+  Desc: El sistema debe permitir cancelar la inscripcion antes del cierre
+        de inscripciones.
+  Criterios:
+    - Solo se permite cancelar antes de la fecha/hora de cierre.
+    - Tras el cierre no se puede cancelar (salvo bajar por motivos
+      validados).
+  Dependencias: RF-030, RF-074
+  Nota: -
+
+RF-033 | Lista de espera | Usuario | Prioridad 2
+  Desc: El sistema debe permitir entrar a una lista de espera cuando la
+        carrera este completa.
+  Criterios:
+    - Si el cupo esta lleno, el usuario puede entrar a lista de espera.
+    - Al liberarse un cupo, se promueve automaticamente al siguiente.
+  Dependencias: RF-030, RF-031
+  Nota: -
+
+RF-034 | Sesiones de practicas | Usuario | Prioridad 3
+  Desc: El sistema debe mostrar las sesiones de practicas.
+  Criterios:
+    - Se listan las sesiones de practica de cada carrera con fecha y hora.
+  Dependencias: RF-070
+  Nota: -
+
+-------------------------------------------------------------------------------
+E. USUARIO - CAMPEONATO
+-------------------------------------------------------------------------------
+
+RF-035 | Ver campeonato de pilotos por categoria | Usuario | Prioridad 1
+  Desc: El sistema debe permitir ver el campeonato de pilotos por
+        categoria.
+  Criterios:
+    - Se muestra la tabla de posiciones con puntos acumulados.
+    - Se actualiza al cargar los resultados de cada carrera.
+  Dependencias: RF-076, RF-075
+  Nota: -
+
+-------------------------------------------------------------------------------
+F. USUARIO - ELO Y SAFETY RATING
+-------------------------------------------------------------------------------
+
+RF-036 | Ver Elo ganado | Usuario | Prioridad 2
+  Desc: El sistema debe mostrar al usuario el Elo ganado.
+  Criterios:
+    - Tras la carrera se muestra el Elo ganado/perdido en el resultado.
+  Dependencias: RF-040
+  Nota: -
+
+RF-037 | Ver Safety Rating ganado | Usuario | Prioridad 2
+  Desc: El sistema debe mostrar al usuario el Safety Rating ganado.
+  Criterios:
+    - Tras la carrera se muestra el SR ganado/perdido en el resultado.
+  Dependencias: RF-041
+  Nota: -
+
+RF-038 | Calcular Elo estimado segun posicion | Usuario | Prioridad 1
+  Desc: El sistema debe calcular el Elo estimado que el usuario ganara o
+        perdera segun su posicion final.
+  Criterios:
+    - El calculo usa la posicion, el Elo propio y el promedio de la
+      categoria.
+  Dependencias: RF-040
+  Nota: La formula exacta de calculo debe definirse (ver TBD en caso de
+        dudas). Se recomienda documentar la formula.
+
+RF-039 | Mostrar Elo estimado antes de la carrera | Usuario | Prioridad 2
+  Desc: El sistema debe mostrar al usuario el Elo estimado antes del
+        inicio de la carrera.
+  Criterios:
+    - Se muestra el rango estimado de ganancia/perdida segun su
+      posicion actual estimada.
+  Dependencias: RF-038
+  Nota: -
+
+RF-040 | Recalcular Elo automaticamente | Usuario/Admin | Prioridad 1
+  Desc: El sistema debe recalcular automaticamente el Elo al finalizar
+        una carrera.
+  Criterios:
+    - Al cargar los resultados se recalcula el Elo de todos los pilotos.
+    - El cambio queda registrado en el historial (RF-018).
+  Dependencias: RF-075
+  Nota: -
+
+RF-041 | Recalcular Safety Rating automaticamente | Usuario/Admin | Prioridad 1
+  Desc: El sistema debe recalcular automaticamente el Safety Rating al
+        finalizar una carrera.
+  Criterios:
+    - Al cargar los resultados se recalcula el SR de todos los pilotos.
+    - El cambio queda registrado en el historial (RF-019).
+  Dependencias: RF-075
+  Nota: -
+
+RF-042 | Analisis detallado de la carrera del piloto | Usuario | Prioridad 3
+  Desc: El sistema debe mostrar un analisis detallado de la carrera del
+        piloto.
+  Criterios:
+    - Se muestra la evolucion de posicion por vuelta.
+    - Se muestran tiempos, diferencia con el lider y detalle por vuelta.
+  Dependencias: RF-075
+  Nota: [TBD] Alcance del analisis a definir. Ver TBD-5.
+
+-------------------------------------------------------------------------------
+G. USUARIO - SETUPS
+-------------------------------------------------------------------------------
+
+RF-043 | Crear y publicar setups | Usuario | Prioridad 2
+  Desc: El sistema debe permitir al usuario hacer setups y publicarlos.
+  Criterios:
+    - El usuario puede crear un setup con datos de circuito/vehiculo.
+    - Al publicarlo, queda visible para la comunidad.
+  Dependencias: -
+  Nota: -
+
+RF-044 | Categorias con setup abierto | Usuario | Prioridad 3
+  Desc: El sistema debe permitir tener categorias con setup abierto.
+  Criterios:
+    - En estas categorias los pilotos pueden usar cualquier setup,
+      incluidos los publicados por otros.
+  Dependencias: RF-021, RF-043
+  Nota: [TBD] Interpretacion propuesta: "setup abierto" = categorias donde
+        no hay restriccion de setups y se permiten setups publicados.
+        Ver TBD-2.
+
+RF-045 | Categorias con el mismo setup | Usuario | Prioridad 3
+  Desc: El sistema debe permitir categorias con el mismo setup.
+  Criterios:
+    - En estas categorias todos los pilotos deben usar un setup unico
+      obligatorio.
+    - El sistema publica el setup oficial de la categoria.
+  Dependencias: RF-021, RF-043
+  Nota: [TBD] Interpretacion propuesta: categorias con "setup fijo"
+        (setup unico obligatorio). Ver TBD-2.
+
+RF-046 | Descargar setups publicados | Usuario | Prioridad 2
+  Desc: El sistema debe permitir al usuario descargar setups publicados.
+  Criterios:
+    - El usuario puede descargar el archivo del setup publicado.
+  Dependencias: RF-043
+  Nota: -
+
+RF-047 | Calificar setups | Usuario | Prioridad 3
+  Desc: El sistema debe permitir al usuario calificar setups.
+  Criterios:
+    - El usuario puede puntuar (1 a 5 estrellas) un setup.
+    - El promedio se muestra en la publicacion.
+  Dependencias: RF-046
+  Nota: -
+
+RF-048 | Comentar setups | Usuario | Prioridad 3
+  Desc: El sistema debe permitir al usuario comentar setups.
+  Criterios:
+    - El usuario puede dejar un comentario en un setup publicado.
+    - Los comentarios se muestran junto al setup.
+  Dependencias: RF-046
+  Nota: -
+
+RF-049 | Buscar setups por circuito y vehiculo | Usuario | Prioridad 3
+  Desc: El sistema debe permitir buscar setups por circuito y vehiculo.
+  Criterios:
+    - Se puede filtrar por circuito, vehiculo y/o categoria.
+  Dependencias: RF-043
+  Nota: -
+
+RF-050 | Editar y eliminar setups propios | Usuario | Prioridad 3
+  Desc: El sistema debe permitir al usuario editar o eliminar sus setups
+        publicados.
+  Criterios:
+    - El autor puede modificar o quitar su publicacion.
+    - Al eliminar, deja de estar disponible para descarga.
+  Dependencias: RF-043
+  Nota: [NUEVO]
+
+-------------------------------------------------------------------------------
+H. USUARIO - INCIDENTES (REPORTANTE)
+-------------------------------------------------------------------------------
+
+RF-052 | Reportar incidente | Usuario | Prioridad 1
+  Desc: El sistema debe permitir al usuario reportar un incidente al
+        comisario.
+  Criterios:
+    - El usuario elige la carrera y describe el incidente.
+    - El reporte queda asociado al piloto involucrado y se asigna a un
+      comisario.
+  Dependencias: RF-085, RF-090
+  Nota: -
+
+RF-053 | Subir video o enlace como evidencia | Usuario | Prioridad 1
+  Desc: El sistema debe permitir al usuario subir un video o enlace como
+        evidencia del incidente.
+  Criterios:
+    - El usuario puede adjuntar un archivo de video o un enlace.
+    - El comisario puede reproducirlo al analizar (RF-091).
+  Dependencias: RF-052
+  Nota: -
+
+RF-054 | Consultar estado del reporte | Usuario | Prioridad 2
+  Desc: El sistema debe permitir al usuario consultar el estado de su
+        reporte.
+  Criterios:
+    - El usuario ve si el reporte esta pendiente, en analisis o resuelto.
+  Dependencias: RF-052
+  Nota: -
+
+RF-055 | Ver resolucion del comisario | Usuario | Prioridad 2
+  Desc: El sistema debe permitir al usuario ver la resolucion emitida por
+        el comisario.
+  Criterios:
+    - Se muestra la sancion, la explicacion y el impacto en Elo/SR.
+  Dependencias: RF-099
+  Nota: -
+
+-------------------------------------------------------------------------------
+I. USUARIO - LOGROS Y RECOMPENSAS
+-------------------------------------------------------------------------------
+
+RF-056 | Ver logros | Usuario | Prioridad 2
+  Desc: El sistema debe permitir al usuario ver sus logros.
+  Criterios:
+    - Se listan los logros obtenidos y los pendientes.
+  Dependencias: RF-058, RF-082
+  Nota: -
+
+RF-057 | Ver progreso de logros | Usuario | Prioridad 3
+  Desc: El sistema debe mostrar el progreso de cada logro.
+  Criterios:
+    - Cada logro muestra su avance (ej. 7/10 victorias).
+  Dependencias: RF-058
+  Nota: -
+
+RF-058 | Otorgar logros automaticamente | Usuario/Admin | Prioridad 2
+  Desc: El sistema debe otorgar logros automaticamente al cumplir las
+        condiciones.
+  Criterios:
+    - Al cumplirse la condicion del logro se otorga sin accion manual.
+    - El usuario recibe la notificacion correspondiente (RF-063).
+  Dependencias: RF-082
+  Nota: -
+
+RF-059 | Ver recompensas | Usuario | Prioridad 2
+  Desc: El sistema debe permitir al usuario ver sus recompensas.
+  Criterios:
+    - Se listan las recompensas obtenidas y las reclamables.
+  Dependencias: RF-060
+  Nota: -
+
+RF-060 | Obtener y reclamar recompensas | Usuario | Prioridad 2
+  Desc: El sistema debe permitir obtener y reclamar una recompensa
+        obtenida.
+  Criterios:
+    - Las recompensas se otorgan al completar logros.
+    - El usuario puede reclamar la recompensa y esta queda marcada como
+      entregada.
+  Dependencias: RF-058, RF-083
+  Nota: Unifica rf26, rf84 y rf97 (duplicados).
+
+-------------------------------------------------------------------------------
+J. USUARIO - NOTIFICACIONES Y ANUNCIOS
+-------------------------------------------------------------------------------
+
+RF-061 | Notificar carrera por comenzar | Usuario | Prioridad 2
+  Desc: El sistema debe notificar al usuario cuando una carrera este por
+        comenzar.
+  Criterios:
+    - El usuario inscripto recibe una notificacion antes del inicio.
+  Dependencias: RF-030
+  Nota: -
+
+RF-062 | Notificar penalizacion | Usuario | Prioridad 2
+  Desc: El sistema debe notificar al usuario cuando reciba una
+        penalizacion.
+  Criterios:
+    - Al aplicar una sancion se notifica al piloto afectado.
+  Dependencias: RF-095
+  Nota: -
+
+RF-063 | Notificar logro obtenido | Usuario | Prioridad 3
+  Desc: El sistema debe notificar al usuario cuando obtenga un logro.
+  Criterios:
+    - Al otorgarse un logro se notifica al usuario.
+  Dependencias: RF-058
+  Nota: -
+
+RF-064 | Ver anuncios | Usuario | Prioridad 2
+  Desc: El sistema debe mostrar los anuncios publicados por el
+        administrador.
+  Criterios:
+    - Los anuncios se muestran en la pagina principal o de notificaciones.
+  Dependencias: RF-084
+  Nota: -
+
+-------------------------------------------------------------------------------
+K. USUARIO - APELACIONES
+-------------------------------------------------------------------------------
+
+RF-065 | Apelar una penalizacion | Usuario | Prioridad 2
+  Desc: El sistema debe permitir al usuario apelar una penalizacion.
+  Criterios:
+    - El usuario puede presentar una apelacion con argumentos.
+    - La apelacion se registra y pasa a revision del admin (RF-081).
+  Dependencias: RF-020, RF-081
+  Nota: -
+
+-------------------------------------------------------------------------------
+L. ADMIN - USUARIOS
+-------------------------------------------------------------------------------
+
+RF-066 | ABM de usuarios | Admin | Prioridad 1
+  Desc: El sistema debe permitir al admin el alta, baja y modificacion de
+        usuarios.
+  Criterios:
+    - El admin puede buscar, editar, deshabilitar y eliminar usuarios.
+    - Los cambios se registran para auditoria.
+  Dependencias: RF-001
+  Nota: -
+
+-------------------------------------------------------------------------------
+M. ADMIN - CATEGORIAS
+-------------------------------------------------------------------------------
+
+RF-067 | Ver categorias | Admin | Prioridad 1
+  Desc: El sistema debe permitir al admin ver las categorias.
+  Criterios:
+    - Se listan todas las categorias con su detalle.
+  Dependencias: -
+  Nota: -
+
+RF-068 | Crear categorias | Admin | Prioridad 1
+  Desc: El sistema debe permitir al admin crear categorias.
+  Criterios:
+    - El admin define nombre, requisitos de Elo y configuracion.
+    - La categoria queda disponible para usuarios (RF-021).
+  Dependencias: RF-067
+  Nota: -
+
+RF-069 | Editar categorias | Admin | Prioridad 1
+  Desc: El sistema debe permitir al admin editar categorias.
+  Criterios:
+    - El admin puede modificar los datos de una categoria existente.
+    - El historial de carreras asociadas se conserva.
+  Dependencias: RF-068
+  Nota: -
+
+-------------------------------------------------------------------------------
+N. ADMIN - CARRERAS Y RESULTADOS
+-------------------------------------------------------------------------------
+
+RF-070 | ABM de carreras | Admin | Prioridad 1
+  Desc: El sistema debe permitir al admin el alta, baja y modificacion de
+        carreras.
+  Criterios:
+    - El admin crea, edita y elimina carreras (fecha, circuito, categoria).
+    - Incluye edicion de fecha, hora, cupo y estado.
+  Dependencias: RF-068
+  Nota: Unifica rf36 y rf37 (duplicados).
+
+RF-071 | Ver historial de carreras | Admin | Prioridad 2
+  Desc: El sistema debe permitir al admin ver el historial de carreras.
+  Criterios:
+    - Se listan carreras pasadas con resultados y participantes.
+  Dependencias: RF-070
+  Nota: -
+
+RF-072 | Asignar pilotos a servidores | Admin | Prioridad 2
+  Desc: El sistema debe permitir al admin asignar pilotos a servidores.
+  Criterios:
+    - El admin define la distribucion de pilotos en servidores para una
+      carrera.
+    - Los pilotos ven su servidor (RF-027).
+  Dependencias: RF-070
+  Nota: -
+
+RF-073 | Cierre automatico de inscripciones | Admin | Prioridad 1
+  Desc: El sistema debe cerrar las inscripciones de una carrera 5 minutos
+        antes de arrancar, automaticamente.
+  Criterios:
+    - A 5 min del inicio el sistema cierra inscripciones sin accion manual.
+    - Tras el cierre no se aceptan inscripciones nuevas.
+  Dependencias: RF-070
+  Nota: -
+
+RF-074 | Cargar resultados de carrera | Admin | Prioridad 1
+  Desc: El sistema debe permitir al admin cargar los resultados (posiciones
+        y tiempos) de una carrera finalizada.
+  Criterios:
+    - El admin ingresa o importa la clasificacion final.
+    - Al guardarse, se disparan RF-040, RF-041 y RF-035.
+  Dependencias: RF-070, RF-040, RF-041
+  Nota: [NUEVO] Cierra el hueco del flujo de datos (de donde salen los
+        resultados que alimentan Elo/SR y campeonato).
+
+-------------------------------------------------------------------------------
+O. ADMIN - CAMPEONATOS
+-------------------------------------------------------------------------------
+
+RF-075 | Crear campeonatos | Admin | Prioridad 2
+  Desc: El sistema debe permitir al admin crear campeonatos.
+  Criterios:
+    - El admin define campeonato, categorias asociadas y sistema de puntos.
+  Dependencias: RF-068, RF-070
+  Nota: -
+
+RF-076 | Editar, cerrar y finalizar campeonatos | Admin | Prioridad 2
+  Desc: El sistema debe permitir al admin editar y cerrar campeonatos.
+  Criterios:
+    - El admin modifica datos del campeonato.
+    - Al cerrarse, se congela la tabla final de posiciones.
+  Dependencias: RF-075
+  Nota: [NUEVO]
+
+-------------------------------------------------------------------------------
+P. ADMIN - PENALIZACIONES, ELO Y APELACIONES
+-------------------------------------------------------------------------------
+
+RF-077 | Penalizar pilotos con puestos | Admin | Prioridad 2
+  Desc: El sistema debe permitir al admin penalizar pilotos con puestos.
+  Criterios:
+    - El admin aplica una perdida de puestos en la posicion final.
+    - El cambio se refleja en el resultado de la carrera.
+  Dependencias: RF-070
+  Nota: [TBD] Conflicto de roles con el comisario (RF-090). Ver TBD-1.
+
+RF-078 | Penalizar pilotos con segundos | Admin | Prioridad 2
+  Desc: El sistema debe permitir al admin penalizar pilotos con segundos.
+  Criterios:
+    - El admin aplica una penalizacion de tiempo.
+    - El cambio se refleja en el resultado de la carrera.
+  Dependencias: RF-070
+  Nota: [TBD] Conflicto de roles con el comisario (RF-090). Ver TBD-1.
+
+RF-079 | Dar o quitar Elo | Admin | Prioridad 2
+  Desc: El sistema debe permitir al admin dar o quitar Elo.
+  Criterios:
+    - El admin ajusta manualmente el Elo de un usuario.
+    - El cambio queda registrado en el historial (RF-018).
+  Dependencias: RF-018
+  Nota: -
+
+RF-080 | Aprobar o rechazar apelaciones | Admin | Prioridad 2
+  Desc: El sistema debe permitir al admin aprobar o rechazar una apelacion.
+  Criterios:
+    - El admin resuelve la apelacion y el resultado se comunica al piloto.
+    - Si se aprueba, se ajusta la sancion original.
+  Dependencias: RF-065
+  Nota: -
+
+-------------------------------------------------------------------------------
+Q. ADMIN - LOGROS, RECOMPENSAS Y ANUNCIOS
+-------------------------------------------------------------------------------
+
+RF-081 | ABM de logros | Admin | Prioridad 2
+  Desc: El sistema debe permitir al admin el alta, baja y modificacion de
+        logros.
+  Criterios:
+    - El admin crea, edita y elimina logros con sus condiciones.
+  Dependencias: RF-058
+  Nota: Unifica rf38 y rf39 (duplicados).
+
+RF-082 | Agregar recompensas a logros | Admin | Prioridad 2
+  Desc: El sistema debe permitir al admin agregar recompensas que se
+        otorgan al terminar los logros.
+  Criterios:
+    - El admin asocia una o mas recompensas a cada logro.
+    - Se otorgan al completarse el logro (RF-060).
+  Dependencias: RF-081, RF-060
+  Nota: -
+
+RF-083 | Publicar anuncios | Admin | Prioridad 3
+  Desc: El sistema debe permitir al admin publicar anuncios para los
+        usuarios.
+  Criterios:
+    - El admin crea anuncios con titulo y contenido.
+    - Los usuarios los ven (RF-064).
+  Dependencias: RF-064
+  Nota: -
+
+-------------------------------------------------------------------------------
+R. ADMIN - INCIDENTES, MODERACION Y ESTADISTICAS
+-------------------------------------------------------------------------------
+
+RF-084 | Asignar incidente a un comisario | Admin | Prioridad 2
+  Desc: El sistema debe permitir asignar un incidente a un comisario.
+  Criterios:
+    - El admin asigna el reporte a uno o mas comisarios.
+    - El comisario lo ve en su lista (RF-090).
+  Dependencias: RF-052, RF-085
+  Nota: -
+
+RF-085 | Ver estadisticas de la pagina | Admin | Prioridad 3
+  Desc: El sistema debe permitir al admin ver estadisticas de la pagina.
+  Criterios:
+    - Se muestran metricas de usuarios activos, carreras, incidentes, etc.
+  Dependencias: -
+  Nota: -
+
+RF-086 | Moderacion de setups y comentarios | Admin | Prioridad 3
+  Desc: El sistema debe permitir al admin moderar setups y comentarios
+        (editar o eliminar contenido inapropiado).
+  Criterios:
+    - El admin puede ocultar/eliminar setups o comentarios.
+  Dependencias: RF-050, RF-048
+  Nota: [NUEVO]
+
+RF-087 | Cierre o posposicion de carreras | Admin | Prioridad 2
+  Desc: El sistema debe permitir al admin cancelar o posponer una carrera.
+  Criterios:
+    - Al cancelar/posponer se notifica a los inscriptos.
+    - Se conserva el registro del cambio.
+  Dependencias: RF-070
+  Nota: [NUEVO]
+
+-------------------------------------------------------------------------------
+S. COMISARIO - GESTION DE INCIDENTES
+-------------------------------------------------------------------------------
+
+RF-088 | Ver incidentes reportados | Comisario | Prioridad 1
+  Desc: El sistema debe permitir al comisario ver los incidentes
+        reportados.
+  Criterios:
+    - Se listan los incidentes asignados con estado y prioridad.
+  Dependencias: RF-084
+  Nota: -
+
+RF-089 | Ver repeticion o video del incidente | Comisario | Prioridad 1
+  Desc: El sistema debe permitir al comisario ver la repeticion o video
+        del incidente.
+  Criterios:
+    - El comisario puede reproducir el video o abrir el enlace de evidencia.
+  Dependencias: RF-053
+  Nota: -
+
+RF-090 | Ver informacion de la carrera del incidente | Comisario | Prioridad 1
+  Desc: El sistema debe permitir al comisario ver la informacion de la
+        carrera donde ocurrio el incidente.
+  Criterios:
+    - Se muestra vuelta, sector, contexto y resultado de la carrera.
+  Dependencias: RF-088
+  Nota: -
+
+RF-091 | Ver pilotos involucrados | Comisario | Prioridad 1
+  Desc: El sistema debe permitir al comisario ver los pilotos involucrados
+        en el incidente.
+  Criterios:
+    - Se listan pilotos, vehiculos y posiciones al momento del incidente.
+  Dependencias: RF-090
+  Nota: -
+
+RF-092 | Analizar el incidente | Comisario | Prioridad 1
+  Desc: El sistema debe permitir al comisario analizar el incidente.
+  Criterios:
+    - El comisario registra su analisis y los involucrados responsables.
+  Dependencias: RF-089, RF-091
+  Nota: -
+
+RF-093 | Asignar penalizacion al piloto | Comisario | Prioridad 1
+  Desc: El sistema debe permitir al comisario asignar una penalizacion al
+        piloto.
+  Criterios:
+    - El comisario aplica la sancion correspondiente al piloto.
+    - El piloto recibe la notificacion (RF-062).
+  Dependencias: RF-092
+  Nota: -
+
+RF-094 | Agregar o quitar puntos de Elo | Comisario | Prioridad 1
+  Desc: El sistema debe permitir al comisario agregar o quitar puntos de
+        Elo segun la resolucion.
+  Criterios:
+    - El ajuste de Elo se aplica segun lo resuelto.
+    - Queda registrado en el historial (RF-018).
+  Dependencias: RF-093
+  Nota: -
+
+RF-095 | Agregar o quitar Safety Rating | Comisario | Prioridad 1
+  Desc: El sistema debe permitir al comisario agregar o quitar Safety
+        Rating segun la resolucion.
+  Criterios:
+    - El ajuste de SR se aplica segun lo resuelto.
+    - Queda registrado en el historial (RF-019).
+  Dependencias: RF-093
+  Nota: -
+
+RF-096 | Explicacion o comentario de la sancion | Comisario | Prioridad 1
+  Desc: El sistema debe permitir al comisario agregar una explicacion o
+        comentario sobre la sancion aplicada.
+  Criterios:
+    - El comentario queda visible para el piloto (RF-055).
+  Dependencias: RF-093
+  Nota: -
+
+RF-097 | Guardar la resolucion del incidente | Comisario | Prioridad 1
+  Desc: El sistema debe permitir al comisario guardar la resolucion del
+        incidente.
+  Criterios:
+    - La resolucion queda cerrada y visible para el piloto.
+    - No se puede modificar sin un nuevo proceso (apelacion).
+  Dependencias: RF-093..RF-096
+  Nota: -
+
+RF-098 | Consultar historial de incidentes resueltos | Comisario | Prioridad 2
+  Desc: El sistema debe permitir al comisario consultar el historial de
+        incidentes resueltos.
+  Criterios:
+    - Se listan incidentes resueltos con su resolucion.
+  Dependencias: RF-097
+  Nota: -
+
+RF-099 | Votacion de varios comisarios | Comisario | Prioridad 2
+  Desc: El sistema debe permitir que varios comisarios voten una
+        resolucion.
+  Criterios:
+    - Cada comisario asignado emite su voto.
+    - Se requiere un quorum minimo para cerrar la resolucion.
+  Dependencias: RF-097
+  Nota: [TBD] Definir quorum y reglas de desempate. Ver TBD-6.
+
+RF-100 | Historial de decisiones de cada comisario | Comisario | Prioridad 2
+  Desc: El sistema debe registrar el historial de decisiones de cada
+        comisario.
+  Criterios:
+    - Se registra cada voto/resolucion por comisario para auditoria.
+  Dependencias: RF-099
+  Nota: -
+
+===============================================================================
+REQUISITOS NO FUNCIONALES
+===============================================================================
+
+NFR-001 | Seguridad de credenciales | Prioridad 1
+  Desc: El sistema debe almacenar las contrasenas de forma segura y
+        proteger el acceso.
+  Criterios:
+    - Las contrasenas se guardan con hash (ej. bcrypt).
+    - Las sesiones expiran tras un tiempo de inactividad.
+  Nota: [NUEVO]
+
+NFR-002 | Autenticacion OAuth Steam | Prioridad 1
+  Desc: El sistema debe integrarse con el sistema de autenticacion de
+        Steam.
+  Criterios:
+    - El login de Steam usa el flujo OAuth oficial.
+    - Los tokens se gestionan de forma segura.
+  Nota: [NUEVO]
+
+NFR-003 | Rendimiento | Prioridad 2
+  Desc: El sistema debe responder de forma aceptable bajo carga normal.
+  Criterios:
+    - Las paginas principales cargan en menos de 3 segundos.
+    - Las consultas de historiales y tablas soportan miles de registros.
+  Nota: [NUEVO]
+
+NFR-004 | Disponibilidad | Prioridad 2
+  Desc: El sistema debe estar disponible durante los momentos criticos
+        (carreras).
+  Criterios:
+    - El sistema soporta picos de acceso en horas de carrera.
+  Nota: [NUEVO]
+
+NFR-005 | Privacidad de datos | Prioridad 1
+  Desc: El sistema debe proteger los datos personales de los usuarios.
+  Criterios:
+    - Solo roles autorizados ven datos sensibles.
+    - Las contrasenas de servidores solo se exponen a inscriptos.
+  Nota: [NUEVO]
+
+NFR-006 | Compatibilidad | Prioridad 3
+  Desc: El sistema debe funcionar en navegadores modernos y dispositivos
+        comunes.
+  Criterios:
+    - Compatible con los navegadores mas usados (Chrome, Edge, Firefox,
+      Safari).
+    - Diseño responsive para movil y escritorio.
+  Nota: [NUEVO]
+
+NFR-007 | Auditabilidad | Prioridad 2
+  Desc: El sistema debe registrar las acciones de cambios de Elo/SR y las
+        decisiones de comisarios.
+  Criterios:
+    - Toda modificacion de Elo/SR queda con fecha, valor y responsable.
+    - Toda resolucion de incidente queda con autor y timestamp.
+  Nota: [NUEVO]
+
+===============================================================================
+PENDIENTES TBD
+===============================================================================
+
+TBD-1 | Penalizaciones: admin vs comisario
+  Contexto: rf34/rf35 (admin) y rf48-50 (comisario) se superponen.
+  Propuesta: El admin aplica penalizaciones correctivas/post-carrera y el
+  comisario las del flujo de incidentes. Definir que rol es el dueno de
+  cada tipo de sancion.
+
+TBD-2 | Setups: "abierto" y "mismo setup" (rf12/rf13)
+  Contexto: rf12 "categorias con setup abierto" y rf13 "categoria con el
+  mismo setup".
+  Propuesta: rf12 = categorias sin restriccion de setup (se permiten
+  setups publicados). rf13 = categorias con setup fijo/obligatorio.
+
+TBD-3 | Umbrales de Elo por categoria (rf27/rf28)
+  Contexto: el original usa "5000" como ejemplo.
+  Propuesta: definir el minimo y el maximo de Elo real de cada categoria,
+  reemplazando el valor de ejemplo.
+
+TBD-4 | Visibilidad de la contrasena del servidor (rf62)
+  Contexto: no se define cuando ni para quien es visible.
+  Propuesta: visible solo para inscriptos, desde un momento previo al
+  inicio (ej. 15 min antes). Definir si los de lista de espera la ven.
+
+TBD-5 | Analisis detallado de carrera (rf98)
+  Contexto: no se define que metricas incluye.
+  Propuesta: evolucion de posicion, tiempos por vuelta, diferencia con el
+  lider, comparacion con otros pilotos.
+
+TBD-6 | Votacion de comisarios (rf91)
+  Contexto: no se define cuantos comisarios ni quorum.
+  Propuesta: se requiere al menos 2 votos concordantes para cerrar una
+  resolucion; definir desempate.
+
+TBD-7 | Formula de calculo de Elo
+  Contexto: rf09 define el concepto pero no la formula.
+  Propuesta: documentar la formula (ej. variante del sistema Elo de ajedrez
+  con K ajustable y promedio de la categoria).
+
+===============================================================================
+REDUNDANCIAS UNIFICADAS
+===============================================================================
+
+  rf26 / rf84 / rf97  -> RF-060  (obtener/reclamar recompensas)
+  rf36 / rf37         -> RF-070  (ABM de carreras)
+  rf38 / rf39         -> RF-081  (ABM de logros)
+  rf42                -> RF-002  (login general)
+  rf34 / rf35         -> RF-077 / RF-078 (ver TBD-1)
+
+===============================================================================
+TRAZABILIDAD rfXX ORIGINAL -> NUEVO RF
+===============================================================================
+
+  rf01 -> RF-002        rf25 -> RF-059        rf49 -> RF-094        rf73 -> RF-014
+  rf02 -> RF-009        rf26 -> RF-060        rf50 -> RF-095        rf74 -> RF-015
+  rf03 -> RF-010        rf27 -> RF-022        rf51 -> RF-096        rf75 -> RF-016
+  rf04 -> RF-021        rf28 -> RF-023        rf52 -> RF-097        rf76 -> RF-017
+  rf05 -> RF-024        rf29 -> RF-066        rf53 -> RF-098        rf77 -> RF-046
+  rf06 -> RF-025        rf30 -> RF-085        rf54 -> RF-052        rf78 -> RF-047
+  rf07 -> RF-036        rf31 -> RF-071        rf55 -> RF-053        rf79 -> RF-048
+  rf08 -> RF-037        rf32 -> RF-069        rf56 -> RF-054        rf80 -> RF-049
+  rf09 -> RF-038        rf33 -> RF-067        rf57 -> RF-055        rf81 -> RF-061
+  rf10 -> RF-039        rf34 -> RF-077        rf58 -> RF-033        rf82 -> RF-062
+  rf11 -> RF-043        rf35 -> RF-078        rf59 -> RF-032        rf83 -> RF-063
+  rf12 -> RF-044        rf36 -> RF-070        rf60 -> RF-026        rf84 -> RF-060
+  rf13 -> RF-045        rf37 -> RF-070        rf61 -> RF-027        rf85 -> RF-068
+  rf14 -> RF-011        rf38 -> RF-081        rf62 -> RF-028        rf86 -> RF-075
+  rf15 -> RF-035        rf39 -> RF-081        rf63 -> RF-018        rf87 -> RF-072
+  rf16 -> RF-029        rf40 -> RF-082        rf64 -> RF-019        rf88 -> RF-073
+  rf17 -> RF-030        rf41 -> RF-079        rf65 -> RF-040        rf89 -> RF-083
+  rf18 -> RF-031        rf42 -> RF-002        rf66 -> RF-041        rf90 -> RF-084
+  rf19 -> RF-034        rf43 -> RF-088        rf67 -> RF-006        rf91 -> RF-099
+  rf20 -> RF-008        rf44 -> RF-089        rf68 -> RF-007        rf92 -> RF-100
+  rf21 -> RF-003        rf45 -> RF-090        rf69 -> RF-004        rf93 -> RF-065
+  rf22 -> [ELIMINADO]   rf46 -> RF-091        rf70 -> RF-005        rf94 -> RF-080
+  rf23 -> RF-020        rf47 -> RF-092        rf71 -> RF-012        rf95 -> RF-058
+  rf24 -> RF-056        rf48 -> RF-093        rf72 -> RF-013        rf96 -> RF-057
+                                                                     rf97 -> RF-060
+                                                                     rf98 -> RF-042
+
+===============================================================================
+FIN DEL DOCUMENTO
+===============================================================================
