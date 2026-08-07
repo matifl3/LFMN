@@ -8,6 +8,12 @@ import java.util.List;
 
 public interface ApelacionRepository extends JpaRepository<Apelacion, Long> {
 
+    List<Apelacion> findAllByOrderByFechaDesc();
+
+    List<Apelacion> findByUsuario_IdOrderByFechaDesc(Long usuarioId);
+
+    List<Apelacion> findByEstadoOrderByFechaAsc(EstadoApelacion estado);
+
     List<Apelacion> findByUsuario_Id(Long usuarioId);
 
     List<Apelacion> findBySancion_Id(Long sancionId);
