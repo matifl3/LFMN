@@ -1,0 +1,156 @@
+package org.example.lfmnacional.service;
+
+import lombok.RequiredArgsConstructor;
+import org.example.lfmnacional.dto.resultado.CargarResultadosRequest;
+import org.example.lfmnacional.dto.resultado.ResultadoCarreraRequest;
+import org.example.lfmnacional.dto.resultado.ResultadoCarreraResponse;
+import org.example.lfmnacional.entity.Carrera;
+import org.example.lfmnacional.entity.EloSancion;
+import org.example.lfmnacional.entity.ResultadoCarrera;
+import org.example.lfmnacional.entity.SafetyRatingSancion;
+import org.example.lfmnacional.entity.Usuario;
+import org.example.lfmnacional.enums.EstadoCarrera;
+import org.example.lfmnacional.exception.BusinessException;
+import org.example.lfmnacional.exception.ResourceNotFoundException;
+import org.example.lfmnacional.repository.EloSancionRepository;
+import org.example.lfmnacional.repository.ResultadoCarreraRepository;
+import org.example.lfmnacional.repository.SafetyRatingSancionRepository;
+import org.example.lfmnacional.repository.UsuarioRepository;
+import org.example.lfmnacional.service.rating.EloCalculator;
+import org.example.lfmnacional.service.rating.SrCalculator;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@Service
+@RequiredArgsConstructor
+public class ResultadoCarreraService {
+
+    private final ResultadoCarreraRepository resultadoCarreraRepository;
+    private final EloSancionRepository eloSancionRepository;
+    private final SafetyRatingSancionRepository safetyRatingSancionRepository;
+    private final UsuarioRepository usuarioRepository;
+    private final CarreraService carreraService;
+    private final UsuarioService usuarioService;
+    private final CampeonatoService campeonatoService;
+    private final EloCalculator eloCalculator;
+    private final SrCalculator srCalculator;
+
+    public ResultadoCarrera getEntity(Long id) {
+        return resultadoCarreraRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Resultado no encontrado con id " + id));
+    }
+
+    @Transactional(readOnly = true)
+    public ResultadoCarreraResponse getById(Long id) {
+        return toResponse(getEntity(id));
+    }
+
+    @Transactional(readOnly = true)
+    public List<ResultadoCarreraResponse> listarPorCarrera(Long carreraId) {
+        return resultadoCarreraRepository.findByCarrera_IdOrderByPosicionFinalAsc(carreraId)
+                .stream().map(this::toResponse).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<ResultadoCarreraResponse> listarPorUsuario(Long usuarioId) {
+        return resultadoCarreraRepository.findByUsuario_Id(usuarioId)
+                .stream().map(this::toResponse).toList();
+    }
+
+    @Transactional
+    public List<ResultadoCarreraResponse> cargarResultados(CargarResultadosRequest request) {
+        Carrera carrera = carreraService.getEntity(request.carreraId());
+        validarCarga(carrera);
+
+        List<ResultadoCarrera> resultados = new ArrayList<>();
+        for (ResultadoCarreraRequest item : request.resultados()) {
+            Usuario usuario = usuarioService.getEntity(item.usuarioId());
+            ResultadoCarrera resultado = resultadoCarreraRepository
+                    .findByCarrera_IdAndUsuario_Id(carrera.getId(), usuario.getId())
+                    .orElseGet(() -> ResultadoCarrera.builder()
+                            .carrera(carrera)
+                            .usuario(usuario)
+                            .build());
+            resultado.setPosicionFinal(item.posicionFinal());
+            resultado.setTiempoTotal(item.tiempoTotal());
+            resultado.setVueltaRapida(item.vueltaRapida());
+            resultado.setPoles(item.poles());
+            resultado.setFinalizo(item.finalizo() != null && item.finalizo());
+            resultados.add(resultadoCarreraRepository.save(resultado));
+        }
+
+        recalcularEloYSafetyRating(carrera, resultados);
+        campeonatoService.actualizarPuntos(carrera, resultados);
+        return resultados.stream().map(this::toResponse).toList();
+    }
+
+    private void validarCarga(Carrera carrera) {
+        if (carrera.getEstado() == EstadoCarrera.PROGRAMADA) {
+            throw new BusinessException("No se pueden cargar resultados de una carrera programada");
+        }
+        if (carrera.getEstado() == EstadoCarrera.CANCELADA) {
+            throw new BusinessException("No se pueden cargar resultados de una carrera cancelada");
+        }
+    }
+
+    private void recalcularEloYSafetyRating(Carrera carrera, List<ResultadoCarrera> resultados) {
+        Map<Long, Integer> elos = new HashMap<>();
+        for (ResultadoCarrera resultado : resultados) {
+            elos.put(resultado.getUsuario().getId(), resultado.getUsuario().getElo());
+        }
+        for (ResultadoCarrera resultado : resultados) {
+            Integer posicion = resultado.getPosicionFinal();
+            if (posicion == null) {
+                continue;
+            }
+            Integer eloPropio = elos.get(resultado.getUsuario().getId());
+            List<Integer> rivales = elos.values().stream()
+                    .filter(elo -> !elo.equals(eloPropio))
+                    .toList();
+            int cambioElo = eloCalculator.calcularCambio(eloPropio, posicion, resultados.size(), rivales);
+            boolean finalizo = resultado.getFinalizo() != null && resultado.getFinalizo();
+            int cambioSr = srCalculator.calcularCambio(finalizo, posicion);
+
+            resultado.setEloGanado(cambioElo);
+            resultado.setSrGanado(cambioSr);
+            resultadoCarreraRepository.save(resultado);
+
+            Usuario usuario = resultado.getUsuario();
+            usuario.setElo(usuario.getElo() + cambioElo);
+            usuario.setSafetyRating(usuario.getSafetyRating() + cambioSr);
+            usuarioRepository.save(usuario);
+
+            eloSancionRepository.save(EloSancion.builder()
+                    .usuario(usuario)
+                    .cambio(cambioElo)
+                    .motivo("Resultado carrera " + carrera.getNombre() + " (posicion " + posicion + ")")
+                    .carrera(carrera)
+                    .build());
+            safetyRatingSancionRepository.save(SafetyRatingSancion.builder()
+                    .usuario(usuario)
+                    .cambio(cambioSr)
+                    .motivo("Resultado carrera " + carrera.getNombre() + " (posicion " + posicion + ")")
+                    .carrera(carrera)
+                    .build());
+        }
+    }
+
+    private ResultadoCarreraResponse toResponse(ResultadoCarrera resultado) {
+        return new ResultadoCarreraResponse(
+                resultado.getId(),
+                resultado.getCarrera().getId(),
+                resultado.getUsuario().getId(),
+                resultado.getPosicionFinal(),
+                resultado.getTiempoTotal(),
+                resultado.getVueltaRapida(),
+                resultado.getPoles(),
+                resultado.getFinalizo(),
+                resultado.getEloGanado(),
+                resultado.getSrGanado());
+    }
+}

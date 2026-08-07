@@ -7,6 +7,7 @@ import org.example.lfmnacional.enums.Rol;
 import org.example.lfmnacional.repository.CategoriaRepository;
 import org.example.lfmnacional.repository.UsuarioRepository;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -17,6 +18,7 @@ public class DataSeeder implements CommandLineRunner {
 
     private final UsuarioRepository usuarioRepository;
     private final CategoriaRepository categoriaRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public void run(String... args) {
@@ -28,7 +30,7 @@ public class DataSeeder implements CommandLineRunner {
         if (!usuarioRepository.existsByEmail("admin@lfm.local")) {
             Usuario admin = Usuario.builder()
                     .email("admin@lfm.local")
-                    .password("admin123")
+                    .password(passwordEncoder.encode("admin123"))
                     .nombrePiloto("Admin LFM")
                     .rol(Rol.ADMIN)
                     .elo(1500)

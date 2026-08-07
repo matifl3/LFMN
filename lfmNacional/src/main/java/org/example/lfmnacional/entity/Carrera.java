@@ -55,8 +55,9 @@ public class Carrera {
     private List<ResultadoCarrera> resultados = new ArrayList<>();
 
 
-    @OneToMany(mappedBy = "carrera")
-    private ArchivoCarrera archivos;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "archivo_id")
+    private ArchivoCarrera archivo;
 
     @OneToMany(mappedBy = "carrera")
     private List<Incidente> incidentes = new ArrayList<>();
