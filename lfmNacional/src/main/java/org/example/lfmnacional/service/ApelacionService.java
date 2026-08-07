@@ -1,6 +1,7 @@
 package org.example.lfmnacional.service;
 
 import lombok.RequiredArgsConstructor;
+import org.example.lfmnacional.dto.apelacion.ApelacionRequest;
 import org.example.lfmnacional.dto.apelacion.ApelacionResolucionRequest;
 import org.example.lfmnacional.dto.apelacion.ApelacionResponse;
 import org.example.lfmnacional.entity.Apelacion;
@@ -18,6 +19,8 @@ import java.util.List;
 public class ApelacionService {
 
     private final ApelacionRepository apelacionRepository;
+    private final SancionService sancionService;
+    private final UsuarioService usuarioService;
 
     public Apelacion getEntity(Long id) {
         return apelacionRepository.findById(id)
@@ -48,6 +51,19 @@ public class ApelacionService {
     }
 
     @Transactional
+    public ApelacionResponse create(ApelacionRequest request) {
+        if (apelacionRepository.existsBySancion_IdAndUsuario_Id(request.sancionId(), request.usuarioId())) {
+            throw new BusinessException("Ya existe una apelacion para esta sancion");
+        }
+        Apelacion apelacion = Apelacion.builder()
+                .sancion(sancionService.getEntity(request.sancionId()))
+                .usuario(usuarioService.getEntity(request.usuarioId()))
+                .motivo(request.motivo())
+                .build();
+        return toResponse(apelacionRepository.save(apelacion));
+    }
+
+    @Transactional
     public ApelacionResponse resolver(Long id, ApelacionResolucionRequest request) {
         Apelacion apelacion = getEntity(id);
         if (request.estado() == EstadoApelacion.PENDIENTE) {
@@ -56,6 +72,11 @@ public class ApelacionService {
         apelacion.setEstado(request.estado());
         apelacion.setRespuestaAdmin(request.respuestaAdmin());
         return toResponse(apelacionRepository.save(apelacion));
+    }
+
+    @Transactional
+    public void delete(Long id) {
+        apelacionRepository.delete(getEntity(id));
     }
 
     private ApelacionResponse toResponse(Apelacion apelacion) {

@@ -2,9 +2,12 @@ package org.example.lfmnacional.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.example.lfmnacional.dto.apelacion.ApelacionRequest;
 import org.example.lfmnacional.dto.apelacion.ApelacionResolucionRequest;
 import org.example.lfmnacional.dto.apelacion.ApelacionResponse;
 import org.example.lfmnacional.service.ApelacionService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,6 +18,11 @@ import java.util.List;
 public class ApelacionController {
 
     private final ApelacionService apelacionService;
+
+    @PostMapping
+    public ResponseEntity<ApelacionResponse> create(@Valid @RequestBody ApelacionRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(apelacionService.create(request));
+    }
 
     @GetMapping
     public List<ApelacionResponse> listAll() {
@@ -39,5 +47,11 @@ public class ApelacionController {
     @PutMapping("/{id}/resolucion")
     public ApelacionResponse resolver(@PathVariable Long id, @Valid @RequestBody ApelacionResolucionRequest request) {
         return apelacionService.resolver(id, request);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        apelacionService.delete(id);
+        return ResponseEntity.noContent().build();
     }
 }
