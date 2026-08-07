@@ -1,11 +1,13 @@
 package org.example.lfmnacional.service;
 
 import lombok.RequiredArgsConstructor;
+import org.example.lfmnacional.dto.anuncio.AnuncioRequest;
 import org.example.lfmnacional.dto.anuncio.AnuncioResponse;
 import org.example.lfmnacional.entity.Anuncio;
 import org.example.lfmnacional.exception.ResourceNotFoundException;
 import org.example.lfmnacional.repository.AnuncioRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -30,6 +32,21 @@ public class AnuncioService {
     public AnuncioResponse getUltimo() {
         return toResponse(anuncioRepository.findFirstByOrderByFechaDesc()
                 .orElseThrow(() -> new ResourceNotFoundException("No hay anuncios registrados")));
+    }
+
+    @Transactional
+    public AnuncioResponse create(AnuncioRequest request) {
+        Anuncio anuncio = Anuncio.builder()
+                .titulo(request.titulo())
+                .contenido(request.contenido())
+                .urlImagen(request.urlImagen())
+                .build();
+        return toResponse(anuncioRepository.save(anuncio));
+    }
+
+    @Transactional
+    public void delete(Long id) {
+        anuncioRepository.delete(getEntity(id));
     }
 
     private AnuncioResponse toResponse(Anuncio anuncio) {
