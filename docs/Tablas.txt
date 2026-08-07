@@ -1,0 +1,49 @@
+Estudio de lo que tenemos hasta ahora 7/8/26
+
+anuncio{id , descripción y contenido}
+
+apelación{id ,SANCION, USUARIO involucrado ,motivo ,estado ,respuesta}
+
+ArchivoCarrera{id, nombre, ruta, tipo, listas de CARRERA?}
+
+Campeonato{id, nombre, temporada, descSistemaPuntos, lista CAMPEONATO_POS} --> CampeonatoPos{id, CAMPEONATO, user, puntos, pos}
+
+Carrera{id, nombre, fecha, circuito, estado, cupo, servidor, contrseña, listINSCRIPPTOS, ARCHIVO_CARRERA, INCIDENTES, RESULTADOS}
+
+Categoria{id, descripcion, eloMin, eloMax, setup,list CARRERA ,list CAMPEONATO}
+
+EloSancion{id, USUARIO, cambio? , motivo, fecha, CARRERA}
+
+Incidente{id, CARRERA, USUARIO report, vuelta, descripcion, videourl, estado, list INCIDENTE_PILOTO, list VOTO_COMISARIO, RESOLUCION INCIDENTE}
+
+IncidentePiloto{id, INCIDENTE, USUARIO, rol piloto}
+
+Inscripcion{id, CARRERA, USUARIO, estado, fecha}
+
+Logro{id, nombre, descripcion, tipocondicion, valor, icono, list RECOMPESAS}
+
+Recompensa{id, LOGRO, descripcion, tipo}
+
+ResolucionIncidente{id, INCIDENTE, USUARIO, explicaion, fecha}
+
+ResultadoCarrera{id, CARRERA, USUARIO, posfinal, tiempoTotal, veultaRapida, poles, finalizo, eloganado, srGanado}
+
+SRSancion{id, USARIO, cambio, motivo, fecha, CARRERA}
+
+Sancion{id, USUARIO, CARRERA, resolucion, tipo, valor, motivo, origen, id, fecha}
+
+Clasificaion{id, CARRERA, USUARIO, fecha, tiempo, diferencia_pole}
+
+Setup{id, titulo, desc, circuito, vehiculo, rutaArchi, USUARIO autor, CATEGORIA, decha, promedioClasificacion, list SETUPCLASIFICACION, list SETUPCOMENTARIO} 
+
+SetupClasificaion{id, SETUP, USUARIO, puntaje}
+
+SetupComentario{id, USUARIO, SETUP, texto, fecha} 
+
+Usuario{id, email, password, nombrePiloto, fotoPerfil, guidStem, elo, sr, rol, fechaRegister, list SANCION, list ELOSANCION, list SRSANCION, list SETUP, list INSCRIOCION, list NOTIFICACION}
+
+UsuarioLogro{id, LOGRO, USUARIO, obtenido, fecha}
+
+UsuarioRecompensa{id, RECOMPENSA, USUARIO, reclamada, fecha}
+
+VotoComisario{id, INCIDENETE, USUARIO comisario, DECISION_COMISARIO, comentario, fecha}
