@@ -1,0 +1,306 @@
+{
+	"TrackName": "balcarce",
+	"TrackConfig": "chicana",
+	"Type": "RACE",
+	"DurationSecs": 0,
+	"RaceLaps": 5,
+	"Cars": [
+		{
+			"CarId": 0,
+			"Driver": {
+				"Name": "Matifel",
+				"Team": "",
+				"Nation": "ARG",
+				"Guid": "76561199066767489",
+				"GuidsList": [
+					""
+				]
+			},
+			"Model": "apvs_actc_camaro_2025_tc1",
+			"Skin": "86_Agustin_canapino",
+			"BallastKG": 0,
+			"Restrictor": 0
+		},
+		{
+			"CarId": 1,
+			"Driver": {
+				"Name": "",
+				"Team": "",
+				"Nation": "",
+				"Guid": "",
+				"GuidsList": [
+					""
+				]
+			},
+			"Model": "apvs_actc_camaro_2025_tc1",
+			"Skin": "10_Marcos_Landa",
+			"BallastKG": 0,
+			"Restrictor": 0
+		},
+		{
+			"CarId": 2,
+			"Driver": {
+				"Name": "",
+				"Team": "",
+				"Nation": "",
+				"Guid": "",
+				"GuidsList": [
+					""
+				]
+			},
+			"Model": "apvs_actc_mustang_2025_tc1",
+			"Skin": "04_mariano_werner",
+			"BallastKG": 0,
+			"Restrictor": 0
+		}
+	],
+	"Result": [
+		{
+			"DriverName": "Matifel",
+			"DriverGuid": "76561199066767489",
+			"CarId": 0,
+			"CarModel": "apvs_actc_camaro_2025_tc1",
+			"BestLap": 110800,
+			"TotalTime": 827739,
+			"BallastKG": 0,
+			"Restrictor": 0
+		},
+		{
+			"DriverName": "",
+			"DriverGuid": "",
+			"CarId": 1,
+			"CarModel": "apvs_actc_camaro_2025_tc1",
+			"BestLap": 999999999,
+			"TotalTime": 0,
+			"BallastKG": 0,
+			"Restrictor": 0
+		},
+		{
+			"DriverName": "",
+			"DriverGuid": "",
+			"CarId": 2,
+			"CarModel": "apvs_actc_mustang_2025_tc1",
+			"BestLap": 999999999,
+			"TotalTime": 0,
+			"BallastKG": 0,
+			"Restrictor": 0
+		}
+	],
+	"Laps": [
+		{
+			"DriverName": "Matifel",
+			"DriverGuid": "76561199066767489",
+			"CarId": 0,
+			"CarModel": "apvs_actc_camaro_2025_tc1",
+			"Timestamp": 883730,
+			"LapTime": 130656,
+			"Sectors": [
+				38878,
+				47201,
+				44577
+			],
+			"Cuts": 0,
+			"BallastKG": 0,
+			"Tyre": "S",
+			"Restrictor": 0
+		},
+		{
+			"DriverName": "Matifel",
+			"DriverGuid": "76561199066767489",
+			"CarId": 0,
+			"CarModel": "apvs_actc_camaro_2025_tc1",
+			"Timestamp": 1067164,
+			"LapTime": 183433,
+			"Sectors": [
+				58639,
+				42367,
+				82427
+			],
+			"Cuts": 0,
+			"BallastKG": 0,
+			"Tyre": "S",
+			"Restrictor": 0
+		},
+		{
+			"DriverName": "Matifel",
+			"DriverGuid": "76561199066767489",
+			"CarId": 0,
+			"CarModel": "apvs_actc_camaro_2025_tc1",
+			"Timestamp": 1177962,
+			"LapTime": 110800,
+			"Sectors": [
+				26524,
+				42404,
+				41872
+			],
+			"Cuts": 0,
+			"BallastKG": 0,
+			"Tyre": "S",
+			"Restrictor": 0
+		},
+		{
+			"DriverName": "Matifel",
+			"DriverGuid": "76561199066767489",
+			"CarId": 0,
+			"CarModel": "apvs_actc_camaro_2025_tc1",
+			"Timestamp": 1429719,
+			"LapTime": 251758,
+			"Sectors": [
+				31087,
+				43330,
+				177341
+			],
+			"Cuts": 0,
+			"BallastKG": 0,
+			"Tyre": "S",
+			"Restrictor": 0
+		},
+		{
+			"DriverName": "Matifel",
+			"DriverGuid": "76561199066767489",
+			"CarId": 0,
+			"CarModel": "apvs_actc_camaro_2025_tc1",
+			"Timestamp": 1580816,
+			"LapTime": 151098,
+			"Sectors": [
+				51283,
+				58379,
+				41436
+			],
+			"Cuts": 0,
+			"BallastKG": 0,
+			"Tyre": "S",
+			"Restrictor": 0
+		}
+	],
+	"Events": [
+		{
+			"Type": "COLLISION_WITH_ENV",
+			"CarId": 0,
+			"Driver": {
+				"Name": "Matifel",
+				"Team": "",
+				"Nation": "ARG",
+				"Guid": "76561199066767489",
+				"GuidsList": [
+					""
+				]
+			},
+			"OtherCarId": -1,
+			"OtherDriver": {
+				"Name": "",
+				"Team": "",
+				"Nation": "",
+				"Guid": "",
+				"GuidsList": null
+			},
+			"ImpactSpeed": 24.131245,
+			"WorldPosition": {
+				"X": -277.86008,
+				"Y": 3.2492535,
+				"Z": 752.58984
+			},
+			"RelPosition": {
+				"X": 0.21234798,
+				"Y": 0.08823249,
+				"Z": 2.4429512
+			}
+		},
+		{
+			"Type": "COLLISION_WITH_ENV",
+			"CarId": 0,
+			"Driver": {
+				"Name": "Matifel",
+				"Team": "",
+				"Nation": "ARG",
+				"Guid": "76561199066767489",
+				"GuidsList": [
+					""
+				]
+			},
+			"OtherCarId": -1,
+			"OtherDriver": {
+				"Name": "",
+				"Team": "",
+				"Nation": "",
+				"Guid": "",
+				"GuidsList": null
+			},
+			"ImpactSpeed": 36.44623,
+			"WorldPosition": {
+				"X": -80.36396,
+				"Y": -22.965078,
+				"Z": -468.01498
+			},
+			"RelPosition": {
+				"X": -0.48455516,
+				"Y": -0.30708516,
+				"Z": 2.4267066
+			}
+		},
+		{
+			"Type": "COLLISION_WITH_ENV",
+			"CarId": 0,
+			"Driver": {
+				"Name": "Matifel",
+				"Team": "",
+				"Nation": "ARG",
+				"Guid": "76561199066767489",
+				"GuidsList": [
+					""
+				]
+			},
+			"OtherCarId": -1,
+			"OtherDriver": {
+				"Name": "",
+				"Team": "",
+				"Nation": "",
+				"Guid": "",
+				"GuidsList": null
+			},
+			"ImpactSpeed": 58.762077,
+			"WorldPosition": {
+				"X": -338.13263,
+				"Y": -7.451724,
+				"Z": 631.83246
+			},
+			"RelPosition": {
+				"X": 0.87421715,
+				"Y": 0.18921477,
+				"Z": 2.0202017
+			}
+		},
+		{
+			"Type": "COLLISION_WITH_ENV",
+			"CarId": 0,
+			"Driver": {
+				"Name": "Matifel",
+				"Team": "",
+				"Nation": "ARG",
+				"Guid": "76561199066767489",
+				"GuidsList": [
+					""
+				]
+			},
+			"OtherCarId": -1,
+			"OtherDriver": {
+				"Name": "",
+				"Team": "",
+				"Nation": "",
+				"Guid": "",
+				"GuidsList": null
+			},
+			"ImpactSpeed": 31.857618,
+			"WorldPosition": {
+				"X": 70.193306,
+				"Y": -4.058308,
+				"Z": -372.78104
+			},
+			"RelPosition": {
+				"X": -0.47532526,
+				"Y": 0.20555587,
+				"Z": 2.4498832
+			}
+		}
+	]
+}
