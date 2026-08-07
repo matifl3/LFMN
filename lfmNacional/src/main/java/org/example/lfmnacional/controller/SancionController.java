@@ -2,7 +2,6 @@ package org.example.lfmnacional.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.example.lfmnacional.dto.sancion.RealPenaltyEventRequest;
 import org.example.lfmnacional.dto.sancion.SancionRequest;
 import org.example.lfmnacional.dto.sancion.SancionResponse;
 import org.example.lfmnacional.service.SancionService;
@@ -37,12 +36,6 @@ public class SancionController {
     @PostMapping
     public ResponseEntity<SancionResponse> create(@Valid @RequestBody SancionRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(sancionService.create(request));
-    }
-
-    @PostMapping("/rp")
-    public ResponseEntity<SancionResponse> recibirEventoRealPenalty(
-            @Valid @RequestBody RealPenaltyEventRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(sancionService.recibirEventoRealPenalty(request));
     }
 
     @PutMapping("/{id}")

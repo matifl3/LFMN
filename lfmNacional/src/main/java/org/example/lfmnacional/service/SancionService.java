@@ -1,11 +1,9 @@
 package org.example.lfmnacional.service;
 
 import lombok.RequiredArgsConstructor;
-import org.example.lfmnacional.dto.sancion.RealPenaltyEventRequest;
 import org.example.lfmnacional.dto.sancion.SancionRequest;
 import org.example.lfmnacional.dto.sancion.SancionResponse;
 import org.example.lfmnacional.entity.*;
-import org.example.lfmnacional.enums.OrigenSancion;
 import org.example.lfmnacional.enums.TipoNotificacion;
 import org.example.lfmnacional.enums.TipoSancion;
 import org.example.lfmnacional.exception.BusinessException;
@@ -21,8 +19,6 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class SancionService {
-
-    private static final int SR_PENALIDAD_RP = -10;
 
     private final SancionRepository sancionRepository;
     private final EloSancionRepository eloSancionRepository;
@@ -81,35 +77,6 @@ public class SancionService {
     @Transactional
     public void delete(Long id) {
         sancionRepository.delete(getEntity(id));
-    }
-
-    @Transactional
-    public SancionResponse recibirEventoRealPenalty(RealPenaltyEventRequest request) {
-        if (sancionRepository.existsByOrigenAndIdExterno(OrigenSancion.REAL_PENALTY, request.eventoId())) {
-            Sancion existente = sancionRepository
-                    .findByOrigenAndIdExterno(OrigenSancion.REAL_PENALTY, request.eventoId())
-                    .orElseThrow();
-            return toResponse(existente);
-        }
-        Usuario usuario = usuarioRepository.findByGuidSteam(request.driverGUID())
-                .orElseThrow(() -> new BusinessException(
-                        "No se pudo correlacionar el driverGUID " + request.driverGUID() + " con ningun usuario"));
-
-        Sancion sancion = Sancion.builder()
-                .usuario(usuario)
-                .tipo(mapTipoRp(request.tipo()))
-                .valor(request.segundos())
-                .motivo(request.motivo())
-                .origen(OrigenSancion.REAL_PENALTY)
-                .idExterno(request.eventoId())
-                .fecha(request.timestamp() != null ? request.timestamp() : LocalDateTime.now())
-                .build();
-        sancion = sancionRepository.save(sancion);
-
-        int cambioSr = (sancion.getTipo() == TipoSancion.DESCALIFICACION) ? SR_PENALIDAD_RP * 2 : SR_PENALIDAD_RP;
-        aplicarCambioSafetyRating(usuario, cambioSr, "Penalidad automatica Real Penalty", sancion.getCarrera());
-        notificar(sancion);
-        return toResponse(sancion);
     }
 
     private Sancion buildSancion(SancionRequest request) {
@@ -215,18 +182,6 @@ public class SancionService {
                         + (sancion.getMotivo() != null ? " - " + sancion.getMotivo() : ""))
                 .leida(false)
                 .build());
-    }
-
-    private TipoSancion mapTipoRp(String tipo) {
-        if (tipo == null) {
-            return TipoSancion.SEGUNDOS;
-        }
-        return switch (tipo.toLowerCase()) {
-            case "dt" -> TipoSancion.DRIVE_THROUGH;
-            case "sg" -> TipoSancion.STOP_AND_GO;
-            case "dsq" -> TipoSancion.DESCALIFICACION;
-            default -> TipoSancion.SEGUNDOS;
-        };
     }
 
     private SancionResponse toResponse(Sancion sancion) {

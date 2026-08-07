@@ -1,13 +1,13 @@
 # Flujos de negocio y modelo de tablas — Low Fuel Motorsport
 
 > Documento técnico del backend (Spring Boot) del proyecto **Low Fuel Motorsport**.
-> Describe el modelo de 26 tablas y los flujos principales del dominio.
+> Describe el modelo de 27 tablas y los flujos principales del dominio.
 
 ---
 
 ## 1. Visión general
 
-El sistema se organiza en torno a 6 flujos de negocio, todos partiendo de un
+El sistema se organiza en torno a 7 flujos de negocio, todos partiendo de un
 usuario registrado:
 
 ```
@@ -20,13 +20,13 @@ usuario registrado:
 └──────────┬───────────────────┬──────────────────────────────────┘
            │                   │
            ▼                   ▼
-     ┌────────────┐     ┌─────────────────┐
-     │  Incidentes │     │   Real Penalty   │──► Sanciones (C)
-     │   (C)      │────►│   (origen RP)     │────► Apelaciones (D)
-     └────────────┘     └─────────────────┘
+     ┌────────────┐      ┌─────────────────────┐
+     │  Incidentes │◄─────│  Ingestión sesiones │
+     │   (C)      │ Events│  Assetto Corsa (G) │──► Resultados / Clasif. (B)
+     └────────────┘      └─────────────────────┘
            │
            ▼
-     Sanciones (C) ──► Ajustes Elo / SR
+     Sanciones (C) ──► Ajustes Elo / SR ──► Apelaciones (D)
 
   Flujos auxiliares: Setups (E), Logros/Recompensas (F), Notificaciones.
 ```
@@ -38,10 +38,13 @@ Flujos:
 - **D — Apelación de sanción**: el piloto puede apelar y el admin responde.
 - **E — Setups**: publicación, calificación y comentarios.
 - **F — Logros y Recompensas**: progreso, obtención y reclamo.
+- **G — Ingestión de sesiones de Assetto Corsa**: el servidor de AC exporta un
+  JSON por sesión; un watcher de carpeta lo procesa (reemplaza al flujo de
+  Real Penalty).
 
 ---
 
-## 2. Diagrama de tablas (26 entidades)
+## 2. Diagrama de tablas (27 entidades)
 
 ### Núcleo
 
@@ -88,6 +91,9 @@ categoria 1───N carrera 1───N sesion_clasificacion N───1 usuar
                    │
                    └──N──1 archivo_carrera        (1 archivo → muchas carreras)
                          (nombre, ruta, tipo)      FK archivo_id vive en carrera
+
+carrera 1───N sesion_procesada
+              (nombre_archivo UNIQUE, tipo, fecha_procesamiento)
 ```
 
 ### Incidentes (comisarios)
@@ -192,12 +198,15 @@ Notas:
 
 ## 4. Flujo B — Carrera → Resultados → Rating y Tabla
 
-Al cargar resultados de una carrera (RF-035):
+Al cargar resultados de una carrera (RF-035). Los resultados pueden entrar por
+dos vías: manual (`POST /api/resultados/cargar`) o automática desde la sesión
+RACE exportada por el servidor (Flujo G).
 
 ```
         ┌───────────────────────────────┐
         │  Cargar resultados (masivo)    │
-        │  CargarResultadosRequest       │
+        │  - manual: CargarResultadosRequest
+        │  - automático: sesión RACE AC  │
         └──────────────┬────────────────┘
                        ▼
         ┌───────────────────────────────┐
@@ -247,6 +256,10 @@ Notas:
   (TBD-7, TBD-1) hasta que se definan las fórmulas oficiales.
 - `resultado_carrera` es UNIQUE(carrera_id, usuario_id): no se puede cargar
   dos veces el mismo piloto en la misma carrera.
+- **Idempotencia**: `cargarResultados` rechaza si la carrera ya tiene
+  resultados (`existsByCarrera_Id`) → no se vuelven a sumar Elo/SR/puntos.
+  Además `sesion_procesada` garantiza que un archivo de sesión no se procesa
+  dos veces (Flujo G).
 
 ---
 
@@ -302,7 +315,7 @@ Notas:
 - Si la resolución es `DESCALIF`, la sanción aplica también penalidad de
   Safety Rating (RP -20 según TBD-6).
 - `sancion.resolucion_id` opcional: permite sanciones sin resolución previa
-  (ej. de origen Real Penalty).
+  (ej. sanciones directas del admin).
 
 ---
 
@@ -368,25 +381,92 @@ Notas:
 
 ---
 
-## 9. Flujo G — Real Penalty (origen de sanciones externas)
+## 9. Flujo G — Ingestión de sesiones de Assetto Corsa
 
-Detalle completo en [integracion-real-penalty.md](integracion-real-penalty.md).
-Resumen del impacto en el modelo:
+El servidor dedicado de Assetto Corsa exporta un JSON con el resumen de cada
+sesión (clasificación y carrera). Un watcher de carpeta lo detecta, lo procesa
+y lo traduce a clasificación, resultados (Elo/SR + campeonato) e incidentes.
+
+> El flujo anterior de **Real Penalty** (feed de eventos de penalidad vía
+> HTTP, `POST /api/sanciones/rp` y `SancionService.recibirEventoRealPenalty`)
+> fue **reemplazado** por esta ingestión. `docs/integracion-real-penalty.md`
+> queda obsoleto.
+
+### 9.1 Convención de archivos
 
 ```
-Real Penalty (UDP) ──► evento de penalidad (driverGUID, tipo, valor)
-                          │
-                          ▼
-              sancion (origen=REAL_PENALTY, id_externo=id del evento)
-                          │
-                          ├─ correlaciona piloto por guid_steam
-                          │
-                          └─ idempotente: no duplica si ya existe
-                             sancion con mismo origen + id_externo
+<carreraId>_<fecha>_<TIPO>.json      ej: 1_2026_8_7_16_31_RACE.json
 ```
 
-Tipos mapeados: `dt` (drive-through), `sgN` (stop & go), `dsq`
-(descalificación) → ajuste de Safety Rating.
+- `<carreraId>` = id de la carrera en la plataforma (correlación explícita;
+  el JSON no trae ese id).
+- `<TIPO>` = `QUALIFY` / `RACE` (también viene en el campo `Type` del JSON).
+
+Estructura del JSON (esquema de exportación de AC):
+
+```
+TrackName, TrackConfig, Type, DurationSecs, RaceLaps
+Cars[]   → CarId, Driver{Name, Guid}, Model, Skin
+Result[] → DriverName, DriverGuid, BestLap, TotalTime
+Laps[]   → DriverGuid, LapTime, Sectors[], Cuts, Tyre
+Events[] → Type, CarId, Driver, OtherCarId, OtherDriver, ImpactSpeed
+```
+
+### 9.2 Watcher de carpeta (`SesionFolderWatcher`)
+
+- `@Scheduled` cada 10 s escanea `sesiones.input-dir` (default `./sesiones`).
+- Por cada `*.json` parsea el `carreraId` del nombre y delega en
+  `SesionServidorService`.
+- Mueve el archivo procesado:
+  - `sesiones.procesadas-dir` → éxito.
+  - `sesiones.errores-dir` → error (se loguea).
+- Si el archivo ya fue procesado (`sesion_procesada`), se mueve sin reimportar.
+
+### 9.3 Procesamiento (`SesionServidorService.importarSesion`)
+
+```
+JSON de sesión AC
+      │  correlación driverGUID → usuario.guid_steam
+      │  (se ignoran drivers sin GUID)
+      ▼
+┌────────────────── QUALIFY ──────────────────┐
+│  sesion_clasificacion (tiempo,              │
+│    diferencia_pole) ordenada por tiempo     │
+│  + resultado_carrera.poles = true (pole)    │
+└────────────────────────────────────────────┘
+      ▼
+┌────────────────── RACE ─────────────────────┐
+│  resultado_carrera ordenado por total_time   │
+│  - DNF (total_time = 0) al final,            │
+│    finalizo = false                          │
+│  - vuelta_rapida = best_lap                  │
+│  └─► recalcularEloYSafetyRating +            │
+│      actualizarPuntos (Flujo B)              │
+└────────────────────────────────────────────┘
+      ▼
+┌────────────────── EVENTS ───────────────────┐
+│  Autogenera un Incidente por colisión:       │
+│  incidente (reportante = piloto,             │
+│    estado PENDIENTE)                         │
+│  + incidente_piloto (rol AFECTADO)           │
+└────────────────────────────────────────────┘
+```
+
+### 9.4 Idempotencia
+
+- `sesion_procesada`: UNIQUE(`nombre_archivo`). Un archivo de sesión se importa
+  una sola vez (evita duplicar resultados, clasificación e incidentes).
+- `resultado_carrera`: `cargarResultados` rechaza si la carrera ya tiene
+  resultados (`existsByCarrera_Id`) → no se vuelven a sumar Elo/SR/puntos.
+
+### 9.5 Endpoint manual
+
+```
+POST /api/sesiones/importar?carreraId={id}
+Body = JSON de sesión de AC
+```
+
+Permite importar una sesión a mano (pruebas o reproceso de un archivo).
 
 ---
 
@@ -404,6 +484,7 @@ Tipos mapeados: `dt` (drive-through), `sgN` (stop & go), `dsq`
 | `setup_calificacion` | UNIQUE(`setup_id`, `usuario_id`) |
 | `usuario_logro` | UNIQUE(`logro_id`, `usuario_id`) |
 | `usuario_recompensa` | UNIQUE(`recompensa_id`, `usuario_id`) |
+| `sesion_procesada` | `nombre_archivo` UNIQUE |
 
 FKs opcionales (nullable): `sancion.carrera_id`, `sancion.resolucion_id`,
 `elo_sancion.carrera_id`, `safety_rating_sancion.carrera_id`,

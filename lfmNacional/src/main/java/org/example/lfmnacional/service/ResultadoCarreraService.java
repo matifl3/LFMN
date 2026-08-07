@@ -66,6 +66,10 @@ public class ResultadoCarreraService {
     public List<ResultadoCarreraResponse> cargarResultados(CargarResultadosRequest request) {
         Carrera carrera = carreraService.getEntity(request.carreraId());
         validarCarga(carrera);
+        if (resultadoCarreraRepository.existsByCarrera_Id(carrera.getId())) {
+            throw new BusinessException(
+                    "Ya existen resultados cargados para la carrera " + carrera.getNombre());
+        }
 
         List<ResultadoCarrera> resultados = new ArrayList<>();
         for (ResultadoCarreraRequest item : request.resultados()) {
