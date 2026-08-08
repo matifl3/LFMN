@@ -11,4 +11,6 @@ public interface SetupCalificacionRepository extends JpaRepository<SetupCalifica
     Optional<SetupCalificacion> findBySetup_IdAndUsuario_Id(Long setupId, Long usuarioId);
 
     List<SetupCalificacion> findBySetup_Id(Long setupId);
+
+    void deleteBySetup_Id(Long setupId);
 }

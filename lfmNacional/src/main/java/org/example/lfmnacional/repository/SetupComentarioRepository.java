@@ -8,4 +8,6 @@ import java.util.List;
 public interface SetupComentarioRepository extends JpaRepository<SetupComentario, Long> {
 
     List<SetupComentario> findBySetup_IdOrderByFechaDesc(Long setupId);
+
+    void deleteBySetup_Id(Long setupId);
 }
