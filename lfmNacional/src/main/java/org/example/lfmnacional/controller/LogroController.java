@@ -68,16 +68,4 @@ public class LogroController {
     public List<UsuarioLogroResponse> logrosDeUsuario(@PathVariable Long usuarioId) {
         return logroService.listarLogrosUsuario(usuarioId);
     }
-
-    @GetMapping("/usuario/{usuarioId}/recompensas")
-    public List<UsuarioRecompensaResponse> recompensasDeUsuario(@PathVariable Long usuarioId) {
-        return logroService.listarRecompensasUsuario(usuarioId);
-    }
-
-    @PostMapping("/usuario/{usuarioId}/recompensas/{recompensaId}/reclamar")
-    public UsuarioRecompensaResponse reclamarRecompensa(
-            @PathVariable Long usuarioId,
-            @PathVariable Long recompensaId) {
-        return logroService.reclamarRecompensa(usuarioId, recompensaId);
-    }
 }

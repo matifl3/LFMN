@@ -6,7 +6,6 @@ import org.example.lfmnacional.dto.logro.LogroResponse;
 import org.example.lfmnacional.dto.logro.RecompensaRequest;
 import org.example.lfmnacional.dto.logro.RecompensaResponse;
 import org.example.lfmnacional.dto.logro.UsuarioLogroResponse;
-import org.example.lfmnacional.dto.logro.UsuarioRecompensaResponse;
 import org.example.lfmnacional.entity.Logro;
 import org.example.lfmnacional.entity.Notificacion;
 import org.example.lfmnacional.entity.Recompensa;
@@ -132,26 +131,6 @@ public class LogroService {
         return response;
     }
 
-    @Transactional(readOnly = true)
-    public List<UsuarioRecompensaResponse> listarRecompensasUsuario(Long usuarioId) {
-        usuarioService.getEntity(usuarioId);
-        return usuarioRecompensaRepository.findByUsuario_Id(usuarioId).stream()
-                .map(this::toUsuarioRecompensaResponse)
-                .toList();
-    }
-
-    @Transactional
-    public UsuarioRecompensaResponse reclamarRecompensa(Long usuarioId, Long recompensaId) {
-        usuarioService.getEntity(usuarioId);
-        recompensaRepository.findById(recompensaId)
-                .orElseThrow(() -> new ResourceNotFoundException("Recompensa no encontrada con id " + recompensaId));
-        UsuarioRecompensa usuarioRecompensa = usuarioRecompensaRepository
-                .findByRecompensa_IdAndUsuario_Id(recompensaId, usuarioId)
-                .orElseThrow(() -> new BusinessException("Este usuario no tiene esa recompensa"));
-        usuarioRecompensa.setReclamada(true);
-        return toUsuarioRecompensaResponse(usuarioRecompensaRepository.save(usuarioRecompensa));
-    }
-
     @Transactional
     public void evaluarLogros(Usuario usuario) {
         for (Logro logro : logroRepository.findAll()) {
@@ -254,16 +233,5 @@ public class LogroService {
                 usuarioLogro.getProgreso(),
                 usuarioLogro.getObtenido(),
                 usuarioLogro.getFechaObtencion());
-    }
-
-    private UsuarioRecompensaResponse toUsuarioRecompensaResponse(UsuarioRecompensa usuarioRecompensa) {
-        Recompensa recompensa = usuarioRecompensa.getRecompensa();
-        return new UsuarioRecompensaResponse(
-                recompensa.getId(),
-                recompensa.getLogro().getId(),
-                recompensa.getDescripcion(),
-                recompensa.getTipo(),
-                usuarioRecompensa.getReclamada(),
-                usuarioRecompensa.getFecha());
     }
 }
