@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.OptionalDouble;
 
 @Service
 @RequiredArgsConstructor
@@ -104,11 +105,10 @@ public class SetupService {
 
     @Transactional
     public void recalcularPromedio(Setup setup) {
-        Double promedio = setupCalificacionRepository.findBySetup_Id(setup.getId()).stream()
+        OptionalDouble promedio = setupCalificacionRepository.findBySetup_Id(setup.getId()).stream()
                 .mapToDouble(calificacion -> calificacion.getPuntaje())
-                .average()
-                .orElse(null);
-        setup.setPromedioCalificacion(promedio);
+                .average();
+        setup.setPromedioCalificacion(promedio.isPresent() ? promedio.getAsDouble() : null);
         setupRepository.save(setup);
     }
 
