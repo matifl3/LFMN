@@ -1,0 +1,122 @@
+@if (cargando()) {
+  <div class="centered">
+    <mat-progress-spinner diameter="40" mode="indeterminate"></mat-progress-spinner>
+  </div>
+} @else if (carrera()) {
+  <a mat-button class="back" routerLink="/carreras">
+    <mat-icon>arrow_back</mat-icon>
+    Volver a carreras
+  </a>
+
+  <mat-card class="detail-card">
+    <mat-card-header>
+      <mat-card-title>{{ carrera()!.nombre }}</mat-card-title>
+      <mat-card-subtitle>
+        {{ carrera()!.fecha | date: 'dd/MM/yyyy HH:mm' }} - {{ carrera()!.circuito }}
+      </mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <mat-chip-set aria-label="Carrera">
+        <mat-chip>{{ carrera()!.categoriaNombre }}</mat-chip>
+        <mat-chip>{{ carrera()!.estado }}</mat-chip>
+        <mat-chip>Inscriptos: {{ inscriptos() }}/{{ carrera()!.cupoMaximo ?? 'sin limite' }}</mat-chip>
+      </mat-chip-set>
+
+      @if (carrera()!.servidor) {
+        <p class="info">
+          <mat-icon>dns</mat-icon>
+          Servidor: {{ carrera()!.servidor }}
+          @if (miInscripcion()) {
+            <span> - Password: {{ carrera()!.contrasenaServidor }}</span>
+          }
+        </p>
+      }
+
+      @if (carrera()!.archivoId) {
+        <p class="info">
+          <mat-icon>folder</mat-icon>
+          <a [href]="'/api/archivos/' + carrera()!.archivoId + '/descargar'">
+            Descargar archivo: {{ carrera()!.archivoNombre }}
+          </a>
+        </p>
+      }
+    </mat-card-content>
+
+    <mat-card-actions class="actions">
+      @if (estaLogueado()) {
+        @if (!miInscripcion()) {
+          <button
+            mat-raised-button
+            color="primary"
+            [disabled]="!abierta() || cargandoAccion()"
+            (click)="inscribirse()"
+          >
+            Inscribirme
+          </button>
+          @if (!abierta() && !esFinalizada()) {
+            <span class="hint">Las inscripciones estan cerradas</span>
+          }
+        } @else {
+          <button mat-raised-button [disabled]="cargandoAccion()" (click)="bajarse()">
+            Bajarme de la carrera
+          </button>
+          <mat-chip class="mi-estado" [highlighted]="miInscripcion()!.estado === ESTADO_INSCRIPTO">
+            {{ miInscripcion()!.estado }}
+          </mat-chip>
+        }
+      } @else {
+        <a mat-raised-button color="primary" routerLink="/login">Inicia sesion para inscribirte</a>
+      }
+    </mat-card-actions>
+  </mat-card>
+
+  @if (esFinalizada()) {
+    <mat-card class="results-card">
+      <mat-card-header>
+        <mat-card-title>Resultados</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="table-wrap">
+          <table mat-table [dataSource]="resultados()" class="results-table">
+            <ng-container matColumnDef="posicion">
+              <th mat-header-cell *matHeaderCellDef>Pos</th>
+              <td mat-cell *matCellDef="let r">{{ r.posicionFinal }}</td>
+            </ng-container>
+            <ng-container matColumnDef="piloto">
+              <th mat-header-cell *matHeaderCellDef>Piloto</th>
+              <td mat-cell *matCellDef="let r">{{ nombrePiloto(r.usuarioId) }}</td>
+            </ng-container>
+            <ng-container matColumnDef="tiempo">
+              <th mat-header-cell *matHeaderCellDef>Tiempo</th>
+              <td mat-cell *matCellDef="let r">{{ formatTiempo(r.tiempoTotal) }}</td>
+            </ng-container>
+            <ng-container matColumnDef="vuelta">
+              <th mat-header-cell *matHeaderCellDef>Vuelta rapida</th>
+              <td mat-cell *matCellDef="let r">{{ r.vueltaRapida ? formatTiempo(r.vueltaRapida) : '-' }}</td>
+            </ng-container>
+            <ng-container matColumnDef="elo">
+              <th mat-header-cell *matHeaderCellDef>Elo</th>
+              <td mat-cell *matCellDef="let r">
+                <span [class.pos]="(r.eloGanado ?? 0) > 0" [class.neg]="(r.eloGanado ?? 0) < 0">
+                  {{ r.eloGanado ?? 0 > 0 ? '+' : '' }}{{ r.eloGanado ?? 0 }}
+                </span>
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="sr">
+              <th mat-header-cell *matHeaderCellDef>SR</th>
+              <td mat-cell *matCellDef="let r">
+                <span [class.pos]="(r.srGanado ?? 0) > 0" [class.neg]="(r.srGanado ?? 0) < 0">
+                  {{ r.srGanado ?? 0 > 0 ? '+' : '' }}{{ r.srGanado ?? 0 }}
+                </span>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="columnas"></tr>
+            <tr mat-row *matRowDef="let row; columns: columnas"></tr>
+          </table>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  }
+}

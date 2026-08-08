@@ -1,0 +1,68 @@
+<div class="page-header">
+  <h2>Carreras</h2>
+</div>
+
+@if (cargando()) {
+  <div class="centered">
+    <mat-progress-spinner diameter="40" mode="indeterminate"></mat-progress-spinner>
+  </div>
+} @else {
+  <mat-tab-group animationDuration="200ms">
+    <mat-tab label="Proximas">
+      <div class="cards">
+        @for (carrera of proximas(); track carrera.id) {
+          <mat-card class="race-card">
+            <mat-card-header>
+              <mat-card-title>{{ carrera.nombre }}</mat-card-title>
+              <mat-card-subtitle>
+                {{ carrera.fecha | date: 'dd/MM/yyyy HH:mm' }} - {{ carrera.circuito }}
+              </mat-card-subtitle>
+            </mat-card-header>
+            <mat-card-content>
+              <p class="meta">
+                <mat-icon>category</mat-icon> {{ carrera.categoriaNombre }}
+                <mat-icon>person</mat-icon> Cupo: {{ carrera.cupoMaximo ?? 'sin limite' }}
+              </p>
+              @if (abierta(carrera)) {
+                <span class="badge badge-open">Inscripciones abiertas</span>
+              } @else {
+                <span class="badge">{{ carrera.estado }}</span>
+              }
+            </mat-card-content>
+            <mat-card-actions>
+              <a mat-button color="primary" [routerLink]="['/carreras', carrera.id]">Ver detalle</a>
+            </mat-card-actions>
+          </mat-card>
+        } @empty {
+          <p class="empty">No hay carreras proximas.</p>
+        }
+      </div>
+    </mat-tab>
+
+    <mat-tab label="Pasadas">
+      <div class="cards">
+        @for (carrera of pasadas(); track carrera.id) {
+          <mat-card class="race-card">
+            <mat-card-header>
+              <mat-card-title>{{ carrera.nombre }}</mat-card-title>
+              <mat-card-subtitle>
+                {{ carrera.fecha | date: 'dd/MM/yyyy HH:mm' }} - {{ carrera.circuito }}
+              </mat-card-subtitle>
+            </mat-card-header>
+            <mat-card-content>
+              <p class="meta">
+                <mat-icon>category</mat-icon> {{ carrera.categoriaNombre }}
+              </p>
+              <span class="badge">{{ carrera.estado }}</span>
+            </mat-card-content>
+            <mat-card-actions>
+              <a mat-button color="primary" [routerLink]="['/carreras', carrera.id]">Resultados</a>
+            </mat-card-actions>
+          </mat-card>
+        } @empty {
+          <p class="empty">No hay carreras pasadas.</p>
+        }
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+}

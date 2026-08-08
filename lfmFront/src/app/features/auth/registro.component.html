@@ -1,0 +1,72 @@
+<div class="auth-page">
+  <mat-card class="auth-card">
+    <mat-card-header>
+      <mat-card-title>Registrate</mat-card-title>
+      <mat-card-subtitle>Crea tu cuenta de piloto</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <form [formGroup]="form" (ngSubmit)="submit()" class="auth-form">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Nombre de piloto</mat-label>
+          <input matInput formControlName="nombrePiloto" autocomplete="nickname" />
+          @if (form.controls.nombrePiloto.hasError('required')) {
+            <mat-error>El nombre es obligatorio</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Email</mat-label>
+          <input matInput type="email" formControlName="email" autocomplete="email" />
+          @if (form.controls.email.hasError('required')) {
+            <mat-error>El email es obligatorio</mat-error>
+          } @else if (form.controls.email.hasError('email')) {
+            <mat-error>Email invalido</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Contrasena</mat-label>
+          <input
+            matInput
+            [type]="ocultarPassword ? 'password' : 'text'"
+            formControlName="password"
+            autocomplete="new-password"
+          />
+          <button
+            mat-icon-button
+            matSuffix
+            type="button"
+            (click)="ocultarPassword = !ocultarPassword"
+            aria-label="Mostrar contrasena"
+          >
+            <mat-icon>{{ ocultarPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+          </button>
+          @if (form.controls.password.hasError('required')) {
+            <mat-error>La contrasena es obligatoria</mat-error>
+          } @else if (form.controls.password.hasError('minlength')) {
+            <mat-error>Minimo 6 caracteres</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>GUID de Steam (opcional)</mat-label>
+          <input matInput formControlName="guidSteam" />
+        </mat-form-field>
+
+        @if (cargando()) {
+          <mat-progress-spinner diameter="28" mode="indeterminate"></mat-progress-spinner>
+        }
+
+        <button mat-raised-button color="primary" type="submit" class="full-width" [disabled]="cargando()">
+          Crear cuenta
+        </button>
+      </form>
+    </mat-card-content>
+
+    <mat-card-actions align="end">
+      <span class="auth-alt">Ya tenes cuenta?</span>
+      <a mat-button color="primary" routerLink="/login">Inicia sesion</a>
+    </mat-card-actions>
+  </mat-card>
+</div>

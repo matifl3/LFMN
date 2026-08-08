@@ -1,0 +1,120 @@
+<mat-card>
+  <mat-card-header>
+    <mat-card-title>Carreras</mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <form [formGroup]="form" (ngSubmit)="guardar()" class="form">
+      <div class="form-row">
+        <mat-form-field appearance="outline">
+          <mat-label>Nombre</mat-label>
+          <input matInput formControlName="nombre" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Fecha y hora</mat-label>
+          <input matInput formControlName="fecha" placeholder="dd/mm/aaaa hh:mm" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Circuito</mat-label>
+          <input matInput formControlName="circuito" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Categoria</mat-label>
+          <mat-select formControlName="categoriaId">
+            @for (categoria of categorias(); track categoria.id) {
+              <mat-option [value]="categoria.id">{{ categoria.nombre }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      </div>
+      <div class="form-row">
+        <mat-form-field appearance="outline">
+          <mat-label>Estado</mat-label>
+          <mat-select formControlName="estado">
+            @for (estado of estados; track estado) {
+              <mat-option [value]="estado">{{ estado }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Cupo maximo</mat-label>
+          <input matInput type="number" formControlName="cupoMaximo" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Servidor</mat-label>
+          <input matInput formControlName="servidor" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Contrasena del servidor</mat-label>
+          <input matInput formControlName="contrasenaServidor" />
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Archivo</mat-label>
+          <mat-select formControlName="archivoId">
+            <mat-option [value]="null">Sin archivo</mat-option>
+            @for (archivo of archivos(); track archivo.id) {
+              <mat-option [value]="archivo.id">{{ archivo.nombre }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      </div>
+      <div class="acciones-form">
+        <button mat-raised-button color="primary" type="submit" [disabled]="form.invalid || guardando()">
+          {{ editandoId() !== null ? 'Guardar cambios' : 'Crear carrera' }}
+        </button>
+        @if (editandoId() !== null) {
+          <button mat-stroked-button type="button" (click)="cancelarEdicion()">Cancelar</button>
+        }
+      </div>
+    </form>
+
+    @if (cargando()) {
+      <div class="centered">
+        <mat-progress-spinner diameter="40" mode="indeterminate"></mat-progress-spinner>
+      </div>
+    } @else {
+      <div class="table-wrap">
+        <table mat-table [dataSource]="carreras()">
+          <ng-container matColumnDef="nombre">
+            <th mat-header-cell *matHeaderCellDef>Nombre</th>
+            <td mat-cell *matCellDef="let c">{{ c.nombre }}</td>
+          </ng-container>
+          <ng-container matColumnDef="fecha">
+            <th mat-header-cell *matHeaderCellDef>Fecha</th>
+            <td mat-cell *matCellDef="let c">{{ c.fecha | date: 'dd/MM/yyyy HH:mm' }}</td>
+          </ng-container>
+          <ng-container matColumnDef="categoria">
+            <th mat-header-cell *matHeaderCellDef>Categoria</th>
+            <td mat-cell *matCellDef="let c">{{ c.categoriaNombre }}</td>
+          </ng-container>
+          <ng-container matColumnDef="estado">
+            <th mat-header-cell *matHeaderCellDef>Estado</th>
+            <td mat-cell *matCellDef="let c">
+              <mat-select [value]="c.estado" (selectionChange)="cambiarEstado(c, $event.value)" class="rol-select">
+                @for (estado of estados; track estado) {
+                  <mat-option [value]="estado">{{ estado }}</mat-option>
+                }
+              </mat-select>
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="acciones">
+            <th mat-header-cell *matHeaderCellDef></th>
+            <td mat-cell *matCellDef="let c">
+              <button mat-icon-button (click)="editar(c)" aria-label="Editar">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button mat-icon-button color="warn" (click)="cancelar(c)" aria-label="Cancelar" title="Cancelar carrera">
+                <mat-icon>block</mat-icon>
+              </button>
+              <button mat-icon-button color="warn" (click)="eliminar(c)" aria-label="Eliminar">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="columnas"></tr>
+          <tr mat-row *matRowDef="let row; columns: columnas"></tr>
+        </table>
+      </div>
+    }
+  </mat-card-content>
+</mat-card>
