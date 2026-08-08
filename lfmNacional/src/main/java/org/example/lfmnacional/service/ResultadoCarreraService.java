@@ -37,6 +37,7 @@ public class ResultadoCarreraService {
     private final CarreraService carreraService;
     private final UsuarioService usuarioService;
     private final CampeonatoService campeonatoService;
+    private final LogroService logroService;
     private final EloCalculator eloCalculator;
     private final SrCalculator srCalculator;
 
@@ -90,6 +91,9 @@ public class ResultadoCarreraService {
 
         recalcularEloYSafetyRating(carrera, resultados);
         campeonatoService.actualizarPuntos(carrera, resultados);
+        for (ResultadoCarrera resultado : resultados) {
+            logroService.evaluarLogros(resultado.getUsuario());
+        }
         return resultados.stream().map(this::toResponse).toList();
     }
 

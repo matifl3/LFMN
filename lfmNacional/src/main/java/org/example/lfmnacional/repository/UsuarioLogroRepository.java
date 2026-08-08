@@ -13,4 +13,6 @@ public interface UsuarioLogroRepository extends JpaRepository<UsuarioLogro, Long
     List<UsuarioLogro> findByUsuario_IdOrderByLogro_Id(Long usuarioId);
 
     List<UsuarioLogro> findByUsuario_IdAndObtenidoTrue(Long usuarioId);
+
+    void deleteByLogro_Id(Long logroId);
 }

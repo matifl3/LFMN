@@ -13,4 +13,6 @@ public interface UsuarioRecompensaRepository extends JpaRepository<UsuarioRecomp
     List<UsuarioRecompensa> findByUsuario_Id(Long usuarioId);
 
     List<UsuarioRecompensa> findByUsuario_IdAndReclamadaFalse(Long usuarioId);
+
+    void deleteByRecompensa_Id(Long recompensaId);
 }

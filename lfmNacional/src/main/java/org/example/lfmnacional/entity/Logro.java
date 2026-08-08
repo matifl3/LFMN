@@ -37,6 +37,6 @@ public class Logro {
     @Column(length = 255)
     private String icono;
 
-    @OneToMany(mappedBy = "logro")
+    @OneToMany(mappedBy = "logro", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Recompensa> recompensas = new ArrayList<>();
 }
