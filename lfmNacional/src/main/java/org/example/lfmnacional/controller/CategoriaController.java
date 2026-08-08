@@ -7,6 +7,7 @@ import org.example.lfmnacional.dto.categoria.CategoriaResponse;
 import org.example.lfmnacional.service.CategoriaService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -34,16 +35,19 @@ public class CategoriaController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<CategoriaResponse> create(@Valid @RequestBody CategoriaRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(categoriaService.create(request));
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public CategoriaResponse update(@PathVariable Long id, @Valid @RequestBody CategoriaRequest request) {
         return categoriaService.update(id, request);
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         categoriaService.delete(id);
         return ResponseEntity.noContent().build();

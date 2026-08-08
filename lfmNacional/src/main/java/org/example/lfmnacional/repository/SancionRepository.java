@@ -18,4 +18,6 @@ public interface SancionRepository extends JpaRepository<Sancion, Long> {
     Optional<Sancion> findByOrigenAndIdExterno(OrigenSancion origen, String idExterno);
 
     boolean existsByOrigenAndIdExterno(OrigenSancion origen, String idExterno);
+
+    boolean existsByCarrera_Id(Long carreraId);
 }

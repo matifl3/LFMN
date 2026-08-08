@@ -14,6 +14,7 @@ public record CarreraRequest(
         EstadoCarrera estado,
         Integer cupoMaximo,
         String servidor,
-        String contrasenaServidor
+        String contrasenaServidor,
+        Long archivoId
 ) {
 }

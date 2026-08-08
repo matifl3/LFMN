@@ -52,10 +52,16 @@ public class Sancion {
     @Column(nullable = false)
     private LocalDateTime fecha;
 
+    @Column(name = "efectos_aplicados", nullable = false)
+    private Boolean efectosAplicados = true;
+
     @PrePersist
     public void prePersist() {
         if (fecha == null) {
             fecha = LocalDateTime.now();
+        }
+        if (efectosAplicados == null) {
+            efectosAplicados = true;
         }
     }
 }

@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -25,6 +26,7 @@ public class SancionService {
     private final SafetyRatingSancionRepository safetyRatingSancionRepository;
     private final ResultadoCarreraRepository resultadoCarreraRepository;
     private final NotificacionRepository notificacionRepository;
+    private final ApelacionRepository apelacionRepository;
     private final UsuarioRepository usuarioRepository;
     private final UsuarioService usuarioService;
     private final CarreraService carreraService;
@@ -63,20 +65,47 @@ public class SancionService {
     @Transactional
     public SancionResponse update(Long id, SancionRequest request) {
         Sancion sancion = getEntity(id);
-        sancion.setUsuario(usuarioService.getEntity(request.usuarioId()));
-        sancion.setCarrera(request.carreraId() != null ? carreraService.getEntity(request.carreraId()) : null);
+        Usuario nuevoUsuario = usuarioService.getEntity(request.usuarioId());
+        Carrera nuevaCarrera = request.carreraId() != null ? carreraService.getEntity(request.carreraId()) : null;
+
+        boolean afectaEfectos = sancion.getTipo() != request.tipo()
+                || !Objects.equals(sancion.getValor(), request.valor())
+                || !Objects.equals(sancion.getUsuario().getId(), nuevoUsuario.getId())
+                || !Objects.equals(
+                        sancion.getCarrera() != null ? sancion.getCarrera().getId() : null,
+                        request.carreraId());
+        if (afectaEfectos) {
+            revertirEfectos(sancion);
+        }
+
+        sancion.setUsuario(nuevoUsuario);
+        sancion.setCarrera(nuevaCarrera);
         sancion.setTipo(request.tipo());
         sancion.setValor(request.valor());
         sancion.setMotivo(request.motivo());
         sancion.setOrigen(request.origen());
         sancion.setIdExterno(request.idExterno());
         sancion.setFecha(request.fecha() != null ? request.fecha() : sancion.getFecha());
-        return toResponse(sancionRepository.save(sancion));
+        sancion = sancionRepository.save(sancion);
+
+        if (afectaEfectos) {
+            aplicarEfectos(sancion);
+        }
+        return toResponse(sancion);
     }
 
     @Transactional
     public void delete(Long id) {
-        sancionRepository.delete(getEntity(id));
+        Sancion sancion = getEntity(id);
+        if (apelacionRepository.existsBySancion_Id(id)) {
+            throw new BusinessException("No se puede eliminar la sancion porque tiene apelaciones asociadas");
+        }
+        if (sancion.getResolucion() != null) {
+            throw new BusinessException(
+                    "No se puede eliminar la sancion porque esta asociada a una resolucion de incidente");
+        }
+        revertirEfectos(sancion);
+        sancionRepository.delete(sancion);
     }
 
     private Sancion buildSancion(SancionRequest request) {
@@ -95,6 +124,7 @@ public class SancionService {
     }
 
     private void aplicarEfectos(Sancion sancion) {
+        sancion.setEfectosAplicados(true);
         switch (sancion.getTipo()) {
             case ELO -> aplicarCambioElo(sancion.getUsuario(), sancion.getValor(),
                     sancion.getMotivo(), sancion.getCarrera());
@@ -105,6 +135,22 @@ public class SancionService {
             default -> {
             }
         }
+    }
+
+    public void revertirEfectos(Sancion sancion) {
+        if (!Boolean.TRUE.equals(sancion.getEfectosAplicados())) {
+            return;
+        }
+        switch (sancion.getTipo()) {
+            case ELO -> revertirCambioElo(sancion.getUsuario(), sancion.getValor(), sancion);
+            case SAFETY_RATING -> revertirCambioSafetyRating(sancion.getUsuario(), sancion.getValor(), sancion);
+            case PUESTOS -> revertirPerdidaPuestos(sancion);
+            case SEGUNDOS -> revertirSegundos(sancion);
+            default -> {
+            }
+        }
+        sancion.setEfectosAplicados(false);
+        sancionRepository.save(sancion);
     }
 
     private void aplicarCambioElo(Usuario usuario, Integer cambio, String motivo, Carrera carrera) {
@@ -153,6 +199,58 @@ public class SancionService {
                 .orElseThrow(() -> new BusinessException(
                         "El usuario no tiene resultado en la carrera indicada"));
         resultado.setTiempoTotal(resultado.getTiempoTotal() + sancion.getValor() * 1000L);
+        resultadoCarreraRepository.save(resultado);
+        reordenarResultados(sancion.getCarrera().getId());
+    }
+
+    private void revertirCambioElo(Usuario usuario, Integer cambio, Sancion sancion) {
+        int valor = cambio != null ? cambio : 0;
+        usuario.setElo(usuario.getElo() - valor);
+        usuarioRepository.save(usuario);
+        eloSancionRepository.save(EloSancion.builder()
+                .usuario(usuario)
+                .cambio(-valor)
+                .motivo("Reversion de sancion " + sancion.getId() + ": "
+                        + (sancion.getMotivo() != null ? sancion.getMotivo() : "sancion"))
+                .carrera(sancion.getCarrera())
+                .build());
+    }
+
+    private void revertirCambioSafetyRating(Usuario usuario, Integer cambio, Sancion sancion) {
+        int valor = cambio != null ? cambio : 0;
+        usuario.setSafetyRating(usuario.getSafetyRating() - valor);
+        usuarioRepository.save(usuario);
+        safetyRatingSancionRepository.save(SafetyRatingSancion.builder()
+                .usuario(usuario)
+                .cambio(-valor)
+                .motivo("Reversion de sancion " + sancion.getId() + ": "
+                        + (sancion.getMotivo() != null ? sancion.getMotivo() : "sancion"))
+                .carrera(sancion.getCarrera())
+                .build());
+    }
+
+    private void revertirPerdidaPuestos(Sancion sancion) {
+        if (sancion.getCarrera() == null || sancion.getValor() == null) {
+            return;
+        }
+        ResultadoCarrera resultado = resultadoCarreraRepository
+                .findByCarrera_IdAndUsuario_Id(sancion.getCarrera().getId(), sancion.getUsuario().getId())
+                .orElseThrow(() -> new BusinessException(
+                        "El usuario no tiene resultado en la carrera indicada"));
+        resultado.setPosicionFinal(resultado.getPosicionFinal() - sancion.getValor());
+        resultadoCarreraRepository.save(resultado);
+        reordenarResultados(sancion.getCarrera().getId());
+    }
+
+    private void revertirSegundos(Sancion sancion) {
+        if (sancion.getCarrera() == null || sancion.getValor() == null) {
+            return;
+        }
+        ResultadoCarrera resultado = resultadoCarreraRepository
+                .findByCarrera_IdAndUsuario_Id(sancion.getCarrera().getId(), sancion.getUsuario().getId())
+                .orElseThrow(() -> new BusinessException(
+                        "El usuario no tiene resultado en la carrera indicada"));
+        resultado.setTiempoTotal(resultado.getTiempoTotal() - sancion.getValor() * 1000L);
         resultadoCarreraRepository.save(resultado);
         reordenarResultados(sancion.getCarrera().getId());
     }

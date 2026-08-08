@@ -11,4 +11,6 @@ public interface CampeonatoPosicionRepository extends JpaRepository<CampeonatoPo
     List<CampeonatoPosicion> findByCampeonato_IdOrderByPuntosDesc(Long campeonatoId);
 
     Optional<CampeonatoPosicion> findByCampeonato_IdAndUsuario_Id(Long campeonatoId, Long usuarioId);
+
+    boolean existsByCampeonato_Id(Long campeonatoId);
 }

@@ -15,4 +15,6 @@ public interface IncidenteRepository extends JpaRepository<Incidente, Long> {
     List<Incidente> findByReportante_Id(Long reportanteId);
 
     List<Incidente> findByEstadoOrderByEstadoAsc(EstadoIncidente estado);
+
+    boolean existsByCarrera_Id(Long carreraId);
 }

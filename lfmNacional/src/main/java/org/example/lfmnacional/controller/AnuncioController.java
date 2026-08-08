@@ -7,6 +7,7 @@ import org.example.lfmnacional.dto.anuncio.AnuncioResponse;
 import org.example.lfmnacional.service.AnuncioService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -34,11 +35,13 @@ public class AnuncioController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<AnuncioResponse> create(@Valid @RequestBody AnuncioRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(anuncioService.create(request));
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         anuncioService.delete(id);
         return ResponseEntity.noContent().build();

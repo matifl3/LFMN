@@ -9,6 +9,7 @@ import org.example.lfmnacional.entity.CampeonatoPosicion;
 import org.example.lfmnacional.entity.Carrera;
 import org.example.lfmnacional.entity.ResultadoCarrera;
 import org.example.lfmnacional.enums.EstadoCampeonato;
+import org.example.lfmnacional.exception.BusinessException;
 import org.example.lfmnacional.exception.ResourceNotFoundException;
 import org.example.lfmnacional.repository.CampeonatoPosicionRepository;
 import org.example.lfmnacional.repository.CampeonatoRepository;
@@ -81,7 +82,13 @@ public class CampeonatoService {
 
     @Transactional
     public void delete(Long id) {
-        campeonatoRepository.delete(getEntity(id));
+        Campeonato campeonato = getEntity(id);
+        if (campeonatoPosicionRepository.existsByCampeonato_Id(id)) {
+            throw new BusinessException(
+                    "No se puede eliminar el campeonato '" + campeonato.getNombre()
+                            + "' porque ya tiene posiciones calculadas en la tabla de puntos");
+        }
+        campeonatoRepository.delete(campeonato);
     }
 
     @Transactional(readOnly = true)

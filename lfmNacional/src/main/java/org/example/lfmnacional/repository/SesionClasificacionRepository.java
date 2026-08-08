@@ -13,4 +13,6 @@ public interface SesionClasificacionRepository extends JpaRepository<SesionClasi
     List<SesionClasificacion> findByUsuario_IdOrderByTiempoAsc(Long usuarioId);
 
     Optional<SesionClasificacion> findByCarrera_IdAndUsuario_Id(Long carreraId, Long usuarioId);
+
+    boolean existsByCarrera_Id(Long carreraId);
 }

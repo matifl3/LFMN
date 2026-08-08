@@ -5,6 +5,7 @@ import org.example.lfmnacional.dto.sesion.SesionServerData;
 import org.example.lfmnacional.service.SesionServidorService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -17,6 +18,7 @@ public class SesionServidorController {
     private final SesionServidorService sesionServidorService;
 
     @PostMapping("/importar")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('COMISARIO')")
     public ResponseEntity<Map<String, Object>> importar(@RequestParam Long carreraId,
                                                         @RequestBody SesionServerData sesion) {
         String tipo = sesionServidorService.importarSesion(carreraId, sesion);

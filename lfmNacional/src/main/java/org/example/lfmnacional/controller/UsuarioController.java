@@ -7,6 +7,7 @@ import org.example.lfmnacional.enums.Rol;
 import org.example.lfmnacional.service.UsuarioService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -24,7 +25,7 @@ public class UsuarioController {
     }
 
     @PostMapping("/login")
-    public UsuarioResponse login(@Valid @RequestBody LoginRequest request) {
+    public LoginResponse login(@Valid @RequestBody LoginRequest request) {
         return usuarioService.login(request);
     }
 
@@ -59,11 +60,13 @@ public class UsuarioController {
     }
 
     @PutMapping("/{id}/rol")
+    @PreAuthorize("hasRole('ADMIN')")
     public UsuarioResponse changeRol(@PathVariable Long id, @RequestParam Rol rol) {
         return usuarioService.changeRol(id, rol);
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         usuarioService.delete(id);
         return ResponseEntity.noContent().build();

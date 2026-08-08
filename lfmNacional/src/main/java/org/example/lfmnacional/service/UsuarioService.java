@@ -12,6 +12,7 @@ import org.example.lfmnacional.repository.EloSancionRepository;
 import org.example.lfmnacional.repository.ResultadoCarreraRepository;
 import org.example.lfmnacional.repository.SafetyRatingSancionRepository;
 import org.example.lfmnacional.repository.UsuarioRepository;
+import org.example.lfmnacional.security.JwtUtil;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,6 +30,7 @@ public class UsuarioService {
     private final SafetyRatingSancionRepository safetyRatingSancionRepository;
     private final ResultadoCarreraRepository resultadoCarreraRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtUtil jwtUtil;
 
     @Transactional
     public UsuarioResponse registrar(UsuarioRequest request) {
@@ -48,13 +50,13 @@ public class UsuarioService {
         return toResponse(usuarioRepository.save(usuario));
     }
 
-    public UsuarioResponse login(LoginRequest request) {
+    public LoginResponse login(LoginRequest request) {
         Usuario usuario = usuarioRepository.findByEmail(request.email())
                 .orElseThrow(() -> new BusinessException("Email o contrasena invalidos"));
         if (!passwordEncoder.matches(request.password(), usuario.getPassword())) {
             throw new BusinessException("Email o contrasena invalidos");
         }
-        return toResponse(usuario);
+        return new LoginResponse(jwtUtil.generarToken(usuario), toResponse(usuario));
     }
 
     public Usuario getEntity(Long id) {

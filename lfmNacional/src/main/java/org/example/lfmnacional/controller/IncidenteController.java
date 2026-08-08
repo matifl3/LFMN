@@ -7,6 +7,7 @@ import org.example.lfmnacional.enums.EstadoIncidente;
 import org.example.lfmnacional.service.IncidenteService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,6 +20,7 @@ public class IncidenteController {
     private final IncidenteService incidenteService;
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN') or hasRole('COMISARIO')")
     public ResponseEntity<IncidenteResponse> reportar(@Valid @RequestBody IncidenteRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(incidenteService.reportar(request));
     }
@@ -64,6 +66,7 @@ public class IncidenteController {
     }
 
     @PostMapping("/{id}/pilotos")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('COMISARIO')")
     public List<IncidentePilotoResponse> asignarPilotos(
             @PathVariable Long id,
             @Valid @RequestBody List<IncidentePilotoRequest> pilotos) {
@@ -71,11 +74,13 @@ public class IncidenteController {
     }
 
     @PostMapping("/{id}/votos")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('COMISARIO')")
     public VotoResponse votar(@PathVariable Long id, @Valid @RequestBody VotoRequest request) {
         return incidenteService.votar(id, request);
     }
 
     @PostMapping("/{id}/resolucion")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('COMISARIO')")
     public ResponseEntity<ResolucionResponse> guardarResolucion(
             @PathVariable Long id,
             @Valid @RequestBody ResolucionRequest request) {

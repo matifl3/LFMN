@@ -7,6 +7,7 @@ import org.example.lfmnacional.dto.resultado.ResultadoCarreraResponse;
 import org.example.lfmnacional.service.ResultadoCarreraService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,6 +20,7 @@ public class ResultadoCarreraController {
     private final ResultadoCarreraService resultadoCarreraService;
 
     @PostMapping("/cargar")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('COMISARIO')")
     public ResponseEntity<List<ResultadoCarreraResponse>> cargarResultados(
             @Valid @RequestBody CargarResultadosRequest request) {
         List<ResultadoCarreraResponse> respuestas = resultadoCarreraService.cargarResultados(request);

@@ -21,4 +21,6 @@ public interface ApelacionRepository extends JpaRepository<Apelacion, Long> {
     List<Apelacion> findByEstado(EstadoApelacion estado);
 
     boolean existsBySancion_IdAndUsuario_Id(Long sancionId, Long usuarioId);
+
+    boolean existsBySancion_Id(Long sancionId);
 }

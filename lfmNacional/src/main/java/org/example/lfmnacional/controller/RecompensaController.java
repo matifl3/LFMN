@@ -8,6 +8,7 @@ import org.example.lfmnacional.dto.logro.UsuarioRecompensaResponse;
 import org.example.lfmnacional.service.RecompensaService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -40,6 +41,7 @@ public class RecompensaController {
     }
 
     @PostMapping("/logro/{logroId}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<RecompensaResponse> create(
             @PathVariable Long logroId,
             @Valid @RequestBody RecompensaRequest request) {
@@ -47,11 +49,13 @@ public class RecompensaController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public RecompensaResponse update(@PathVariable Long id, @Valid @RequestBody RecompensaRequest request) {
         return recompensaService.update(id, request);
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         recompensaService.delete(id);
         return ResponseEntity.noContent().build();

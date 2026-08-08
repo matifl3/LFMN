@@ -8,6 +8,12 @@ import org.example.lfmnacional.enums.EstadoCarrera;
 import org.example.lfmnacional.exception.BusinessException;
 import org.example.lfmnacional.exception.ResourceNotFoundException;
 import org.example.lfmnacional.repository.CarreraRepository;
+import org.example.lfmnacional.repository.IncidenteRepository;
+import org.example.lfmnacional.repository.InscripcionRepository;
+import org.example.lfmnacional.repository.ResultadoCarreraRepository;
+import org.example.lfmnacional.repository.SancionRepository;
+import org.example.lfmnacional.repository.SesionClasificacionRepository;
+import org.example.lfmnacional.repository.SesionProcesadaRepository;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,6 +30,13 @@ public class CarreraService {
 
     private final CarreraRepository carreraRepository;
     private final CategoriaService categoriaService;
+    private final ArchivoCarreraService archivoCarreraService;
+    private final InscripcionRepository inscripcionRepository;
+    private final ResultadoCarreraRepository resultadoCarreraRepository;
+    private final IncidenteRepository incidenteRepository;
+    private final SesionClasificacionRepository sesionClasificacionRepository;
+    private final SesionProcesadaRepository sesionProcesadaRepository;
+    private final SancionRepository sancionRepository;
 
     public Carrera getEntity(Long id) {
         return carreraRepository.findById(id)
@@ -69,6 +82,7 @@ public class CarreraService {
                 .cupoMaximo(request.cupoMaximo())
                 .servidor(request.servidor())
                 .contrasenaServidor(request.contrasenaServidor())
+                .archivo(request.archivoId() != null ? archivoCarreraService.getEntity(request.archivoId()) : null)
                 .build();
         return toResponse(carreraRepository.save(carrera));
     }
@@ -84,6 +98,23 @@ public class CarreraService {
         carrera.setCupoMaximo(request.cupoMaximo());
         carrera.setServidor(request.servidor());
         carrera.setContrasenaServidor(request.contrasenaServidor());
+        if (request.archivoId() != null) {
+            carrera.setArchivo(archivoCarreraService.getEntity(request.archivoId()));
+        }
+        return toResponse(carreraRepository.save(carrera));
+    }
+
+    @Transactional
+    public CarreraResponse vincularArchivo(Long id, Long archivoId) {
+        Carrera carrera = getEntity(id);
+        carrera.setArchivo(archivoCarreraService.getEntity(archivoId));
+        return toResponse(carreraRepository.save(carrera));
+    }
+
+    @Transactional
+    public CarreraResponse desvincularArchivo(Long id) {
+        Carrera carrera = getEntity(id);
+        carrera.setArchivo(null);
         return toResponse(carreraRepository.save(carrera));
     }
 
@@ -101,7 +132,32 @@ public class CarreraService {
 
     @Transactional
     public void delete(Long id) {
-        carreraRepository.delete(getEntity(id));
+        Carrera carrera = getEntity(id);
+        List<String> dependencias = new ArrayList<>();
+        if (inscripcionRepository.existsByCarrera_Id(id)) {
+            dependencias.add("inscripciones");
+        }
+        if (resultadoCarreraRepository.existsByCarrera_Id(id)) {
+            dependencias.add("resultados");
+        }
+        if (incidenteRepository.existsByCarrera_Id(id)) {
+            dependencias.add("incidentes");
+        }
+        if (sesionClasificacionRepository.existsByCarrera_Id(id)) {
+            dependencias.add("sesiones de clasificacion");
+        }
+        if (sesionProcesadaRepository.existsByCarrera_Id(id)) {
+            dependencias.add("sesiones procesadas");
+        }
+        if (sancionRepository.existsByCarrera_Id(id)) {
+            dependencias.add("sanciones");
+        }
+        if (!dependencias.isEmpty()) {
+            throw new BusinessException(
+                    "No se puede eliminar la carrera '" + carrera.getNombre()
+                            + "' porque tiene " + String.join(", ", dependencias) + " asociadas");
+        }
+        carreraRepository.delete(carrera);
     }
 
     @Transactional

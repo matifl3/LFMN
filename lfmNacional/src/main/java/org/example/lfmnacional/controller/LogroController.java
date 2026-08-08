@@ -11,6 +11,7 @@ import org.example.lfmnacional.dto.logro.UsuarioRecompensaResponse;
 import org.example.lfmnacional.service.LogroService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -33,22 +34,26 @@ public class LogroController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<LogroResponse> create(@Valid @RequestBody LogroRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(logroService.create(request));
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public LogroResponse update(@PathVariable Long id, @Valid @RequestBody LogroRequest request) {
         return logroService.update(id, request);
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         logroService.delete(id);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{logroId}/recompensas")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<RecompensaResponse> agregarRecompensa(
             @PathVariable Long logroId,
             @Valid @RequestBody RecompensaRequest request) {
@@ -57,6 +62,7 @@ public class LogroController {
     }
 
     @DeleteMapping("/{logroId}/recompensas/{recompensaId}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> quitarRecompensa(
             @PathVariable Long logroId,
             @PathVariable Long recompensaId) {

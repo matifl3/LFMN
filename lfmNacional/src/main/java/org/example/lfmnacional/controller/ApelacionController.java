@@ -8,6 +8,7 @@ import org.example.lfmnacional.dto.apelacion.ApelacionResponse;
 import org.example.lfmnacional.service.ApelacionService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -45,11 +46,13 @@ public class ApelacionController {
     }
 
     @PutMapping("/{id}/resolucion")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('COMISARIO')")
     public ApelacionResponse resolver(@PathVariable Long id, @Valid @RequestBody ApelacionResolucionRequest request) {
         return apelacionService.resolver(id, request);
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('COMISARIO')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         apelacionService.delete(id);
         return ResponseEntity.noContent().build();

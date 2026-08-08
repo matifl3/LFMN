@@ -6,5 +6,6 @@ public enum TipoNotificacion {
     LOGRO,
     RECOMPENSA,
     ANUNCIO,
-    INCIDENTE
+    INCIDENTE,
+    APELACION
 }

@@ -6,6 +6,7 @@ import org.example.lfmnacional.dto.incidente.ResolucionResponse;
 import org.example.lfmnacional.dto.incidente.ResolucionUpdateRequest;
 import org.example.lfmnacional.service.ResolucionIncidenteService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -33,6 +34,7 @@ public class ResolucionIncidenteController {
     }
 
     @PutMapping("/{id}/explicacion")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('COMISARIO')")
     public ResolucionResponse updateExplicacion(
             @PathVariable Long id,
             @Valid @RequestBody ResolucionUpdateRequest request) {
@@ -40,6 +42,7 @@ public class ResolucionIncidenteController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('COMISARIO')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         resolucionIncidenteService.delete(id);
         return ResponseEntity.noContent().build();
