@@ -4,6 +4,7 @@ import tools.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.lfmnacional.dto.sesion.SesionServerData;
+import org.example.lfmnacional.entity.Carrera;
 import org.example.lfmnacional.service.SesionServidorService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -13,6 +14,11 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.attribute.FileTime;
+import java.time.DateTimeException;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.stream.Stream;
 
 @Slf4j
@@ -21,6 +27,7 @@ import java.util.stream.Stream;
 public class SesionFolderWatcher {
 
     private static final String EXTENSION_JSON = ".json";
+    private static final Duration MINIMA_ANTIGUEDAD = Duration.ofSeconds(3);
 
     private final SesionServidorService sesionServidorService;
     private final ObjectMapper objectMapper;
@@ -53,32 +60,56 @@ public class SesionFolderWatcher {
     private void procesarArchivo(Path archivo) {
         String nombre = archivo.getFileName().toString();
         try {
+            if (esDemasiadoReciente(archivo)) {
+                log.info("Sesion aun escribiendose, se reintentara en el proximo ciclo: {}", nombre);
+                return;
+            }
             if (sesionServidorService.yaProcesada(nombre)) {
                 log.info("Sesion ya procesada, moviendo: {}", nombre);
                 mover(archivo, procesadasDir);
                 return;
             }
-            Long carreraId = parseCarreraId(nombre);
             SesionServerData sesion = objectMapper.readValue(archivo.toFile(), SesionServerData.class);
-            String tipo = sesionServidorService.importarSesion(carreraId, sesion);
-            sesionServidorService.registrarProcesada(carreraId, nombre, tipo);
+            LocalDateTime momentoSesion = parseMomentoSesion(nombre, archivo);
+            Carrera carrera = sesionServidorService.resolverCarrera(sesion, momentoSesion);
+            String tipo = sesionServidorService.importarSesion(carrera.getId(), sesion);
+            sesionServidorService.registrarProcesada(carrera.getId(), nombre, tipo);
             mover(archivo, procesadasDir);
-            log.info("Sesion {} procesada para la carrera {}", nombre, carreraId);
+            log.info("Sesion {} procesada para la carrera {}", nombre, carrera.getId());
         } catch (Exception e) {
             log.error("Error procesando sesion {}", nombre, e);
             mover(archivo, erroresDir);
         }
     }
 
-    private Long parseCarreraId(String nombre) {
-        int guion = nombre.indexOf('_');
-        if (guion <= 0) {
-            throw new IllegalArgumentException("Nombre de archivo invalido, se espera <carreraId>_... : " + nombre);
+    private boolean esDemasiadoReciente(Path archivo) {
+        try {
+            FileTime modificado = Files.getLastModifiedTime(archivo);
+            return System.currentTimeMillis() - modificado.toMillis() < MINIMA_ANTIGUEDAD.toMillis();
+        } catch (IOException e) {
+            return true;
+        }
+    }
+
+    private LocalDateTime parseMomentoSesion(String nombre, Path archivo) {
+        String base = nombre.substring(0, nombre.lastIndexOf('.'));
+        String[] partes = base.split("_");
+        try {
+            if (partes.length >= 5) {
+                return LocalDateTime.of(
+                        Integer.parseInt(partes[0]),
+                        Integer.parseInt(partes[1]),
+                        Integer.parseInt(partes[2]),
+                        Integer.parseInt(partes[3]),
+                        Integer.parseInt(partes[4]));
+            }
+        } catch (NumberFormatException | DateTimeException ignored) {
         }
         try {
-            return Long.parseLong(nombre.substring(0, guion));
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("CarreraId invalido en nombre de archivo: " + nombre);
+            return LocalDateTime.ofInstant(
+                    Files.getLastModifiedTime(archivo).toInstant(), ZoneId.systemDefault());
+        } catch (IOException e) {
+            return LocalDateTime.now();
         }
     }
 

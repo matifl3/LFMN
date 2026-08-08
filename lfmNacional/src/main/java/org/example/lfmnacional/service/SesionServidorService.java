@@ -16,6 +16,7 @@ import org.example.lfmnacional.entity.Usuario;
 import org.example.lfmnacional.enums.EstadoIncidente;
 import org.example.lfmnacional.enums.RolPilotoIncidente;
 import org.example.lfmnacional.exception.BusinessException;
+import org.example.lfmnacional.repository.CarreraRepository;
 import org.example.lfmnacional.repository.IncidentePilotoRepository;
 import org.example.lfmnacional.repository.IncidenteRepository;
 import org.example.lfmnacional.repository.ResultadoCarreraRepository;
@@ -25,6 +26,8 @@ import org.example.lfmnacional.repository.UsuarioRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.text.Normalizer;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -40,6 +43,7 @@ public class SesionServidorService {
     private static final String SESION_RACE = "RACE";
 
     private final CarreraService carreraService;
+    private final CarreraRepository carreraRepository;
     private final UsuarioRepository usuarioRepository;
     private final ResultadoCarreraService resultadoCarreraService;
     private final ResultadoCarreraRepository resultadoCarreraRepository;
@@ -51,6 +55,38 @@ public class SesionServidorService {
     @Transactional
     public String importarSesion(Long carreraId, SesionServerData sesion) {
         Carrera carrera = carreraService.getEntity(carreraId);
+        return importar(carrera, sesion);
+    }
+
+    @Transactional(readOnly = true)
+    public Carrera resolverCarrera(SesionServerData sesion, LocalDateTime momentoSesion) {
+        if (sesion == null || sesion.trackName() == null || sesion.trackName().isBlank()) {
+            throw new BusinessException("El JSON de sesion no permite asociar una carrera (falta trackName)");
+        }
+        String track = normalizar(sesion.trackName());
+        Carrera mejor = null;
+        long menorDiferencia = Long.MAX_VALUE;
+        for (Carrera carrera : carreraRepository.findAll()) {
+            if (carrera.getCircuito() == null || carrera.getCircuito().isBlank()) {
+                continue;
+            }
+            String circuito = normalizar(carrera.getCircuito());
+            if (circuito.contains(track) || track.contains(circuito)) {
+                long diferencia = Math.abs(Duration.between(carrera.getFecha(), momentoSesion).toMinutes());
+                if (diferencia < menorDiferencia) {
+                    menorDiferencia = diferencia;
+                    mejor = carrera;
+                }
+            }
+        }
+        if (mejor == null) {
+            throw new BusinessException(
+                    "No se encontro una carrera para el circuito '" + sesion.trackName() + "'");
+        }
+        return mejor;
+    }
+
+    private String importar(Carrera carrera, SesionServerData sesion) {
         if (sesion == null) {
             throw new BusinessException("El JSON de sesion es invalido");
         }
@@ -62,6 +98,13 @@ public class SesionServidorService {
         }
         autogenerarIncidentes(carrera, sesion);
         return tipo;
+    }
+
+    private String normalizar(String texto) {
+        return Normalizer.normalize(texto, Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "")
+                .toLowerCase()
+                .trim();
     }
 
     @Transactional
