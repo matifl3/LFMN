@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Incidentes — LFM Nacional</title>
+<link rel="stylesheet" href="main.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container-wide">
+    <a href="01-home.html" class="brand">
+      <span class="brand-mark">L</span>
+      <span class="brand-name">LFM Nacional<small>Low Fuel Motorsport</small></span>
+    </a>
+    <nav class="main-nav">
+      <a href="01-home.html">Inicio</a>
+      <a href="03-races-list.html">Carreras</a>
+      <a href="05-championship.html">Campeonato</a>
+      <a href="06-categories.html">Categorías</a>
+      <a href="07-setups.html">Setups</a>
+      <a href="11-achievements.html">Logros</a>
+    </nav>
+    <div class="header-actions">
+      <a href="10-notifications.html" class="icon-btn" aria-label="Notificaciones">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span class="dot"></span>
+      </a>
+      <a href="09-my-profile.html" aria-label="Mi perfil"><img class="avatar" width="38" height="38" src="https://i.pravatar.cc/80?img=12" alt=""></a>
+    </div>
+  </div>
+</header>
+
+<main class="container-wide section">
+  <div class="section-head">
+    <div>
+      <span class="eyebrow">JUSTICIA DEPORTIVA</span>
+      <h2>Incidentes y sanciones</h2>
+    </div>
+  </div>
+
+  <div class="tabs" style="margin-bottom:var(--sp-6)">
+    <span class="tab active">Incidentes <span class="count">14</span></span>
+    <span class="tab">Sanciones <span class="count">6</span></span>
+    <span class="tab">Apelaciones <span class="count">2</span></span>
+  </div>
+
+  <div class="admin-layout">
+
+    <div class="flex-col gap-3">
+
+      <div class="race-row" style="grid-template-columns:auto 2fr 1fr auto">
+        <span class="chip chip-review">En revisión</span>
+        <div>
+          <strong style="font-family:var(--font-display); text-transform:uppercase; font-size:var(--fs-base)">Toque en curva 4 — T1</strong>
+          <div class="text-tertiary" style="font-size:var(--fs-sm)">Sprint Nocturno · reportado por C. Molina</div>
+        </div>
+        <span class="text-tertiary mono" style="font-size:var(--fs-xs)">Vueltas 5-6</span>
+        <a href="#detalle-incidente" class="btn btn-secondary btn-sm">Ver detalle</a>
+      </div>
+
+      <div class="race-row" style="grid-template-columns:auto 2fr 1fr auto">
+        <span class="chip chip-sanctioned">Sancionado</span>
+        <div>
+          <strong style="font-family:var(--font-display); text-transform:uppercase; font-size:var(--fs-base)">Salida de pista con ventaja</strong>
+          <div class="text-tertiary" style="font-size:var(--fs-sm)">GP de Termas — clasificación</div>
+        </div>
+        <span class="text-tertiary mono" style="font-size:var(--fs-xs)">+5 seg</span>
+        <a href="#" class="btn btn-ghost btn-sm">Ver detalle</a>
+      </div>
+
+      <div class="race-row" style="grid-template-columns:auto 2fr 1fr auto">
+        <span class="chip chip-resolved">Resuelto</span>
+        <div>
+          <strong style="font-family:var(--font-display); text-transform:uppercase; font-size:var(--fs-base)">Bloqueo en recta principal</strong>
+          <div class="text-tertiary" style="font-size:var(--fs-sm)">Endurance El Villicum</div>
+        </div>
+        <span class="text-tertiary mono" style="font-size:var(--fs-xs)">Sin sanción</span>
+        <a href="#" class="btn btn-ghost btn-sm">Ver detalle</a>
+      </div>
+
+      <div class="race-row" style="grid-template-columns:auto 2fr 1fr auto">
+        <span class="chip chip-rejected">Apelación rechazada</span>
+        <div>
+          <strong style="font-family:var(--font-display); text-transform:uppercase; font-size:var(--fs-base)">Contacto en boxes</strong>
+          <div class="text-tertiary" style="font-size:var(--fs-sm)">Copa Rookies — Ronda 3</div>
+        </div>
+        <span class="text-tertiary mono" style="font-size:var(--fs-xs)">Drive-through</span>
+        <a href="#" class="btn btn-ghost btn-sm">Ver detalle</a>
+      </div>
+
+    </div>
+
+    <aside class="panel-aside report-form-panel">
+      <h4 style="margin-bottom:var(--sp-4)">Reportar un incidente</h4>
+      <div class="field">
+        <label for="carrera">Carrera</label>
+        <select class="select" id="carrera"><option>GP de Termas — GT3 Pro</option><option>Sprint Nocturno — GT3 Am</option></select>
+      </div>
+      <div class="field">
+        <label for="vuelta">Vuelta / hora del incidente</label>
+        <input class="input" id="vuelta" placeholder="Ej. Vuelta 6, min 12:40">
+      </div>
+      <div class="field">
+        <label for="piloto-inv">Piloto involucrado</label>
+        <input class="input" id="piloto-inv" placeholder="Buscar piloto…">
+      </div>
+      <div class="field">
+        <label for="desc">Descripción</label>
+        <textarea class="textarea" id="desc" placeholder="Describí qué pasó, en qué curva y qué consecuencia tuvo…"></textarea>
+      </div>
+      <div class="field">
+        <label for="evidencia">Evidencia (video o captura)</label>
+        <div class="import-zone text-center" style="padding:var(--sp-4)">
+          <span class="text-tertiary" style="font-size:var(--fs-sm)">Arrastrá un archivo o hacé clic para subir</span>
+        </div>
+      </div>
+      <a href="#" class="btn btn-primary btn-block">Enviar reporte</a>
+    </aside>
+
+  </div>
+
+  <!-- Detalle de incidente para comisario -->
+  <section id="detalle-incidente" style="margin-top:var(--sp-10)">
+    <div class="detail-header">
+      <div>
+        <span class="eyebrow amber">EN REVISIÓN · PANEL DE COMISARIOS</span>
+        <h2 style="text-transform:none; font-size:var(--fs-xl); margin-top:var(--sp-2)">Toque en curva 4 — Sprint Nocturno</h2>
+        <p class="text-secondary" style="margin-top:var(--sp-2)">Reportado por C. Molina · vueltas 5-6 · hace 5 horas</p>
+      </div>
+      <span class="chip chip-review" style="font-size:var(--fs-xs); padding:.5em 1em">En revisión</span>
+    </div>
+
+    <div class="incident-section">
+      <h3>Información de la carrera</h3>
+      <div class="info-grid">
+        <div class="info-tile"><div class="label">Carrera</div><div class="value">Sprint Nocturno</div></div>
+        <div class="info-tile"><div class="label">Circuito</div><div class="value">Aut. de Bs. As. N°9</div></div>
+        <div class="info-tile"><div class="label">Categoría</div><div class="value"><span class="chip chip-category">GT3 Am</span></div></div>
+        <div class="info-tile"><div class="label">Vuelta</div><div class="value mono">5-6</div></div>
+      </div>
+    </div>
+
+    <div class="incident-section">
+      <h3>Pilotos involucrados</h3>
+      <div class="card">
+        <div class="driver-pair">
+          <div class="flex gap-3" style="align-items:center; flex:1">
+            <img class="avatar" width="40" height="40" src="https://i.pravatar.cc/80?img=47" alt="">
+            <div>
+              <strong style="font-size:var(--fs-sm)">C. Molina</strong>
+              <div class="text-tertiary mono" style="font-size:var(--fs-2xs)">Reportante — auto #14</div>
+            </div>
+          </div>
+          <span class="vs">VS</span>
+          <div class="flex gap-3" style="align-items:center; flex:1; justify-content:flex-end; text-align:right">
+            <div>
+              <strong style="font-size:var(--fs-sm)">J. Ferreyra</strong>
+              <div class="text-tertiary mono" style="font-size:var(--fs-2xs)">Reportado — auto #22</div>
+            </div>
+            <img class="avatar" width="40" height="40" src="https://i.pravatar.cc/80?img=51" alt="">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="incident-section">
+      <h3>Evidencia</h3>
+      <div class="evidence-grid">
+        <div class="evidence-thumb">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        </div>
+        <div class="evidence-thumb">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg>
+        </div>
+        <div class="evidence-thumb">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="incident-section">
+      <h3>Votación de comisarios <span class="text-tertiary mono" style="font-size:var(--fs-sm)">(2 / 3)</span></h3>
+      <div class="card">
+        <div class="vote-row">
+          <span class="flex gap-3" style="align-items:center"><img class="avatar" width="28" height="28" src="https://i.pravatar.cc/56?img=8" alt="">Comisario A. Lima</span>
+          <span class="chip chip-sanctioned">Sanción — +5 seg</span>
+        </div>
+        <div class="vote-row">
+          <span class="flex gap-3" style="align-items:center"><img class="avatar" width="28" height="28" src="https://i.pravatar.cc/56?img=9" alt="">Comisario D. Roldán</span>
+          <span class="chip chip-sanctioned">Sanción — +5 seg</span>
+        </div>
+        <div class="vote-row">
+          <span class="flex gap-3" style="align-items:center"><img class="avatar" width="28" height="28" src="https://i.pravatar.cc/56?img=10" alt="">Comisario S. Prieto</span>
+          <span class="chip chip-pending">Pendiente</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex gap-3" style="justify-content:flex-end">
+      <a href="#" class="btn btn-ghost">Pedir más evidencia</a>
+      <a href="#" class="btn btn-primary">Resolver incidente</a>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="container-wide footer-grid">
+    <div class="brand">
+      <span class="brand-mark">L</span>
+      <span class="brand-name">LFM Nacional<small>Low Fuel Motorsport</small></span>
+    </div>
+    <span class="text-tertiary" style="font-size:var(--fs-sm)">© 2026 LFM Nacional — Liga argentina de sim racing.</span>
+  </div>
+</footer>
+
+</body>
+</html>

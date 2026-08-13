@@ -1,0 +1,106 @@
+// ==========================================================================
+// LFM NACIONAL — DESIGN TOKENS
+// Sim racing league, Argentina. HUD/telemetry aesthetic: night pit-lane
+// darkness, timing-tower amber, albiceleste accent, corner-bracket reticles.
+// ==========================================================================
+
+:root {
+  // ---- Base surfaces (deep asphalt, slight blue-green tint, never pure black)
+  --bg-void:        #06080b;
+  --bg-base:        #0a0d12;
+  --bg-panel:       #10141b;
+  --bg-panel-raised:#161c25;
+  --bg-panel-hover: #1c232e;
+  --bg-inset:       #0c1015;
+
+  // ---- Lines
+  --line:        #232b37;
+  --line-bright: #384254;
+  --line-hair:   #1a212b;
+
+  // ---- Text
+  --text-primary:   #eef2f7;
+  --text-secondary: #9aa5b8;
+  --text-tertiary:  #5d6779;
+  --text-disabled:  #3d4553;
+
+  // ---- Signature accent: timing-tower amber
+  --amber:      #ffb020;
+  --amber-hi:   #ffc95c;
+  --amber-dim:  #8a5c14;
+  --amber-glow: rgba(255, 176, 32, 0.35);
+
+  // ---- Secondary accent: albiceleste (AR flag nod)
+  --celeste:     #52b7e8;
+  --celeste-hi:  #8ed2f5;
+  --celeste-dim: #245a78;
+  --celeste-glow:rgba(82, 183, 232, 0.28);
+
+  // ---- Status
+  --danger:      #ff4a5c;
+  --danger-dim:  #7a2530;
+  --danger-glow: rgba(255, 74, 92, 0.28);
+  --success:     #33d488;
+  --success-dim: #1c6b47;
+  --success-glow:rgba(51, 212, 136, 0.25);
+  --warning:     var(--amber);
+
+  // ---- Podium
+  --podium-gold:   #ffcf4a;
+  --podium-silver: #c7d0dc;
+  --podium-bronze: #e3945a;
+
+  // ---- Type
+  --font-display: 'Rajdhani', 'Oswald', sans-serif;
+  --font-body:    'Inter', -apple-system, sans-serif;
+  --font-mono:    'JetBrains Mono', 'SFMono-Regular', monospace;
+
+  // ---- Type scale
+  --fs-2xs: 0.6875rem;  // 11
+  --fs-xs:  0.75rem;    // 12
+  --fs-sm:  0.8125rem;  // 13
+  --fs-base:0.9375rem;  // 15
+  --fs-md:  1.0625rem;  // 17
+  --fs-lg:  1.25rem;    // 20
+  --fs-xl:  1.625rem;   // 26
+  --fs-2xl: 2.125rem;   // 34
+  --fs-3xl: 2.875rem;   // 46
+  --fs-4xl: 4rem;       // 64
+  --fs-5xl: 5.5rem;     // 88
+
+  // ---- Spacing (8px base)
+  --sp-1: 0.25rem;
+  --sp-2: 0.5rem;
+  --sp-3: 0.75rem;
+  --sp-4: 1rem;
+  --sp-5: 1.5rem;
+  --sp-6: 2rem;
+  --sp-7: 2.5rem;
+  --sp-8: 3rem;
+  --sp-9: 4rem;
+  --sp-10: 6rem;
+  --sp-11: 8rem;
+
+  // ---- Radius — mostly sharp, HUD panels get a tiny cut, pills stay round
+  --r-sharp: 2px;
+  --r-sm: 4px;
+  --r-md: 6px;
+  --r-pill: 999px;
+
+  // ---- Shadow / elevation
+  --shadow-panel: 0 1px 0 rgba(255,255,255,0.02) inset, 0 12px 28px -16px rgba(0,0,0,0.65);
+  --shadow-lift:  0 20px 44px -20px rgba(0,0,0,0.75);
+  --shadow-amber-glow: 0 0 0 1px rgba(255,176,32,0.25), 0 0 24px -4px rgba(255,176,32,0.35);
+
+  // ---- Motion
+  --ease: cubic-bezier(.2,.7,.2,1);
+  --dur-fast: 120ms;
+  --dur-base: 220ms;
+  --dur-slow: 420ms;
+
+  // ---- Layout
+  --container: 1240px;
+  --container-wide: 1440px;
+  --header-h: 68px;
+  --bracket: 14px; // corner-bracket signature size
+}

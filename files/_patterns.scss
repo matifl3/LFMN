@@ -1,0 +1,175 @@
+// ==========================================================================
+// SCREEN PATTERNS
+// ==========================================================================
+
+// ---- Hero (Home) -------------------------------------------------------
+.hero {
+  position: relative;
+  padding-block: var(--sp-11) var(--sp-9);
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(6,8,11,0) 0%, var(--bg-base) 92%),
+    linear-gradient(115deg, #0a1720 0%, #0a0d12 46%, #140d08 100%);
+  border-bottom: 1px solid var(--line-hair);
+}
+.hero-checker {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 6px;
+  top: 0;
+}
+.hero-checker.bottom { top: auto; bottom: 0; }
+.hero-grid-bg {
+  position: absolute; inset: 0;
+  mask-image: radial-gradient(700px 380px at 25% 20%, black, transparent 75%);
+}
+.hero-content { position: relative; max-width: 760px; }
+.hero-content h1 { margin-block: var(--sp-4) var(--sp-4); }
+.hero-content h1 span { color: var(--amber); }
+.hero-lede { font-size: var(--fs-md); color: var(--text-secondary); max-width: 52ch; margin-bottom: var(--sp-6); }
+.hero-ctas { display: flex; gap: var(--sp-3); flex-wrap: wrap; }
+.hero-stats { display: flex; gap: var(--sp-7); margin-top: var(--sp-8); flex-wrap: wrap; }
+.hero-stat .stat-value { font-size: var(--fs-xl); }
+
+// ---- Home section label -------------------------------------------------------
+.section-head { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: var(--sp-5); }
+.section-head h2 { margin-top: var(--sp-2); }
+
+// ---- Race card (list, grid mode) -----------------------------------------
+.race-card { display: flex; flex-direction: column; gap: var(--sp-4); }
+.race-card-top { display: flex; justify-content: space-between; align-items: flex-start; }
+.race-card .race-date {
+  font-family: var(--font-mono);
+  color: var(--amber-hi);
+  font-size: var(--fs-sm);
+  display: flex; flex-direction: column; align-items: center;
+  background: var(--bg-inset);
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm);
+  padding: var(--sp-2) var(--sp-3);
+  min-width: 58px;
+}
+.race-card .race-date .day { font-size: var(--fs-lg); font-weight: 700; line-height: 1; }
+.race-card .race-date .mon { font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-tertiary); }
+.race-card .race-meta { display: flex; flex-direction: column; gap: var(--sp-1); font-size: var(--fs-sm); color: var(--text-tertiary); }
+
+// ---- Race row (list, table/row mode) -----------------------------------------
+.race-row {
+  display: grid;
+  grid-template-columns: 64px 2fr 1fr 1fr auto auto;
+  align-items: center;
+  gap: var(--sp-4);
+  padding: var(--sp-4);
+  border: 1px solid var(--line-hair);
+  border-radius: var(--r-md);
+  background: var(--bg-panel);
+}
+.race-row:hover { border-color: var(--line-bright); background: var(--bg-panel-hover); }
+@media (max-width: 900px) { .race-row { grid-template-columns: 1fr; } }
+
+// ---- Race detail header -----------------------------------------
+.detail-header {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  padding-bottom: var(--sp-6);
+  border-bottom: 1px solid var(--line);
+  margin-bottom: var(--sp-7);
+  flex-wrap: wrap;
+  gap: var(--sp-4);
+}
+.info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: var(--sp-4); margin-bottom: var(--sp-8); }
+.info-tile { padding: var(--sp-4); background: var(--bg-panel); border: 1px solid var(--line); border-radius: var(--r-md); }
+.info-tile .label { font-family: var(--font-display); font-size: var(--fs-2xs); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-tertiary); margin-bottom: var(--sp-2); }
+.info-tile .value { font-size: var(--fs-md); font-weight: 600; }
+
+.file-row { display: flex; align-items: center; justify-content: space-between; padding: var(--sp-3) var(--sp-4); border: 1px solid var(--line-hair); border-radius: var(--r-sm); background: var(--bg-panel); }
+.file-row + .file-row { margin-top: var(--sp-2); }
+
+.entrant-row { display: flex; align-items: center; gap: var(--sp-3); padding: var(--sp-3) 0; border-bottom: 1px solid var(--line-hair); }
+.entrant-row:last-child { border-bottom: none; }
+
+// ---- Championship standings -----------------------------------------
+.champ-select-bar { display: flex; align-items: center; gap: var(--sp-4); flex-wrap: wrap; margin-bottom: var(--sp-6); }
+
+// ---- Category card -----------------------------------------
+.category-card { display: flex; flex-direction: column; gap: var(--sp-4); height: 100%; }
+.category-icon { width: 52px; height: 52px; display: grid; place-items: center; background: var(--bg-inset); border: 1px solid var(--line-bright); color: var(--amber); border-radius: var(--r-sm); }
+.elo-range { display: flex; align-items: center; gap: var(--sp-2); font-family: var(--font-mono); font-size: var(--fs-sm); color: var(--text-primary); }
+.elo-range .arrow { color: var(--text-tertiary); }
+
+// ---- Setups -----------------------------------------
+.setup-filters { display: flex; gap: var(--sp-3); margin-bottom: var(--sp-6); flex-wrap: wrap; }
+.setup-filters .input, .setup-filters .select { max-width: 240px; }
+.setup-card { display: flex; flex-direction: column; gap: var(--sp-3); }
+.setup-card-cover {
+  height: 96px;
+  border-radius: var(--r-sm);
+  background: repeating-linear-gradient(120deg, var(--bg-inset) 0 22px, var(--bg-panel-raised) 22px 44px);
+  border: 1px solid var(--line);
+  display: flex; align-items: flex-end; padding: var(--sp-3);
+}
+.author-row { display: flex; align-items: center; gap: var(--sp-2); font-size: var(--fs-sm); color: var(--text-secondary); }
+
+.slider-row { display: flex; align-items: center; gap: var(--sp-4); }
+input[type="range"] {
+  flex: 1;
+  accent-color: var(--amber);
+  height: 4px;
+}
+
+// ---- Profile header -----------------------------------------
+.profile-header { display: flex; gap: var(--sp-6); align-items: center; flex-wrap: wrap; padding: var(--sp-6); }
+.profile-avatar-wrap { position: relative; padding: var(--sp-2); }
+.profile-avatar-wrap .avatar { width: 108px; height: 108px; }
+.profile-name-block h1 { font-size: var(--fs-2xl); text-transform: none; }
+.profile-tagline { color: var(--text-tertiary); font-family: var(--font-mono); font-size: var(--fs-sm); margin-top: var(--sp-1); }
+.profile-ratings { display: flex; gap: var(--sp-7); margin-top: var(--sp-4); flex-wrap: wrap; }
+.rating-block .rating-label { font-family: var(--font-display); font-size: var(--fs-2xs); letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-tertiary); }
+.rating-block .rating-value { font-size: var(--fs-3xl); font-weight: 700; line-height: 1.1; }
+
+.stat-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: var(--sp-4); margin-block: var(--sp-7); }
+@media (max-width: 1080px) { .stat-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 560px) { .stat-grid { grid-template-columns: repeat(2, 1fr); } }
+
+// ---- Achievements -----------------------------------------
+.achievement-card { display: flex; flex-direction: column; gap: var(--sp-3); text-align: center; align-items: center; padding: var(--sp-5); position: relative; }
+.achievement-card.locked { opacity: 0.5; }
+.achievement-icon {
+  width: 64px; height: 64px; border-radius: 50%;
+  display: grid; place-items: center;
+  background: var(--bg-inset);
+  border: 1px solid var(--line-bright);
+  color: var(--text-tertiary);
+  font-size: var(--fs-lg);
+}
+.achievement-card.unlocked .achievement-icon {
+  color: var(--amber-hi);
+  background: radial-gradient(circle, rgba(255,176,32,0.18), transparent 70%);
+  border-color: var(--amber-dim);
+  box-shadow: var(--shadow-amber-glow);
+}
+.achievement-check {
+  position: absolute; top: var(--sp-4); right: var(--sp-4);
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--success); color: #06210f;
+  display: grid; place-items: center; font-size: 12px; font-weight: 700;
+}
+
+// ---- Incidents / sanciones -----------------------------------------
+.report-form-panel { max-width: 640px; }
+.incident-section { margin-bottom: var(--sp-7); }
+.incident-section h3 { margin-bottom: var(--sp-3); display: flex; align-items: center; gap: var(--sp-2); }
+.evidence-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: var(--sp-3); }
+.evidence-thumb { aspect-ratio: 16/9; background: var(--bg-inset); border: 1px solid var(--line); border-radius: var(--r-sm); display: grid; place-items: center; color: var(--text-tertiary); }
+.driver-pair { display: flex; align-items: center; gap: var(--sp-4); }
+.driver-pair .vs { font-family: var(--font-display); color: var(--text-tertiary); }
+
+// ---- Admin -----------------------------------------
+.admin-layout { display: grid; grid-template-columns: 1fr 340px; gap: var(--sp-6); align-items: start; }
+@media (max-width: 980px) { .admin-layout { grid-template-columns: 1fr; } }
+.row-actions { display: flex; gap: var(--sp-2); justify-content: flex-end; }
+.import-zone { border: 1px dashed var(--line-bright); border-radius: var(--r-md); padding: var(--sp-5); background: var(--bg-inset); }
+
+// ---- Auth card -----------------------------------------
+.auth-shell { min-height: calc(100vh - var(--header-h)); display: grid; place-items: center; padding: var(--sp-6); position: relative; overflow: hidden; }
+.auth-card { width: 100%; max-width: 420px; padding: var(--sp-7); position: relative; z-index: 1; }
+.auth-tabs { display: flex; margin-bottom: var(--sp-6); }

@@ -1,0 +1,148 @@
+// ==========================================================================
+// BASE — reset, typography, utilities, signature patterns
+// ==========================================================================
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  background: var(--bg-void);
+  color-scheme: dark;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: var(--fs-base);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  background-image:
+    radial-gradient(1100px 620px at 12% -8%, rgba(82,183,232,0.08), transparent 60%),
+    radial-gradient(900px 520px at 100% 0%, rgba(255,176,32,0.06), transparent 55%);
+  background-attachment: fixed;
+}
+
+img { max-width: 100%; display: block; }
+a { color: inherit; text-decoration: none; }
+button { font: inherit; }
+ul, ol { margin: 0; padding: 0; list-style: none; }
+h1,h2,h3,h4,h5,p { margin: 0; }
+table { border-collapse: collapse; width: 100%; }
+
+::selection { background: var(--amber-glow); color: var(--text-primary); }
+
+:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 2px;
+  border-radius: var(--r-sm);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+}
+
+// ---- Headings -------------------------------------------------------------
+h1, h2, h3, h4, .font-display {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+}
+
+h1 { font-size: var(--fs-4xl); font-weight: 700; letter-spacing: 0.005em; line-height: 1.02; }
+h2 { font-size: var(--fs-2xl); line-height: 1.08; }
+h3 { font-size: var(--fs-lg); line-height: 1.2; }
+h4 { font-size: var(--fs-md); line-height: 1.3; }
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-family: var(--font-mono);
+  font-size: var(--fs-2xs);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--celeste);
+}
+.eyebrow::before {
+  content: '';
+  width: 7px; height: 7px;
+  background: var(--celeste);
+  box-shadow: 0 0 10px var(--celeste);
+}
+.eyebrow.amber { color: var(--amber); }
+.eyebrow.amber::before { background: var(--amber); box-shadow: 0 0 10px var(--amber); }
+
+// ---- Mono / data numerals — the signature numeric treatment ---------------
+.mono, .stat-value, .data {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+}
+
+.glow-amber   { color: var(--amber-hi); text-shadow: 0 0 18px var(--amber-glow); }
+.glow-celeste { color: var(--celeste-hi); text-shadow: 0 0 18px var(--celeste-glow); }
+
+// ---- Layout -----------------------------------------------------------
+.container { max-width: var(--container); margin-inline: auto; padding-inline: var(--sp-6); }
+.container-wide { max-width: var(--container-wide); margin-inline: auto; padding-inline: var(--sp-6); }
+
+.section { padding-block: var(--sp-9); }
+.section-tight { padding-block: var(--sp-7); }
+
+.grid { display: grid; gap: var(--sp-5); }
+.grid-3 { grid-template-columns: repeat(3, 1fr); }
+.grid-2 { grid-template-columns: repeat(2, 1fr); }
+.grid-4 { grid-template-columns: repeat(4, 1fr); }
+.grid-6 { grid-template-columns: repeat(6, 1fr); }
+
+.flex { display: flex; }
+.flex-between { display: flex; align-items: center; justify-content: space-between; }
+.flex-center { display: flex; align-items: center; }
+.flex-col { display: flex; flex-direction: column; }
+.gap-1 { gap: var(--sp-1); } .gap-2 { gap: var(--sp-2); } .gap-3 { gap: var(--sp-3); }
+.gap-4 { gap: var(--sp-4); } .gap-5 { gap: var(--sp-5); }
+
+.text-secondary { color: var(--text-secondary); }
+.text-tertiary { color: var(--text-tertiary); }
+.text-center { text-align: center; }
+
+@media (max-width: 1080px) {
+  .grid-3, .grid-4 { grid-template-columns: repeat(2, 1fr); }
+  .grid-6 { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 720px) {
+  h1 { font-size: var(--fs-3xl); }
+  .grid-2, .grid-3, .grid-4, .grid-6 { grid-template-columns: 1fr; }
+  .container, .container-wide { padding-inline: var(--sp-4); }
+  .section { padding-block: var(--sp-7); }
+}
+
+// ---- Signature pattern: checkered flag (hero use, sparing) ----------------
+.pattern-checker {
+  background-image:
+    linear-gradient(45deg, rgba(255,255,255,0.5) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.5) 75%),
+    linear-gradient(45deg, rgba(255,255,255,0.5) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.5) 75%);
+  background-size: 16px 16px;
+  background-position: 0 0, 8px 8px;
+}
+
+// ---- Signature pattern: track-grid (subtle telemetry backdrop) ------------
+.pattern-trackgrid {
+  background-image:
+    linear-gradient(rgba(154,165,184,0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(154,165,184,0.08) 1px, transparent 1px);
+  background-size: 42px 42px;
+}
+
+// ---- Chevron divider (checkered-flag / racing-stripe motif) ---------------
+.chevron-rule {
+  height: 10px;
+  background:
+    linear-gradient(135deg, var(--amber) 25%, transparent 25%) 0 0/16px 16px,
+    linear-gradient(225deg, var(--amber) 25%, transparent 25%) 0 0/16px 16px;
+  opacity: 0.9;
+}
