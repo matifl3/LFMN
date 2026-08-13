@@ -38,121 +38,60 @@
       <span class="eyebrow">TALLER COMUNITARIO</span>
       <h2>Setups</h2>
     </div>
-    <a href="#" class="btn btn-primary">Subir setup</a>
+    <button type="button" class="btn btn-primary" id="setup-btn-subir">Subir setup</button>
+  </div>
+
+  <div class="card" id="setup-form-card" style="display:none; margin-bottom:var(--sp-5)">
+    <div class="card-header">
+      <h4>Subir un setup</h4>
+    </div>
+    <div class="grid grid-3" style="gap:var(--sp-4)">
+      <div class="field">
+        <label>Título</label>
+        <input class="input" id="sf-titulo" placeholder="Ej. Ferrari 296 — Seco / alta velocidad">
+      </div>
+      <div class="field">
+        <label>Circuito</label>
+        <input class="input" id="sf-circuito" placeholder="Ej. Termas de Río Hondo">
+      </div>
+      <div class="field">
+        <label>Vehículo</label>
+        <input class="input" id="sf-vehiculo" placeholder="Ej. Ferrari 296 GT3">
+      </div>
+      <div class="field">
+        <label>Archivo (URL)</label>
+        <input class="input" id="sf-archivo" placeholder="https://…/setup.json">
+      </div>
+      <div class="field">
+        <label>Categoría</label>
+        <select class="select" id="sf-categoria"><option value="">—</option></select>
+      </div>
+    </div>
+    <div class="field">
+      <label>Descripción</label>
+      <textarea class="textarea" id="sf-descripcion" placeholder="Comportamiento, condiciones de uso, tips…"></textarea>
+    </div>
+    <button type="button" class="btn btn-primary" id="sf-publicar">Publicar setup</button>
   </div>
 
   <div class="setup-filters">
-    <input class="input" placeholder="Buscar por vehículo o autor…" style="max-width:280px">
-    <select class="select"><option>Todos los circuitos</option><option>Termas de Río Hondo</option><option>El Villicum</option><option>Autódromo N°9</option></select>
-    <select class="select"><option>Todos los vehículos</option><option>Ferrari 296 GT3</option><option>Porsche 992 GT3 R</option><option>BMW M4 GT3</option></select>
-    <select class="select" style="margin-left:auto"><option>Mejor puntuados</option><option>Más recientes</option><option>Más descargados</option></select>
+    <input class="input" id="sf-search" placeholder="Buscar por vehículo, circuito o título…" style="max-width:280px">
+    <select class="select" id="sf-f-circuito"><option value="">Todos los circuitos</option></select>
+    <select class="select" id="sf-f-vehiculo"><option value="">Todos los vehículos</option></select>
+    <select class="select" style="margin-left:auto" id="sf-f-order">
+      <option value="rating">Mejor puntuados</option>
+      <option value="recientes">Más recientes</option>
+    </select>
   </div>
 
   <div class="admin-layout" style="grid-template-columns: 1.1fr 1.5fr;">
 
-    <!-- LISTADO -->
-    <div class="flex-col gap-4">
-
-      <div class="card setup-card bracket">
-        <div class="setup-card-cover">
-          <span class="chip chip-category">Termas de Río Hondo</span>
-        </div>
-        <h4>Ferrari 296 GT3 — Seco / Alta veloc.</h4>
-        <div class="flex-between">
-          <span class="author-row"><img class="avatar" width="24" height="24" src="https://i.pravatar.cc/48?img=13" alt="">L. Bianchi</span>
-          <span class="stars">★★★★★</span>
-        </div>
-        <div class="text-tertiary mono" style="font-size:var(--fs-2xs)">4.9 · 214 descargas</div>
-      </div>
-
-      <div class="card setup-card">
-        <div class="setup-card-cover">
-          <span class="chip chip-category">El Villicum</span>
-        </div>
-        <h4>Porsche 992 GT3 R — Balance neutro</h4>
-        <div class="flex-between">
-          <span class="author-row"><img class="avatar" width="24" height="24" src="https://i.pravatar.cc/48?img=33" alt="">F. Gómez Reta</span>
-          <span class="stars">★★★★<span class="star-empty">★</span></span>
-        </div>
-        <div class="text-tertiary mono" style="font-size:var(--fs-2xs)">4.3 · 98 descargas</div>
-      </div>
-
-      <div class="card setup-card">
-        <div class="setup-card-cover">
-          <span class="chip chip-category">Autódromo N°9</span>
-        </div>
-        <h4>BMW M4 GT3 — Lluvia</h4>
-        <div class="flex-between">
-          <span class="author-row"><img class="avatar" width="24" height="24" src="https://i.pravatar.cc/48?img=25" alt="">R. Peralta</span>
-          <span class="stars">★★★★<span class="star-empty">★</span></span>
-        </div>
-        <div class="text-tertiary mono" style="font-size:var(--fs-2xs)">4.1 · 61 descargas</div>
-      </div>
-
-      <div class="card setup-card">
-        <div class="setup-card-cover">
-          <span class="chip chip-category">Termas de Río Hondo</span>
-        </div>
-        <h4>Audi R8 LMS GT3 — Sobre-viraje bajo</h4>
-        <div class="flex-between">
-          <span class="author-row"><img class="avatar" width="24" height="24" src="https://i.pravatar.cc/48?img=47" alt="">M. Suárez</span>
-          <span class="stars">★★★<span class="star-empty">★★</span></span>
-        </div>
-        <div class="text-tertiary mono" style="font-size:var(--fs-2xs)">3.4 · 27 descargas</div>
-      </div>
-
+    <div class="flex-col gap-4" id="setup-list">
+      <p class="text-tertiary">Cargando setups…</p>
     </div>
 
-    <!-- DETALLE -->
-    <div class="card bracket bracket-celeste">
-      <div class="card-header">
-        <div>
-          <span class="eyebrow amber">FERRARI 296 GT3</span>
-          <h3 style="margin-top:var(--sp-2)">Seco / Alta velocidad — Termas</h3>
-          <span class="author-row" style="margin-top:var(--sp-2)"><img class="avatar" width="24" height="24" src="https://i.pravatar.cc/48?img=13" alt="">Subido por L. Bianchi · hace 3 días</span>
-        </div>
-        <a href="#" class="btn btn-primary">Descargar .json</a>
-      </div>
-
-      <p class="text-secondary" style="font-size:var(--fs-sm); margin-bottom:var(--sp-5)">Setup orientado a los sectores rápidos de Termas, con reparto de frenada adelantado y ala trasera baja para reducir arrastre en la recta principal. Probado en condiciones de pista seca y 22°C.</p>
-
-      <div class="grid grid-3" style="margin-bottom:var(--sp-6)">
-        <div class="stat-card"><div class="stat-label">Circuito</div><div class="stat-value" style="font-size:var(--fs-md)">Termas</div></div>
-        <div class="stat-card"><div class="stat-label">Condición</div><div class="stat-value" style="font-size:var(--fs-md)">Seco</div></div>
-        <div class="stat-card"><div class="stat-label">Descargas</div><div class="stat-value" style="font-size:var(--fs-md)" class="mono">214</div></div>
-      </div>
-
-      <div class="field">
-        <label>Tu calificación</label>
-        <div class="slider-row">
-          <span class="stars" style="font-size:var(--fs-lg)">★★★★<span class="star-empty">★</span></span>
-          <input type="range" min="1" max="5" step="1" value="4" aria-label="Calificación en estrellas">
-        </div>
-      </div>
-
-      <h4 style="margin-top:var(--sp-6); margin-bottom:var(--sp-3)">Comentarios <span class="text-tertiary mono" style="font-size:var(--fs-sm)">(3)</span></h4>
-
-      <div class="comment">
-        <img class="avatar" width="34" height="34" src="https://i.pravatar.cc/68?img=25" alt="">
-        <div style="flex:1">
-          <div class="flex-between"><strong style="font-size:var(--fs-sm)">R. Peralta</strong><span class="stars" style="font-size:var(--fs-xs)">★★★★★</span></div>
-          <p class="text-secondary" style="font-size:var(--fs-sm); margin-top:var(--sp-1)">Excelente en el sector 2, gané casi 2 décimas en la curva 6. Recomendado.</p>
-        </div>
-      </div>
-      <div class="comment">
-        <img class="avatar" width="34" height="34" src="https://i.pravatar.cc/68?img=47" alt="">
-        <div style="flex:1">
-          <div class="flex-between"><strong style="font-size:var(--fs-sm)">M. Suárez</strong><span class="stars" style="font-size:var(--fs-xs)">★★★★<span class="star-empty">★</span></span></div>
-          <p class="text-secondary" style="font-size:var(--fs-sm); margin-top:var(--sp-1)">Un poco nervioso en la frenada de curva 1, le bajaría el freno motor.</p>
-        </div>
-      </div>
-
-      <div class="field" style="margin-top:var(--sp-5); margin-bottom:0">
-        <label>Agregar comentario</label>
-        <textarea class="textarea" placeholder="Contá cómo te fue con este setup…"></textarea>
-        <a href="#" class="btn btn-secondary" style="align-self:flex-end">Publicar comentario</a>
-      </div>
-
+    <div class="card bracket bracket-celeste" id="setup-detail">
+      <p class="text-tertiary">Seleccioná un setup de la lista para ver el detalle.</p>
     </div>
   </div>
 </main>
@@ -167,5 +106,8 @@
   </div>
 </footer>
 
+<script src="js/api.js"></script>
+<script src="js/shell.js"></script>
+<script src="js/setups.js"></script>
 </body>
 </html>

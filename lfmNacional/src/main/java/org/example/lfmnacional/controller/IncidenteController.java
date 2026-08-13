@@ -20,7 +20,6 @@ public class IncidenteController {
     private final IncidenteService incidenteService;
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN') or hasRole('COMISARIO')")
     public ResponseEntity<IncidenteResponse> reportar(@Valid @RequestBody IncidenteRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(incidenteService.reportar(request));
     }

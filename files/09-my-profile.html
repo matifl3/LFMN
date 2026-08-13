@@ -38,113 +38,85 @@
       <span class="eyebrow">CUENTA</span>
       <h2>Mi perfil</h2>
     </div>
-    <a href="08-driver-profile.html" class="btn btn-ghost">Ver perfil público</a>
+    <a href="08-driver-profile.html" class="btn btn-ghost" id="mp-perfil-publico">Ver perfil público</a>
   </div>
 
   <div class="admin-layout">
     <div>
 
       <div class="tabs-pill" style="margin-bottom:var(--sp-6)">
-        <span class="tab active">Datos personales</span>
-        <span class="tab">Contraseña</span>
-        <span class="tab">Steam</span>
+        <button type="button" class="tab active" data-panel="datos" style="background:none;border:none;cursor:pointer;font:inherit;color:inherit">Datos personales</button>
+        <button type="button" class="tab" data-panel="password" style="background:none;border:none;cursor:pointer;font:inherit;color:inherit">Contraseña</button>
+        <button type="button" class="tab" data-panel="steam" style="background:none;border:none;cursor:pointer;font:inherit;color:inherit">Steam</button>
       </div>
 
-      <div class="card" style="margin-bottom:var(--sp-8)">
+      <div class="card" style="margin-bottom:var(--sp-8)" id="mp-panel-datos">
         <h3 style="margin-bottom:var(--sp-5)">Datos personales</h3>
-        <div class="input-group">
-          <div class="field">
-            <label for="nombre">Nombre</label>
-            <input class="input" id="nombre" value="Franco">
-          </div>
-          <div class="field">
-            <label for="apellido">Apellido</label>
-            <input class="input" id="apellido" value="Gómez Reta">
-          </div>
+        <div class="field">
+          <label for="mp-nombre">Nombre de piloto</label>
+          <input class="input" id="mp-nombre">
         </div>
         <div class="field">
-          <label for="usuario">Nombre de usuario</label>
-          <input class="input" id="usuario" value="fgomezreta">
+          <label for="mp-mail">Email</label>
+          <input class="input" id="mp-mail" type="email">
         </div>
         <div class="field">
-          <label for="mail">Email</label>
-          <input class="input" id="mail" type="email" value="franco.gr@ejemplo.com">
-        </div>
-        <div class="field" style="margin-bottom:0">
-          <label for="pais">País / Provincia</label>
-          <select class="select" id="pais">
-            <option>Argentina — Santiago del Estero</option>
-            <option>Argentina — Buenos Aires</option>
-            <option>Argentina — Córdoba</option>
-          </select>
+          <label for="mp-foto">Foto de perfil (URL)</label>
+          <input class="input" id="mp-foto" type="url" placeholder="https://…">
         </div>
         <div class="flex" style="justify-content:flex-end; margin-top:var(--sp-6)">
-          <a href="#" class="btn btn-primary">Guardar cambios</a>
+          <button type="button" class="btn btn-primary" id="mp-guardar">Guardar cambios</button>
         </div>
       </div>
 
-      <div class="card" style="margin-bottom:var(--sp-8)">
+      <div class="card" style="margin-bottom:var(--sp-8); display:none" id="mp-panel-password">
+        <h3 style="margin-bottom:var(--sp-5)">Cambiar contraseña</h3>
+        <div class="field">
+          <label for="mp-pass-actual">Contraseña actual</label>
+          <input class="input" id="mp-pass-actual" type="password">
+        </div>
+        <div class="field">
+          <label for="mp-pass-nueva">Nueva contraseña</label>
+          <input class="input" id="mp-pass-nueva" type="password" placeholder="Mínimo 6 caracteres">
+        </div>
+        <div class="flex" style="justify-content:flex-end; margin-top:var(--sp-6)">
+          <button type="button" class="btn btn-primary" id="mp-cambiar-pass">Cambiar contraseña</button>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:var(--sp-8); display:none" id="mp-panel-steam">
         <h3 style="margin-bottom:var(--sp-2)">Vinculación con Steam</h3>
         <p class="text-tertiary" style="font-size:var(--fs-sm); margin-bottom:var(--sp-5)">Usamos tu cuenta de Steam para verificar tiempos y evitar suplantación de identidad en carrera.</p>
-        <div class="file-row">
-          <span class="flex gap-3" style="align-items:center">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="color:var(--celeste)"><path d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.87 8.37 6.84 9.73.5.1.68-.22.68-.49 0-.24-.01-.87-.01-1.71-2.78.62-3.37-1.37-3.37-1.37-.45-1.18-1.11-1.5-1.11-1.5-.91-.64.07-.63.07-.63 1 .07 1.53 1.05 1.53 1.05.89 1.57 2.34 1.11 2.91.85.09-.66.35-1.11.63-1.37-2.22-.26-4.56-1.14-4.56-5.06 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.31.1-2.73 0 0 .84-.28 2.75 1.05a9.3 9.3 0 0 1 5 0c1.91-1.33 2.75-1.05 2.75-1.05.55 1.42.2 2.47.1 2.73.64.72 1.03 1.63 1.03 2.75 0 3.93-2.34 4.8-4.57 5.05.36.32.68.94.68 1.9 0 1.37-.01 2.47-.01 2.81 0 .27.18.6.69.49A10.26 10.26 0 0 0 22 12.25C22 6.58 17.52 2 12 2z"/></svg>
-            <span>fgomezreta_sim conectado</span>
-          </span>
-          <span class="chip chip-confirmed">Verificado</span>
+        <div id="mp-steam-estado">
+          <div class="file-row">
+            <span class="flex gap-3" style="align-items:center">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="color:var(--celeste)"><path d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.87 8.37 6.84 9.73.5.1.68-.22.68-.49 0-.24-.01-.87-.01-1.71-2.78.62-3.37-1.37-3.37-1.37-.45-1.18-1.11-1.5-1.11-1.5-.91-.64.07-.63.07-.63 1 .07 1.53 1.05 1.53 1.05.89 1.57 2.34 1.11 2.91.85.09-.66.35-1.11.63-1.37-2.22-.26-4.56-1.14-4.56-5.06 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.31.1-2.73 0 0 .84-.28 2.75 1.05a9.3 9.3 0 0 1 5 0c1.91-1.33 2.75-1.05 2.75-1.05.55 1.42.2 2.47.1 2.73.64.72 1.03 1.63 1.03 2.75 0 3.93-2.34 4.8-4.57 5.05.36.32.68.94.68 1.9 0 1.37-.01 2.47-.01 2.81 0 .27.18.6.69.49A10.26 10.26 0 0 0 22 12.25C22 6.58 17.52 2 12 2z"/></svg>
+              <span id="mp-steam-nombre">Sin vincular</span>
+            </span>
+            <span class="chip chip-pending" id="mp-steam-chip">Sin vincular</span>
+          </div>
+        </div>
+        <div class="field" style="margin-top:var(--sp-5)">
+          <label for="mp-steam-guid">GUID de Steam (SteamID64)</label>
+          <input class="input" id="mp-steam-guid" placeholder="76561198…">
+        </div>
+        <div class="flex" style="justify-content:flex-end; gap:var(--sp-3); margin-top:var(--sp-3)">
+          <button type="button" class="btn btn-secondary" id="mp-steam-vincular">Vincular</button>
+          <button type="button" class="btn btn-danger" id="mp-steam-desvincular">Desvincular</button>
         </div>
       </div>
 
       <h3 style="margin-bottom:var(--sp-4)">Mis inscripciones</h3>
-      <div class="flex-col gap-3" style="margin-bottom:var(--sp-8)">
-        <div class="race-row" style="grid-template-columns:64px 2fr 1fr auto">
-          <div class="race-date"><span class="day">17</span><span class="mon">AGO</span></div>
-          <div>
-            <strong style="font-family:var(--font-display); text-transform:uppercase; font-size:var(--fs-base)">GP de Termas</strong>
-            <div class="text-tertiary" style="font-size:var(--fs-sm)">GT3 Pro</div>
-          </div>
-          <span class="chip chip-confirmed">Confirmado</span>
-          <a href="#" class="btn btn-danger btn-sm">Cancelar</a>
-        </div>
-        <div class="race-row" style="grid-template-columns:64px 2fr 1fr auto">
-          <div class="race-date"><span class="day">24</span><span class="mon">AGO</span></div>
-          <div>
-            <strong style="font-family:var(--font-display); text-transform:uppercase; font-size:var(--fs-base)">Endurance de Otoño</strong>
-            <div class="text-tertiary" style="font-size:var(--fs-sm)">Turismo Clásico</div>
-          </div>
-          <span class="chip chip-pending">Sin confirmar</span>
-          <a href="#" class="btn btn-danger btn-sm">Cancelar</a>
-        </div>
+      <div class="flex-col gap-3" style="margin-bottom:var(--sp-8)" id="mp-inscripciones">
+        <p class="text-tertiary">Cargando…</p>
       </div>
 
     </div>
 
     <aside class="panel-aside">
-      <h4 style="margin-bottom:var(--sp-4)">Recompensas</h4>
-      <div class="flex-col gap-3">
-        <div class="card card-raised" style="padding:var(--sp-4)">
-          <div class="flex-between" style="margin-bottom:var(--sp-2)">
-            <strong style="font-size:var(--fs-sm)">Racha de 5 carreras</strong>
-            <span class="chip chip-confirmed" style="padding:.2em .6em">Lista</span>
-          </div>
-          <p class="text-tertiary" style="font-size:var(--fs-xs); margin-bottom:var(--sp-3)">+150 puntos de reputación</p>
-          <a href="#" class="btn btn-primary btn-sm btn-block">Reclamar</a>
-        </div>
-        <div class="card card-raised" style="padding:var(--sp-4)">
-          <div class="flex-between" style="margin-bottom:var(--sp-2)">
-            <strong style="font-size:var(--fs-sm)">Piloto limpio del mes</strong>
-            <span class="chip chip-confirmed" style="padding:.2em .6em">Lista</span>
-          </div>
-          <p class="text-tertiary" style="font-size:var(--fs-xs); margin-bottom:var(--sp-3)">Insignia exclusiva de perfil</p>
-          <a href="#" class="btn btn-primary btn-sm btn-block">Reclamar</a>
-        </div>
-        <div class="card" style="padding:var(--sp-4); opacity:.55">
-          <div class="flex-between" style="margin-bottom:var(--sp-2)">
-            <strong style="font-size:var(--fs-sm)">10 podios en Termas</strong>
-            <span class="chip chip-pending" style="padding:.2em .6em">7 / 10</span>
-          </div>
-          <div class="progress"><div class="progress-bar" style="width:70%"></div></div>
-        </div>
+      <h4 style="margin-bottom:var(--sp-4)">Recompensas disponibles</h4>
+      <div class="flex-col gap-3" id="mp-recompensas">
+        <p class="text-tertiary">Cargando…</p>
       </div>
     </aside>
   </div>
@@ -160,5 +132,8 @@
   </div>
 </footer>
 
+<script src="js/api.js"></script>
+<script src="js/shell.js"></script>
+<script src="js/profile.js"></script>
 </body>
 </html>

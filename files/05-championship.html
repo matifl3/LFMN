@@ -41,101 +41,26 @@
   </div>
 
   <div class="champ-select-bar">
-    <select class="select" style="width:auto; min-width:220px">
-      <option>GT3 Pro</option>
-      <option>GT3 Am</option>
-      <option>Copa Rookies</option>
-      <option>Turismo Clásico</option>
+    <select class="select" style="width:auto; min-width:220px" id="champ-select">
+      <option value="">Cargando campeonatos…</option>
     </select>
     <div class="tabs-pill">
       <span class="tab active">Pilotos</span>
       <span class="tab">Equipos</span>
     </div>
-    <span class="text-tertiary mono" style="font-size:var(--fs-sm); margin-left:auto">Después de la ronda 7 de 16</span>
+    <span class="text-tertiary mono" style="font-size:var(--fs-sm); margin-left:auto" id="champ-info">—</span>
   </div>
 
   <div class="table-wrap">
     <table class="table">
       <thead>
         <tr>
-          <th>Pos</th><th>Piloto</th><th>Vehículo</th>
-          <th class="num">Victorias</th><th class="num">Podios</th>
-          <th class="num">Mejor vuelta</th><th class="num">Puntos</th>
+          <th>Pos</th><th>Piloto</th>
+          <th class="num">Puntos</th>
         </tr>
       </thead>
-      <tbody>
-        <tr class="podium-1">
-          <td><span class="rank-badge gold">1</span></td>
-          <td class="data">F. Gómez Reta</td>
-          <td>Ferrari 296 GT3</td>
-          <td class="num mono">4</td>
-          <td class="num mono">6</td>
-          <td class="num mono">3</td>
-          <td class="num mono glow-amber" style="font-weight:700">318</td>
-        </tr>
-        <tr class="podium-2">
-          <td><span class="rank-badge silver">2</span></td>
-          <td class="data">L. Bianchi</td>
-          <td>Porsche 992 GT3 R</td>
-          <td class="num mono">3</td>
-          <td class="num mono">7</td>
-          <td class="num mono">2</td>
-          <td class="num mono" style="font-weight:700">296</td>
-        </tr>
-        <tr class="podium-3">
-          <td><span class="rank-badge bronze">3</span></td>
-          <td class="data">M. Suárez</td>
-          <td>Audi R8 LMS GT3</td>
-          <td class="num mono">2</td>
-          <td class="num mono">5</td>
-          <td class="num mono">1</td>
-          <td class="num mono" style="font-weight:700">281</td>
-        </tr>
-        <tr>
-          <td><span class="rank-badge">4</span></td>
-          <td>R. Peralta</td>
-          <td>BMW M4 GT3</td>
-          <td class="num mono">1</td>
-          <td class="num mono">4</td>
-          <td class="num mono">0</td>
-          <td class="num mono">254</td>
-        </tr>
-        <tr>
-          <td><span class="rank-badge">5</span></td>
-          <td>C. Molina</td>
-          <td>Mercedes-AMG GT3</td>
-          <td class="num mono">1</td>
-          <td class="num mono">2</td>
-          <td class="num mono">1</td>
-          <td class="num mono">229</td>
-        </tr>
-        <tr>
-          <td><span class="rank-badge">6</span></td>
-          <td>J. Ferreyra</td>
-          <td>Lamborghini Huracán GT3</td>
-          <td class="num mono">0</td>
-          <td class="num mono">1</td>
-          <td class="num mono">0</td>
-          <td class="num mono">198</td>
-        </tr>
-        <tr>
-          <td><span class="rank-badge">7</span></td>
-          <td>D. Aguirre</td>
-          <td>McLaren 720S GT3</td>
-          <td class="num mono">0</td>
-          <td class="num mono">0</td>
-          <td class="num mono">0</td>
-          <td class="num mono">171</td>
-        </tr>
-        <tr>
-          <td><span class="rank-badge">8</span></td>
-          <td>N. Villalba</td>
-          <td>Aston Martin Vantage GT3</td>
-          <td class="num mono">0</td>
-          <td class="num mono">0</td>
-          <td class="num mono">0</td>
-          <td class="num mono">154</td>
-        </tr>
+      <tbody id="champ-tabla">
+        <tr><td colspan="3" class="text-tertiary">Cargando posiciones…</td></tr>
       </tbody>
     </table>
   </div>
@@ -151,5 +76,8 @@
   </div>
 </footer>
 
+<script src="js/api.js"></script>
+<script src="js/shell.js"></script>
+<script src="js/championship.js"></script>
 </body>
 </html>

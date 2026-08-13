@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GP de Termas — LFM Nacional</title>
+<title>Carrera — LFM Nacional</title>
 <link rel="stylesheet" href="main.css">
 </head>
 <body>
@@ -38,13 +38,13 @@
 
   <div class="detail-header">
     <div>
-      <span class="eyebrow amber">GT3 PRO · RONDA 8</span>
-      <h1 style="text-transform:none; font-size:var(--fs-2xl); margin-top:var(--sp-2)">GP de Termas</h1>
-      <p class="text-secondary" style="margin-top:var(--sp-2)">Termas de Río Hondo — Circuito Internacional, 17 de agosto, 20:30 hs</p>
+      <span class="eyebrow amber" id="race-eyebrow">CARRERA</span>
+      <h1 style="text-transform:none; font-size:var(--fs-2xl); margin-top:var(--sp-2)" id="race-titulo">Carrera</h1>
+      <p class="text-secondary" style="margin-top:var(--sp-2)" id="race-subtitulo"></p>
     </div>
     <div class="flex-col gap-3" style="align-items:flex-end">
-      <span class="chip chip-upcoming" style="font-size:var(--fs-xs); padding:.5em 1em">Inscripciones abiertas</span>
-      <a href="#" class="btn btn-primary">Inscribirme</a>
+      <span id="race-estado-chip"><span class="chip chip-pending">…</span></span>
+      <a href="#" class="btn btn-primary" id="race-inscribir">Inscribirme</a>
     </div>
   </div>
 
@@ -60,92 +60,41 @@
     <div class="info-grid">
       <div class="info-tile bracket">
         <div class="label">Fecha y hora</div>
-        <div class="value">17 ago · 20:30 hs</div>
+        <div class="value" id="race-fecha">—</div>
       </div>
       <div class="info-tile">
         <div class="label">Circuito</div>
-        <div class="value">Termas de Río Hondo</div>
+        <div class="value" id="race-circuito">—</div>
       </div>
       <div class="info-tile">
         <div class="label">Categoría</div>
-        <div class="value"><span class="chip chip-category">GT3 Pro</span></div>
+        <div class="value"><span class="chip chip-category" id="race-categoria">—</span></div>
       </div>
       <div class="info-tile">
         <div class="label">Servidor</div>
-        <div class="value mono">LFM-AR-03 · 128 tick</div>
+        <div class="value mono" id="race-servidor">—</div>
       </div>
       <div class="info-tile">
         <div class="label">Cupo</div>
-        <div class="value mono">28 / 32</div>
-        <div class="progress" style="margin-top:var(--sp-2)"><div class="progress-bar" style="width:87%"></div></div>
+        <div class="value mono" id="race-cupo">—</div>
+        <div class="progress" style="margin-top:var(--sp-2)"><div class="progress-bar" id="race-cupo-bar" style="width:0%"></div></div>
       </div>
     </div>
   </section>
 
   <section id="archivos" class="section-tight">
     <h3 style="margin-bottom:var(--sp-4)">Archivos de la carrera</h3>
-    <div class="flex-col">
-      <div class="file-row">
-        <span class="flex gap-3" style="align-items:center">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--celeste)"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
-          <span>Reglamento_GP_Termas.pdf</span>
-        </span>
-        <a href="#" class="btn btn-ghost btn-sm">Descargar</a>
-      </div>
-      <div class="file-row">
-        <span class="flex gap-3" style="align-items:center">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--celeste)"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
-          <span>BOP_GT3_Ronda8.pdf</span>
-        </span>
-        <a href="#" class="btn btn-ghost btn-sm">Descargar</a>
-      </div>
-      <div class="file-row">
-        <span class="flex gap-3" style="align-items:center">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--amber)"><path d="m12 2 3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg>
-          <span>Setup_referencia_Termas.rar</span>
-        </span>
-        <a href="#" class="btn btn-ghost btn-sm">Descargar</a>
-      </div>
+    <div class="flex-col" id="race-archivos">
+      <p class="text-tertiary" style="font-size:var(--fs-sm)">No hay archivos publicados.</p>
     </div>
   </section>
 
   <section id="inscriptos" class="section-tight">
     <div class="section-head" style="margin-bottom:var(--sp-3)">
-      <h3>Inscriptos <span class="text-tertiary mono" style="font-size:var(--fs-sm)">28 / 32</span></h3>
+      <h3>Inscriptos <span class="text-tertiary mono" style="font-size:var(--fs-sm)" id="race-inscriptos-count"></span></h3>
     </div>
-    <div class="card">
-      <div class="entrant-row">
-        <img class="avatar" width="36" height="36" src="https://i.pravatar.cc/72?img=13" alt="">
-        <div style="flex:1">
-          <strong style="font-size:var(--fs-sm)">F. Gómez Reta</strong>
-          <div class="text-tertiary mono" style="font-size:var(--fs-2xs)">Elo 2410 · SR 89</div>
-        </div>
-        <span class="chip chip-confirmed">Confirmado</span>
-      </div>
-      <div class="entrant-row">
-        <img class="avatar" width="36" height="36" src="https://i.pravatar.cc/72?img=33" alt="">
-        <div style="flex:1">
-          <strong style="font-size:var(--fs-sm)">L. Bianchi</strong>
-          <div class="text-tertiary mono" style="font-size:var(--fs-2xs)">Elo 2355 · SR 92</div>
-        </div>
-        <span class="chip chip-confirmed">Confirmado</span>
-      </div>
-      <div class="entrant-row">
-        <img class="avatar" width="36" height="36" src="https://i.pravatar.cc/72?img=47" alt="">
-        <div style="flex:1">
-          <strong style="font-size:var(--fs-sm)">M. Suárez</strong>
-          <div class="text-tertiary mono" style="font-size:var(--fs-2xs)">Elo 2298 · SR 81</div>
-        </div>
-        <span class="chip chip-pending">Sin confirmar</span>
-      </div>
-      <div class="entrant-row" style="border-bottom:none">
-        <img class="avatar" width="36" height="36" src="https://i.pravatar.cc/72?img=25" alt="">
-        <div style="flex:1">
-          <strong style="font-size:var(--fs-sm)">R. Peralta</strong>
-          <div class="text-tertiary mono" style="font-size:var(--fs-2xs)">Elo 2201 · SR 95</div>
-        </div>
-        <span class="chip chip-confirmed">Confirmado</span>
-      </div>
+    <div class="card" id="race-inscriptos-list">
+      <p class="text-tertiary" style="font-size:var(--fs-sm)">Cargando inscriptos…</p>
     </div>
   </section>
 
@@ -155,59 +104,12 @@
       <table class="table">
         <thead>
           <tr>
-            <th>Pos</th><th>Piloto</th><th>Vehículo</th>
+            <th>Pos</th><th>Piloto</th>
             <th class="num">Mejor vuelta</th><th class="num">Elo</th><th class="num">SR</th>
           </tr>
         </thead>
-        <tbody>
-          <tr class="podium-1">
-            <td><span class="rank-badge gold">1</span></td>
-            <td class="data">F. Gómez Reta</td>
-            <td>Ferrari 296 GT3</td>
-            <td class="num mono">1:38.214</td>
-            <td class="num mono" style="color:var(--success)">+24</td>
-            <td class="num mono" style="color:var(--success)">+2</td>
-          </tr>
-          <tr class="podium-2">
-            <td><span class="rank-badge silver">2</span></td>
-            <td class="data">L. Bianchi</td>
-            <td>Porsche 992 GT3 R</td>
-            <td class="num mono">1:38.560</td>
-            <td class="num mono" style="color:var(--success)">+17</td>
-            <td class="num mono" style="color:var(--success)">+1</td>
-          </tr>
-          <tr class="podium-3">
-            <td><span class="rank-badge bronze">3</span></td>
-            <td class="data">R. Peralta</td>
-            <td>BMW M4 GT3</td>
-            <td class="num mono">1:38.902</td>
-            <td class="num mono" style="color:var(--success)">+11</td>
-            <td class="num mono">0</td>
-          </tr>
-          <tr>
-            <td><span class="rank-badge">4</span></td>
-            <td>M. Suárez</td>
-            <td>Audi R8 LMS GT3</td>
-            <td class="num mono">1:39.118</td>
-            <td class="num mono" style="color:var(--success)">+6</td>
-            <td class="num mono" style="color:var(--danger)">−3</td>
-          </tr>
-          <tr>
-            <td><span class="rank-badge">5</span></td>
-            <td>C. Molina</td>
-            <td>Mercedes-AMG GT3</td>
-            <td class="num mono">1:39.402</td>
-            <td class="num mono" style="color:var(--danger)">−4</td>
-            <td class="num mono" style="color:var(--danger)">−6</td>
-          </tr>
-          <tr>
-            <td><span class="rank-badge">—</span></td>
-            <td>J. Ferreyra</td>
-            <td>Lamborghini Huracán GT3</td>
-            <td class="num mono">—</td>
-            <td class="num mono" style="color:var(--danger)">−18</td>
-            <td class="num"><span class="chip chip-dnf" style="padding:.2em .6em">DNF</span></td>
-          </tr>
+        <tbody id="race-resultados">
+          <tr><td colspan="5" class="text-tertiary">Sin resultados publicados.</td></tr>
         </tbody>
       </table>
     </div>
@@ -218,13 +120,10 @@
     <div class="table-wrap">
       <table class="table">
         <thead>
-          <tr><th>Pos</th><th>Piloto</th><th>Vehículo</th><th class="num">Vuelta</th></tr>
+          <tr><th>Pos</th><th>Piloto</th><th class="num">Vuelta</th></tr>
         </thead>
-        <tbody>
-          <tr class="podium-1"><td><span class="rank-badge gold">1</span></td><td class="data">L. Bianchi</td><td>Porsche 992 GT3 R</td><td class="num mono">1:37.884</td></tr>
-          <tr class="podium-2"><td><span class="rank-badge silver">2</span></td><td class="data">F. Gómez Reta</td><td>Ferrari 296 GT3</td><td class="num mono">1:37.951</td></tr>
-          <tr class="podium-3"><td><span class="rank-badge bronze">3</span></td><td class="data">R. Peralta</td><td>BMW M4 GT3</td><td class="num mono">1:38.220</td></tr>
-          <tr><td><span class="rank-badge">4</span></td><td>M. Suárez</td><td>Audi R8 LMS GT3</td><td class="num mono">1:38.671</td></tr>
+        <tbody id="race-clasificacion">
+          <tr><td colspan="3" class="text-tertiary">Sin tiempos registrados.</td></tr>
         </tbody>
       </table>
     </div>
@@ -242,5 +141,8 @@
   </div>
 </footer>
 
+<script src="js/api.js"></script>
+<script src="js/shell.js"></script>
+<script src="js/race-detail.js"></script>
 </body>
 </html>

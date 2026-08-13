@@ -40,20 +40,20 @@
     <h1>Compite. Subí de Elo.<br><span>Hacete un nombre.</span></h1>
     <p class="hero-lede">La liga de sim racing más competitiva de Argentina. Carreras semanales, categorías por nivel de Elo y un sistema de Safety Rating que premia el respeto en pista.</p>
     <div class="hero-ctas">
-      <a href="04-race-detail.html" class="btn btn-primary btn-lg">Inscribirme a la próxima carrera</a>
+      <a href="04-race-detail.html" id="home-cta-inscribir" class="btn btn-primary btn-lg">Inscribirme a la próxima carrera</a>
       <a href="05-championship.html" class="btn btn-secondary btn-lg">Ver campeonato</a>
     </div>
     <div class="hero-stats">
       <div class="hero-stat">
-        <div class="stat-value mono glow-amber">1.284</div>
+        <div class="stat-value mono glow-amber" id="stat-pilotos">—</div>
         <div class="progress-label" style="margin-top:.25rem">Pilotos activos</div>
       </div>
       <div class="hero-stat">
-        <div class="stat-value mono glow-amber">312</div>
+        <div class="stat-value mono glow-amber" id="stat-carreras">—</div>
         <div class="progress-label" style="margin-top:.25rem">Carreras corridas</div>
       </div>
       <div class="hero-stat">
-        <div class="stat-value mono glow-amber">6</div>
+        <div class="stat-value mono glow-amber" id="stat-categorias">—</div>
         <div class="progress-label" style="margin-top:.25rem">Categorías activas</div>
       </div>
     </div>
@@ -76,7 +76,7 @@
         <h3>Próximas carreras</h3>
         <a href="03-races-list.html" class="chip chip-upcoming">Ver todas</a>
       </div>
-      <div class="flex-col gap-4">
+      <div class="flex-col gap-4" id="home-next-races">
         <div class="flex gap-3">
           <div class="race-date"><span class="day">17</span><span class="mon">AGO</span></div>
           <div class="race-meta">
@@ -97,10 +97,10 @@
     <!-- Campeonato -->
     <div class="card card-hover bracket bracket-celeste">
       <div class="card-header">
-        <h3>Campeonato GT3 Pro</h3>
-        <a href="05-championship.html" class="chip chip-category">Temp. 2026</a>
+        <h3 id="home-champ-title">Campeonato GT3 Pro</h3>
+        <a href="05-championship.html" class="chip chip-category" id="home-champ-chip">Temp. 2026</a>
       </div>
-      <div class="flex-col gap-3">
+      <div class="flex-col gap-3" id="home-champ-top">
         <div class="flex-between">
           <span class="flex gap-2" style="align-items:center"><span class="rank-badge gold">1</span> F. Gómez Reta</span>
           <span class="mono data">318 pts</span>
@@ -120,10 +120,10 @@
     <div class="card card-hover">
       <div class="card-header">
         <h3>Último anuncio</h3>
-        <span class="text-tertiary mono" style="font-size:var(--fs-2xs)">HACE 2 HS</span>
+        <span class="text-tertiary mono" style="font-size:var(--fs-2xs)" id="home-anuncio-fecha">HACE 2 HS</span>
       </div>
-      <p class="text-secondary" style="font-size:var(--fs-sm); margin-bottom:var(--sp-4)">Se actualizó el reglamento de incidentes: las apelaciones ahora tienen un plazo de 48 hs desde la publicación de resultados oficiales.</p>
-      <a href="#" class="btn btn-ghost btn-sm">Leer reglamento completo</a>
+      <p class="text-secondary" style="font-size:var(--fs-sm); margin-bottom:var(--sp-4)" id="home-anuncio-contenido">Se actualizó el reglamento de incidentes: las apelaciones ahora tienen un plazo de 48 hs desde la publicación de resultados oficiales.</p>
+      <a href="#" class="btn btn-ghost btn-sm" id="home-anuncio-link">Leer reglamento completo</a>
     </div>
 
   </div>
@@ -139,5 +139,8 @@
   </div>
 </footer>
 
+<script src="js/api.js"></script>
+<script src="js/shell.js"></script>
+<script src="js/home.js"></script>
 </body>
 </html>

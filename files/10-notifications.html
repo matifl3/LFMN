@@ -34,97 +34,14 @@
 <main class="container-wide section" style="max-width:760px">
   <div class="section-head">
     <div>
-      <span class="eyebrow">3 SIN LEER</span>
+      <span class="eyebrow" id="nt-cta">—</span>
       <h2>Notificaciones</h2>
     </div>
-    <a href="#" class="btn btn-ghost btn-sm">Marcar todas como leídas</a>
+    <a href="#" class="btn btn-ghost btn-sm" id="nt-marcar-todas">Marcar todas como leídas</a>
   </div>
 
-  <div class="flex-col gap-3">
-
-    <div class="feed-item unread">
-      <div class="feed-icon" style="color:var(--celeste)">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 17V7l8-4 8 4v10l-8 4-8-4Z"/></svg>
-      </div>
-      <div style="flex:1">
-        <div class="flex-between">
-          <strong style="font-size:var(--fs-sm)">Inscripción confirmada</strong>
-          <span class="text-tertiary mono" style="font-size:var(--fs-2xs)">Hace 20 min</span>
-        </div>
-        <p class="text-secondary" style="font-size:var(--fs-sm); margin-top:var(--sp-1)">Tu inscripción a <strong style="color:var(--text-primary)">GP de Termas — GT3 Pro</strong> fue confirmada por los organizadores.</p>
-        <div class="flex gap-2" style="margin-top:var(--sp-3)">
-          <a href="04-race-detail.html" class="btn btn-ghost btn-sm">Ver carrera</a>
-          <a href="#" class="btn btn-ghost btn-sm">Marcar como leída</a>
-        </div>
-      </div>
-    </div>
-
-    <div class="feed-item unread">
-      <div class="feed-icon" style="color:var(--amber)">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 2 3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg>
-      </div>
-      <div style="flex:1">
-        <div class="flex-between">
-          <strong style="font-size:var(--fs-sm)">Nuevo logro desbloqueado</strong>
-          <span class="text-tertiary mono" style="font-size:var(--fs-2xs)">Hace 2 hs</span>
-        </div>
-        <p class="text-secondary" style="font-size:var(--fs-sm); margin-top:var(--sp-1)">Desbloqueaste <strong style="color:var(--text-primary)">"Racha de 5 carreras"</strong>. Reclamá tu recompensa desde tu perfil.</p>
-        <div class="flex gap-2" style="margin-top:var(--sp-3)">
-          <a href="11-achievements.html" class="btn btn-ghost btn-sm">Ver logro</a>
-          <a href="#" class="btn btn-ghost btn-sm">Marcar como leída</a>
-        </div>
-      </div>
-    </div>
-
-    <div class="feed-item unread">
-      <div class="feed-icon" style="color:var(--danger)">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/><path d="M12 9v4M12 17h.01"/></svg>
-      </div>
-      <div style="flex:1">
-        <div class="flex-between">
-          <strong style="font-size:var(--fs-sm)">Incidente reportado en tu contra</strong>
-          <span class="text-tertiary mono" style="font-size:var(--fs-2xs)">Hace 5 hs</span>
-        </div>
-        <p class="text-secondary" style="font-size:var(--fs-sm); margin-top:var(--sp-1)">C. Molina reportó un incidente en la curva 4 de <strong style="color:var(--text-primary)">Sprint Nocturno</strong>. Tenés 48 hs para presentar tu descargo.</p>
-        <div class="flex gap-2" style="margin-top:var(--sp-3)">
-          <a href="12-incidents.html" class="btn btn-secondary btn-sm">Ver incidente</a>
-          <a href="#" class="btn btn-ghost btn-sm">Marcar como leída</a>
-        </div>
-      </div>
-    </div>
-
-    <div class="feed-item">
-      <div class="feed-icon">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
-      </div>
-      <div style="flex:1">
-        <div class="flex-between">
-          <strong style="font-size:var(--fs-sm)" class="text-secondary">Recordatorio de carrera</strong>
-          <span class="text-tertiary mono" style="font-size:var(--fs-2xs)">Ayer</span>
-        </div>
-        <p class="text-tertiary" style="font-size:var(--fs-sm); margin-top:var(--sp-1)">Copa Rookies — Ronda 4 empieza en 24 hs. Revisá tu configuración de auto.</p>
-        <div class="flex gap-2" style="margin-top:var(--sp-3)">
-          <a href="#" class="btn btn-ghost btn-sm">Eliminar</a>
-        </div>
-      </div>
-    </div>
-
-    <div class="feed-item">
-      <div class="feed-icon">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/></svg>
-      </div>
-      <div style="flex:1">
-        <div class="flex-between">
-          <strong style="font-size:var(--fs-sm)" class="text-secondary">Nueva versión del reglamento</strong>
-          <span class="text-tertiary mono" style="font-size:var(--fs-2xs)">Hace 2 días</span>
-        </div>
-        <p class="text-tertiary" style="font-size:var(--fs-sm); margin-top:var(--sp-1)">Se actualizaron las reglas de apelaciones. Ya está disponible para descarga.</p>
-        <div class="flex gap-2" style="margin-top:var(--sp-3)">
-          <a href="#" class="btn btn-ghost btn-sm">Eliminar</a>
-        </div>
-      </div>
-    </div>
-
+  <div class="flex-col gap-3" id="nt-feed">
+    <p class="text-tertiary">Cargando notificaciones…</p>
   </div>
 </main>
 
@@ -138,5 +55,8 @@
   </div>
 </footer>
 
+<script src="js/api.js"></script>
+<script src="js/shell.js"></script>
+<script src="js/notifications.js"></script>
 </body>
 </html>

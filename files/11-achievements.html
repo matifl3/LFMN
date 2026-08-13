@@ -35,91 +35,14 @@
 <main class="container-wide section">
   <div class="section-head">
     <div>
-      <span class="eyebrow amber">18 DE 32 DESBLOQUEADOS</span>
+      <span class="eyebrow amber" id="ach-eyebrow">—</span>
       <h2>Logros</h2>
     </div>
-    <div class="progress" style="width:220px"><div class="progress-bar full" style="width:56%"></div></div>
+    <div class="progress" style="width:220px"><div class="progress-bar full" id="ach-progress" style="width:0%"></div></div>
   </div>
 
-  <div class="grid grid-4">
-
-    <div class="card achievement-card unlocked bracket">
-      <div class="achievement-check">✓</div>
-      <div class="achievement-icon">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 2 3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg>
-      </div>
-      <h4>Primera victoria</h4>
-      <p class="text-tertiary" style="font-size:var(--fs-xs)">Ganá tu primera carrera oficial.</p>
-    </div>
-
-    <div class="card achievement-card unlocked">
-      <div class="achievement-check">✓</div>
-      <div class="achievement-icon">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 17V7l8-4 8 4v10l-8 4-8-4Z"/></svg>
-      </div>
-      <h4>Racha de 5 carreras</h4>
-      <p class="text-tertiary" style="font-size:var(--fs-xs)">Corré 5 carreras seguidas sin faltar.</p>
-    </div>
-
-    <div class="card achievement-card unlocked">
-      <div class="achievement-check">✓</div>
-      <div class="achievement-icon">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
-      </div>
-      <h4>Piloto limpio del mes</h4>
-      <p class="text-tertiary" style="font-size:var(--fs-xs)">Terminá un mes con SR superior a 90.</p>
-    </div>
-
-    <div class="card achievement-card">
-      <div class="achievement-icon">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/></svg>
-      </div>
-      <h4>Poleman serial</h4>
-      <p class="text-tertiary" style="font-size:var(--fs-xs)">Conseguí 10 poles en una temporada.</p>
-      <div class="progress" style="margin-top:var(--sp-2)"><div class="progress-bar" style="width:60%"></div></div>
-      <span class="text-tertiary mono" style="font-size:var(--fs-2xs)">6 / 10</span>
-    </div>
-
-    <div class="card achievement-card">
-      <div class="achievement-icon">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 17V7l8-4 8 4v10l-8 4-8-4Z"/></svg>
-      </div>
-      <h4>10 podios en Termas</h4>
-      <p class="text-tertiary" style="font-size:var(--fs-xs)">Subite al podio 10 veces en este circuito.</p>
-      <div class="progress" style="margin-top:var(--sp-2)"><div class="progress-bar" style="width:70%"></div></div>
-      <span class="text-tertiary mono" style="font-size:var(--fs-2xs)">7 / 10</span>
-    </div>
-
-    <div class="card achievement-card locked">
-      <div class="achievement-icon">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="11" width="16" height="9" rx="1"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
-      </div>
-      <h4>Invicto</h4>
-      <p class="text-tertiary" style="font-size:var(--fs-xs)">Ganá una temporada completa sin perder el liderazgo.</p>
-      <div class="progress" style="margin-top:var(--sp-2)"><div class="progress-bar" style="width:15%"></div></div>
-      <span class="text-tertiary mono" style="font-size:var(--fs-2xs)">2 / 16</span>
-    </div>
-
-    <div class="card achievement-card locked">
-      <div class="achievement-icon">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-      </div>
-      <h4>Vuelta perfecta</h4>
-      <p class="text-tertiary" style="font-size:var(--fs-xs)">Registrá la vuelta rápida en 5 carreras distintas.</p>
-      <div class="progress" style="margin-top:var(--sp-2)"><div class="progress-bar" style="width:20%"></div></div>
-      <span class="text-tertiary mono" style="font-size:var(--fs-2xs)">1 / 5</span>
-    </div>
-
-    <div class="card achievement-card locked">
-      <div class="achievement-icon">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.87 8.37 6.84 9.73"/><path d="M22 12.25a10 10 0 0 1-4 8"/></svg>
-      </div>
-      <h4>Trotamundos</h4>
-      <p class="text-tertiary" style="font-size:var(--fs-xs)">Corré en los 10 circuitos disponibles.</p>
-      <div class="progress" style="margin-top:var(--sp-2)"><div class="progress-bar" style="width:40%"></div></div>
-      <span class="text-tertiary mono" style="font-size:var(--fs-2xs)">4 / 10</span>
-    </div>
-
+  <div class="grid grid-4" id="ach-grid">
+    <p class="text-tertiary">Cargando logros…</p>
   </div>
 </main>
 
@@ -133,5 +56,8 @@
   </div>
 </footer>
 
+<script src="js/api.js"></script>
+<script src="js/shell.js"></script>
+<script src="js/achievements.js"></script>
 </body>
 </html>

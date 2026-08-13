@@ -40,142 +40,199 @@
     </div>
   </div>
 
-  <div class="tabs-pill" style="margin-bottom:var(--sp-6)">
-    <span class="tab active">Carreras</span>
-    <span class="tab">Categorías</span>
-    <span class="tab">Pilotos</span>
-    <span class="tab">Importar datos</span>
+  <div id="adm-denied" class="card" style="display:none">
+    <p class="text-tertiary">Necesitás una sesión de administrador o comisario para acceder a este panel.</p>
+    <a href="02-auth.html" class="btn btn-primary btn-sm" style="margin-top:var(--sp-3)">Iniciar sesión</a>
   </div>
 
-  <div class="admin-layout">
-
-    <div>
-      <div class="table-wrap" style="margin-bottom:var(--sp-8)">
-        <table class="table">
-          <thead>
-            <tr><th>Carrera</th><th>Categoría</th><th>Fecha</th><th class="num">Cupo</th><th>Estado</th><th></th></tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td class="data">GP de Termas</td>
-              <td><span class="chip chip-category">GT3 Pro</span></td>
-              <td class="mono">17 ago 20:30</td>
-              <td class="num mono">28 / 32</td>
-              <td><span class="chip chip-upcoming">Abierta</span></td>
-              <td>
-                <div class="row-actions">
-                  <button class="btn btn-ghost btn-sm btn-icon" aria-label="Editar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
-                  <button class="btn btn-danger btn-sm btn-icon" aria-label="Eliminar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg></button>
-                </div>
-              </td>
-            </tr>
-            <tr>
-              <td class="data">Sprint Nocturno</td>
-              <td><span class="chip chip-category">GT3 Am</span></td>
-              <td class="mono">18 ago 21:30</td>
-              <td class="num mono">32 / 32</td>
-              <td><span class="chip chip-closed">Cupo lleno</span></td>
-              <td>
-                <div class="row-actions">
-                  <button class="btn btn-ghost btn-sm btn-icon" aria-label="Editar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
-                  <button class="btn btn-danger btn-sm btn-icon" aria-label="Eliminar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg></button>
-                </div>
-              </td>
-            </tr>
-            <tr>
-              <td class="data">Copa Rookies — Ronda 4</td>
-              <td><span class="chip chip-category">Rookies</span></td>
-              <td class="mono">21 ago 21:00</td>
-              <td class="num mono">14 / 24</td>
-              <td><span class="chip chip-upcoming">Abierta</span></td>
-              <td>
-                <div class="row-actions">
-                  <button class="btn btn-ghost btn-sm btn-icon" aria-label="Editar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
-                  <button class="btn btn-danger btn-sm btn-icon" aria-label="Eliminar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg></button>
-                </div>
-              </td>
-            </tr>
-            <tr style="opacity:.6">
-              <td class="data">GP de Termas — Clasificación</td>
-              <td><span class="chip chip-category">GT3 Pro</span></td>
-              <td class="mono">25 ago 20:00</td>
-              <td class="num mono">0 / 32</td>
-              <td><span class="chip chip-pending">Borrador</span></td>
-              <td>
-                <div class="row-actions">
-                  <button class="btn btn-ghost btn-sm btn-icon" aria-label="Editar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
-                  <button class="btn btn-danger btn-sm btn-icon" aria-label="Eliminar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg></button>
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <h3 style="margin-bottom:var(--sp-4)">Importar datos</h3>
-      <div class="card">
-        <p class="text-tertiary" style="font-size:var(--fs-sm); margin-bottom:var(--sp-4)">Pegá un bloque JSON con carreras, resultados o pilotos para cargarlos en lote. El formato debe respetar el esquema publicado en la documentación.</p>
-        <div class="import-zone">
-          <textarea class="textarea" style="min-height:180px" placeholder='{
-  "carreras": [
-    {
-      "nombre": "GP de Termas",
-      "categoria": "GT3 Pro",
-      "fecha": "2026-08-17T20:30:00",
-      "cupo": 32
-    }
-  ]
-}'></textarea>
-        </div>
-        <div class="flex gap-3" style="justify-content:flex-end; margin-top:var(--sp-4)">
-          <a href="#" class="btn btn-ghost">Validar JSON</a>
-          <a href="#" class="btn btn-primary">Importar</a>
-        </div>
-      </div>
+  <div id="adm-panel">
+    <div class="tabs-pill" style="margin-bottom:var(--sp-6)">
+      <span class="tab active" data-tab="carreras">Carreras</span>
+      <span class="tab" data-tab="campeonatos">Campeonatos</span>
+      <span class="tab" data-tab="categorias">Categorías</span>
+      <span class="tab" data-tab="pilotos">Pilotos</span>
+      <span class="tab" data-tab="importar">Importar datos</span>
     </div>
 
-    <aside class="panel-aside">
-      <h4 style="margin-bottom:var(--sp-4)">Nueva carrera</h4>
-      <div class="field">
-        <label for="a-nombre">Nombre</label>
-        <input class="input" id="a-nombre" placeholder="Ej. GP de Termas">
-      </div>
-      <div class="field">
-        <label for="a-cat">Categoría</label>
-        <select class="select" id="a-cat">
-          <option>GT3 Pro</option><option>GT3 Am</option><option>Copa Rookies</option><option>Turismo Clásico</option>
-        </select>
-      </div>
-      <div class="input-group">
-        <div class="field">
-          <label for="a-fecha">Fecha</label>
-          <input class="input" id="a-fecha" type="date">
-        </div>
-        <div class="field">
-          <label for="a-hora">Hora</label>
-          <input class="input" id="a-hora" type="time">
-        </div>
-      </div>
-      <div class="field">
-        <label for="a-circuito">Circuito</label>
-        <select class="select" id="a-circuito">
-          <option>Termas de Río Hondo</option><option>El Villicum</option><option>Autódromo N°9</option>
-        </select>
-      </div>
-      <div class="field">
-        <label for="a-cupo">Cupo de inscriptos</label>
-        <input class="input" id="a-cupo" type="number" value="32">
-      </div>
-      <div class="field" style="margin-bottom:0">
-        <label for="a-servidor">Servidor</label>
-        <input class="input" id="a-servidor" value="LFM-AR-03 · 128 tick">
-      </div>
-      <div class="flex gap-2" style="margin-top:var(--sp-6)">
-        <a href="#" class="btn btn-ghost btn-block">Cancelar</a>
-        <a href="#" class="btn btn-primary btn-block">Crear carrera</a>
-      </div>
-    </aside>
+    <div class="admin-layout">
 
+      <div>
+        <div class="pane" id="pane-carreras">
+          <div class="table-wrap" style="margin-bottom:var(--sp-8)">
+            <table class="table">
+              <thead>
+                <tr><th>Carrera</th><th>Categoría</th><th>Fecha</th><th class="num">Cupo</th><th>Estado</th><th></th></tr>
+              </thead>
+              <tbody id="adm-tabla-carreras">
+                <tr><td colspan="6" class="text-tertiary">Cargando…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="pane" id="pane-campeonatos" style="display:none">
+          <div class="table-wrap" style="margin-bottom:var(--sp-8)">
+            <table class="table">
+              <thead>
+                <tr><th>Campeonato</th><th>Temporada</th><th>Categoría</th><th>Puntos</th><th>Estado</th><th></th></tr>
+              </thead>
+              <tbody id="adm-tabla-campeonatos">
+                <tr><td colspan="6" class="text-tertiary">Cargando…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="pane" id="pane-categorias" style="display:none">
+          <div class="table-wrap" style="margin-bottom:var(--sp-8)">
+            <table class="table">
+              <thead>
+                <tr><th>Categoría</th><th>Descripción</th><th class="num">Elo</th><th>Setup</th><th></th></tr>
+              </thead>
+              <tbody id="adm-tabla-categorias">
+                <tr><td colspan="5" class="text-tertiary">Cargando…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="pane" id="pane-pilotos" style="display:none">
+          <div class="table-wrap" style="margin-bottom:var(--sp-8)">
+            <table class="table">
+              <thead>
+                <tr><th>Piloto</th><th>Email</th><th class="num">Elo</th><th class="num">SR</th><th>Rol</th><th></th></tr>
+              </thead>
+              <tbody id="adm-tabla-pilotos">
+                <tr><td colspan="6" class="text-tertiary">Cargando…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="pane" id="pane-importar" style="display:none">
+          <div class="card">
+            <p class="text-tertiary" style="font-size:var(--fs-sm); margin-bottom:var(--sp-4)">Pegá el JSON de una sesión (clasificación o carrera) exportada desde el simulador y seleccioná la carrera a la que corresponde.</p>
+            <div class="field">
+              <label for="adm-import-carrera">Carrera</label>
+              <select class="select" id="adm-import-carrera"></select>
+            </div>
+            <div class="import-zone">
+              <textarea class="textarea" id="adm-import-json" style="min-height:200px" placeholder='{ "sessionType": "QUALIFY", "entries": [] }'></textarea>
+            </div>
+            <div class="flex gap-3" style="justify-content:flex-end; margin-top:var(--sp-4)">
+              <button class="btn btn-ghost" id="adm-import-validar">Validar JSON</button>
+              <button class="btn btn-primary" id="adm-import-enviar">Importar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <aside class="panel-aside">
+        <div id="form-carrera">
+          <h4 id="adm-form-titulo" style="margin-bottom:var(--sp-4)">Nueva carrera</h4>
+          <input type="hidden" id="a-id">
+          <div class="field">
+            <label for="a-nombre">Nombre</label>
+            <input class="input" id="a-nombre" placeholder="Ej. GP de Termas">
+          </div>
+          <div class="field">
+            <label for="a-cat">Categoría</label>
+            <select class="select" id="a-cat"></select>
+          </div>
+          <div class="input-group">
+            <div class="field">
+              <label for="a-fecha">Fecha</label>
+              <input class="input" id="a-fecha" type="date">
+            </div>
+            <div class="field">
+              <label for="a-hora">Hora</label>
+              <input class="input" id="a-hora" type="time">
+            </div>
+          </div>
+          <div class="field">
+            <label for="a-circuito">Circuito</label>
+            <input class="input" id="a-circuito" placeholder="Ej. Termas de Río Hondo">
+          </div>
+          <div class="field">
+            <label for="a-cupo">Cupo de inscriptos</label>
+            <input class="input" id="a-cupo" type="number" value="32">
+          </div>
+          <div class="field" style="margin-bottom:0">
+            <label for="a-servidor">Servidor</label>
+            <input class="input" id="a-servidor" placeholder="LFM-AR-03 · 128 tick">
+          </div>
+          <div class="flex gap-2" style="margin-top:var(--sp-6)">
+            <button class="btn btn-ghost btn-block" id="a-cancelar">Cancelar</button>
+            <button class="btn btn-primary btn-block" id="a-guardar">Crear carrera</button>
+          </div>
+        </div>
+
+        <div id="form-campeonato" style="display:none">
+          <h4 id="cam-form-titulo" style="margin-bottom:var(--sp-4)">Nuevo campeonato</h4>
+          <input type="hidden" id="c-id">
+          <div class="field">
+            <label for="c-nombre">Nombre</label>
+            <input class="input" id="c-nombre" placeholder="Ej. Temporada 2026 — LFM Pro">
+          </div>
+          <div class="field">
+            <label for="c-temporada">Temporada</label>
+            <input class="input" id="c-temporada" placeholder="Ej. 2026">
+          </div>
+          <div class="field">
+            <label for="c-cat">Categoría</label>
+            <select class="select" id="c-cat"></select>
+          </div>
+          <div class="field" style="margin-bottom:0">
+            <label for="c-sistema">Sistema de puntos</label>
+            <select class="select" id="c-sistema">
+              <option value="">Por defecto</option>
+              <option value="F1">Fórmula 1</option>
+              <option value="F1_SPRINT">F1 + Sprint</option>
+            </select>
+          </div>
+          <div class="flex gap-2" style="margin-top:var(--sp-6)">
+            <button class="btn btn-ghost btn-block" id="c-cancelar">Cancelar</button>
+            <button class="btn btn-primary btn-block" id="c-guardar">Crear campeonato</button>
+          </div>
+        </div>
+
+        <div id="form-categoria" style="display:none">
+          <h4 id="cat-form-titulo" style="margin-bottom:var(--sp-4)">Nueva categoría</h4>
+          <input type="hidden" id="cat-id">
+          <div class="field">
+            <label for="cat-nombre">Nombre</label>
+            <input class="input" id="cat-nombre" placeholder="Ej. LFM Pro">
+          </div>
+          <div class="field">
+            <label for="cat-desc">Descripción</label>
+            <textarea class="textarea" id="cat-desc" placeholder="Descripción corta…"></textarea>
+          </div>
+          <div class="input-group">
+            <div class="field">
+              <label for="cat-elomin">Elo mínimo</label>
+              <input class="input" id="cat-elomin" type="number" placeholder="0">
+            </div>
+            <div class="field">
+              <label for="cat-elomax">Elo máximo</label>
+              <input class="input" id="cat-elomax" type="number" placeholder="9999">
+            </div>
+          </div>
+          <div class="field" style="margin-bottom:0">
+            <label for="cat-setup">Setup</label>
+            <select class="select" id="cat-setup">
+              <option value="ABIERTO">Abierto</option>
+              <option value="FIJO">Fijo</option>
+              <option value="LIBRE">Libre</option>
+            </select>
+          </div>
+          <div class="flex gap-2" style="margin-top:var(--sp-6)">
+            <button class="btn btn-ghost btn-block" id="cat-cancelar">Cancelar</button>
+            <button class="btn btn-primary btn-block" id="cat-guardar">Crear categoría</button>
+          </div>
+        </div>
+      </aside>
+
+    </div>
   </div>
 </main>
 
@@ -189,5 +246,8 @@
   </div>
 </footer>
 
+<script src="js/api.js"></script>
+<script src="js/shell.js"></script>
+<script src="js/admin.js"></script>
 </body>
 </html>

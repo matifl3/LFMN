@@ -39,98 +39,19 @@
       <h2>Carreras</h2>
     </div>
     <div class="flex gap-3">
-      <select class="select" style="width:auto">
-        <option>Todas las categorías</option>
-        <option>GT3 Pro</option>
-        <option>GT3 Am</option>
-        <option>Copa Rookies</option>
-        <option>Turismo Clásico</option>
+      <select class="select" style="width:auto" id="races-categoria">
+        <option value="">Todas las categorías</option>
       </select>
     </div>
   </div>
 
   <div class="tabs" style="margin-bottom:var(--sp-6)">
-    <span class="tab active">Próximas <span class="count">6</span></span>
-    <span class="tab">Pasadas <span class="count">312</span></span>
+    <button type="button" class="tab active" id="tab-proximas" style="background:none;border:none;cursor:pointer;font:inherit;color:inherit">Próximas <span class="count">0</span></button>
+    <button type="button" class="tab" id="tab-pasadas" style="background:none;border:none;cursor:pointer;font:inherit;color:inherit">Pasadas <span class="count">0</span></button>
   </div>
 
-  <div class="flex-col gap-3">
-
-    <div class="race-row">
-      <div class="race-date"><span class="day">17</span><span class="mon">AGO</span></div>
-      <div>
-        <strong style="font-family:var(--font-display); text-transform:uppercase; font-size:var(--fs-base)">GP de Termas</strong>
-        <div class="text-tertiary" style="font-size:var(--fs-sm)">Termas de Río Hondo · 20:30 hs</div>
-      </div>
-      <div><span class="chip chip-category">GT3 Pro</span></div>
-      <div>
-        <div class="progress-label" style="margin-top:0"><span>Inscriptos</span><span class="mono">28 / 32</span></div>
-        <div class="progress"><div class="progress-bar" style="width:87%"></div></div>
-      </div>
-      <span class="chip chip-upcoming">Abierta</span>
-      <a href="04-race-detail.html" class="btn btn-primary btn-sm">Ver carrera</a>
-    </div>
-
-    <div class="race-row">
-      <div class="race-date"><span class="day">18</span><span class="mon">AGO</span></div>
-      <div>
-        <strong style="font-family:var(--font-display); text-transform:uppercase; font-size:var(--fs-base)">Sprint Nocturno</strong>
-        <div class="text-tertiary" style="font-size:var(--fs-sm)">Autódromo de Buenos Aires N°9 · 21:30 hs</div>
-      </div>
-      <div><span class="chip chip-category">GT3 Am</span></div>
-      <div>
-        <div class="progress-label" style="margin-top:0"><span>Inscriptos</span><span class="mono">32 / 32</span></div>
-        <div class="progress"><div class="progress-bar full" style="width:100%"></div></div>
-      </div>
-      <span class="chip chip-closed">Cupo lleno</span>
-      <a href="04-race-detail.html" class="btn btn-ghost btn-sm">Ver carrera</a>
-    </div>
-
-    <div class="race-row">
-      <div class="race-date"><span class="day">21</span><span class="mon">AGO</span></div>
-      <div>
-        <strong style="font-family:var(--font-display); text-transform:uppercase; font-size:var(--fs-base)">Copa Rookies — Ronda 4</strong>
-        <div class="text-tertiary" style="font-size:var(--fs-sm)">Autódromo Oscar Cabalén · 21:00 hs</div>
-      </div>
-      <div><span class="chip chip-category">Rookies</span></div>
-      <div>
-        <div class="progress-label" style="margin-top:0"><span>Inscriptos</span><span class="mono">14 / 24</span></div>
-        <div class="progress"><div class="progress-bar" style="width:58%"></div></div>
-      </div>
-      <span class="chip chip-upcoming">Abierta</span>
-      <a href="04-race-detail.html" class="btn btn-primary btn-sm">Ver carrera</a>
-    </div>
-
-    <div class="race-row">
-      <div class="race-date"><span class="day">24</span><span class="mon">AGO</span></div>
-      <div>
-        <strong style="font-family:var(--font-display); text-transform:uppercase; font-size:var(--fs-base)">Endurance de Otoño — 2 hs</strong>
-        <div class="text-tertiary" style="font-size:var(--fs-sm)">El Villicum · 19:00 hs</div>
-      </div>
-      <div><span class="chip chip-category">Turismo Clásico</span></div>
-      <div>
-        <div class="progress-label" style="margin-top:0"><span>Inscriptos</span><span class="mono">9 / 30</span></div>
-        <div class="progress"><div class="progress-bar" style="width:30%"></div></div>
-      </div>
-      <span class="chip chip-upcoming">Abierta</span>
-      <a href="04-race-detail.html" class="btn btn-primary btn-sm">Ver carrera</a>
-    </div>
-
-    <div class="race-row" style="opacity:.55">
-      <div class="race-date"><span class="day">25</span><span class="mon">AGO</span></div>
-      <div>
-        <strong style="font-family:var(--font-display); text-transform:uppercase; font-size:var(--fs-base)">GP de Termas — Clasificación</strong>
-        <div class="text-tertiary" style="font-size:var(--fs-sm)">Termas de Río Hondo · 20:00 hs</div>
-      </div>
-      <div><span class="chip chip-category">GT3 Pro</span></div>
-      <div>
-        <div class="progress-label" style="margin-top:0"><span>Inscriptos</span><span class="mono">0 / 32</span></div>
-        <div class="progress"><div class="progress-bar" style="width:0%"></div></div>
-      </div>
-      <span class="chip chip-pending">Próximamente</span>
-      <a href="#" class="btn btn-ghost btn-sm" aria-disabled="true">Aún no disponible</a>
-    </div>
-
+  <div class="flex-col gap-3" id="races-list">
+    <p class="text-tertiary">Cargando carreras…</p>
   </div>
 </main>
 
@@ -144,5 +65,8 @@
   </div>
 </footer>
 
+<script src="js/api.js"></script>
+<script src="js/shell.js"></script>
+<script src="js/races.js"></script>
 </body>
 </html>

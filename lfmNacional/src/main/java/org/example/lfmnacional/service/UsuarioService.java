@@ -34,6 +34,9 @@ public class UsuarioService {
 
     @Transactional
     public UsuarioResponse registrar(UsuarioRequest request) {
+        if (request.password() == null || request.password().isBlank()) {
+            throw new BusinessException("La contrasena es obligatoria");
+        }
         if (usuarioRepository.existsByEmail(request.email())) {
             throw new BusinessException("Ya existe un usuario con el email " + request.email());
         }

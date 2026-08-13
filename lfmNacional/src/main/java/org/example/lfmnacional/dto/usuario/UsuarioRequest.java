@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 
 public record UsuarioRequest(
         @NotBlank @Email String email,
-        @NotBlank String password,
+        String password,
         String nombrePiloto,
         String fotoPerfil,
         String guidSteam
