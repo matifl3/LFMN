@@ -65,6 +65,12 @@ public class UsuarioController {
         return usuarioService.changeRol(id, rol);
     }
 
+    @PutMapping("/{id}/rating")
+    @PreAuthorize("hasRole('ADMIN')")
+    public UsuarioResponse updateRating(@PathVariable Long id, @Valid @RequestBody RatingRequest request) {
+        return usuarioService.updateRating(id, request);
+    }
+
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {

@@ -369,14 +369,47 @@
           }).join('') + '</select>';
         const del = u.id === me.id ? '<span></span>' :
           '<button class="btn btn-danger btn-sm btn-icon" data-del-piloto="' + u.id + '" aria-label="Eliminar">' + icono('del') + '</button>';
+        const ratingCell = function (campo) {
+          if (!isAdmin) {
+            return '<td class="num mono">' + (u[campo] != null ? u[campo] : '—') + '</td>';
+          }
+          return '<td><input class="input" type="number" min="0" data-rating-piloto="' + u.id + '" data-campo="' + campo + '" value="' + (u[campo] != null ? u[campo] : '') + '" style="width:70px;padding:4px 6px;font-size:var(--fs-2xs)"></td>';
+        };
         return '<tr>' +
           '<td class="data">' + L.avatarHtml(u, 26) + ' ' + L.esc(u.nombrePiloto || u.email) + '</td>' +
           '<td class="text-tertiary" style="font-size:var(--fs-xs)">' + L.esc(u.email || '—') + '</td>' +
-          '<td class="num mono">' + (u.elo != null ? u.elo : '—') + '</td>' +
-          '<td class="num mono">' + (u.safetyRating != null ? u.safetyRating : '—') + '</td>' +
+          ratingCell('elo') +
+          ratingCell('safetyRating') +
           '<td>' + (isAdmin ? sel : '<span class="chip chip-pending">' + u.rol + '</span>') + '</td>' +
           '<td>' + (isAdmin ? del : '<span></span>') + '</td></tr>';
       }).join('') : '<tr><td colspan="6" class="text-tertiary">No hay pilotos.</td></tr>';
+
+      tbody.querySelectorAll('input[data-rating-piloto]').forEach(function (inp) {
+        inp.addEventListener('change', function () {
+          const id = inp.getAttribute('data-rating-piloto');
+          const body = {};
+          ['elo', 'safetyRating'].forEach(function (campo) {
+            const el = tbody.querySelector('input[data-rating-piloto="' + id + '"][data-campo="' + campo + '"]');
+            if (el) {
+              const v = el.value.trim() === '' ? null : Number(el.value);
+              if (v !== null && !isNaN(v) && v >= 0) body[campo] = v;
+            }
+          });
+          if (!Object.keys(body).length) {
+            L.toast('Ingresá un valor mayor o igual a 0.', 'error');
+            cargarPilotos();
+            return;
+          }
+          L.put('/usuarios/' + id + '/rating', body)
+            .then(function (u) {
+              L.toast('Rating actualizado: ' + (u.nombrePiloto || 'piloto') + ' · Elo ' + u.elo + ' · SR ' + u.safetyRating, 'success');
+            })
+            .catch(function (e) {
+              L.toast(e.message, 'error');
+              cargarPilotos();
+            });
+        });
+      });
 
       tbody.querySelectorAll('select[data-piloto]').forEach(function (sel) {
         sel.addEventListener('change', function () {
