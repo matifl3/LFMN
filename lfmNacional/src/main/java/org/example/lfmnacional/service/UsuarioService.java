@@ -131,6 +131,34 @@ public class UsuarioService {
     }
 
     @Transactional
+    public UsuarioResponse updateRating(Long id, RatingRequest request) {
+        Usuario usuario = getEntity(id);
+        if (request.elo() != null) {
+            int deltaElo = request.elo() - usuario.getElo();
+            usuario.setElo(request.elo());
+            if (deltaElo != 0) {
+                eloSancionRepository.save(EloSancion.builder()
+                        .usuario(usuario)
+                        .cambio(deltaElo)
+                        .motivo("Ajuste manual del admin")
+                        .build());
+            }
+        }
+        if (request.safetyRating() != null) {
+            int deltaSr = request.safetyRating() - usuario.getSafetyRating();
+            usuario.setSafetyRating(request.safetyRating());
+            if (deltaSr != 0) {
+                safetyRatingSancionRepository.save(SafetyRatingSancion.builder()
+                        .usuario(usuario)
+                        .cambio(deltaSr)
+                        .motivo("Ajuste manual del admin")
+                        .build());
+            }
+        }
+        return toResponse(usuarioRepository.save(usuario));
+    }
+
+    @Transactional
     public void delete(Long id) {
         Usuario usuario = getEntity(id);
         usuarioRepository.delete(usuario);
