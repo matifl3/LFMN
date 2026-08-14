@@ -182,7 +182,9 @@
 
   const CARRERA_CHIPS = {
     PROGRAMADA: ['chip-upcoming', 'Programada'],
-    CERRADA: ['chip-closed', 'Cerrada'],
+    INSCRIPCIONES_ABIERTAS: ['chip-upcoming', 'Inscripciones abiertas'],
+    INSCRIPCIONES_CERRADAS: ['chip-closed', 'Cerrada'],
+    EN_CURSO: ['chip-review', 'En curso'],
     FINALIZADA: ['chip-resolved', 'Finalizada'],
     CANCELADA: ['chip-rejected', 'Cancelada']
   };

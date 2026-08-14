@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -39,11 +40,19 @@ public class InscripcionService {
         validarInscripcionesAbiertas(carrera);
         validarRequisitosElo(carrera, usuario);
 
-        inscripcionRepository.findByCarrera_IdAndUsuario_Id(carreraId, usuarioId).ifPresent(existing -> {
+        Optional<Inscripcion> existente = inscripcionRepository.findByCarrera_IdAndUsuario_Id(carreraId, usuarioId);
+        if (existente.isPresent() && existente.get().getEstado() != EstadoInscripcion.CANCELADA) {
             throw new BusinessException("El usuario ya esta inscripto en esta carrera");
-        });
+        }
 
         EstadoInscripcion estado = hayCupo(carrera) ? EstadoInscripcion.INSCRIPTO : EstadoInscripcion.LISTA_ESPERA;
+
+        if (existente.isPresent()) {
+            Inscripcion previa = existente.get();
+            previa.setEstado(estado);
+            return toResponse(inscripcionRepository.save(previa));
+        }
+
         Inscripcion inscripcion = Inscripcion.builder()
                 .carrera(carrera)
                 .usuario(usuario)

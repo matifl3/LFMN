@@ -17,7 +17,9 @@
     if (r.estado === 'CANCELADA') return L.chipCarrera('CANCELADA');
     const cupo = r.cupoMaximo || 0;
     const lleno = inscriptos >= cupo && cupo > 0;
-    if (r.estado === 'PROGRAMADA') return lleno ? L.chipEstado('CERRADA', { CERRADA: ['chip-closed', 'Cupo lleno'] }) : L.chipCarrera('PROGRAMADA');
+    if (r.estado === 'PROGRAMADA' || r.estado === 'INSCRIPCIONES_ABIERTAS') {
+      return lleno ? '<span class="chip chip-closed">Cupo lleno</span>' : L.chipCarrera('INSCRIPCIONES_ABIERTAS');
+    }
     return L.chipCarrera(r.estado);
   }
 
