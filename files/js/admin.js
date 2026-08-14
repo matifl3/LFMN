@@ -4,8 +4,10 @@
   const L = window.LFM;
 
   const ESTADO_LABEL = {
-    PROGRAMADA: 'Abierta',
-    CERRADA: 'Cupo lleno',
+    PROGRAMADA: 'Programada',
+    INSCRIPCIONES_ABIERTAS: 'Inscripciones abiertas',
+    INSCRIPCIONES_CERRADAS: 'Inscripciones cerradas',
+    EN_CURSO: 'En curso',
     FINALIZADA: 'Finalizada',
     CANCELADA: 'Cancelada'
   };

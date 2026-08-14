@@ -23,9 +23,9 @@
     if (carrera.estado === 'CANCELADA') return L.chipCarrera('CANCELADA');
     const cupo = carrera.cupoMaximo || 0;
     const n = inscriptos.filter(function (i) { return i.estado !== 'CANCELADA'; }).length;
-    if (carrera.estado === 'PROGRAMADA') {
-      if (n >= cupo && cupo > 0) return L.chipEstado('CERRADA', { CERRADA: ['chip-closed', 'Cupo lleno'] });
-      return L.chipEstado('PROGRAMADA', { PROGRAMADA: ['chip-upcoming', 'Inscripciones abiertas'] });
+    if (carrera.estado === 'PROGRAMADA' || carrera.estado === 'INSCRIPCIONES_ABIERTAS') {
+      if (n >= cupo && cupo > 0) return L.chipEstado('INSCRIPCIONES_CERRADAS', { INSCRIPCIONES_CERRADAS: ['chip-closed', 'Cupo lleno'] });
+      return L.chipEstado('INSCRIPCIONES_ABIERTAS', { INSCRIPCIONES_ABIERTAS: ['chip-upcoming', 'Inscripciones abiertas'] });
     }
     return L.chipCarrera(carrera.estado);
   }
@@ -155,7 +155,7 @@
 
     const yaInscripto = inscriptos.some(function (i) { return i.usuarioId === user.id && i.estado !== 'CANCELADA'; });
 
-    if (carrera.estado !== 'PROGRAMADA') {
+    if (carrera.estado !== 'PROGRAMADA' && carrera.estado !== 'INSCRIPCIONES_ABIERTAS') {
       btn.textContent = 'Inscripción cerrada';
       btn.setAttribute('aria-disabled', 'true');
       btn.style.pointerEvents = 'none';

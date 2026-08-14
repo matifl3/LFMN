@@ -1,4 +1,6 @@
+
 # Flujos de negocio y modelo de tablas — Low Fuel Motorsport
+
 
 > Documento técnico del backend (Spring Boot) del proyecto **Low Fuel Motorsport**.
 > Describe el modelo de 27 tablas y los flujos principales del dominio.
