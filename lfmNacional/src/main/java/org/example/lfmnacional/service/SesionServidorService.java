@@ -3,7 +3,9 @@ package org.example.lfmnacional.service;
 import lombok.RequiredArgsConstructor;
 import org.example.lfmnacional.dto.resultado.CargarResultadosRequest;
 import org.example.lfmnacional.dto.resultado.ResultadoCarreraRequest;
+import org.example.lfmnacional.dto.sesion.CarSesionData;
 import org.example.lfmnacional.dto.sesion.EventoSesionData;
+import org.example.lfmnacional.dto.sesion.LapSesionData;
 import org.example.lfmnacional.dto.sesion.ResultadoSesionData;
 import org.example.lfmnacional.dto.sesion.SesionServerData;
 import org.example.lfmnacional.entity.Carrera;
@@ -13,6 +15,7 @@ import org.example.lfmnacional.entity.ResultadoCarrera;
 import org.example.lfmnacional.entity.SesionClasificacion;
 import org.example.lfmnacional.entity.SesionProcesada;
 import org.example.lfmnacional.entity.Usuario;
+import org.example.lfmnacional.entity.VueltaCarrera;
 import org.example.lfmnacional.enums.EstadoIncidente;
 import org.example.lfmnacional.enums.RolPilotoIncidente;
 import org.example.lfmnacional.exception.BusinessException;
@@ -23,6 +26,7 @@ import org.example.lfmnacional.repository.ResultadoCarreraRepository;
 import org.example.lfmnacional.repository.SesionClasificacionRepository;
 import org.example.lfmnacional.repository.SesionProcesadaRepository;
 import org.example.lfmnacional.repository.UsuarioRepository;
+import org.example.lfmnacional.repository.VueltaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,7 +35,9 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -51,6 +57,7 @@ public class SesionServidorService {
     private final IncidenteRepository incidenteRepository;
     private final IncidentePilotoRepository incidentePilotoRepository;
     private final SesionProcesadaRepository sesionProcesadaRepository;
+    private final VueltaRepository vueltaRepository;
 
     @Transactional
     public String importarSesion(Long carreraId, SesionServerData sesion) {
@@ -93,7 +100,10 @@ public class SesionServidorService {
         String tipo = sesion.type() != null ? sesion.type().toUpperCase() : "";
         switch (tipo) {
             case SESION_QUALIFY -> importarClasificacion(carrera, sesion);
-            case SESION_RACE -> importarResultados(carrera, sesion);
+            case SESION_RACE -> {
+                importarResultados(carrera, sesion);
+                importarVueltas(carrera, sesion, tipo);
+            }
             default -> throw new BusinessException("Tipo de sesion no soportado: " + sesion.type());
         }
         autogenerarIncidentes(carrera, sesion);
@@ -138,6 +148,7 @@ public class SesionServidorService {
         }
 
         Long tiempoPole = conTiempo.get(0).bestLap();
+        Map<Integer, CarSesionData> autos = autosPorId(sesion);
         for (ResultadoSesionData dato : conTiempo) {
             Usuario usuario = usuarioRepository.findByGuidSteam(dato.driverGuid()).orElse(null);
             if (usuario == null) {
@@ -152,6 +163,8 @@ public class SesionServidorService {
             clasificacion.setFecha(LocalDateTime.now());
             clasificacion.setTiempo(dato.bestLap());
             clasificacion.setDiferenciaPole(dato.bestLap() - tiempoPole);
+            clasificacion.setModeloAuto(modeloDe(autos, dato));
+            clasificacion.setSkinAuto(skinDe(autos, dato));
             sesionClasificacionRepository.save(clasificacion);
         }
 
@@ -188,6 +201,7 @@ public class SesionServidorService {
                 .toList();
 
         List<ResultadoCarreraRequest> items = new ArrayList<>();
+        Map<Integer, CarSesionData> autos = autosPorId(sesion);
         int posicion = 1;
         for (ResultadoSesionData dato : finalizaron) {
             Usuario usuario = usuarioRepository.findByGuidSteam(dato.driverGuid()).orElse(null);
@@ -197,7 +211,8 @@ public class SesionServidorService {
             items.add(new ResultadoCarreraRequest(
                     carrera.getId(), usuario.getId(), posicion++,
                     dato.totalTime(), vueltaRapidaValida(dato.bestLap()),
-                    null, true, null, null));
+                    null, true, null, null,
+                    modeloDe(autos, dato), skinDe(autos, dato)));
         }
         for (ResultadoSesionData dato : dnf) {
             Usuario usuario = usuarioRepository.findByGuidSteam(dato.driverGuid()).orElse(null);
@@ -207,13 +222,79 @@ public class SesionServidorService {
             items.add(new ResultadoCarreraRequest(
                     carrera.getId(), usuario.getId(), posicion++,
                     dato.totalTime(), vueltaRapidaValida(dato.bestLap()),
-                    null, false, null, null));
+                    null, false, null, null,
+                    modeloDe(autos, dato), skinDe(autos, dato)));
         }
 
         if (items.isEmpty()) {
             return;
         }
         resultadoCarreraService.cargarResultados(new CargarResultadosRequest(carrera.getId(), items));
+    }
+
+    private Map<Integer, CarSesionData> autosPorId(SesionServerData sesion) {
+        Map<Integer, CarSesionData> mapa = new HashMap<>();
+        if (sesion.cars() != null) {
+            for (CarSesionData auto : sesion.cars()) {
+                if (auto.carId() != null) {
+                    mapa.put(auto.carId(), auto);
+                }
+            }
+        }
+        return mapa;
+    }
+
+    private String modeloDe(Map<Integer, CarSesionData> autos, ResultadoSesionData dato) {
+        if (dato.carModel() != null && !dato.carModel().isBlank()) {
+            return dato.carModel();
+        }
+        CarSesionData auto = dato.carId() != null ? autos.get(dato.carId()) : null;
+        return auto != null ? auto.model() : null;
+    }
+
+    private String skinDe(Map<Integer, CarSesionData> autos, ResultadoSesionData dato) {
+        CarSesionData auto = dato.carId() != null ? autos.get(dato.carId()) : null;
+        return auto != null ? auto.skin() : null;
+    }
+
+    private void importarVueltas(Carrera carrera, SesionServerData sesion, String tipo) {
+        if (sesion.laps() == null || sesion.laps().isEmpty()) {
+            return;
+        }
+        vueltaRepository.deleteByCarrera_IdAndTipo(carrera.getId(), tipo);
+        Map<String, Integer> numeros = new HashMap<>();
+        List<VueltaCarrera> vueltas = new ArrayList<>();
+        for (LapSesionData lap : sesion.laps()) {
+            if (!guidValido(lap.driverGuid())) {
+                continue;
+            }
+            Usuario usuario = usuarioRepository.findByGuidSteam(lap.driverGuid()).orElse(null);
+            if (usuario == null) {
+                continue;
+            }
+            int numero = numeros.merge(lap.driverGuid(), 1, Integer::sum);
+            vueltas.add(VueltaCarrera.builder()
+                    .carrera(carrera)
+                    .usuario(usuario)
+                    .numeroVuelta(numero)
+                    .tiempoMs(lap.lapTime())
+                    .sector1(sectorDe(lap, 0))
+                    .sector2(sectorDe(lap, 1))
+                    .sector3(sectorDe(lap, 2))
+                    .cortes(lap.cuts())
+                    .neumatico(lap.tyre())
+                    .tipo(tipo)
+                    .build());
+        }
+        vueltaRepository.saveAll(vueltas);
+    }
+
+    private Long sectorDe(LapSesionData lap, int indice) {
+        if (lap.sectors() == null || lap.sectors().size() <= indice) {
+            return null;
+        }
+        Integer sector = lap.sectors().get(indice);
+        return sector != null ? sector.longValue() : null;
     }
 
     private void autogenerarIncidentes(Carrera carrera, SesionServerData sesion) {

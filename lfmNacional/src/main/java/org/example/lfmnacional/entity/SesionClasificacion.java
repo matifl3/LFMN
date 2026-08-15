@@ -34,4 +34,10 @@ public class SesionClasificacion {
 
     @Column(name = "diferencia_pole")
     private Long diferenciaPole;
+
+    @Column(name = "modelo_auto")
+    private String modeloAuto;
+
+    @Column(name = "skin_auto")
+    private String skinAuto;
 }

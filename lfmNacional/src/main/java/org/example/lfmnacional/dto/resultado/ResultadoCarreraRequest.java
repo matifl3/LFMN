@@ -11,6 +11,8 @@ public record ResultadoCarreraRequest(
         Boolean poles,
         Boolean finalizo,
         Integer eloGanado,
-        Integer srGanado
+        Integer srGanado,
+        String modeloAuto,
+        String skinAuto
 ) {
 }

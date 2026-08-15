@@ -56,6 +56,8 @@ public class SesionClasificacionService {
                 .fecha(request.fecha() != null ? request.fecha() : LocalDateTime.now())
                 .tiempo(request.tiempo())
                 .diferenciaPole(request.diferenciaPole())
+                .modeloAuto(request.modeloAuto())
+                .skinAuto(request.skinAuto())
                 .build();
         return toResponse(sesionClasificacionRepository.save(clasificacion));
     }
@@ -68,6 +70,8 @@ public class SesionClasificacionService {
         clasificacion.setFecha(request.fecha() != null ? request.fecha() : clasificacion.getFecha());
         clasificacion.setTiempo(request.tiempo());
         clasificacion.setDiferenciaPole(request.diferenciaPole());
+        clasificacion.setModeloAuto(request.modeloAuto());
+        clasificacion.setSkinAuto(request.skinAuto());
         return toResponse(sesionClasificacionRepository.save(clasificacion));
     }
 
@@ -84,6 +88,8 @@ public class SesionClasificacionService {
                 clasificacion.getUsuario().getNombrePiloto(),
                 clasificacion.getFecha(),
                 clasificacion.getTiempo(),
-                clasificacion.getDiferenciaPole());
+                clasificacion.getDiferenciaPole(),
+                clasificacion.getModeloAuto(),
+                clasificacion.getSkinAuto());
     }
 }

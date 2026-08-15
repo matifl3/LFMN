@@ -40,7 +40,12 @@
     <h1>Compite. Subí de Elo.<br><span>Hacete un nombre.</span></h1>
     <p class="hero-lede">La liga de sim racing más competitiva de Argentina. Carreras semanales, categorías por nivel de Elo y un sistema de Safety Rating que premia el respeto en pista.</p>
     <div class="hero-ctas">
-      <a href="04-race-detail.html" id="home-cta-inscribir" class="btn btn-primary btn-lg">Inscribirme a la próxima carrera</a>
+      <div class="cta-dropdown">
+        <button class="btn btn-primary btn-lg" id="home-cta-inscribir">Inscribirme a la próxima carrera <span class="caret">▾</span></button>
+        <div class="cta-dropdown-panel" id="home-cta-panel">
+          <p class="text-tertiary" style="font-size:var(--fs-sm); padding:var(--sp-3)">Cargando carreras…</p>
+        </div>
+      </div>
       <a href="05-championship.html" class="btn btn-secondary btn-lg">Ver campeonato</a>
     </div>
     <div class="hero-stats">
