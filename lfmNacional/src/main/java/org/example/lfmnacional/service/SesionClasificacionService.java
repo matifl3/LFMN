@@ -81,6 +81,7 @@ public class SesionClasificacionService {
                 clasificacion.getId(),
                 clasificacion.getCarrera().getId(),
                 clasificacion.getUsuario().getId(),
+                clasificacion.getUsuario().getNombrePiloto(),
                 clasificacion.getFecha(),
                 clasificacion.getTiempo(),
                 clasificacion.getDiferenciaPole());

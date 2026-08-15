@@ -10,7 +10,10 @@ public record SetupResponse(
         String vehiculo,
         String archivo,
         Long autorId,
+        String autorNombre,
+        String autorFoto,
         Long categoriaId,
+        String categoriaNombre,
         LocalDateTime fechaPublicacion,
         Double promedioCalificacion
 ) {

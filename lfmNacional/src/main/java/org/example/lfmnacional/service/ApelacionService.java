@@ -110,6 +110,7 @@ public class ApelacionService {
                 apelacion.getId(),
                 apelacion.getSancion().getId(),
                 apelacion.getUsuario().getId(),
+                apelacion.getUsuario().getNombrePiloto(),
                 apelacion.getMotivo(),
                 apelacion.getEstado(),
                 apelacion.getRespuestaAdmin(),

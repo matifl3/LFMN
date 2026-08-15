@@ -8,6 +8,7 @@ public record ApelacionResponse(
         Long id,
         Long sancionId,
         Long usuarioId,
+        String nombrePiloto,
         String motivo,
         EstadoApelacion estado,
         String respuestaAdmin,

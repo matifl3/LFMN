@@ -5,8 +5,7 @@
 
   const listBox = document.getElementById('inc-list');
   let view = 'incidentes';
-  let carreraMap = {};
-  let usuariosMap = {};
+  let carreras = [];
   let incidentes = [];
   let sanciones = [];
   let apelaciones = [];
@@ -17,9 +16,8 @@
     RESUELTO: ['chip-resolved', 'Resuelto']
   };
 
-  function carreraNombre(id) {
-    const c = carreraMap[id];
-    return c ? (c.nombre + (c.categoriaNombre ? ' — ' + c.categoriaNombre : '')) : ('Carrera #' + id);
+  function fmtCarrera(nombre, categoria) {
+    return (nombre || 'Carrera') + (categoria ? ' — ' + categoria : '');
   }
 
   function setView(v) {
@@ -44,12 +42,11 @@
     }
     listBox.innerHTML = incidentes.map(function (i) {
       const chip = L.chipEstado(i.estado, ESTADO_CHIP);
-      const r = usuariosMap[i.reportanteId];
       return '<div class="race-row" style="grid-template-columns:auto 2fr 1fr auto">' +
         chip +
         '<div>' +
         '<strong style="font-family:var(--font-display); text-transform:uppercase; font-size:var(--fs-base)">' + L.esc(i.descripcion || 'Incidente') + '</strong>' +
-        '<div class="text-tertiary" style="font-size:var(--fs-sm)">' + L.esc(carreraNombre(i.carreraId)) + ' · reportado por ' + L.esc((r || {}).nombrePiloto || ('Piloto #' + i.reportanteId)) + '</div>' +
+        '<div class="text-tertiary" style="font-size:var(--fs-sm)">' + L.esc(fmtCarrera(i.carreraNombre, i.categoriaNombre)) + ' · reportado por ' + L.esc(i.reportanteNombre || ('Piloto #' + i.reportanteId)) + '</div>' +
         '</div>' +
         '<span class="text-tertiary mono" style="font-size:var(--fs-xs)">' + (i.vuelta ? 'Vuelta ' + i.vuelta : '—') + '</span>' +
         (i.videoUrl ? '<a href="' + L.esc(i.videoUrl) + '" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">Evidencia</a>' : '<span></span>') +
@@ -76,7 +73,7 @@
         '<span class="chip chip-sanctioned">Sanción</span>' +
         '<div>' +
         '<strong style="font-family:var(--font-display); text-transform:uppercase; font-size:var(--fs-base)">' + L.esc(s.motivo || 'Sanción') + '</strong>' +
-        '<div class="text-tertiary" style="font-size:var(--fs-sm)">' + L.esc(carreraNombre(s.carreraId)) + '</div>' +
+        '<div class="text-tertiary" style="font-size:var(--fs-sm)">' + L.esc(fmtCarrera(s.carreraNombre, s.categoriaNombre)) + '</div>' +
         '</div>' +
         '<span class="text-tertiary mono" style="font-size:var(--fs-xs)">' + detalle + '</span>' +
         '<span class="text-tertiary mono" style="font-size:var(--fs-2xs)">' + L.fmtFecha(s.fecha) + '</span>' +
@@ -94,12 +91,11 @@
       const chip = a.estado === 'APROBADA'
         ? '<span class="chip chip-resolved">Aprobada</span>'
         : (a.estado === 'RECHAZADA' ? '<span class="chip chip-rejected">Rechazada</span>' : '<span class="chip chip-review">Pendiente</span>');
-      const r = usuariosMap[a.usuarioId];
       return '<div class="race-row" style="grid-template-columns:auto 2fr 1fr auto">' +
         chip +
         '<div>' +
         '<strong style="font-family:var(--font-display); text-transform:uppercase; font-size:var(--fs-base)">' + L.esc(a.motivo || 'Apelación') + '</strong>' +
-        '<div class="text-tertiary" style="font-size:var(--fs-sm)">' + L.esc((r || {}).nombrePiloto || ('Piloto #' + a.usuarioId)) + '</div>' +
+        '<div class="text-tertiary" style="font-size:var(--fs-sm)">' + L.esc(a.nombrePiloto || ('Piloto #' + a.usuarioId)) + '</div>' +
         '</div>' +
         '<span class="text-tertiary mono" style="font-size:var(--fs-xs)">' + L.fmtFecha(a.fecha) + '</span>' +
         '<span></span>' +
@@ -112,20 +108,18 @@
     Promise.all([
       L.api('/incidentes').catch(function () { return []; }),
       L.api('/carreras').catch(function () { return []; }),
-      L.api('/usuarios').catch(function () { return []; }),
       L.api('/apelaciones').catch(function () { return []; }),
       user ? L.api('/sanciones/usuario/' + user.id).catch(function () { return []; }) : Promise.resolve([])
     ]).then(function (res) {
       incidentes = res[0];
-      res[1].forEach(function (c) { carreraMap[c.id] = c; });
-      res[2].forEach(function (u) { usuariosMap[u.id] = u; });
-      apelaciones = res[3];
-      sanciones = res[4];
+      carreras = res[1];
+      apelaciones = res[2];
+      sanciones = res[3];
       render();
 
       const sel = document.getElementById('inc-carrera');
-      if (res[1].length) {
-        sel.innerHTML = res[1].map(function (c) {
+      if (carreras.length) {
+        sel.innerHTML = carreras.map(function (c) {
           return '<option value="' + c.id + '">' + L.esc(c.nombre + ' — ' + (c.categoriaNombre || '')) + '</option>';
         }).join('');
       } else {

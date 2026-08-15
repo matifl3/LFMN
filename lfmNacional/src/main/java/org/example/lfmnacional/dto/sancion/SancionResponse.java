@@ -9,6 +9,8 @@ public record SancionResponse(
         Long id,
         Long usuarioId,
         Long carreraId,
+        String carreraNombre,
+        String categoriaNombre,
         Long resolucionId,
         TipoSancion tipo,
         Integer valor,

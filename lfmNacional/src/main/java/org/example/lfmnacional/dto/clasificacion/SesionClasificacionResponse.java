@@ -6,6 +6,7 @@ public record SesionClasificacionResponse(
         Long id,
         Long carreraId,
         Long usuarioId,
+        String nombrePiloto,
         LocalDateTime fecha,
         Long tiempo,
         Long diferenciaPole

@@ -50,7 +50,6 @@
     L.api('/usuarios/' + id + '/historial-safety-rating').catch(function () { return []; }),
     L.api('/resultados/usuario/' + id).catch(function () { return []; }),
     L.api('/usuarios/' + id + '/logros/obtenidos').catch(function () { return []; }),
-    L.api('/carreras').catch(function () { return []; }),
     L.api('/categorias').catch(function () { return []; })
   ]).then(function (res) {
     const user = res[0];
@@ -59,8 +58,7 @@
     const histSr = res[3];
     const resultados = res[4];
     const logros = res[5];
-    const carreras = res[6];
-    const categorias = res[7];
+    const categorias = res[6];
 
     document.title = user.nombrePiloto + ' — Perfil de piloto — LFM Nacional';
     document.getElementById('dp-avatar').innerHTML = L.avatarHtml(user, 108);
@@ -91,21 +89,17 @@
     document.getElementById('dp-chart-elo').innerHTML = chartHtml(cumulative(histElo, user.elo || 1000), 'var(--amber)');
     document.getElementById('dp-chart-sr').innerHTML = chartHtml(cumulative(histSr, user.safetyRating || 50), 'var(--celeste)');
 
-    const carreraMap = {};
-    carreras.forEach(function (c) { carreraMap[c.id] = c; });
-
     if (resultados.length) {
       const medal = ['gold', 'silver', 'bronze'];
       const order = resultados.slice().sort(function (a, b) { return (b.id || 0) - (a.id || 0); });
       document.getElementById('dp-tabla-resultados').innerHTML = order.map(function (r) {
-        const cr = carreraMap[r.carreraId] || {};
         const pos = r.finalizo === false ? '<span class="chip chip-dnf" style="padding:.2em .6em">DNF</span>'
           : '<span class="rank-badge ' + (medal[(r.posicionFinal || 9) - 1] || '') + '" style="width:22px;height:22px">' + (r.posicionFinal ?? '—') + '</span>';
         const elo = r.eloGanado == null ? '—' : '<span class="mono" style="color:' + (r.eloGanado >= 0 ? 'var(--success)' : 'var(--danger)') + '">' + (r.eloGanado >= 0 ? '+' : '') + r.eloGanado + '</span>';
         const sr = r.srGanado == null ? '—' : '<span class="mono" style="color:' + (r.srGanado >= 0 ? 'var(--success)' : 'var(--danger)') + '">' + (r.srGanado >= 0 ? '+' : '') + r.srGanado + '</span>';
         return '<tr class="' + ((r.posicionFinal === 1 && r.finalizo !== false) ? 'podium-1' : (r.posicionFinal === 2 ? 'podium-2' : (r.posicionFinal === 3 ? 'podium-3' : ''))) + '">' +
-          '<td class="data"><a href="04-race-detail.html?id=' + r.carreraId + '" class="link">' + L.esc(cr.nombre || ('Carrera #' + r.carreraId)) + '</a></td>' +
-          '<td>' + L.esc(cr.categoriaNombre || '—') + '</td>' +
+          '<td class="data"><a href="04-race-detail.html?id=' + r.carreraId + '" class="link">' + L.esc(r.carreraNombre || ('Carrera #' + r.carreraId)) + '</a></td>' +
+          '<td>' + L.esc(r.categoriaNombre || '—') + '</td>' +
           '<td class="num">' + pos + '</td>' +
           '<td class="num">' + elo + '</td>' +
           '<td class="num">' + sr + '</td>' +

@@ -287,6 +287,8 @@ public class SancionService {
                 sancion.getId(),
                 sancion.getUsuario().getId(),
                 sancion.getCarrera() != null ? sancion.getCarrera().getId() : null,
+                sancion.getCarrera() != null ? sancion.getCarrera().getNombre() : null,
+                sancion.getCarrera() != null ? sancion.getCarrera().getCategoria().getNombre() : null,
                 sancion.getResolucion() != null ? sancion.getResolucion().getId() : null,
                 sancion.getTipo(),
                 sancion.getValor(),

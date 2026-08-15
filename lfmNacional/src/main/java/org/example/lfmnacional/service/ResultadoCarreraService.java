@@ -152,7 +152,10 @@ public class ResultadoCarreraService {
         return new ResultadoCarreraResponse(
                 resultado.getId(),
                 resultado.getCarrera().getId(),
+                resultado.getCarrera().getNombre(),
+                resultado.getCarrera().getCategoria().getNombre(),
                 resultado.getUsuario().getId(),
+                resultado.getUsuario().getNombrePiloto(),
                 resultado.getPosicionFinal(),
                 resultado.getTiempoTotal(),
                 resultado.getVueltaRapida(),

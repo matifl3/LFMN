@@ -231,7 +231,10 @@ public class IncidenteService {
         return new IncidenteResponse(
                 incidente.getId(),
                 incidente.getCarrera().getId(),
+                incidente.getCarrera().getNombre(),
+                incidente.getCarrera().getCategoria().getNombre(),
                 incidente.getReportante().getId(),
+                incidente.getReportante().getNombrePiloto(),
                 incidente.getVuelta(),
                 incidente.getDescripcion(),
                 incidente.getVideoUrl(),

@@ -98,22 +98,21 @@
     } catch (err) { L.toast(err.message, 'error'); }
   });
 
-  function renderInscripciones(list, carrerasMap) {
+  function renderInscripciones(list) {
     const box = document.getElementById('mp-inscripciones');
     if (!list.length) {
       box.innerHTML = '<p class="text-tertiary">No tenés inscripciones activas.</p>';
       return;
     }
     box.innerHTML = list.map(function (ins) {
-      const cr = carrerasMap[ins.carreraId] || {};
       const chip = ins.estado === 'LISTA_ESPERA'
         ? '<span class="chip chip-pending">En espera</span>'
         : '<span class="chip chip-confirmed">Confirmado</span>';
       return '<div class="race-row" style="grid-template-columns:64px 2fr 1fr auto">' +
-        '<div class="race-date"><span class="day">' + L.fmtFecha(cr.fecha).split(' ')[0] + '</span><span class="mon">' + (L.fmtFecha(cr.fecha).split(' ')[1] || '') + '</span></div>' +
+        '<div class="race-date"><span class="day">' + L.fmtFecha(ins.carreraFecha).split(' ')[0] + '</span><span class="mon">' + (L.fmtFecha(ins.carreraFecha).split(' ')[1] || '') + '</span></div>' +
         '<div>' +
-        '<strong style="font-family:var(--font-display); text-transform:uppercase; font-size:var(--fs-base)"><a href="04-race-detail.html?id=' + ins.carreraId + '" class="link">' + L.esc(cr.nombre || ('Carrera #' + ins.carreraId)) + '</a></strong>' +
-        '<div class="text-tertiary" style="font-size:var(--fs-sm)">' + L.esc(cr.categoriaNombre || '') + '</div>' +
+        '<strong style="font-family:var(--font-display); text-transform:uppercase; font-size:var(--fs-base)"><a href="04-race-detail.html?id=' + ins.carreraId + '" class="link">' + L.esc(ins.carreraNombre || ('Carrera #' + ins.carreraId)) + '</a></strong>' +
+        '<div class="text-tertiary" style="font-size:var(--fs-sm)">' + L.esc(ins.categoriaNombre || '') + '</div>' +
         '</div>' +
         chip +
         '<button type="button" class="btn btn-danger btn-sm" data-baja="' + ins.carreraId + '">Cancelar</button>' +
@@ -134,13 +133,8 @@
 
   async function loadInscripciones() {
     try {
-      const [list, carreras] = await Promise.all([
-        L.api('/inscripciones/usuario/' + user.id).catch(function () { return []; }),
-        L.api('/carreras').catch(function () { return []; })
-      ]);
-      const map = {};
-      carreras.forEach(function (c) { map[c.id] = c; });
-      renderInscripciones(list.filter(function (i) { return i.estado !== 'CANCELADA'; }), map);
+      const list = await L.api('/inscripciones/usuario/' + user.id).catch(function () { return []; });
+      renderInscripciones(list.filter(function (i) { return i.estado !== 'CANCELADA'; }));
     } catch (err) {
       document.getElementById('mp-inscripciones').innerHTML = '<p class="text-tertiary">No se pudieron cargar las inscripciones.</p>';
     }
