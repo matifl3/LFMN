@@ -3,11 +3,13 @@ package org.example.lfmnacional.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.lfmnacional.dto.usuario.*;
+import org.example.lfmnacional.entity.Usuario;
 import org.example.lfmnacional.enums.Rol;
 import org.example.lfmnacional.service.UsuarioService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -32,6 +34,11 @@ public class UsuarioController {
     @GetMapping
     public List<UsuarioResponse> listAll() {
         return usuarioService.listAll();
+    }
+
+    @GetMapping("/me")
+    public UsuarioResponse getMe(@AuthenticationPrincipal Usuario usuario) {
+        return usuarioService.me(usuario);
     }
 
     @GetMapping("/{id}")
