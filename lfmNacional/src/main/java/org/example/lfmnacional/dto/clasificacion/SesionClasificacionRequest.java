@@ -9,6 +9,8 @@ public record SesionClasificacionRequest(
         @NotNull Long usuarioId,
         @NotNull Long tiempo,
         Long diferenciaPole,
-        LocalDateTime fecha
+        LocalDateTime fecha,
+        String modeloAuto,
+        String skinAuto
 ) {
 }

@@ -10,6 +10,8 @@ public record ResultadoCarreraResponse(
         Integer posicionFinal,
         Long tiempoTotal,
         Long vueltaRapida,
+        String modeloAuto,
+        String skinAuto,
         Boolean poles,
         Boolean finalizo,
         Integer eloGanado,

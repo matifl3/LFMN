@@ -36,7 +36,7 @@
     document.querySelectorAll('.tabs-pill .tab').forEach(function (t) {
       t.classList.toggle('active', t.getAttribute('data-tab') === name);
     });
-    ['carreras', 'campeonatos', 'categorias', 'pilotos', 'importar'].forEach(function (p) {
+    ['carreras', 'campeonatos', 'categorias', 'pilotos', 'anuncios', 'importar'].forEach(function (p) {
       $('pane-' + p).style.display = p === name ? 'block' : 'none';
     });
     const aside = document.querySelector('.panel-aside');
@@ -44,6 +44,7 @@
     $('form-carrera').style.display = name === 'carreras' ? 'block' : 'none';
     $('form-campeonato').style.display = name === 'campeonatos' ? 'block' : 'none';
     $('form-categoria').style.display = name === 'categorias' ? 'block' : 'none';
+    $('form-anuncio').style.display = name === 'anuncios' ? 'block' : 'none';
   }
 
   /* ---------- Carreras ---------- */
@@ -438,6 +439,65 @@
     });
   }
 
+  /* ---------- Anuncios ---------- */
+
+  function limpiarFormAnuncio() {
+    $('an-form-titulo').textContent = 'Nuevo anuncio';
+    $('an-titulo').value = '';
+    $('an-contenido').value = '';
+    $('an-imagen').value = '';
+  }
+
+  function cargarAnuncios() {
+    const tbody = $('adm-tabla-anuncios');
+    tbody.innerHTML = '<tr><td colspan="5" class="text-tertiary">Cargando…</td></tr>';
+    L.get('/anuncios').then(function (anuncios) {
+      tbody.innerHTML = anuncios.length ? anuncios.map(function (a) {
+        const img = a.urlImagen
+          ? '<img src="' + L.esc(a.urlImagen) + '" alt="" style="width:56px;height:36px;object-fit:cover;border-radius:var(--r-sm);border:1px solid var(--line-bright)">'
+          : '<span class="text-tertiary">—</span>';
+        return '<tr>' +
+          '<td class="mono" style="font-size:var(--fs-2xs)">' + L.fmtFechaHora(a.fecha) + '</td>' +
+          '<td class="data">' + L.esc(a.titulo) + '</td>' +
+          '<td class="text-secondary" style="font-size:var(--fs-xs); max-width:340px">' + L.esc(a.contenido) + '</td>' +
+          '<td>' + img + '</td>' +
+          '<td>' + (isAdmin ?
+            '<div class="row-actions">' +
+              '<button class="btn btn-danger btn-sm btn-icon" data-del-anuncio="' + a.id + '" aria-label="Eliminar">' + icono('del') + '</button>' +
+            '</div>' : '') +
+          '</td></tr>';
+      }).join('') : '<tr><td colspan="5" class="text-tertiary">No hay anuncios publicados.</td></tr>';
+
+      tbody.querySelectorAll('[data-del-anuncio]').forEach(function (b) {
+        b.addEventListener('click', function () {
+          const id = Number(b.getAttribute('data-del-anuncio'));
+          if (!confirm('¿Eliminar este anuncio?')) return;
+          L.del('/anuncios/' + id).then(function () {
+            L.toast('Anuncio eliminado', 'success');
+            cargarAnuncios();
+          }).catch(function (e) { L.toast(e.message, 'error'); });
+        });
+      });
+    }).catch(function (e) {
+      tbody.innerHTML = '<tr><td colspan="5" class="text-tertiary">' + L.esc(e.message) + '</td></tr>';
+    });
+  }
+
+  function guardarAnuncio() {
+    if (!$('an-titulo').value.trim()) { L.toast('Ingresá el título.', 'error'); return; }
+    if (!$('an-contenido').value.trim()) { L.toast('Ingresá el contenido.', 'error'); return; }
+    const body = {
+      titulo: $('an-titulo').value.trim(),
+      contenido: $('an-contenido').value.trim(),
+      urlImagen: $('an-imagen').value.trim() || null
+    };
+    L.post('/anuncios', body).then(function () {
+      L.toast('Anuncio publicado', 'success');
+      limpiarFormAnuncio();
+      cargarAnuncios();
+    }).catch(function (e) { L.toast(e.message, 'error'); });
+  }
+
   /* ---------- Importar sesión ---------- */
 
   function cargarCarrerasImport() {
@@ -504,6 +564,8 @@
   $('c-cancelar').addEventListener('click', limpiarFormCampeonato);
   $('cat-guardar').addEventListener('click', guardarCategoria);
   $('cat-cancelar').addEventListener('click', limpiarFormCategoria);
+  $('an-guardar').addEventListener('click', guardarAnuncio);
+  $('an-cancelar').addEventListener('click', limpiarFormAnuncio);
 
   if (!checkAccess()) return;
 
@@ -512,5 +574,6 @@
   cargarCampeonatos();
   cargarCategorias();
   cargarPilotos();
+  cargarAnuncios();
   cargarCarrerasImport();
 })();

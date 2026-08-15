@@ -86,6 +86,8 @@ public class ResultadoCarreraService {
             resultado.setVueltaRapida(item.vueltaRapida());
             resultado.setPoles(item.poles());
             resultado.setFinalizo(item.finalizo() != null && item.finalizo());
+            resultado.setModeloAuto(item.modeloAuto());
+            resultado.setSkinAuto(item.skinAuto());
             resultados.add(resultadoCarreraRepository.save(resultado));
         }
 
@@ -159,6 +161,8 @@ public class ResultadoCarreraService {
                 resultado.getPosicionFinal(),
                 resultado.getTiempoTotal(),
                 resultado.getVueltaRapida(),
+                resultado.getModeloAuto(),
+                resultado.getSkinAuto(),
                 resultado.getPoles(),
                 resultado.getFinalizo(),
                 resultado.getEloGanado(),

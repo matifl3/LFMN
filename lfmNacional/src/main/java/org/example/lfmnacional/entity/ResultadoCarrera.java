@@ -34,6 +34,12 @@ public class ResultadoCarrera {
     @Column(name = "vuelta_rapida")
     private Long vueltaRapida;
 
+    @Column(name = "modelo_auto")
+    private String modeloAuto;
+
+    @Column(name = "skin_auto")
+    private String skinAuto;
+
     private Boolean poles;
 
     private Boolean finalizo;

@@ -3,6 +3,50 @@
   'use strict';
   const L = window.LFM;
 
+  const CTA_ESTADOS = ['PROGRAMADA', 'INSCRIPCIONES_ABIERTAS', 'INSCRIPCIONES_CERRADAS', 'EN_CURSO'];
+
+  function setupCtaInscribir(proximas) {
+    const btn = document.getElementById('home-cta-inscribir');
+    const panel = document.getElementById('home-cta-panel');
+    if (!btn || !panel) return;
+
+    const programadas = proximas.filter(function (r) { return CTA_ESTADOS.indexOf(r.estado) !== -1; });
+
+    if (!programadas.length) {
+      btn.setAttribute('aria-disabled', 'true');
+      btn.disabled = true;
+      btn.style.opacity = '.5';
+      panel.innerHTML = '<p class="text-tertiary" style="font-size:var(--fs-sm); padding:var(--sp-3)">No hay carreras próximas publicadas todavía.</p>';
+      return;
+    }
+
+    panel.innerHTML = programadas.map(function (r) {
+      return '<a class="cta-dropdown-item" href="04-race-detail.html?id=' + r.id + '">' +
+        L.raceRow(r) +
+        '</a>';
+    }).join('');
+
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      btn.classList.toggle('open');
+      panel.classList.toggle('open');
+    });
+
+    document.addEventListener('click', function (e) {
+      if (!e.target.closest('.cta-dropdown')) {
+        btn.classList.remove('open');
+        panel.classList.remove('open');
+      }
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') {
+        btn.classList.remove('open');
+        panel.classList.remove('open');
+      }
+    });
+  }
+
   async function load() {
     const [usuarios, pasadas, categorias, proximas, campeonatos] = await Promise.all([
       L.api('/usuarios').catch(() => []),
@@ -22,17 +66,11 @@
       racesBox.innerHTML = proximas.slice(0, 2).map(function (r) {
         return L.raceRow(r);
       }).join('');
-
-      const primera = proximas[0];
-      const cta = document.getElementById('home-cta-inscribir');
-      cta.href = '04-race-detail.html?id=' + primera.id;
     } else {
       racesBox.innerHTML = '<p class="text-tertiary" style="font-size:var(--fs-sm)">No hay carreras próximas publicadas todavía.</p>';
-      const cta = document.getElementById('home-cta-inscribir');
-      cta.setAttribute('aria-disabled', 'true');
-      cta.style.pointerEvents = 'none';
-      cta.style.opacity = '.5';
     }
+
+    setupCtaInscribir(proximas);
 
     // Campeonato
     if (campeonatos.length) {

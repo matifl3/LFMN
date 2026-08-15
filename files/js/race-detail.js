@@ -89,11 +89,26 @@
     }).join('');
   }
 
+  function fmtDif(ms) {
+    if (ms === null || ms === undefined || isNaN(ms)) return '—';
+    const sign = ms >= 0 ? '+' : '−';
+    const total = Math.abs(ms) / 1000;
+    const m = Math.floor(total / 60);
+    const s = Math.floor(total % 60);
+    const ml = Math.floor((total * 1000) % 1000);
+    return sign + (m > 0 ? m + ':' : '') + String(s).padStart(2, '0') + '.' + String(ml).padStart(3, '0');
+  }
+
+  function autoHtml(auto, skin) {
+    if (!auto) return '—';
+    return L.esc(auto) + (skin ? ' <span class="text-tertiary">' + L.esc(skin) + '</span>' : '');
+  }
+
   function renderResultados() {
     L.api('/resultados/carrera/' + id).then(function (res) {
       const tbody = document.getElementById('race-resultados');
       if (!res.length) {
-        tbody.innerHTML = '<tr><td colspan="5" class="text-tertiary">Sin resultados publicados.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" class="text-tertiary">Sin resultados publicados.</td></tr>';
         return;
       }
       const medal = ['gold', 'silver', 'bronze'];
@@ -108,10 +123,14 @@
           : '<span class="mono" style="color:' + (sr >= 0 ? 'var(--success)' : 'var(--danger)') + '">' + (sr >= 0 ? '+' : '') + sr + '</span>';
         const pos = r.finalizo === false ? '<span class="chip chip-dnf" style="padding:.2em .6em">DNF</span>'
           : '<span class="rank-badge ' + (medal[idx] || '') + '">' + (r.posicionFinal ?? idx + 1) + '</span>';
+        const pole = r.poles === true ? '<span class="chip chip-pole">POLE</span>' : '—';
         return '<tr class="' + rowClass + '">' +
           '<td>' + pos + '</td>' +
           '<td class="data"><a href="08-driver-profile.html?id=' + r.usuarioId + '" class="link">' + L.esc(r.nombrePiloto || ('Piloto #' + r.usuarioId)) + '</a></td>' +
+          '<td class="num mono">' + L.fmtLap(r.tiempoTotal) + '</td>' +
           '<td class="num mono">' + L.fmtLap(r.vueltaRapida) + '</td>' +
+          '<td class="num">' + pole + '</td>' +
+          '<td class="num">' + autoHtml(r.modeloAuto, r.skinAuto) + '</td>' +
           '<td class="num">' + eloHtml + '</td>' +
           '<td class="num">' + srHtml + '</td>' +
           '</tr>';
@@ -123,16 +142,41 @@
     L.api('/clasificaciones/carrera/' + id).then(function (res) {
       const tbody = document.getElementById('race-clasificacion');
       if (!res.length) {
-        tbody.innerHTML = '<tr><td colspan="3" class="text-tertiary">Sin tiempos registrados.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" class="text-tertiary">Sin tiempos registrados.</td></tr>';
         return;
       }
       const medal = ['gold', 'silver', 'bronze'];
       tbody.innerHTML = res.slice().sort(function (a, b) { return (a.tiempo || 0) - (b.tiempo || 0); }).map(function (c, idx) {
         const rowClass = idx === 0 ? 'podium-1' : (idx === 1 ? 'podium-2' : (idx === 2 ? 'podium-3' : ''));
+        const dif = c.diferenciaPole === 0 ? '<span class="chip chip-pole">POLE</span>' : fmtDif(c.diferenciaPole);
         return '<tr class="' + rowClass + '">' +
           '<td><span class="rank-badge ' + (medal[idx] || '') + '">' + (idx + 1) + '</span></td>' +
           '<td class="data"><a href="08-driver-profile.html?id=' + c.usuarioId + '" class="link">' + L.esc(c.nombrePiloto || ('Piloto #' + c.usuarioId)) + '</a></td>' +
           '<td class="num mono">' + L.fmtLap(c.tiempo) + '</td>' +
+          '<td class="num mono">' + dif + '</td>' +
+          '<td class="num">' + autoHtml(c.modeloAuto, c.skinAuto) + '</td>' +
+          '</tr>';
+      }).join('');
+    }).catch(function () {});
+  }
+
+  function renderAnalisis() {
+    L.api('/vueltas/carrera/' + id).then(function (res) {
+      const tbody = document.getElementById('race-analisis');
+      if (!res.length) {
+        tbody.innerHTML = '<tr><td colspan="8" class="text-tertiary">Sin vueltas registradas.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = res.map(function (v) {
+        return '<tr>' +
+          '<td class="data"><a href="08-driver-profile.html?id=' + v.usuarioId + '" class="link">' + L.esc(v.nombrePiloto || ('Piloto #' + v.usuarioId)) + '</a></td>' +
+          '<td class="num mono">' + v.numeroVuelta + '</td>' +
+          '<td class="num mono">' + L.fmtLap(v.tiempoMs) + '</td>' +
+          '<td class="num mono">' + L.fmtLap(v.sector1) + '</td>' +
+          '<td class="num mono">' + L.fmtLap(v.sector2) + '</td>' +
+          '<td class="num mono">' + L.fmtLap(v.sector3) + '</td>' +
+          '<td class="num">' + (v.cortes || 0) + '</td>' +
+          '<td class="mono">' + L.esc(v.neumatico || '—') + '</td>' +
           '</tr>';
       }).join('');
     }).catch(function () {});
@@ -195,6 +239,7 @@
     setupInscribir();
     renderResultados();
     renderClasificacion();
+    renderAnalisis();
   }).catch(function (err) {
     L.toast(err.message, 'error');
     document.getElementById('race-titulo').textContent = 'Carrera no encontrada';

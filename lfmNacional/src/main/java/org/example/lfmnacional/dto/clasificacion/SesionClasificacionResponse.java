@@ -9,6 +9,8 @@ public record SesionClasificacionResponse(
         String nombrePiloto,
         LocalDateTime fecha,
         Long tiempo,
-        Long diferenciaPole
+        Long diferenciaPole,
+        String modeloAuto,
+        String skinAuto
 ) {
 }

@@ -51,6 +51,7 @@
       <span class="tab" data-tab="campeonatos">Campeonatos</span>
       <span class="tab" data-tab="categorias">Categorías</span>
       <span class="tab" data-tab="pilotos">Pilotos</span>
+      <span class="tab" data-tab="anuncios">Anuncios</span>
       <span class="tab" data-tab="importar">Importar datos</span>
     </div>
 
@@ -104,6 +105,19 @@
               </thead>
               <tbody id="adm-tabla-pilotos">
                 <tr><td colspan="6" class="text-tertiary">Cargando…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="pane" id="pane-anuncios" style="display:none">
+          <div class="table-wrap" style="margin-bottom:var(--sp-8)">
+            <table class="table">
+              <thead>
+                <tr><th>Fecha</th><th>Título</th><th>Contenido</th><th>Imagen</th><th></th></tr>
+              </thead>
+              <tbody id="adm-tabla-anuncios">
+                <tr><td colspan="5" class="text-tertiary">Cargando…</td></tr>
               </tbody>
             </table>
           </div>
@@ -228,6 +242,26 @@
           <div class="flex gap-2" style="margin-top:var(--sp-6)">
             <button class="btn btn-ghost btn-block" id="cat-cancelar">Cancelar</button>
             <button class="btn btn-primary btn-block" id="cat-guardar">Crear categoría</button>
+          </div>
+        </div>
+
+        <div id="form-anuncio" style="display:none">
+          <h4 id="an-form-titulo" style="margin-bottom:var(--sp-4)">Nuevo anuncio</h4>
+          <div class="field">
+            <label for="an-titulo">Título</label>
+            <input class="input" id="an-titulo" placeholder="Ej. Reglamento actualizado">
+          </div>
+          <div class="field">
+            <label for="an-contenido">Contenido</label>
+            <textarea class="textarea" id="an-contenido" style="min-height:120px" placeholder="Texto del anuncio…"></textarea>
+          </div>
+          <div class="field" style="margin-bottom:0">
+            <label for="an-imagen">URL de imagen (opcional)</label>
+            <input class="input" id="an-imagen" placeholder="https://…">
+          </div>
+          <div class="flex gap-2" style="margin-top:var(--sp-6)">
+            <button class="btn btn-ghost btn-block" id="an-cancelar">Limpiar</button>
+            <button class="btn btn-primary btn-block" id="an-guardar">Publicar anuncio</button>
           </div>
         </div>
       </aside>
