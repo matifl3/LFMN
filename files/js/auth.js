@@ -65,7 +65,43 @@
     }
   });
 
-  document.getElementById('btn-steam').addEventListener('click', function () {
-    L.toast('El ingreso con Steam estará disponible próximamente.');
+  document.getElementById('btn-steam').addEventListener('click', async function () {
+    const btn = this;
+    btn.disabled = true;
+    try {
+      const data = await L.api('/steam/auth-url', { auth: false });
+      if (data && data.url) {
+        window.location.href = data.url;
+      } else {
+        L.toast('No se pudo iniciar el ingreso con Steam.', 'error');
+        btn.disabled = false;
+      }
+    } catch (err) {
+      L.toast(err.message, 'error');
+      btn.disabled = false;
+    }
   });
+
+  /* Retorno del flujo Steam: ?steam=ok&token=<jwt> o ?steam=invalido|expirado */
+  (function procesoSteam() {
+    const params = new URLSearchParams(location.search);
+    const steam = params.get('steam');
+    if (!steam) return;
+    const token = params.get('token');
+    history.replaceState(null, '', location.pathname + location.hash);
+    if (steam === 'ok' && token) {
+      L.setSession(token, null);
+      L.api('/usuarios/me').then(function (usuario) {
+        L.updateUser(usuario);
+        L.toast('¡Bienvenido, ' + (usuario.nombrePiloto || 'piloto') + '!', 'success');
+        location.href = next();
+      }).catch(function () {
+        L.toast('No se pudo completar el ingreso con Steam.', 'error');
+      });
+    } else {
+      L.toast(steam === 'expirado'
+        ? 'El enlace de ingreso con Steam expiró. Intentá de nuevo.'
+        : 'No se pudo ingresar con Steam.', 'error');
+    }
+  })();
 })();

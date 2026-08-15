@@ -33,4 +33,21 @@ public class SteamController {
         String resultado = steamService.procesarCallback(params);
         return new RedirectView(frontendUrl + "/09-my-profile.html?steam=" + resultado);
     }
+
+    @GetMapping("/auth-url")
+    public Map<String, String> obtenerUrlAuth() {
+        return Map.of("url", steamService.generarUrlAuth());
+    }
+
+    @GetMapping("/auth/callback")
+    public RedirectView procesarAuthCallback(@RequestParam Map<String, String> params) {
+        SteamService.SteamAuthResult resultado = steamService.autenticarOCrear(params);
+        String url;
+        if (resultado.token() != null) {
+            url = frontendUrl + "/02-auth.html?steam=ok&token=" + resultado.token();
+        } else {
+            url = frontendUrl + "/02-auth.html?steam=" + resultado.resultado();
+        }
+        return new RedirectView(url);
+    }
 }

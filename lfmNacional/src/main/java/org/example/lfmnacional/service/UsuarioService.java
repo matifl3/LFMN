@@ -71,6 +71,10 @@ public class UsuarioService {
         return toResponse(getEntity(id));
     }
 
+    public UsuarioResponse me(Usuario usuario) {
+        return toResponse(usuario);
+    }
+
     public List<UsuarioResponse> listAll() {
         return usuarioRepository.findAll().stream().map(this::toResponse).toList();
     }

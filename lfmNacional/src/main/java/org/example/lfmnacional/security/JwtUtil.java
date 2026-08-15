@@ -58,6 +58,17 @@ public class JwtUtil {
         return Long.valueOf(claims.getSubject());
     }
 
+    public void validarState(String token, String scopeEsperado) {
+        if (token == null || token.isBlank()) {
+            throw new JwtException("Token de estado invalido");
+        }
+        Claims claims = parseClaims(token);
+        String scope = claims.get("scope", String.class);
+        if (!scopeEsperado.equals(scope)) {
+            throw new JwtException("Scope de estado invalido");
+        }
+    }
+
     public String extraerEmail(String token) {
         return parseClaims(token).getSubject();
     }
