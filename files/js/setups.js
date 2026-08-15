@@ -4,15 +4,13 @@
   const L = window.LFM;
 
   let setups = [];
-  let usuariosMap = {};
-  let categoriasMap = {};
   let selectedId = null;
 
   const listBox = document.getElementById('setup-list');
   const detailBox = document.getElementById('setup-detail');
 
   function autor(s) {
-    return usuariosMap[s.autorId] || { id: s.autorId, nombrePiloto: 'Piloto #' + s.autorId };
+    return { id: s.autorId, nombrePiloto: s.autorNombre || ('Piloto #' + s.autorId), fotoPerfil: s.autorFoto };
   }
 
   function stars(prom) {
@@ -87,7 +85,7 @@
       '<div class="grid grid-3" style="margin-bottom:var(--sp-6)">' +
       '<div class="stat-card"><div class="stat-label">Circuito</div><div class="stat-value" style="font-size:var(--fs-md)">' + L.esc(s.circuito || '—') + '</div></div>' +
       '<div class="stat-card"><div class="stat-label">Calificación</div><div class="stat-value" style="font-size:var(--fs-md)">' + (s.promedioCalificacion != null ? s.promedioCalificacion.toFixed(1) : '—') + '</div></div>' +
-      '<div class="stat-card"><div class="stat-label">Categoría</div><div class="stat-value" style="font-size:var(--fs-md)">' + L.esc((categoriasMap[s.categoriaId] || {}).nombre || '—') + '</div></div>' +
+      '<div class="stat-card"><div class="stat-label">Categoría</div><div class="stat-value" style="font-size:var(--fs-md)">' + L.esc(s.categoriaNombre || '—') + '</div></div>' +
       '</div>';
 
     const ratingBox = document.createElement('div');
@@ -129,7 +127,7 @@
       const inner = document.createElement('div');
       inner.innerHTML = '<h4 style="margin:var(--sp-5) 0 var(--sp-3)">Comentarios <span class="text-tertiary mono" style="font-size:var(--fs-sm)">(' + coments.length + ')</span></h4>' +
         (coments.length ? coments.map(function (c) {
-          const cu = usuariosMap[c.usuarioId] || { nombrePiloto: 'Piloto #' + c.usuarioId };
+          const cu = { nombrePiloto: c.nombrePiloto || ('Piloto #' + c.usuarioId), fotoPerfil: c.fotoPerfil };
           return '<div class="comment">' +
             L.avatarHtml(cu, 34) +
             '<div style="flex:1">' +
@@ -174,19 +172,14 @@
   }
 
   L.api('/categorias').then(function (cats) {
-    cats.forEach(function (c) { categoriasMap[c.id] = c; });
     const sel = document.getElementById('sf-categoria');
     sel.innerHTML = '<option value="">—</option>' + cats.map(function (c) {
       return '<option value="' + c.id + '">' + L.esc(c.nombre) + '</option>';
     }).join('');
   }).catch(function () {});
 
-  Promise.all([
-    L.api('/setups').catch(function () { return []; }),
-    L.api('/usuarios').catch(function () { return []; })
-  ]).then(function (res) {
-    setups = res[0];
-    res[1].forEach(function (u) { usuariosMap[u.id] = u; });
+  L.api('/setups').catch(function () { return []; }).then(function (list) {
+    setups = list;
 
     const circ = new Set();
     const veh = new Set();

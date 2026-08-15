@@ -148,7 +148,14 @@ public class InscripcionService {
         return new InscripcionResponse(
                 inscripcion.getId(),
                 inscripcion.getCarrera().getId(),
+                inscripcion.getCarrera().getNombre(),
+                inscripcion.getCarrera().getCategoria().getNombre(),
+                inscripcion.getCarrera().getFecha(),
                 inscripcion.getUsuario().getId(),
+                inscripcion.getUsuario().getNombrePiloto(),
+                inscripcion.getUsuario().getFotoPerfil(),
+                inscripcion.getUsuario().getElo(),
+                inscripcion.getUsuario().getSafetyRating(),
                 inscripcion.getEstado(),
                 inscripcion.getFechaInscripcion());
     }

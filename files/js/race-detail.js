@@ -12,11 +12,6 @@
 
   let carrera = null;
   let inscriptos = [];
-  let usuariosMap = {};
-
-  function usuarioDe(u) {
-    return usuariosMap[u] || { id: u, nombrePiloto: 'Piloto #' + u };
-  }
 
   function estadoChip() {
     if (!carrera) return L.chipEstado('', null);
@@ -60,13 +55,13 @@
       return;
     }
     box.innerHTML = activas.map(function (i) {
-      const u = usuarioDe(i.usuarioId);
+      const u = { nombrePiloto: i.nombrePiloto || ('Piloto #' + i.usuarioId), fotoPerfil: i.fotoPerfil };
       const chip = i.estado === 'LISTA_ESPERA' ? '<span class="chip chip-pending">En espera</span>' : '<span class="chip chip-confirmed">Confirmado</span>';
       return '<div class="entrant-row">' +
         L.avatarHtml(u, 36) +
         '<div style="flex:1">' +
         '<strong style="font-size:var(--fs-sm)">' + L.esc(u.nombrePiloto) + '</strong>' +
-        '<div class="text-tertiary mono" style="font-size:var(--fs-2xs)">Elo ' + (u.elo ?? '—') + ' · SR ' + (u.safetyRating ?? '—') + '</div>' +
+        '<div class="text-tertiary mono" style="font-size:var(--fs-2xs)">Elo ' + (i.elo ?? '—') + ' · SR ' + (i.safetyRating ?? '—') + '</div>' +
         '</div>' +
         chip +
         '</div>';
@@ -115,7 +110,7 @@
           : '<span class="rank-badge ' + (medal[idx] || '') + '">' + (r.posicionFinal ?? idx + 1) + '</span>';
         return '<tr class="' + rowClass + '">' +
           '<td>' + pos + '</td>' +
-          '<td class="data"><a href="08-driver-profile.html?id=' + r.usuarioId + '" class="link">' + L.esc(usuarioDe(r.usuarioId).nombrePiloto) + '</a></td>' +
+          '<td class="data"><a href="08-driver-profile.html?id=' + r.usuarioId + '" class="link">' + L.esc(r.nombrePiloto || ('Piloto #' + r.usuarioId)) + '</a></td>' +
           '<td class="num mono">' + L.fmtLap(r.vueltaRapida) + '</td>' +
           '<td class="num">' + eloHtml + '</td>' +
           '<td class="num">' + srHtml + '</td>' +
@@ -136,7 +131,7 @@
         const rowClass = idx === 0 ? 'podium-1' : (idx === 1 ? 'podium-2' : (idx === 2 ? 'podium-3' : ''));
         return '<tr class="' + rowClass + '">' +
           '<td><span class="rank-badge ' + (medal[idx] || '') + '">' + (idx + 1) + '</span></td>' +
-          '<td class="data"><a href="08-driver-profile.html?id=' + c.usuarioId + '" class="link">' + L.esc(usuarioDe(c.usuarioId).nombrePiloto) + '</a></td>' +
+          '<td class="data"><a href="08-driver-profile.html?id=' + c.usuarioId + '" class="link">' + L.esc(c.nombrePiloto || ('Piloto #' + c.usuarioId)) + '</a></td>' +
           '<td class="num mono">' + L.fmtLap(c.tiempo) + '</td>' +
           '</tr>';
       }).join('');
@@ -190,12 +185,10 @@
 
   Promise.all([
     L.api('/carreras/' + id),
-    L.api('/inscripciones/carrera/' + id).catch(function () { return []; }),
-    L.api('/usuarios').catch(function () { return []; })
+    L.api('/inscripciones/carrera/' + id).catch(function () { return []; })
   ]).then(function (res) {
     carrera = res[0];
     inscriptos = res[1];
-    res[2].forEach(function (u) { usuariosMap[u.id] = u; });
     renderCarrera();
     renderInscriptos();
     renderArchivos();

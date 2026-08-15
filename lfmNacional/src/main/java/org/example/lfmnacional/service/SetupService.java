@@ -121,7 +121,10 @@ public class SetupService {
                 setup.getVehiculo(),
                 setup.getArchivo(),
                 setup.getAutor().getId(),
+                setup.getAutor().getNombrePiloto(),
+                setup.getAutor().getFotoPerfil(),
                 setup.getCategoria() != null ? setup.getCategoria().getId() : null,
+                setup.getCategoria() != null ? setup.getCategoria().getNombre() : null,
                 setup.getFechaPublicacion(),
                 setup.getPromedioCalificacion());
     }

@@ -62,6 +62,8 @@ public class SetupComentarioService {
                 comentario.getId(),
                 comentario.getSetup().getId(),
                 comentario.getUsuario().getId(),
+                comentario.getUsuario().getNombrePiloto(),
+                comentario.getUsuario().getFotoPerfil(),
                 comentario.getTexto(),
                 comentario.getFecha());
     }
