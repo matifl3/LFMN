@@ -1,5 +1,10 @@
 package org.example.lfmnacional.entity;
 
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import org.example.lfmnacional.enums.Rol;
 
 import jakarta.persistence.*;
@@ -22,24 +27,35 @@ public class Usuario {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank
+    @Email
+    @Size(max = 150)
     @Column(nullable = false, unique = true, length = 150)
     private String email;
-
+    
+    @NotBlank
+    @Size(min = 6, max = 100)
     @Column(nullable = false)
     private String password;
 
+    @Size(max = 100)
     @Column(name = "nombre_piloto", length = 100)
     private String nombrePiloto;
 
+    @Size(max = 255)
     @Column(name = "foto_perfil")
     private String fotoPerfil;
 
+    @Pattern(regexp = "\\d{17}")
+    @Size(max = 40)
     @Column(name = "guid_steam", unique = true, length = 40)
     private String guidSteam;
 
+    @Min(0)
     @Column(nullable = false)
     private Integer elo;
 
+    @Min(0)
     @Column(name = "safety_rating", nullable = false)
     private Integer safetyRating;
 

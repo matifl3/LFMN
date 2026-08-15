@@ -42,6 +42,7 @@ public class CategoriaService {
         if (categoriaRepository.existsByNombre(request.nombre())) {
             throw new BusinessException("Ya existe una categoria con el nombre " + request.nombre());
         }
+        validarRangoElo(request);
         Categoria categoria = Categoria.builder()
                 .nombre(request.nombre())
                 .descripcion(request.descripcion())
@@ -55,6 +56,7 @@ public class CategoriaService {
 
     @Transactional
     public CategoriaResponse update(Long id, CategoriaRequest request) {
+        validarRangoElo(request);
         Categoria categoria = getEntity(id);
         categoria.setNombre(request.nombre());
         categoria.setDescripcion(request.descripcion());
@@ -68,6 +70,13 @@ public class CategoriaService {
     @Transactional
     public void delete(Long id) {
         categoriaRepository.delete(getEntity(id));
+    }
+
+    private void validarRangoElo(CategoriaRequest request) {
+        if (request.eloMinimo() != null && request.eloMaximo() != null
+                && request.eloMaximo() < request.eloMinimo()) {
+            throw new BusinessException("El elo maximo no puede ser menor al elo minimo");
+        }
     }
 
     private CategoriaResponse toResponse(Categoria categoria) {
