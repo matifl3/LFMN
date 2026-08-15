@@ -1,6 +1,7 @@
 package org.example.lfmnacional.security;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.example.lfmnacional.entity.Usuario;
@@ -10,6 +11,8 @@ import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 @Component
 public class JwtUtil {
@@ -24,16 +27,35 @@ public class JwtUtil {
     }
 
     public String generarToken(Usuario usuario) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("rol", usuario.getRol().name());
+        claims.put("nombrePiloto", usuario.getNombrePiloto());
+        return generarToken(usuario.getEmail(), claims, expiracionMinutos);
+    }
+
+    public String generarToken(String subject, Map<String, Object> claims, long minutos) {
         Date ahora = new Date();
-        Date expiracion = new Date(ahora.getTime() + expiracionMinutos * 60_000L);
-        return Jwts.builder()
-                .subject(usuario.getEmail())
-                .claim("rol", usuario.getRol().name())
-                .claim("nombrePiloto", usuario.getNombrePiloto())
+        Date expiracion = new Date(ahora.getTime() + minutos * 60_000L);
+        var builder = Jwts.builder()
+                .subject(subject)
                 .issuedAt(ahora)
-                .expiration(expiracion)
+                .expiration(expiracion);
+        claims.forEach(builder::claim);
+        return builder
                 .signWith(secretKey)
                 .compact();
+    }
+
+    public Long extraerUserId(String token, String scopeEsperado) {
+        if (token == null || token.isBlank()) {
+            throw new JwtException("Token de estado invalido");
+        }
+        Claims claims = parseClaims(token);
+        String scope = claims.get("scope", String.class);
+        if (!scopeEsperado.equals(scope)) {
+            throw new JwtException("Scope de estado invalido");
+        }
+        return Long.valueOf(claims.getSubject());
     }
 
     public String extraerEmail(String token) {

@@ -61,15 +61,33 @@
   }
 
   document.getElementById('mp-steam-vincular').addEventListener('click', async function () {
-    const guid = document.getElementById('mp-steam-guid').value.trim();
-    if (!guid) { L.toast('Ingresá el GUID de Steam.', 'error'); return; }
     try {
-      const updated = await L.put('/usuarios/' + user.id + '/steam', { guidSteam: guid });
-      L.updateUser(updated);
-      renderSteam();
-      L.toast('Cuenta de Steam vinculada', 'success');
+      const data = await L.api('/steam/vincular-url');
+      if (data && data.url) {
+        window.location.href = data.url;
+      } else {
+        L.toast('No se pudo iniciar la vinculación con Steam.', 'error');
+      }
     } catch (err) { L.toast(err.message, 'error'); }
   });
+
+  const steamResultado = new URLSearchParams(location.search).get('steam');
+  if (steamResultado) {
+    history.replaceState(null, '', location.pathname);
+    if (steamResultado === 'ok') {
+      L.toast('Cuenta de Steam vinculada', 'success');
+    } else if (steamResultado === 'ocupado') {
+      L.toast('Esa cuenta de Steam ya está vinculada a otro usuario', 'error');
+    } else if (steamResultado === 'expirado') {
+      L.toast('El enlace de vinculación expiró. Intentá de nuevo.', 'error');
+    } else {
+      L.toast('No se pudo vincular la cuenta de Steam.', 'error');
+    }
+    L.api('/usuarios/' + user.id).then(function (updated) {
+      L.updateUser(updated);
+      renderSteam();
+    }).catch(function () {});
+  }
 
   document.getElementById('mp-steam-desvincular').addEventListener('click', async function () {
     try {
