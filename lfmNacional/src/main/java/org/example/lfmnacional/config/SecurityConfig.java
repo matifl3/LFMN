@@ -32,6 +32,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/usuarios/registro", "/api/usuarios/login").permitAll()
+                        .requestMatchers("/api/steam/vincular-url").authenticated()
                         .requestMatchers(HttpMethod.GET, "/**").permitAll()
                         .anyRequest().authenticated())
                 .exceptionHandling(ex -> ex
