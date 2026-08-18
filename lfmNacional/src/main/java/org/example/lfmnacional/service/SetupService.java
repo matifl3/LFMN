@@ -1,29 +1,45 @@
 package org.example.lfmnacional.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.lfmnacional.dto.setup.SetupRequest;
 import org.example.lfmnacional.dto.setup.SetupResponse;
 import org.example.lfmnacional.entity.Setup;
+import org.example.lfmnacional.exception.BusinessException;
 import org.example.lfmnacional.exception.ResourceNotFoundException;
 import org.example.lfmnacional.repository.SetupCalificacionRepository;
 import org.example.lfmnacional.repository.SetupComentarioRepository;
 import org.example.lfmnacional.repository.SetupRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.OptionalDouble;
+import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class SetupService {
+
+    private static final String SUBDIRECTORIO = "setups";
 
     private final SetupRepository setupRepository;
     private final SetupCalificacionRepository setupCalificacionRepository;
     private final SetupComentarioRepository setupComentarioRepository;
     private final UsuarioService usuarioService;
     private final CategoriaService categoriaService;
+
+    @Value("${archivos.base-dir}")
+    private String baseDir;
 
     public Setup getEntity(Long id) {
         return setupRepository.findById(id)
@@ -98,9 +114,66 @@ public class SetupService {
     @Transactional
     public void delete(Long id) {
         Setup setup = getEntity(id);
+        eliminarArchivo(setup);
         setupCalificacionRepository.deleteBySetup_Id(setup.getId());
         setupComentarioRepository.deleteBySetup_Id(setup.getId());
         setupRepository.delete(setup);
+    }
+
+    @Transactional
+    public void guardarArchivo(Long setupId, MultipartFile archivo) {
+        if (archivo == null || archivo.isEmpty()) {
+            throw new BusinessException("El archivo no puede estar vacio");
+        }
+        Setup setup = getEntity(setupId);
+        eliminarArchivo(setup);
+        String extension = obtenerExtension(archivo.getOriginalFilename());
+        String nombreAlmacenado = UUID.randomUUID() + extension;
+        Path destino = Paths.get(baseDir, SUBDIRECTORIO, nombreAlmacenado).toAbsolutePath().normalize();
+        try {
+            Files.createDirectories(destino.getParent());
+            Files.copy(archivo.getInputStream(), destino, StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException e) {
+            log.error("Error al guardar archivo de setup: {}", e.getMessage());
+            throw new BusinessException("No se pudo guardar el archivo en el servidor");
+        }
+        setup.setArchivo(nombreAlmacenado);
+        setupRepository.save(setup);
+    }
+
+    public Path resolverRuta(Setup setup) {
+        if (setup.getArchivo() == null) {
+            throw new BusinessException("Este setup no tiene archivo");
+        }
+        Path base = Paths.get(baseDir, SUBDIRECTORIO).toAbsolutePath().normalize();
+        Path resuelta = base.resolve(setup.getArchivo()).normalize();
+        if (!resuelta.startsWith(base)) {
+            throw new BusinessException("Ruta de archivo no valida");
+        }
+        if (Files.notExists(resuelta) || Files.isDirectory(resuelta)) {
+            throw new ResourceNotFoundException("Archivo de setup no encontrado en el servidor");
+        }
+        return resuelta;
+    }
+
+    private void eliminarArchivo(Setup setup) {
+        if (setup.getArchivo() == null) return;
+        Path base = Paths.get(baseDir, SUBDIRECTORIO).toAbsolutePath().normalize();
+        Path archivo = base.resolve(setup.getArchivo()).normalize();
+        if (archivo.startsWith(base) && Files.exists(archivo)) {
+            try {
+                Files.delete(archivo);
+            } catch (IOException e) {
+                log.warn("No se pudo eliminar el archivo de setup: {}", e.getMessage());
+            }
+        }
+        setup.setArchivo(null);
+    }
+
+    private String obtenerExtension(String nombreOriginal) {
+        if (nombreOriginal == null) return "";
+        int index = nombreOriginal.lastIndexOf('.');
+        return index >= 0 ? nombreOriginal.substring(index) : "";
     }
 
     @Transactional

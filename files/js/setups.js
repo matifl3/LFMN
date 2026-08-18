@@ -78,7 +78,7 @@
       '<span class="author-row" style="margin-top:var(--sp-2)">' + L.avatarHtml(a, 24) + 'Subido por ' + L.esc(a.nombrePiloto) + ' · ' + L.fmtRel(s.fechaPublicacion) + '</span>' +
       '</div>' +
       (s.archivo
-        ? '<a href="' + L.esc(s.archivo) + '" target="_blank" rel="noopener" class="btn btn-primary">Descargar .json</a>'
+        ? '<a href="/api/setups/' + s.id + '/descargar" class="btn btn-primary">Descargar setup</a>'
         : '<span class="chip chip-closed">Sin archivo</span>') +
       '</div>' +
       '<p class="text-secondary" style="font-size:var(--fs-sm); margin:var(--sp-4) 0 var(--sp-5)">' + L.esc(s.descripcion || 'Sin descripción.') + '</p>' +
@@ -210,27 +210,66 @@
     form.style.display = form.style.display === 'none' ? 'block' : 'none';
   });
 
+  let archivoSeleccionado = null;
+
+  const dropzone = document.getElementById('sf-dropzone');
+  const fileInput = document.getElementById('sf-archivo');
+  const archivoNombre = document.getElementById('sf-archivo-nombre');
+
+  dropzone.addEventListener('click', function () { fileInput.click(); });
+  dropzone.addEventListener('dragover', function (e) { e.preventDefault(); dropzone.classList.add('drop-zone-active'); });
+  dropzone.addEventListener('dragleave', function () { dropzone.classList.remove('drop-zone-active'); });
+  dropzone.addEventListener('drop', function (e) {
+    e.preventDefault();
+    dropzone.classList.remove('drop-zone-active');
+    if (e.dataTransfer.files.length) {
+      fileInput.files = e.dataTransfer.files;
+      archivoSeleccionado = e.dataTransfer.files[0];
+      archivoNombre.textContent = archivoSeleccionado.name;
+    }
+  });
+  fileInput.addEventListener('change', function () {
+    if (fileInput.files.length) {
+      archivoSeleccionado = fileInput.files[0];
+      archivoNombre.textContent = archivoSeleccionado.name;
+    }
+  });
+
   document.getElementById('sf-publicar').addEventListener('click', async function () {
     const user = L.requireAuth();
     if (!user) return;
-    const body = {
-      titulo: document.getElementById('sf-titulo').value.trim(),
-      descripcion: document.getElementById('sf-descripcion').value.trim(),
-      circuito: document.getElementById('sf-circuito').value.trim(),
-      vehiculo: document.getElementById('sf-vehiculo').value.trim(),
-      archivo: document.getElementById('sf-archivo').value.trim() || null,
-      autorId: user.id,
-      categoriaId: document.getElementById('sf-categoria').value ? Number(document.getElementById('sf-categoria').value) : null
-    };
-    if (!body.titulo || !body.circuito || !body.vehiculo) {
+    const titulo = document.getElementById('sf-titulo').value.trim();
+    const circuito = document.getElementById('sf-circuito').value.trim();
+    const vehiculo = document.getElementById('sf-vehiculo').value.trim();
+    if (!titulo || !circuito || !vehiculo) {
       L.toast('Completá título, circuito y vehículo.', 'error');
       return;
     }
+    const body = {
+      titulo: titulo,
+      descripcion: document.getElementById('sf-descripcion').value.trim(),
+      circuito: circuito,
+      vehiculo: vehiculo,
+      autorId: user.id,
+      categoriaId: document.getElementById('sf-categoria').value ? Number(document.getElementById('sf-categoria').value) : null
+    };
     try {
       const nuevo = await L.post('/setups', body);
+      if (archivoSeleccionado) {
+        var fd = new FormData();
+        fd.append('archivo', archivoSeleccionado);
+        await L.post('/setups/' + nuevo.id + '/archivo', fd);
+      }
       setups.unshift(nuevo);
       selectedId = nuevo.id;
       document.getElementById('setup-form-card').style.display = 'none';
+      archivoSeleccionado = null;
+      fileInput.value = null;
+      archivoNombre.textContent = '';
+      document.getElementById('sf-titulo').value = '';
+      document.getElementById('sf-descripcion').value = '';
+      document.getElementById('sf-circuito').value = '';
+      document.getElementById('sf-vehiculo').value = '';
       renderList();
       loadDetail(nuevo.id);
       L.toast('Setup publicado', 'success');
