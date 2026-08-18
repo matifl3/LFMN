@@ -1691,3 +1691,33 @@ input[type=range] {
   display: flex;
   margin-bottom: var(--sp-6);
 }
+
+.drop-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-5) var(--sp-4);
+  border: 2px dashed var(--line-bright);
+  border-radius: var(--r-sm);
+  background: var(--bg-inset);
+  color: var(--text-secondary);
+  font-size: var(--fs-sm);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  text-align: center;
+}
+
+.drop-zone:hover {
+  border-color: var(--celeste);
+  background: var(--bg-panel-hover);
+}
+
+.drop-zone-active {
+  border-color: var(--amber);
+  background: rgba(255, 176, 32, 0.06);
+}
+
+.drop-zone svg {
+  color: var(--text-tertiary);
+}
