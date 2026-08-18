@@ -1,0 +1,51 @@
+<div class="page-header">
+  <h2>Setups</h2>
+</div>
+
+<div class="search">
+  <mat-form-field appearance="outline" class="search-field">
+    <mat-label>Circuito</mat-label>
+    <input matInput [(ngModel)]="circuito" (keyup.enter)="buscar()" />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="search-field">
+    <mat-label>Vehiculo</mat-label>
+    <input matInput [(ngModel)]="vehiculo" (keyup.enter)="buscar()" />
+  </mat-form-field>
+
+  <button mat-raised-button color="primary" (click)="buscar()">
+    <mat-icon>search</mat-icon>
+    Buscar
+  </button>
+</div>
+
+@if (cargando()) {
+  <div class="centered">
+    <mat-progress-spinner diameter="40" mode="indeterminate"></mat-progress-spinner>
+  </div>
+} @else {
+  <div class="cards">
+    @for (setup of setups(); track setup.id) {
+      <mat-card class="setup-card">
+        <mat-card-header>
+          <mat-card-title>{{ setup.titulo }}</mat-card-title>
+          <mat-card-subtitle>{{ setup.vehiculo }} - {{ setup.circuito }}</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <p class="desc">{{ setup.descripcion }}</p>
+          <p class="meta">
+            <mat-icon>star</mat-icon>
+            {{ estrellas(setup.promedioCalificacion) }}/5
+            <mat-icon>schedule</mat-icon>
+            {{ setup.fechaPublicacion | date: 'dd/MM/yyyy' }}
+          </p>
+        </mat-card-content>
+        <mat-card-actions>
+          <a mat-button color="primary" [routerLink]="['/setups', setup.id]">Ver setup</a>
+        </mat-card-actions>
+      </mat-card>
+    } @empty {
+      <p class="empty">No se encontraron setups.</p>
+    }
+  </div>
+}

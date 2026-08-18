@@ -29,7 +29,7 @@ public class CarreraService {
     private static final int MINUTOS_CIERRE_PREVIO = 5;
 
     private final CarreraRepository carreraRepository;
-    private final CategoriaService categoriaService;
+    private final CampeonatoService campeonatoService;
     private final ArchivoCarreraService archivoCarreraService;
     private final InscripcionRepository inscripcionRepository;
     private final ResultadoCarreraRepository resultadoCarreraRepository;
@@ -66,8 +66,8 @@ public class CarreraService {
     }
 
     @Transactional(readOnly = true)
-    public List<CarreraResponse> porCategoria(Long categoriaId) {
-        return carreraRepository.findByCategoria_IdOrderByFechaDesc(categoriaId)
+    public List<CarreraResponse> porCampeonato(Long campeonatoId) {
+        return carreraRepository.findByCampeonato_IdOrderByFechaDesc(campeonatoId)
                 .stream().map(this::toResponse).toList();
     }
 
@@ -77,7 +77,7 @@ public class CarreraService {
                 .nombre(request.nombre())
                 .fecha(request.fecha())
                 .circuito(request.circuito())
-                .categoria(categoriaService.getEntity(request.categoriaId()))
+                .campeonato(campeonatoService.getEntity(request.campeonatoId()))
                 .estado(request.estado())
                 .cupoMaximo(request.cupoMaximo())
                 .servidor(request.servidor())
@@ -93,7 +93,7 @@ public class CarreraService {
         carrera.setNombre(request.nombre());
         carrera.setFecha(request.fecha());
         carrera.setCircuito(request.circuito());
-        carrera.setCategoria(categoriaService.getEntity(request.categoriaId()));
+        carrera.setCampeonato(campeonatoService.getEntity(request.campeonatoId()));
         carrera.setEstado(request.estado() != null ? request.estado() : carrera.getEstado());
         carrera.setCupoMaximo(request.cupoMaximo());
         carrera.setServidor(request.servidor());
@@ -187,8 +187,10 @@ public class CarreraService {
                 carrera.getNombre(),
                 carrera.getFecha(),
                 carrera.getCircuito(),
-                carrera.getCategoria().getId(),
-                carrera.getCategoria().getNombre(),
+                carrera.getCampeonato().getId(),
+                carrera.getCampeonato().getNombre(),
+                carrera.getCampeonato().getCategoria().getId(),
+                carrera.getCampeonato().getCategoria().getNombre(),
                 carrera.getEstado(),
                 carrera.getCupoMaximo(),
                 carrera.getServidor(),

@@ -1,0 +1,112 @@
+<mat-card>
+  <mat-card-header>
+    <mat-card-title>Resultados</mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <div class="form">
+      <div class="form-row">
+        <mat-form-field appearance="outline">
+          <mat-label>Carrera</mat-label>
+          <mat-select [(ngModel)]="carreraSeleccionada">
+            @for (carrera of carreras(); track carrera.id) {
+              <mat-option [value]="carrera.id">
+                {{ carrera.nombre }} ({{ carrera.estado }})
+              </mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+        <button mat-stroked-button (click)="cargarInscriptos()" [disabled]="!carreraSeleccionada()">
+          Cargar inscriptos
+        </button>
+      </div>
+
+      @if (cargandoFilas()) {
+        <div class="centered">
+          <mat-progress-spinner diameter="30" mode="indeterminate"></mat-progress-spinner>
+        </div>
+      }
+
+      @if (filas().length > 0) {
+        <p class="hint">Tiempos en formato <code>m:ss.mmm</code>. Deja en blanco si no finalizo.</p>
+        <div class="table-wrap">
+          <table mat-table [dataSource]="filas()" [trackBy]="trackFila">
+            <ng-container matColumnDef="piloto">
+              <th mat-header-cell *matHeaderCellDef>Piloto</th>
+              <td mat-cell *matCellDef="let f">{{ f.piloto }}</td>
+            </ng-container>
+            <ng-container matColumnDef="posicion">
+              <th mat-header-cell *matHeaderCellDef>Pos</th>
+              <td mat-cell *matCellDef="let f">
+                <input class="cell-input" type="number" min="1" [(ngModel)]="f.posicion" />
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="tiempo">
+              <th mat-header-cell *matHeaderCellDef>Tiempo total</th>
+              <td mat-cell *matCellDef="let f">
+                <input class="cell-input" [(ngModel)]="f.tiempo" placeholder="m:ss.mmm" />
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="vueltaRapida">
+              <th mat-header-cell *matHeaderCellDef>Vuelta rapida</th>
+              <td mat-cell *matCellDef="let f">
+                <input class="cell-input" [(ngModel)]="f.vueltaRapida" placeholder="m:ss.mmm" />
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="poles">
+              <th mat-header-cell *matHeaderCellDef>Pole</th>
+              <td mat-cell *matCellDef="let f">
+                <mat-checkbox [(ngModel)]="f.poles"></mat-checkbox>
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="finalizo">
+              <th mat-header-cell *matHeaderCellDef>Finalizo</th>
+              <td mat-cell *matCellDef="let f">
+                <mat-checkbox [(ngModel)]="f.finalizo"></mat-checkbox>
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="elo">
+              <th mat-header-cell *matHeaderCellDef>Elo</th>
+              <td mat-cell *matCellDef="let f">
+                <input class="cell-input" type="number" [(ngModel)]="f.elo" />
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="sr">
+              <th mat-header-cell *matHeaderCellDef>SR</th>
+              <td mat-cell *matCellDef="let f">
+                <input class="cell-input" type="number" [(ngModel)]="f.sr" />
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="columnas"></tr>
+            <tr mat-row *matRowDef="let row; columns: columnas"></tr>
+          </table>
+        </div>
+        <div class="acciones-form">
+          <button mat-raised-button color="primary" (click)="guardarResultados()" [disabled]="guardando()">
+            Guardar resultados
+          </button>
+        </div>
+      }
+    </div>
+  </mat-card-content>
+</mat-card>
+
+<mat-card>
+  <mat-card-header>
+    <mat-card-title>Importar sesion de Assetto Corsa</mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <div class="form">
+      <mat-form-field appearance="outline" class="full">
+        <mat-label>JSON de la sesion (SessionResult de AC)</mat-label>
+        <textarea matInput rows="10" [(ngModel)]="jsonSesion" class="json-input"></textarea>
+      </mat-form-field>
+      <div class="acciones-form">
+        <button mat-raised-button color="primary" (click)="importarSesion()" [disabled]="!carreraSeleccionada() || guardando()">
+          Importar sesion
+        </button>
+      </div>
+      <p class="hint">Usa la carrera seleccionada arriba. El circuito de la sesion debe coincidir con el de la carrera.</p>
+    </div>
+  </mat-card-content>
+</mat-card>

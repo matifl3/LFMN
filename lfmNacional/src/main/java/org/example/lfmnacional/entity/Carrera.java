@@ -32,8 +32,8 @@ public class Carrera {
     private String circuito;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "categoria_id", nullable = false)
-    private Categoria categoria;
+    @JoinColumn(name = "campeonato_id", nullable = false)
+    private Campeonato campeonato;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

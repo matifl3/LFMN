@@ -101,28 +101,27 @@ public class CampeonatoService {
 
     @Transactional
     public void actualizarPuntos(Carrera carrera, List<ResultadoCarrera> resultados) {
-        List<Campeonato> campeonatos = campeonatoRepository.findByEstado(EstadoCampeonato.ACTIVO).stream()
-                .filter(c -> c.getCategoria().getId().equals(carrera.getCategoria().getId()))
-                .toList();
-        for (Campeonato campeonato : campeonatos) {
-            for (ResultadoCarrera resultado : resultados) {
-                if (resultado.getPosicionFinal() == null) {
-                    continue;
-                }
-                int puntos = puntosPorPosicion(resultado.getPosicionFinal());
-                CampeonatoPosicion posicion = campeonatoPosicionRepository
-                        .findByCampeonato_IdAndUsuario_Id(campeonato.getId(), resultado.getUsuario().getId())
-                        .orElseGet(() -> CampeonatoPosicion.builder()
-                                .campeonato(campeonato)
-                                .usuario(resultado.getUsuario())
-                                .puntos(0)
-                                .posicion(0)
-                                .build());
-                posicion.setPuntos(posicion.getPuntos() + puntos);
-                campeonatoPosicionRepository.save(posicion);
-            }
-            recalcularPosiciones(campeonato.getId());
+        Campeonato campeonato = carrera.getCampeonato();
+        if (campeonato.getEstado() != EstadoCampeonato.ACTIVO) {
+            return;
         }
+        for (ResultadoCarrera resultado : resultados) {
+            if (resultado.getPosicionFinal() == null) {
+                continue;
+            }
+            int puntos = puntosPorPosicion(resultado.getPosicionFinal());
+            CampeonatoPosicion posicion = campeonatoPosicionRepository
+                    .findByCampeonato_IdAndUsuario_Id(campeonato.getId(), resultado.getUsuario().getId())
+                    .orElseGet(() -> CampeonatoPosicion.builder()
+                            .campeonato(campeonato)
+                            .usuario(resultado.getUsuario())
+                            .puntos(0)
+                            .posicion(0)
+                            .build());
+            posicion.setPuntos(posicion.getPuntos() + puntos);
+            campeonatoPosicionRepository.save(posicion);
+        }
+        recalcularPosiciones(campeonato.getId());
     }
 
     private void recalcularPosiciones(Long campeonatoId) {

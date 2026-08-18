@@ -1,0 +1,88 @@
+.page-header h2 {
+  font-family: 'Roboto Condensed', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.centered {
+  display: flex;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.camp-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  width: 100%;
+  text-align: left;
+  padding: 0.75rem;
+  margin: 0.35rem 0;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.camp-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.camp-item.active {
+  background: rgba(229, 57, 53, 0.12);
+  border-color: rgba(229, 57, 53, 0.5);
+}
+
+.camp-nombre {
+  font-weight: 500;
+}
+
+.camp-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #9aa4af;
+  font-size: 0.8rem;
+}
+
+.estado-chip {
+  min-height: 20px;
+  font-size: 0.65rem;
+  padding: 0 0.4rem;
+}
+
+.empty {
+  color: #9aa4af;
+}
+
+.tabla {
+  width: 100%;
+}
+
+.pos-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.pos-number.podium {
+  background: rgba(229, 57, 53, 0.35);
+}
