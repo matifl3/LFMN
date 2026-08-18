@@ -465,7 +465,7 @@
     $('an-form-titulo').textContent = 'Nuevo anuncio';
     $('an-titulo').value = '';
     $('an-contenido').value = '';
-    $('an-imagen').value = '';
+    $('an-imagen').value = null;
   }
 
   function cargarAnuncios() {
@@ -506,16 +506,28 @@
   function guardarAnuncio() {
     if (!$('an-titulo').value.trim()) { L.toast('Ingresá el título.', 'error'); return; }
     if (!$('an-contenido').value.trim()) { L.toast('Ingresá el contenido.', 'error'); return; }
-    const body = {
-      titulo: $('an-titulo').value.trim(),
-      contenido: $('an-contenido').value.trim(),
-      urlImagen: $('an-imagen').value.trim() || null
+    const archivo = $('an-imagen').files[0];
+    const crearAnuncio = function (urlImagen) {
+      const body = {
+        titulo: $('an-titulo').value.trim(),
+        contenido: $('an-contenido').value.trim(),
+        urlImagen: urlImagen || null
+      };
+      L.post('/anuncios', body).then(function () {
+        L.toast('Anuncio publicado', 'success');
+        limpiarFormAnuncio();
+        cargarAnuncios();
+      }).catch(function (e) { L.toast(e.message, 'error'); });
     };
-    L.post('/anuncios', body).then(function () {
-      L.toast('Anuncio publicado', 'success');
-      limpiarFormAnuncio();
-      cargarAnuncios();
-    }).catch(function (e) { L.toast(e.message, 'error'); });
+    if (archivo) {
+      var fd = new FormData();
+      fd.append('archivo', archivo);
+      L.post('/imagenes', fd).then(function (res) {
+        crearAnuncio(res.url);
+      }).catch(function (e) { L.toast('Error al subir imagen: ' + e.message, 'error'); });
+    } else {
+      crearAnuncio(null);
+    }
   }
 
   /* ---------- Importar sesión ---------- */
