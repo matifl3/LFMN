@@ -116,6 +116,23 @@
     });
   }
 
+  function cargarCampeonatosSelect(categoriaId, selectedId) {
+    const sel = $('a-camp');
+    if (!categoriaId) {
+      sel.innerHTML = '<option value="">Elegí categoría primero…</option>';
+      return;
+    }
+    L.get('/campeonatos/categoria/' + categoriaId).then(function (cams) {
+      sel.innerHTML = cams.length
+        ? '<option value="">Elegí campeonato…</option>' + cams.map(function (c) {
+            return '<option value="' + c.id + '"' + (selectedId && c.id === selectedId ? ' selected' : '') + '>' + L.esc(c.nombre) + '</option>';
+          }).join('')
+        : '<option value="">Sin campeonatos</option>';
+    }).catch(function () {
+      sel.innerHTML = '<option value="">Error al cargar</option>';
+    });
+  }
+
   function limpiarFormCarrera() {
     editCarreraId = null;
     $('adm-form-titulo').textContent = 'Nueva carrera';
@@ -127,6 +144,7 @@
     $('a-circuito').value = '';
     $('a-cupo').value = '32';
     $('a-servidor').value = '';
+    $('a-camp').innerHTML = '<option value="">Elegí categoría primero…</option>';
   }
 
   function editarCarrera(c) {
@@ -145,6 +163,7 @@
     $('a-servidor').value = c.servidor || '';
     const sel = $('a-cat');
     if (c.categoriaId) sel.value = String(c.categoriaId);
+    cargarCampeonatosSelect(c.categoriaId, c.campeonatoId);
     sel.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 
@@ -153,12 +172,13 @@
     const hora = $('a-hora').value;
     if (!$('a-nombre').value.trim()) { L.toast('Ingresá el nombre.', 'error'); return; }
     if (!$('a-cat').value) { L.toast('Elegí una categoría.', 'error'); return; }
+    if (!$('a-camp').value) { L.toast('Elegí un campeonato.', 'error'); return; }
     if (!fecha) { L.toast('Ingresá la fecha.', 'error'); return; }
     const body = {
       nombre: $('a-nombre').value.trim(),
-      categoriaId: Number($('a-cat').value),
       fecha: fecha + (hora ? 'T' + hora : 'T20:00') + ':00',
       circuito: $('a-circuito').value.trim() || 'Por definir',
+      campeonatoId: Number($('a-camp').value),
       cupoMaximo: Number($('a-cupo').value) || 32,
       servidor: $('a-servidor').value.trim() || null
     };
@@ -560,6 +580,9 @@
 
   $('a-guardar').addEventListener('click', guardarCarrera);
   $('a-cancelar').addEventListener('click', limpiarFormCarrera);
+  $('a-cat').addEventListener('change', function () {
+    cargarCampeonatosSelect($('a-cat').value);
+  });
   $('c-guardar').addEventListener('click', guardarCampeonato);
   $('c-cancelar').addEventListener('click', limpiarFormCampeonato);
   $('cat-guardar').addEventListener('click', guardarCategoria);
