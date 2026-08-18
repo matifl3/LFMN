@@ -1,0 +1,187 @@
+@if (cargando()) {
+  <div class="centered">
+    <mat-progress-spinner diameter="40" mode="indeterminate"></mat-progress-spinner>
+  </div>
+} @else if (usuario()) {
+  <div class="page-header">
+    <h2>Mi perfil</h2>
+  </div>
+
+  <mat-card class="header-card">
+    <mat-card-content class="header">
+      @if (usuario()!.fotoPerfil) {
+        <img class="avatar" [src]="usuario()!.fotoPerfil" alt="Foto de perfil" />
+      } @else {
+        <div class="avatar avatar-placeholder">
+          <mat-icon>person</mat-icon>
+        </div>
+      }
+      <div class="info">
+        <h2>{{ usuario()!.nombrePiloto ?? usuario()!.email }}</h2>
+        <p class="sub">
+          <mat-icon>emoji_events</mat-icon> Elo {{ usuario()!.elo ?? 0 }}
+          <mat-icon>shield</mat-icon> SR {{ usuario()!.safetyRating ?? 0 }}
+        </p>
+        @if (usuario()!.guidSteam) {
+          <p class="sub"><mat-icon>sports_esports</mat-icon> Steam: {{ usuario()!.guidSteam }}</p>
+        }
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-tab-group animationDuration="200ms">
+    <mat-tab label="Mis inscripciones">
+      <div class="table-wrap">
+        <table mat-table [dataSource]="inscripciones()">
+          <ng-container matColumnDef="carrera">
+            <th mat-header-cell *matHeaderCellDef>Carrera</th>
+            <td mat-cell *matCellDef="let i">{{ nombreCarrera(i.carreraId) }}</td>
+          </ng-container>
+          <ng-container matColumnDef="fecha">
+            <th mat-header-cell *matHeaderCellDef>Fecha de inscripcion</th>
+            <td mat-cell *matCellDef="let i">{{ i.fechaInscripcion | date: 'dd/MM/yyyy' }}</td>
+          </ng-container>
+          <ng-container matColumnDef="estado">
+            <th mat-header-cell *matHeaderCellDef>Estado</th>
+            <td mat-cell *matCellDef="let i">
+              <span class="badge">{{ i.estado }}</span>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="columnasInscripciones"></tr>
+          <tr mat-row *matRowDef="let row; columns: columnasInscripciones"></tr>
+        </table>
+        @if (inscripciones().length === 0) {
+          <p class="empty">Todavia no te inscribiste a ninguna carrera.</p>
+        }
+      </div>
+    </mat-tab>
+
+    <mat-tab label="Mis logros">
+      <div class="logros">
+        @for (logro of logros(); track logro.logroId) {
+          <mat-card class="logro-card" [class.obtenido]="logro.obtenido">
+            <mat-card-content>
+              <mat-icon>{{ logro.obtenido ? 'military_tech' : 'lock' }}</mat-icon>
+              <div>
+                <h3>{{ logro.nombre }}</h3>
+                <p>{{ logro.descripcion }}</p>
+                @if (!logro.obtenido) {
+                  <span class="progreso">Progreso: {{ logro.progreso }}/{{ logro.valorCondicion }}</span>
+                } @else {
+                  <span class="fecha">Obtenido {{ logro.fechaObtencion | date: 'dd/MM/yyyy' }}</span>
+                }
+              </div>
+            </mat-card-content>
+          </mat-card>
+        } @empty {
+          <p class="empty">Sin logros.</p>
+        }
+      </div>
+    </mat-tab>
+
+    <mat-tab label="Mis recompensas">
+      <div class="table-wrap">
+        <table mat-table [dataSource]="recompensas()">
+          <ng-container matColumnDef="descripcion">
+            <th mat-header-cell *matHeaderCellDef>Recompensa</th>
+            <td mat-cell *matCellDef="let r">{{ r.descripcion }}</td>
+          </ng-container>
+          <ng-container matColumnDef="tipo">
+            <th mat-header-cell *matHeaderCellDef>Tipo</th>
+            <td mat-cell *matCellDef="let r">{{ r.tipo }}</td>
+          </ng-container>
+          <ng-container matColumnDef="estado">
+            <th mat-header-cell *matHeaderCellDef>Estado</th>
+            <td mat-cell *matCellDef="let r">
+              <span class="badge" [class.reclamada]="r.reclamada">
+                {{ r.reclamada ? 'Reclamada' : 'Pendiente' }}
+              </span>
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="accion">
+            <th mat-header-cell *matHeaderCellDef></th>
+            <td mat-cell *matCellDef="let r">
+              <button
+                mat-raised-button
+                color="primary"
+                [disabled]="r.reclamada || guardando()"
+                (click)="reclamar(r)"
+              >
+                Reclamar
+              </button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="columnasRecompensas"></tr>
+          <tr mat-row *matRowDef="let row; columns: columnasRecompensas"></tr>
+        </table>
+        @if (recompensas().length === 0) {
+          <p class="empty">No tenes recompensas pendientes.</p>
+        }
+      </div>
+    </mat-tab>
+
+    <mat-tab label="Editar perfil">
+      <form [formGroup]="formPerfil" (ngSubmit)="guardarPerfil()" class="form">
+        <mat-form-field appearance="outline">
+          <mat-label>Nombre de piloto</mat-label>
+          <input matInput formControlName="nombrePiloto" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>URL de foto de perfil</mat-label>
+          <input matInput formControlName="fotoPerfil" />
+        </mat-form-field>
+
+        <button mat-raised-button color="primary" type="submit" [disabled]="formPerfil.invalid || guardando()">
+          Guardar
+        </button>
+      </form>
+    </mat-tab>
+
+    <mat-tab label="Contrasena">
+      <form [formGroup]="formPassword" (ngSubmit)="cambiarPassword()" class="form">
+        <mat-form-field appearance="outline">
+          <mat-label>Contrasena actual</mat-label>
+          <input matInput type="password" formControlName="passwordActual" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Nueva contrasena (minimo 6 caracteres)</mat-label>
+          <input matInput type="password" formControlName="nuevaPassword" />
+        </mat-form-field>
+
+        <button mat-raised-button color="primary" type="submit" [disabled]="formPassword.invalid || guardando()">
+          Cambiar contrasena
+        </button>
+      </form>
+    </mat-tab>
+
+    <mat-tab label="Cuenta Steam">
+      @if (!usuario()!.guidSteam) {
+        <form [formGroup]="formSteam" (ngSubmit)="vincularSteam()" class="form">
+          <p class="hint">Vincula tu GUID de Steam para recibir resultados de las carreras.</p>
+          <mat-form-field appearance="outline">
+            <mat-label>GUID de Steam</mat-label>
+            <input matInput formControlName="guidSteam" placeholder="7656119xxxxxxxxxx" />
+          </mat-form-field>
+
+          <button mat-raised-button color="primary" type="submit" [disabled]="formSteam.invalid || guardando()">
+            Vincular
+          </button>
+        </form>
+      } @else {
+        <div class="steam-vinculado">
+          <p>
+            <mat-icon>sports_esports</mat-icon>
+            Cuenta vinculada: {{ usuario()!.guidSteam }}
+          </p>
+          <button mat-raised-button color="warn" [disabled]="guardando()" (click)="desvincularSteam()">
+            Desvincular
+          </button>
+        </div>
+      }
+    </mat-tab>
+  </mat-tab-group>
+}

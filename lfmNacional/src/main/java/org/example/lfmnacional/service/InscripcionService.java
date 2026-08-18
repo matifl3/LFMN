@@ -121,8 +121,8 @@ public class InscripcionService {
     }
 
     private void validarRequisitosElo(Carrera carrera, Usuario usuario) {
-        Integer eloMinimo = carrera.getCategoria().getEloMinimo();
-        Integer eloMaximo = carrera.getCategoria().getEloMaximo();
+        Integer eloMinimo = carrera.getCampeonato().getCategoria().getEloMinimo();
+        Integer eloMaximo = carrera.getCampeonato().getCategoria().getEloMaximo();
         if (eloMinimo != null && usuario.getElo() < eloMinimo) {
             throw new BusinessException("El Elo del usuario (" + usuario.getElo()
                     + ") es menor al minimo de la categoria (" + eloMinimo + ")");
@@ -149,7 +149,7 @@ public class InscripcionService {
                 inscripcion.getId(),
                 inscripcion.getCarrera().getId(),
                 inscripcion.getCarrera().getNombre(),
-                inscripcion.getCarrera().getCategoria().getNombre(),
+                inscripcion.getCarrera().getCampeonato().getCategoria().getNombre(),
                 inscripcion.getCarrera().getFecha(),
                 inscripcion.getUsuario().getId(),
                 inscripcion.getUsuario().getNombrePiloto(),

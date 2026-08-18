@@ -1,0 +1,73 @@
+:host {
+  display: block;
+  height: 100%;
+}
+
+.shell {
+  height: 100vh;
+}
+
+.shell-sidenav {
+  width: 260px;
+}
+
+.brand {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  padding: 1.25rem 1.5rem 0.75rem;
+}
+
+.brand-logo {
+  font-family: 'Roboto Condensed', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #e53935;
+}
+
+.brand-name {
+  font-family: 'Roboto Condensed', sans-serif;
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.nav-section {
+  padding: 1rem 1.5rem 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #9aa4af;
+}
+
+.active-link {
+  border-left: 3px solid #e53935;
+  background: rgba(229, 57, 53, 0.08);
+}
+
+.shell-toolbar {
+  gap: 0.5rem;
+}
+
+.toolbar-title {
+  font-family: 'Roboto Condensed', sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.spacer {
+  flex: 1 1 auto;
+}
+
+.user-name {
+  margin-left: 0.25rem;
+}
+
+.content {
+  padding: 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}

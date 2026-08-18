@@ -1,0 +1,40 @@
+<div class="page-header">
+  <h2>Categorias</h2>
+</div>
+
+@if (cargando()) {
+  <div class="centered">
+    <mat-progress-spinner diameter="40" mode="indeterminate"></mat-progress-spinner>
+  </div>
+} @else {
+  <div class="cards">
+    @for (categoria of categorias(); track categoria.id) {
+      <mat-card class="cat-card">
+        <mat-card-header>
+          <mat-card-title>{{ categoria.nombre }}</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <p class="desc">{{ categoria.descripcion }}</p>
+          <p class="meta">
+            <mat-icon>trending_up</mat-icon>
+            Elo:
+            @if (categoria.eloMinimo !== null || categoria.eloMaximo !== null) {
+              {{ categoria.eloMinimo ?? '-' }} - {{ categoria.eloMaximo ?? 'sin maximo' }}
+            } @else {
+              sin restriccion
+            }
+          </p>
+          <p class="meta">
+            <mat-icon>settings</mat-icon>
+            Setup {{ categoria.setupFijo ? 'fijo' : categoria.setupAbierto ? 'abierto' : 'cerrado' }}
+          </p>
+        </mat-card-content>
+        <mat-card-actions>
+          <a mat-button color="primary" [routerLink]="['/carreras']">Ver carreras</a>
+        </mat-card-actions>
+      </mat-card>
+    } @empty {
+      <p class="empty">No hay categorias.</p>
+    }
+  </div>
+}

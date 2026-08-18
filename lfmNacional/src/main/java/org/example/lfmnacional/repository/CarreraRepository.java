@@ -9,7 +9,7 @@ import java.util.List;
 
 public interface CarreraRepository extends JpaRepository<Carrera, Long> {
 
-    List<Carrera> findByCategoria_IdAndEstado(Long categoriaId, EstadoCarrera estado);
+    List<Carrera> findByCampeonato_IdAndEstado(Long campeonatoId, EstadoCarrera estado);
 
     List<Carrera> findByEstado(EstadoCarrera estado);
 
@@ -17,5 +17,5 @@ public interface CarreraRepository extends JpaRepository<Carrera, Long> {
 
     List<Carrera> findByFechaBeforeOrderByFechaDesc(LocalDateTime fecha);
 
-    List<Carrera> findByCategoria_IdOrderByFechaDesc(Long categoriaId);
+    List<Carrera> findByCampeonato_IdOrderByFechaDesc(Long campeonatoId);
 }

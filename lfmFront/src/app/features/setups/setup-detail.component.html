@@ -1,0 +1,74 @@
+@if (cargando()) {
+  <div class="centered">
+    <mat-progress-spinner diameter="40" mode="indeterminate"></mat-progress-spinner>
+  </div>
+} @else if (setup()) {
+  <a mat-button class="back" routerLink="/setups">
+    <mat-icon>arrow_back</mat-icon>
+    Volver a setups
+  </a>
+
+  <mat-card class="detail-card">
+    <mat-card-header>
+      <mat-card-title>{{ setup()!.titulo }}</mat-card-title>
+      <mat-card-subtitle>{{ setup()!.vehiculo }} - {{ setup()!.circuito }}</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <p class="desc">{{ setup()!.descripcion }}</p>
+      <p class="meta">
+        <mat-icon>person</mat-icon> Autor: {{ autor(setup()!.autorId) }}
+        <mat-icon>star</mat-icon>
+        {{ setup()!.promedioCalificacion === null ? '-' : setup()!.promedioCalificacion.toFixed(1) }}/5
+      </p>
+
+      <div class="rating-box">
+        <p>Calificame este setup:</p>
+        <mat-slider min="1" max="5" step="1" discrete [displayWith]="() => puntaje() + ' estrella(s)'">
+          <input matSliderThumb [(ngModel)]="puntaje" [ngModelOptions]="{ standalone: true }" />
+        </mat-slider>
+        <button
+          mat-raised-button
+          color="primary"
+          [disabled]="!estaLogueado || guardando()"
+          (click)="calificar()"
+        >
+          Calificar
+        </button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card class="comments-card">
+    <mat-card-header>
+      <mat-card-title>Comentarios</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      @for (comentario of comentarios(); track comentario.id) {
+        <div class="comentario">
+          <p class="comentario-texto">{{ comentario.texto }}</p>
+          <p class="comentario-meta">
+            {{ autor(comentario.usuarioId) }} - {{ comentario.fecha | date: 'dd/MM/yyyy HH:mm' }}
+          </p>
+        </div>
+      } @empty {
+        <p class="empty">Sin comentarios todavia.</p>
+      }
+
+      @if (estaLogueado()) {
+        <form [formGroup]="formComentario" (ngSubmit)="comentar()" class="comentar">
+          <mat-form-field appearance="outline" class="comentar-field">
+            <mat-label>Escribe un comentario</mat-label>
+            <textarea matInput formControlName="texto" rows="2"></textarea>
+          </mat-form-field>
+          <button mat-raised-button color="primary" type="submit" [disabled]="formComentario.invalid || guardando()">
+            Comentar
+          </button>
+        </form>
+      } @else {
+        <p class="hint">
+          <a routerLink="/login">Inicia sesion</a> para comentar o calificar.
+        </p>
+      }
+    </mat-card-content>
+  </mat-card>
+}

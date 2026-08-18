@@ -155,7 +155,7 @@ public class ResultadoCarreraService {
                 resultado.getId(),
                 resultado.getCarrera().getId(),
                 resultado.getCarrera().getNombre(),
-                resultado.getCarrera().getCategoria().getNombre(),
+                resultado.getCarrera().getCampeonato().getCategoria().getNombre(),
                 resultado.getUsuario().getId(),
                 resultado.getUsuario().getNombrePiloto(),
                 resultado.getPosicionFinal(),

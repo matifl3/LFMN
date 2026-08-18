@@ -9,6 +9,8 @@ public record CarreraResponse(
         String nombre,
         LocalDateTime fecha,
         String circuito,
+        Long campeonatoId,
+        String campeonatoNombre,
         Long categoriaId,
         String categoriaNombre,
         EstadoCarrera estado,

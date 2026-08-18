@@ -1,0 +1,47 @@
+<div class="page-header">
+  <h2>Notificaciones</h2>
+  @if (notificaciones().length > 0) {
+    <button mat-stroked-button (click)="marcarTodas()">
+      <mat-icon>done_all</mat-icon>
+      Marcar todas como leidas
+    </button>
+  }
+</div>
+
+@if (cargando()) {
+  <div class="centered">
+    <mat-progress-spinner diameter="40" mode="indeterminate"></mat-progress-spinner>
+  </div>
+} @else if (notificaciones().length === 0) {
+  <p class="empty">No tenes notificaciones.</p>
+} @else {
+  <div class="list">
+    @for (notificacion of notificaciones(); track notificacion.id) {
+      <mat-card
+        class="item"
+        [class.no-leida]="!notificacion.leida"
+        (click)="ir(notificacion)"
+      >
+        <mat-card-content class="row">
+          @if (!notificacion.leida) {
+            <span class="dot"></span>
+          }
+          <div class="texto">
+            <p>{{ notificacion.mensaje }}</p>
+            <span class="meta">
+              {{ notificacion.tipo }} - {{ notificacion.fecha | date: 'dd/MM/yyyy HH:mm' }}
+            </span>
+          </div>
+          <button
+            mat-icon-button
+            class="borrar"
+            (click)="eliminar(notificacion.id); $event.stopPropagation()"
+            aria-label="Eliminar notificacion"
+          >
+            <mat-icon>delete</mat-icon>
+          </button>
+        </mat-card-content>
+      </mat-card>
+    }
+  </div>
+}
