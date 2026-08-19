@@ -10,4 +10,6 @@ public interface SafetyRatingSancionRepository extends JpaRepository<SafetyRatin
     List<SafetyRatingSancion> findByUsuario_IdOrderByFechaDesc(Long usuarioId);
 
     List<SafetyRatingSancion> findByUsuario_IdAndCarrera_Id(Long usuarioId, Long carreraId);
+
+    void deleteByCarrera_Id(Long carreraId);
 }
