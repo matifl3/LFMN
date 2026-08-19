@@ -110,6 +110,7 @@ public class IncidenteService {
                         piloto.getId(),
                         piloto.getIncidente().getId(),
                         piloto.getUsuario().getId(),
+                        piloto.getUsuario().getNombrePiloto(),
                         piloto.getRol()))
                 .toList();
     }
