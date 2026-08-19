@@ -13,4 +13,6 @@ public interface CampeonatoPosicionRepository extends JpaRepository<CampeonatoPo
     Optional<CampeonatoPosicion> findByCampeonato_IdAndUsuario_Id(Long campeonatoId, Long usuarioId);
 
     boolean existsByCampeonato_Id(Long campeonatoId);
+
+    long countByCampeonato_Id(Long campeonatoId);
 }

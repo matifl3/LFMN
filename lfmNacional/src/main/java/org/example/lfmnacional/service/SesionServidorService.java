@@ -42,6 +42,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -176,12 +177,20 @@ public class SesionServidorService {
             case SESION_QUALIFY -> importarClasificacion(carrera, sesion);
             case SESION_RACE -> {
                 importarResultados(carrera, sesion);
-                importarVueltas(carrera, sesion, tipo);
+                try {
+                    importarVueltas(carrera, sesion, tipo);
+                } catch (Exception e) {
+                    log.warn("Error al importar vueltas para carrera {}: {}", carrera.getNombre(), e.getMessage());
+                }
+                try {
+                    autogenerarIncidentes(carrera, sesion);
+                } catch (Exception e) {
+                    log.warn("Error al autogenerar incidentes para carrera {}: {}", carrera.getNombre(), e.getMessage());
+                }
             }
             case "PRACTICE" -> log.info("Sesion PRACTICE ignorada (no importa datos)");
             default -> throw new BusinessException("Tipo de sesion no soportado: " + sesion.type());
         }
-        autogenerarIncidentes(carrera, sesion);
         return tipo;
     }
 
@@ -243,15 +252,6 @@ public class SesionServidorService {
             clasificacion.setSkinAuto(skinDe(autos, dato));
             sesionClasificacionRepository.save(clasificacion);
         }
-
-        ResultadoSesionData pole = conTiempo.get(0);
-        usuarioRepository.findByGuidSteam(pole.driverGuid()).ifPresent(usuario ->
-                resultadoCarreraRepository
-                        .findByCarrera_IdAndUsuario_Id(carrera.getId(), usuario.getId())
-                        .ifPresent(resultado -> {
-                            resultado.setPoles(true);
-                            resultadoCarreraRepository.save(resultado);
-                        }));
     }
 
     private void importarResultados(Carrera carrera, SesionServerData sesion) {
@@ -305,6 +305,24 @@ public class SesionServidorService {
         if (items.isEmpty()) {
             return;
         }
+
+        Optional<SesionClasificacion> poleOpt = sesionClasificacionRepository
+                .findByCarrera_IdOrderByTiempoAsc(carrera.getId()).stream().findFirst();
+        if (poleOpt.isPresent()) {
+            Long poleUsuarioId = poleOpt.get().getUsuario().getId();
+            for (int i = 0; i < items.size(); i++) {
+                if (items.get(i).usuarioId().equals(poleUsuarioId)) {
+                    ResultadoCarreraRequest old = items.get(i);
+                    items.set(i, new ResultadoCarreraRequest(
+                            old.carreraId(), old.usuarioId(), old.posicionFinal(),
+                            old.tiempoTotal(), old.vueltaRapida(),
+                            true, old.finalizo(), old.eloGanado(), old.srGanado(),
+                            old.modeloAuto(), old.skinAuto()));
+                    break;
+                }
+            }
+        }
+
         resultadoCarreraService.cargarResultados(new CargarResultadosRequest(carrera.getId(), items));
     }
 
