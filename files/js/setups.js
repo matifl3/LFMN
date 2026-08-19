@@ -5,6 +5,8 @@
 
   let setups = [];
   let selectedId = null;
+  const currentUser = L.getUser();
+  const isAdmin = currentUser && currentUser.rol === 'ADMIN';
 
   const listBox = document.getElementById('setup-list');
   const detailBox = document.getElementById('setup-detail');
@@ -45,7 +47,7 @@
     }
     listBox.innerHTML = list.map(function (s) {
       const a = autor(s);
-      return '<div class="card setup-card ' + (s.id === selectedId ? 'bracket' : 'card-hover') + '" style="cursor:pointer" data-setup="' + s.id + '">' +
+      return '<div class="card setup-card ' + (s.id === selectedId ? 'bracket' : 'card-hover') + '" style="cursor:pointer;position:relative" data-setup="' + s.id + '">' +
         '<div class="setup-card-cover"><span class="chip chip-category">' + L.esc(s.circuito || '') + '</span></div>' +
         '<h4>' + L.esc(s.titulo) + '</h4>' +
         '<div class="flex-between">' +
@@ -53,16 +55,36 @@
         stars(s.promedioCalificacion) +
         '</div>' +
         '<div class="text-tertiary mono" style="font-size:var(--fs-2xs)">' + (s.promedioCalificacion != null ? s.promedioCalificacion.toFixed(1) + ' · ' : '') + 'publicado ' + L.fmtRel(s.fechaPublicacion) + '</div>' +
+        (isAdmin ? '<button class="btn btn-danger btn-sm btn-icon" data-del-setup="' + s.id + '" title="Eliminar setup" style="position:absolute;top:var(--sp-3);right:var(--sp-3);z-index:1">🗑️</button>' : '') +
         '</div>';
     }).join('');
 
     listBox.querySelectorAll('[data-setup]').forEach(function (el) {
-      el.addEventListener('click', function () {
+      el.addEventListener('click', function (e) {
+        if (e.target.closest('[data-del-setup]')) return;
         selectedId = Number(el.dataset.setup);
         renderList();
         loadDetail(selectedId);
       });
     });
+
+    if (isAdmin) {
+      listBox.querySelectorAll('[data-del-setup]').forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          const id = Number(btn.getAttribute('data-del-setup'));
+          if (!confirm('¿Eliminar este setup y todos sus comentarios?')) return;
+          L.del('/setups/' + id).then(function () {
+            L.toast('Setup eliminado', 'success');
+            setups = setups.filter(function (s) { return s.id !== id; });
+            if (selectedId === id) selectedId = null;
+            renderList();
+            if (selectedId) loadDetail(selectedId);
+            else detailBox.innerHTML = '<p class="text-tertiary">Seleccioná un setup de la lista para ver el detalle.</p>';
+          }).catch(function (e) { L.toast(e.message, 'error'); });
+        });
+      });
+    }
   }
 
   function loadDetail(id) {
@@ -133,7 +155,9 @@
             '<div style="flex:1">' +
             '<div class="flex-between"><strong style="font-size:var(--fs-sm)">' + L.esc(cu.nombrePiloto) + '</strong><span class="text-tertiary mono" style="font-size:var(--fs-2xs)">' + L.fmtRel(c.fecha) + '</span></div>' +
             '<p class="text-secondary" style="font-size:var(--fs-sm); margin-top:var(--sp-1)">' + L.esc(c.texto) + '</p>' +
-            '</div></div>';
+            '</div>' +
+            (isAdmin ? '<button class="btn btn-danger btn-sm btn-icon" data-del-comentario="' + c.id + '" data-setup-id="' + id + '" title="Eliminar comentario" style="align-self:flex-start;margin-left:var(--sp-2)">🗑️</button>' : '') +
+            '</div>';
         }).join('') : '<p class="text-tertiary" style="font-size:var(--fs-sm)">Todavía no hay comentarios.</p>');
 
       if (user) {
@@ -145,6 +169,20 @@
           '</div>');
       }
       commentsBox.innerHTML = inner.innerHTML;
+
+      if (isAdmin) {
+        commentsBox.querySelectorAll('[data-del-comentario]').forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            const cId = Number(btn.getAttribute('data-del-comentario'));
+            const sId = Number(btn.getAttribute('data-setup-id'));
+            if (!confirm('¿Eliminar este comentario?')) return;
+            L.del('/setups/' + sId + '/comentarios/' + cId).then(function () {
+              L.toast('Comentario eliminado', 'success');
+              loadDetail(sId);
+            }).catch(function (e) { L.toast(e.message, 'error'); });
+          });
+        });
+      }
 
       const pubBtn = document.getElementById('setup-pub-comentario');
       if (pubBtn) {
