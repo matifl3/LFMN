@@ -130,8 +130,16 @@ public class SteamService {
 
         Usuario usuario = usuarioRepository.findByGuidSteam(guidSteam).orElse(null);
         if (usuario == null) {
-            usuario = crearConSteam(guidSteam);
-            log.info("Steam auth: usuario nuevo creado id={}", usuario.getId());
+            String emailGenerado = "steam_" + guidSteam + SUFFIX_EMAIL;
+            usuario = usuarioRepository.findByEmail(emailGenerado).orElse(null);
+            if (usuario != null) {
+                usuario.setGuidSteam(guidSteam);
+                usuarioRepository.save(usuario);
+                log.info("Steam auth: guidSteam vinculado a usuario existente id={}", usuario.getId());
+            } else {
+                usuario = crearConSteam(guidSteam);
+                log.info("Steam auth: usuario nuevo creado id={}", usuario.getId());
+            }
         } else {
             log.info("Steam auth: usuario existente id={}", usuario.getId());
         }
