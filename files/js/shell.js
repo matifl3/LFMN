@@ -24,8 +24,8 @@
         actions.appendChild(a);
       }
 
-      // Nav: link Admin para admins
-      if (user.rol === 'ADMIN') {
+      // Nav: link Admin para admins y comisarios
+      if (user.rol === 'ADMIN' || user.rol === 'COMISARIO') {
         const nav = document.querySelector('.main-nav');
         if (nav && !nav.querySelector('a[href="13-admin.html"]')) {
           const a = document.createElement('a');

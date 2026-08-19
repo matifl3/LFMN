@@ -42,6 +42,12 @@ public class SancionService {
     }
 
     @Transactional(readOnly = true)
+    public List<SancionResponse> listAll() {
+        return sancionRepository.findAll().stream()
+                .map(this::toResponse).toList();
+    }
+
+    @Transactional(readOnly = true)
     public List<SancionResponse> listarPorUsuario(Long usuarioId) {
         return sancionRepository.findByUsuario_IdOrderByFechaDesc(usuarioId).stream()
                 .map(this::toResponse).toList();
