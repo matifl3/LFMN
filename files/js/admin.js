@@ -470,23 +470,37 @@
 
   function cargarAnuncios() {
     const tbody = $('adm-tabla-anuncios');
-    tbody.innerHTML = '<tr><td colspan="5" class="text-tertiary">Cargando…</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" class="text-tertiary">Cargando…</td></tr>';
     L.get('/anuncios').then(function (anuncios) {
       tbody.innerHTML = anuncios.length ? anuncios.map(function (a) {
         const img = a.urlImagen
           ? '<img src="' + L.esc(a.urlImagen) + '" alt="" style="width:56px;height:36px;object-fit:cover;border-radius:var(--r-sm);border:1px solid var(--line-bright)">'
           : '<span class="text-tertiary">—</span>';
+        const star = a.destacado
+          ? '<button class="btn btn-sm btn-icon btn-star-active" data-dest-acar="' + a.id + '" title="Quitar destacado" style="color:var(--amber);cursor:pointer;background:none;border:none;font-size:1.2rem">★</button>'
+          : '<button class="btn btn-sm btn-icon" data-dest-acar="' + a.id + '" title="Destacar en inicio" style="color:var(--text-tertiary);cursor:pointer;background:none;border:none;font-size:1.2rem">☆</button>';
         return '<tr>' +
           '<td class="mono" style="font-size:var(--fs-2xs)">' + L.fmtFechaHora(a.fecha) + '</td>' +
           '<td class="data">' + L.esc(a.titulo) + '</td>' +
           '<td class="text-secondary" style="font-size:var(--fs-xs); max-width:340px">' + L.esc(a.contenido) + '</td>' +
           '<td>' + img + '</td>' +
+          '<td style="text-align:center">' + star + '</td>' +
           '<td>' + (isAdmin ?
             '<div class="row-actions">' +
               '<button class="btn btn-danger btn-sm btn-icon" data-del-anuncio="' + a.id + '" aria-label="Eliminar">' + icono('del') + '</button>' +
             '</div>' : '') +
           '</td></tr>';
-      }).join('') : '<tr><td colspan="5" class="text-tertiary">No hay anuncios publicados.</td></tr>';
+      }).join('') : '<tr><td colspan="6" class="text-tertiary">No hay anuncios publicados.</td></tr>';
+
+      tbody.querySelectorAll('[data-dest-acar]').forEach(function (b) {
+        b.addEventListener('click', function () {
+          const id = Number(b.getAttribute('data-dest-acar'));
+          L.api('/anuncios/' + id + '/destacar', { method: 'PATCH' }).then(function () {
+            L.toast('Anuncio destacado actualizado', 'success');
+            cargarAnuncios();
+          }).catch(function (e) { L.toast(e.message, 'error'); });
+        });
+      });
 
       tbody.querySelectorAll('[data-del-anuncio]').forEach(function (b) {
         b.addEventListener('click', function () {
@@ -499,7 +513,7 @@
         });
       });
     }).catch(function (e) {
-      tbody.innerHTML = '<tr><td colspan="5" class="text-tertiary">' + L.esc(e.message) + '</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6" class="text-tertiary">' + L.esc(e.message) + '</td></tr>';
     });
   }
 
