@@ -15,4 +15,6 @@ public interface SesionClasificacionRepository extends JpaRepository<SesionClasi
     Optional<SesionClasificacion> findByCarrera_IdAndUsuario_Id(Long carreraId, Long usuarioId);
 
     boolean existsByCarrera_Id(Long carreraId);
+
+    void deleteByCarrera_Id(Long carreraId);
 }

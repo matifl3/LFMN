@@ -20,4 +20,6 @@ public interface InscripcionRepository extends JpaRepository<Inscripcion, Long> 
     long countByCarrera_IdAndEstado(Long carreraId, EstadoInscripcion estado);
 
     boolean existsByCarrera_Id(Long carreraId);
+
+    void deleteByCarrera_Id(Long carreraId);
 }

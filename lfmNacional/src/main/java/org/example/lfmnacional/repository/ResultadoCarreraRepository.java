@@ -12,6 +12,8 @@ public interface ResultadoCarreraRepository extends JpaRepository<ResultadoCarre
 
     boolean existsByCarrera_Id(Long carreraId);
 
+    void deleteByCarrera_Id(Long carreraId);
+
     List<ResultadoCarrera> findByCarrera_IdOrderByPosicionFinalAsc(Long carreraId);
 
     Optional<ResultadoCarrera> findByCarrera_IdAndUsuario_Id(Long carreraId, Long usuarioId);
