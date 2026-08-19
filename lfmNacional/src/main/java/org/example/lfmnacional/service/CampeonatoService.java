@@ -112,12 +112,15 @@ public class CampeonatoService {
             int puntos = puntosPorPosicion(resultado.getPosicionFinal());
             CampeonatoPosicion posicion = campeonatoPosicionRepository
                     .findByCampeonato_IdAndUsuario_Id(campeonato.getId(), resultado.getUsuario().getId())
-                    .orElseGet(() -> CampeonatoPosicion.builder()
-                            .campeonato(campeonato)
-                            .usuario(resultado.getUsuario())
-                            .puntos(0)
-                            .posicion(0)
-                            .build());
+                    .orElseGet(() -> {
+                        long total = campeonatoPosicionRepository.countByCampeonato_Id(campeonato.getId());
+                        return CampeonatoPosicion.builder()
+                                .campeonato(campeonato)
+                                .usuario(resultado.getUsuario())
+                                .puntos(0)
+                                .posicion((int) total + 1)
+                                .build();
+                    });
             posicion.setPuntos(posicion.getPuntos() + puntos);
             campeonatoPosicionRepository.save(posicion);
         }
