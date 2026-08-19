@@ -1,0 +1,177 @@
+{
+	"TrackName": "toay_la_pampa_h22",
+	"TrackConfig": "toay_la_pampa_h22",
+	"Type": "RACE",
+	"DurationSecs": 0,
+	"RaceLaps": 5,
+	"Cars": [
+		{
+			"CarId": 0,
+			"Driver": {
+				"Name": "Matifel",
+				"Team": "",
+				"Nation": "ARG",
+				"Guid": "76561199066767489",
+				"GuidsList": [
+					""
+				]
+			},
+			"Model": "apvs_actc_camaro_2025_tc1",
+			"Skin": "86_Agustin_canapino",
+			"BallastKG": 0,
+			"Restrictor": 0
+		},
+		{
+			"CarId": 1,
+			"Driver": {
+				"Name": "",
+				"Team": "",
+				"Nation": "",
+				"Guid": "",
+				"GuidsList": [
+					""
+				]
+			},
+			"Model": "apvs_actc_camaro_2025_tc1",
+			"Skin": "10_Marcos_Landa",
+			"BallastKG": 0,
+			"Restrictor": 0
+		},
+		{
+			"CarId": 2,
+			"Driver": {
+				"Name": "",
+				"Team": "",
+				"Nation": "",
+				"Guid": "",
+				"GuidsList": [
+					""
+				]
+			},
+			"Model": "apvs_actc_mustang_2025_tc1",
+			"Skin": "04_mariano_werner",
+			"BallastKG": 0,
+			"Restrictor": 0
+		}
+	],
+	"Result": [
+		{
+			"DriverName": "Matifel",
+			"DriverGuid": "76561199066767489",
+			"CarId": 0,
+			"CarModel": "apvs_actc_camaro_2025_tc1",
+			"BestLap": 81681,
+			"TotalTime": 452621,
+			"BallastKG": 0,
+			"Restrictor": 0
+		},
+		{
+			"DriverName": "",
+			"DriverGuid": "",
+			"CarId": 1,
+			"CarModel": "apvs_actc_camaro_2025_tc1",
+			"BestLap": 999999999,
+			"TotalTime": 0,
+			"BallastKG": 0,
+			"Restrictor": 0
+		},
+		{
+			"DriverName": "",
+			"DriverGuid": "",
+			"CarId": 2,
+			"CarModel": "apvs_actc_mustang_2025_tc1",
+			"BestLap": 999999999,
+			"TotalTime": 0,
+			"BallastKG": 0,
+			"Restrictor": 0
+		}
+	],
+	"Laps": [
+		{
+			"DriverName": "Matifel",
+			"DriverGuid": "76561199066767489",
+			"CarId": 0,
+			"CarModel": "apvs_actc_camaro_2025_tc1",
+			"Timestamp": 1430715,
+			"LapTime": 100829,
+			"Sectors": [
+				32776,
+				40518,
+				27535
+			],
+			"Cuts": 0,
+			"BallastKG": 0,
+			"Tyre": "S",
+			"Restrictor": 0
+		},
+		{
+			"DriverName": "Matifel",
+			"DriverGuid": "76561199066767489",
+			"CarId": 0,
+			"CarModel": "apvs_actc_camaro_2025_tc1",
+			"Timestamp": 1513038,
+			"LapTime": 82325,
+			"Sectors": [
+				28469,
+				26861,
+				26995
+			],
+			"Cuts": 0,
+			"BallastKG": 0,
+			"Tyre": "S",
+			"Restrictor": 0
+		},
+		{
+			"DriverName": "Matifel",
+			"DriverGuid": "76561199066767489",
+			"CarId": 0,
+			"CarModel": "apvs_actc_camaro_2025_tc1",
+			"Timestamp": 1618426,
+			"LapTime": 105388,
+			"Sectors": [
+				28227,
+				25740,
+				51421
+			],
+			"Cuts": 0,
+			"BallastKG": 0,
+			"Tyre": "S",
+			"Restrictor": 0
+		},
+		{
+			"DriverName": "Matifel",
+			"DriverGuid": "76561199066767489",
+			"CarId": 0,
+			"CarModel": "apvs_actc_camaro_2025_tc1",
+			"Timestamp": 1700830,
+			"LapTime": 82405,
+			"Sectors": [
+				28707,
+				26545,
+				27153
+			],
+			"Cuts": 0,
+			"BallastKG": 0,
+			"Tyre": "S",
+			"Restrictor": 0
+		},
+		{
+			"DriverName": "Matifel",
+			"DriverGuid": "76561199066767489",
+			"CarId": 0,
+			"CarModel": "apvs_actc_camaro_2025_tc1",
+			"Timestamp": 1782511,
+			"LapTime": 81681,
+			"Sectors": [
+				28599,
+				25965,
+				27117
+			],
+			"Cuts": 0,
+			"BallastKG": 0,
+			"Tyre": "S",
+			"Restrictor": 0
+		}
+	],
+	"Events": null
+}

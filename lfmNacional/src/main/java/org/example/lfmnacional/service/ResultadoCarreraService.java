@@ -100,9 +100,6 @@ public class ResultadoCarreraService {
     }
 
     private void validarCarga(Carrera carrera) {
-        if (carrera.getEstado() == EstadoCarrera.PROGRAMADA) {
-            throw new BusinessException("No se pueden cargar resultados de una carrera programada");
-        }
         if (carrera.getEstado() == EstadoCarrera.CANCELADA) {
             throw new BusinessException("No se pueden cargar resultados de una carrera cancelada");
         }

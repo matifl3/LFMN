@@ -27,6 +27,7 @@ import org.example.lfmnacional.repository.SesionClasificacionRepository;
 import org.example.lfmnacional.repository.SesionProcesadaRepository;
 import org.example.lfmnacional.repository.UsuarioRepository;
 import org.example.lfmnacional.repository.VueltaRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,6 +40,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class SesionServidorService {
@@ -104,6 +106,7 @@ public class SesionServidorService {
                 importarResultados(carrera, sesion);
                 importarVueltas(carrera, sesion, tipo);
             }
+            case "PRACTICE" -> log.info("Sesion PRACTICE ignorada (no importa datos)");
             default -> throw new BusinessException("Tipo de sesion no soportado: " + sesion.type());
         }
         autogenerarIncidentes(carrera, sesion);
@@ -114,6 +117,7 @@ public class SesionServidorService {
         return Normalizer.normalize(texto, Normalizer.Form.NFD)
                 .replaceAll("\\p{M}", "")
                 .toLowerCase()
+                .replaceAll("_", " ")
                 .trim();
     }
 
