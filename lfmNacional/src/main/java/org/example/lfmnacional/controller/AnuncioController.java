@@ -46,4 +46,10 @@ public class AnuncioController {
         anuncioService.delete(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PatchMapping("/{id}/destacar")
+    @PreAuthorize("hasRole('ADMIN')")
+    public AnuncioResponse toggleDestacado(@PathVariable Long id) {
+        return anuncioService.toggleDestacado(id);
+    }
 }
