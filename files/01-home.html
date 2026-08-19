@@ -123,12 +123,13 @@
 
     <!-- Último anuncio -->
     <div class="card card-hover">
+      <img id="home-anuncio-img" class="anuncio-img" src="" alt="" style="display:none">
       <div class="card-header">
         <h3>Último anuncio</h3>
-        <span class="text-tertiary mono" style="font-size:var(--fs-2xs)" id="home-anuncio-fecha">HACE 2 HS</span>
+        <span class="text-tertiary mono" style="font-size:var(--fs-2xs)" id="home-anuncio-fecha"></span>
       </div>
-      <p class="text-secondary" style="font-size:var(--fs-sm); margin-bottom:var(--sp-4)" id="home-anuncio-contenido">Se actualizó el reglamento de incidentes: las apelaciones ahora tienen un plazo de 48 hs desde la publicación de resultados oficiales.</p>
-      <a href="#" class="btn btn-ghost btn-sm" id="home-anuncio-link">Leer reglamento completo</a>
+      <p class="text-secondary" style="font-size:var(--fs-sm); margin-bottom:var(--sp-4)" id="home-anuncio-contenido"></p>
+      <a href="#" class="btn btn-ghost btn-sm" id="home-anuncio-link"></a>
     </div>
 
   </div>
@@ -144,7 +145,17 @@
   </div>
 </footer>
 
-<script src="js/api.js"></script>
+  <div id="anuncio-modal" class="modal-overlay" style="display:none">
+    <div class="modal-box">
+      <button class="modal-close" id="anuncio-modal-close">&times;</button>
+      <img id="anuncio-modal-img" class="anuncio-modal-img" src="" alt="" style="display:none">
+      <h3 id="anuncio-modal-titulo" class="data" style="margin-bottom:var(--sp-2)"></h3>
+      <span class="text-tertiary mono" style="font-size:var(--fs-2xs)" id="anuncio-modal-fecha"></span>
+      <p class="text-secondary" style="margin-top:var(--sp-4);line-height:1.6" id="anuncio-modal-contenido"></p>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
 <script src="js/shell.js"></script>
 <script src="js/home.js"></script>
 </body>
