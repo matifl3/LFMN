@@ -16,6 +16,8 @@ public record CarreraRequest(
         Integer cupoMaximo,
         String servidor,
         String contrasenaServidor,
-        Long archivoId
+        Long archivoId,
+        String linkPista,
+        String linkAuto
 ) {
 }
