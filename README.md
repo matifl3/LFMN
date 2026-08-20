@@ -1,4 +1,3 @@
-[README.md](https://github.com/user-attachments/files/31107282/README.md)
 # LFM Nacional — Low Fuel Motorsport
 
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.0-6DB33F?logo=springboot&logoColor=white)
@@ -86,7 +85,7 @@ Detalles técnicos:
 - Sanciones / Incidentes (panel de comisario)
 - Panel de administración
 
-## Instalación (end-to-end)
+## Instalación (desarrollo local)
 
 ### 1. Requisitos previos
 
@@ -102,51 +101,40 @@ CREATE DATABASE lfm CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 Las tablas se generan automáticamente con Hibernate (`ddl-auto=update`).
 
-### 3. Configurar el backend
+### 3. Configurar variables de entorno
 
-Editar `lfmNacional/src/main/resources/application.properties`:
+Copiar el archivo de ejemplo y completar los valores:
 
-```properties
-# Base de datos
-spring.datasource.url=jdbc:mysql://localhost:3306/lfm?serverTimezone=UTC&useSSL=false&allowPublicKeyRetrieval=true
-spring.datasource.username=TU_USUARIO_MYSQL
-spring.datasource.password=TU_PASSWORD_MYSQL
-
-# Puerto del servidor
-server.port=8080
-
-# JWT
-jwt.secreto=UNA_CLAVE_LARGA_Y_SEGURA_DE_FIRMA_HS256
-jwt.expiracion-minutos=480
+```bash
+cd lfmNacional
+cp .env.example .env
 ```
 
-> **Recomendación de seguridad:** no commitees credenciales reales. Mové el
-> password de MySQL y `jwt.secreto` a variables de entorno:
->
-> ```properties
-> spring.datasource.password=${DB_PASSWORD}
-> jwt.secreto=${JWT_SECRETO}
-> ```
-
-Configuración de sesiones de Assetto Corsa (dónde exporta resultados el servidor):
+Editar `.env` con tus valores:
 
 ```properties
-sesiones.input-dir=D:/SteamLibrary/steamapps/common/assettocorsa/server/results
-sesiones.procesadas-dir=./lfmNacional/sesiones/procesadas
-sesiones.errores-dir=./lfmNacional/sesiones/errores
+DB_USERNAME=root
+DB_PASSWORD=tu_password_mysql
+JWT_SECRETO=clave_larga_aleatoria_para_firmar_tokens
+FRONTEND_URL=http://localhost:8080
+CORS_ALLOWED_ORIGINS=*
 ```
 
-Configuración de Steam OAuth:
+> **Seguridad**: el archivo `.env` está en `.gitignore` y nunca se sube a git.
+> En desarrollo local, los valores por defecto de `application.properties` funcionan
+> sin necesidad de `.env`.
+
+### 4. Configurar sesiones de Assetto Corsa
+
+En `.env`, configurar la ruta donde el servidor de Assetto Corsa exporta resultados:
 
 ```properties
-steam.realm=http://localhost:8080
-steam.return-to=http://localhost:8080/api/steam/vinculacion/callback
-steam.return-to-auth=http://localhost:8080/api/steam/auth/callback
-frontend.url=http://localhost:8080
-steam.state-timeout-minutos=10
+SESIONES_DIR=/ruta/a/tus/sesiones
 ```
 
-### 4. Correr el backend
+O dejar el valor por defecto (funciona en desarrollo local).
+
+### 5. Correr el backend
 
 ```bash
 cd lfmNacional
@@ -155,11 +143,12 @@ cd lfmNacional
 
 La app queda disponible en `http://localhost:8080`.
 
-### 5. Abrir el frontend
+### 6. Abrir el frontend
 
-Abrí `files/index.html` en tu navegador (o serví la carpeta `files/` con cualquier servidor estático). El frontend se comunica con el backend en `http://localhost:8080` vía la API REST.
+Abrí `http://localhost:8080` en tu navegador. El frontend es servido automáticamente
+por el backend desde la carpeta `files/`.
 
-### 6. Procesar sesiones de carrera
+### 7. Procesar sesiones de carrera
 
 El watcher de carpeta detecta automáticamente los JSON exportados por Assetto
 Corsa con el formato:
@@ -176,10 +165,75 @@ curl -X POST "http://localhost:8080/api/sesiones/importar?carreraId=1" \
   -d @sesion.json
 ```
 
+## Despliegue en producción
+
+### Opción 1: Docker (recomendado)
+
+```bash
+# Build de la imagen
+docker build -t lfm-app .
+
+# Ejecutar con variables de entorno
+docker run -d \
+  --name lfm \
+  -p 8080:8080 \
+  -e DB_USERNAME=lfm_user \
+  -e DB_PASSWORD=tu_password_seguro \
+  -e JWT_SECRETO=tu_jwt_secret_largo \
+  -e FRONTEND_URL=https://tudominio.com \
+  -e CORS_ALLOWED_ORIGINS=https://tudominio.com \
+  -e SPRING_PROFILES_ACTIVE=prod \
+  lfm-app
+```
+
+### Opción 2: Oracle Cloud Free Tier (gratis forever)
+
+El proyecto incluye un script de setup automático:
+
+```bash
+# 1. Crear instancia VM en Oracle Cloud (ARM, 4 OCPU, 24GB RAM, Ubuntu)
+# 2. Conectarse por SSH
+ssh -i tu-clave ubuntu@ip-publica
+
+# 3. Subir el proyecto
+scp -r lfmNacional/ ubuntu@ip:~/
+scp -r files/ ubuntu@ip:~/app/
+
+# 4. Ejecutar setup
+sudo bash setup-oracle-cloud.sh
+
+# 5. Subir el JAR compilado
+cd lfmNacional
+./mvnw clean package -DskipTests
+scp target/lfmNacional-0.0.1-SNAPSHOT.jar ubuntu@ip:~/app/app.jar
+
+# 6. Iniciar
+sudo systemctl start lfm
+```
+
+El script genera credenciales aleatorias, crea la BD MySQL y configura el servicio systemd.
+
+### Configuración de producción
+
+| Variable | Descripción |
+|---|---|
+| `DB_USERNAME` | Usuario de MySQL |
+| `DB_PASSWORD` | Password de MySQL |
+| `JWT_SECRETO` | Clave para firmar tokens JWT (generar con `openssl rand -base64 64`) |
+| `FRONTEND_URL` | URL pública de la app (ej: `https://tudominio.com`) |
+| `CORS_ALLOWED_ORIGINS` | Dominios permitidos (separados por coma) |
+| `SESIONES_DIR` | Ruta a la carpeta de sesiones de Assetto Corsa |
+| `SPRING_PROFILES_ACTIVE` | Usar `prod` para config segura |
+
+### Perfiles de Spring
+
+- **default** (desarrollo): `ddl-auto=update`, `show-sql=true`, datos de test
+- **prod** (producción): `ddl-auto=validate`, `show-sql=false`, sin DataSeeder
+
 ## Scripts de utilidad
 
+- `setup-oracle-cloud.sh` — setup automático para Oracle Cloud Free Tier
 - `scripts/simular-carrera.ps1` — simula el flujo de una carrera para pruebas
-  (inscripción, resultados y recálculo de rating).
 
 ## Pendientes (TBD)
 
