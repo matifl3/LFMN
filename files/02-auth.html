@@ -62,6 +62,22 @@
       <button type="submit" class="btn btn-primary btn-block btn-lg" id="btn-register">Crear cuenta</button>
     </form>
 
+    <form id="form-steam-setup" style="display:none">
+      <div class="text-center" style="margin-bottom:var(--sp-4)">
+        <p class="text-tertiary" style="font-size:var(--fs-sm)">Completá tu perfil para terminar de crear tu cuenta.</p>
+      </div>
+      <div class="field">
+        <label for="steam-nombre">Nombre de piloto</label>
+        <input class="input" type="text" id="steam-nombre" placeholder="Ej. Franco Gómez Reta" required>
+      </div>
+      <div class="field">
+        <label for="steam-email">Email</label>
+        <input class="input" type="email" id="steam-email" placeholder="piloto@ejemplo.com" required>
+      </div>
+      <input type="hidden" id="steam-guid" value="">
+      <button type="submit" class="btn btn-primary btn-block btn-lg" id="btn-steam-setup">Crear cuenta</button>
+    </form>
+
     <div class="divider-or">o continuar con</div>
 
     <button type="button" class="btn btn-ghost btn-block" id="btn-steam">

@@ -31,7 +31,7 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/usuarios/registro", "/api/usuarios/login").permitAll()
+                        .requestMatchers("/api/usuarios/registro", "/api/usuarios/login", "/api/usuarios/registro-steam").permitAll()
                         .requestMatchers("/api/steam/vincular-url").authenticated()
                         .requestMatchers(HttpMethod.GET, "/**").permitAll()
                         .anyRequest().authenticated())
