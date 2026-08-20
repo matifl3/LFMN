@@ -161,15 +161,19 @@
   }
 
   function renderAnalisis() {
-    L.api('/vueltas/carrera/' + id).then(function (res) {
-      const tbody = document.getElementById('race-analisis');
+    const user = L.getUser();
+    const tbody = document.getElementById('race-analisis');
+    if (!user) {
+      tbody.innerHTML = '<tr><td colspan="7" class="text-tertiary">Ingresá para ver tu análisis por vuelta.</td></tr>';
+      return;
+    }
+    L.api('/vueltas/carrera/' + id + '/usuario/' + user.id).then(function (res) {
       if (!res.length) {
-        tbody.innerHTML = '<tr><td colspan="8" class="text-tertiary">Sin vueltas registradas.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" class="text-tertiary">Sin vueltas registradas.</td></tr>';
         return;
       }
       tbody.innerHTML = res.map(function (v) {
         return '<tr>' +
-          '<td class="data"><a href="08-driver-profile.html?id=' + v.usuarioId + '" class="link">' + L.esc(v.nombrePiloto || ('Piloto #' + v.usuarioId)) + '</a></td>' +
           '<td class="num mono">' + v.numeroVuelta + '</td>' +
           '<td class="num mono">' + L.fmtLap(v.tiempoMs) + '</td>' +
           '<td class="num mono">' + L.fmtLap(v.sector1) + '</td>' +
