@@ -97,6 +97,8 @@ public class CarreraService {
                 .servidor(request.servidor())
                 .contrasenaServidor(request.contrasenaServidor())
                 .archivo(request.archivoId() != null ? archivoCarreraService.getEntity(request.archivoId()) : null)
+                .linkPista(request.linkPista())
+                .linkAuto(request.linkAuto())
                 .build();
         return toResponse(carreraRepository.save(carrera));
     }
@@ -115,6 +117,8 @@ public class CarreraService {
         if (request.archivoId() != null) {
             carrera.setArchivo(archivoCarreraService.getEntity(request.archivoId()));
         }
+        carrera.setLinkPista(request.linkPista());
+        carrera.setLinkAuto(request.linkAuto());
         return toResponse(carreraRepository.save(carrera));
     }
 
@@ -202,6 +206,8 @@ public class CarreraService {
                 carrera.getServidor(),
                 carrera.getContrasenaServidor(),
                 carrera.getArchivo() != null ? carrera.getArchivo().getId() : null,
-                carrera.getArchivo() != null ? carrera.getArchivo().getNombre() : null);
+                carrera.getArchivo() != null ? carrera.getArchivo().getNombre() : null,
+                carrera.getLinkPista(),
+                carrera.getLinkAuto());
     }
 }

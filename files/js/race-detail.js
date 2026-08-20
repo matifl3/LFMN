@@ -70,23 +70,20 @@
 
   function renderArchivos() {
     const box = document.getElementById('race-archivos');
-    const files = [];
-    if (carrera.archivoId) {
-      files.push({ id: carrera.archivoId, nombre: carrera.archivoNombre || ('Archivo #' + carrera.archivoId), tipo: 'reglamento' });
-    }
-    if (!files.length) {
+    const hasPista = carrera.linkPista && carrera.linkPista.trim();
+    const hasAuto = carrera.linkAuto && carrera.linkAuto.trim();
+    if (!hasPista && !hasAuto) {
       box.innerHTML = '<p class="text-tertiary" style="font-size:var(--fs-sm)">No hay archivos publicados para esta carrera.</p>';
       return;
     }
-    box.innerHTML = files.map(function (f) {
-      const color = f.tipo === 'setup' ? 'var(--amber)' : 'var(--celeste)';
-      return '<div class="file-row">' +
-        '<span class="flex gap-3" style="align-items:center">' +
-        '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:' + color + '"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>' +
-        '<span>' + L.esc(f.nombre) + '</span></span>' +
-        '<a href="' + L.API_BASE + '/api/archivos/' + f.id + '/descargar" class="btn btn-ghost btn-sm">Descargar</a>' +
-        '</div>';
-    }).join('');
+    var html = '';
+    if (hasPista) {
+      html += '<a href="' + L.esc(carrera.linkPista) + '" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">Descargar Pista</a>';
+    }
+    if (hasAuto) {
+      html += '<a href="' + L.esc(carrera.linkAuto) + '" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">Descargar Auto</a>';
+    }
+    box.innerHTML = html;
   }
 
   function fmtDif(ms) {

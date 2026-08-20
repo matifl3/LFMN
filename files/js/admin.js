@@ -144,6 +144,8 @@
     $('a-circuito').value = '';
     $('a-cupo').value = '32';
     $('a-servidor').value = '';
+    $('a-link-pista').value = '';
+    $('a-link-auto').value = '';
     $('a-camp').innerHTML = '<option value="">Elegí categoría primero…</option>';
   }
 
@@ -161,6 +163,8 @@
     $('a-circuito').value = c.circuito || '';
     $('a-cupo').value = c.cupoMaximo != null ? c.cupoMaximo : '';
     $('a-servidor').value = c.servidor || '';
+    $('a-link-pista').value = c.linkPista || '';
+    $('a-link-auto').value = c.linkAuto || '';
     const sel = $('a-cat');
     if (c.categoriaId) sel.value = String(c.categoriaId);
     cargarCampeonatosSelect(c.categoriaId, c.campeonatoId);
@@ -180,7 +184,9 @@
       circuito: $('a-circuito').value.trim() || 'Por definir',
       campeonatoId: Number($('a-camp').value),
       cupoMaximo: Number($('a-cupo').value) || 32,
-      servidor: $('a-servidor').value.trim() || null
+      servidor: $('a-servidor').value.trim() || null,
+      linkPista: $('a-link-pista').value.trim() || null,
+      linkAuto: $('a-link-auto').value.trim() || null
     };
     const req = editCarreraId ? L.put('/carreras/' + editCarreraId, body) : L.post('/carreras', body);
     req.then(function () {
