@@ -82,12 +82,13 @@
     }
   });
 
-  /* Retorno del flujo Steam: ?steam=ok&token=<jwt> o ?steam=invalido|expirado */
+  /* Retorno del flujo Steam: ?steam=ok&token=<jwt> o ?steam=nuevo&guid=<guid> o ?steam=invalido|expirado */
   (function procesoSteam() {
     const params = new URLSearchParams(location.search);
     const steam = params.get('steam');
     if (!steam) return;
     const token = params.get('token');
+    const guid = params.get('guid');
     history.replaceState(null, '', location.pathname + location.hash);
     if (steam === 'ok' && token) {
       L.setSession(token, null);
@@ -98,10 +99,38 @@
       }).catch(function () {
         L.toast('No se pudo completar el ingreso con Steam.', 'error');
       });
+    } else if (steam === 'nuevo' && guid) {
+      document.getElementById('form-login').style.display = 'none';
+      document.getElementById('form-register').style.display = 'none';
+      document.getElementById('tab-login').style.display = 'none';
+      document.getElementById('tab-register').style.display = 'none';
+      document.querySelector('.divider-or').style.display = 'none';
+      document.getElementById('btn-steam').style.display = 'none';
+      document.getElementById('steam-guid').value = guid;
+      document.getElementById('form-steam-setup').style.display = 'block';
     } else {
       L.toast(steam === 'expirado'
         ? 'El enlace de ingreso con Steam expiró. Intentá de nuevo.'
         : 'No se pudo ingresar con Steam.', 'error');
     }
   })();
+
+  document.getElementById('form-steam-setup').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    const btn = document.getElementById('btn-steam-setup');
+    btn.disabled = true;
+    try {
+      const data = await L.post('/usuarios/registro-steam', {
+        email: document.getElementById('steam-email').value.trim(),
+        nombrePiloto: document.getElementById('steam-nombre').value.trim(),
+        guidSteam: document.getElementById('steam-guid').value
+      });
+      L.setSession(data.token, data.usuario);
+      L.toast('Cuenta creada correctamente', 'success');
+      location.href = next();
+    } catch (err) {
+      L.toast(err.message, 'error');
+      btn.disabled = false;
+    }
+  });
 })();

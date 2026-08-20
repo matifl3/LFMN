@@ -45,6 +45,8 @@ public class SteamController {
         String url;
         if (resultado.token() != null) {
             url = frontendUrl + "/02-auth.html?steam=ok&token=" + resultado.token();
+        } else if ("nuevo".equals(resultado.resultado())) {
+            url = frontendUrl + "/02-auth.html?steam=nuevo&guid=" + resultado.guidSteam();
         } else {
             url = frontendUrl + "/02-auth.html?steam=" + resultado.resultado();
         }

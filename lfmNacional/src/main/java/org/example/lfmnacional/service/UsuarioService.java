@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -43,6 +44,10 @@ public class UsuarioService {
         if (request.guidSteam() != null && usuarioRepository.existsByGuidSteam(request.guidSteam())) {
             throw new BusinessException("Ya existe un usuario vinculado a esa cuenta de Steam");
         }
+        if (request.nombrePiloto() != null && !request.nombrePiloto().isBlank()
+                && usuarioRepository.existsByNombrePiloto(request.nombrePiloto())) {
+            throw new BusinessException("Ya existe un usuario con ese nombre de piloto");
+        }
         Usuario usuario = Usuario.builder()
                 .email(request.email())
                 .password(passwordEncoder.encode(request.password()))
@@ -51,6 +56,27 @@ public class UsuarioService {
                 .guidSteam(request.guidSteam())
                 .build();
         return toResponse(usuarioRepository.save(usuario));
+    }
+
+    @Transactional
+    public LoginResponse registrarSteam(SteamRegistroRequest request) {
+        if (usuarioRepository.existsByEmail(request.email())) {
+            throw new BusinessException("Ya existe un usuario con el email " + request.email());
+        }
+        if (usuarioRepository.existsByGuidSteam(request.guidSteam())) {
+            throw new BusinessException("Ya existe un usuario vinculado a esa cuenta de Steam");
+        }
+        if (usuarioRepository.existsByNombrePiloto(request.nombrePiloto())) {
+            throw new BusinessException("Ya existe un usuario con ese nombre de piloto");
+        }
+        Usuario usuario = Usuario.builder()
+                .email(request.email())
+                .password(passwordEncoder.encode(UUID.randomUUID().toString()))
+                .nombrePiloto(request.nombrePiloto())
+                .guidSteam(request.guidSteam())
+                .build();
+        usuario = usuarioRepository.save(usuario);
+        return new LoginResponse(jwtUtil.generarToken(usuario), toResponse(usuario));
     }
 
     public LoginResponse login(LoginRequest request) {
@@ -89,6 +115,11 @@ public class UsuarioService {
                 && !request.guidSteam().equals(usuario.getGuidSteam())
                 && usuarioRepository.existsByGuidSteam(request.guidSteam())) {
             throw new BusinessException("Ya existe un usuario vinculado a esa cuenta de Steam");
+        }
+        if (request.nombrePiloto() != null && !request.nombrePiloto().isBlank()
+                && !request.nombrePiloto().equals(usuario.getNombrePiloto())
+                && usuarioRepository.existsByNombrePiloto(request.nombrePiloto())) {
+            throw new BusinessException("Ya existe un usuario con ese nombre de piloto");
         }
         usuario.setEmail(request.email());
         usuario.setNombrePiloto(request.nombrePiloto());
