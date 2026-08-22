@@ -10,4 +10,6 @@ public interface EloSancionRepository extends JpaRepository<EloSancion, Long> {
     List<EloSancion> findByUsuario_IdOrderByFechaDesc(Long usuarioId);
 
     List<EloSancion> findByUsuario_IdAndCarrera_Id(Long usuarioId, Long carreraId);
+
+    void deleteByCarrera_Id(Long carreraId);
 }

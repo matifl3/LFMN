@@ -19,6 +19,7 @@
       <a href="03-races-list.html">Carreras</a>
       <a href="05-championship.html">Campeonato</a>
       <a href="06-categories.html">Categorías</a>
+      <a href="12-incidents.html">Incidentes</a>
       <a href="07-setups.html" class="active">Setups</a>
       <a href="11-achievements.html">Logros</a>
     </nav>
@@ -59,8 +60,14 @@
         <input class="input" id="sf-vehiculo" placeholder="Ej. Ferrari 296 GT3">
       </div>
       <div class="field">
-        <label>Archivo (URL)</label>
-        <input class="input" id="sf-archivo" placeholder="https://…/setup.json">
+        <label>Archivo del setup</label>
+        <div class="drop-zone" id="sf-dropzone">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <span>Arrastrá el archivo aquí o <strong>click para seleccionar</strong></span>
+          <span class="text-tertiary" style="font-size:var(--fs-2xs)">.json, .ini u otro formato de setup</span>
+        </div>
+        <input type="file" id="sf-archivo" style="display:none">
+        <div id="sf-archivo-nombre" class="text-tertiary" style="font-size:var(--fs-xs); margin-top:var(--sp-1)"></div>
       </div>
       <div class="field">
         <label>Categoría</label>

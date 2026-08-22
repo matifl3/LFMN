@@ -8,6 +8,8 @@ import lombok.*;
 import java.util.ArrayList;
 import java.util.List;
 
+
+
 @Entity
 @Table(name = "campeonato")
 @Getter
@@ -40,6 +42,9 @@ public class Campeonato {
 
     @OneToMany(mappedBy = "campeonato")
     private List<CampeonatoPosicion> posiciones = new ArrayList<>();
+
+    @OneToMany(mappedBy = "campeonato")
+    private List<Carrera> carreras = new ArrayList<>();
 
     @PrePersist
     public void prePersist() {

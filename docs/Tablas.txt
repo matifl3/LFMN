@@ -6,11 +6,11 @@ apelación{id ,SANCION, USUARIO involucrado ,motivo ,estado ,respuesta}
 
 ArchivoCarrera{id, nombre, ruta, tipo, listas de CARRERA?}
 
-Campeonato{id, nombre, temporada, descSistemaPuntos, lista CAMPEONATO_POS} --> CampeonatoPos{id, CAMPEONATO, user, puntos, pos}
+Campeonato{id, nombre, temporada, descSistemaPuntos, lista CAMPEONATO_POS, lista CARRERA} --> CampeonatoPos{id, CAMPEONATO, user, puntos, pos}
 
-Carrera{id, nombre, fecha, circuito, estado, cupo, servidor, contrseña, listINSCRIPPTOS, ARCHIVO_CARRERA, INCIDENTES, RESULTADOS}
+Carrera{id, nombre, fecha, circuito, CAMPEONATO, estado, cupo, servidor, contrseña, listINSCRIPPTOS, ARCHIVO_CARRERA, INCIDENTES, RESULTADOS}
 
-Categoria{id, descripcion, eloMin, eloMax, setup,list CARRERA ,list CAMPEONATO}
+Categoria{id, descripcion, eloMin, eloMax, setup, list CAMPEONATO}
 
 EloSancion{id, USUARIO, cambio? , motivo, fecha, CARRERA}
 

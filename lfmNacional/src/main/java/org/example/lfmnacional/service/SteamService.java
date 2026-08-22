@@ -1,6 +1,7 @@
 package org.example.lfmnacional.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.lfmnacional.entity.Usuario;
 import org.example.lfmnacional.repository.UsuarioRepository;
 import org.example.lfmnacional.security.JwtUtil;
@@ -24,6 +25,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class SteamService {
@@ -63,7 +65,8 @@ public class SteamService {
                 String.valueOf(userId),
                 Map.of("scope", SCOPE_VINCULACION),
                 STATE_TIMEOUT_MINUTOS);
-        return buildOpenIdUrl(returnTo, state);
+        String callback = returnTo + "?state=" + URLEncoder.encode(state, StandardCharsets.UTF_8);
+        return buildOpenIdUrl(callback);
     }
 
     public String generarUrlAuth() {
@@ -71,7 +74,8 @@ public class SteamService {
                 UUID.randomUUID().toString(),
                 Map.of("scope", SCOPE_AUTH),
                 STATE_TIMEOUT_MINUTOS);
-        return buildOpenIdUrl(returnToAuth, state);
+        String callback = returnToAuth + "?state=" + URLEncoder.encode(state, StandardCharsets.UTF_8);
+        return buildOpenIdUrl(callback);
     }
 
     public String procesarCallback(Map<String, String> params) {
@@ -82,7 +86,7 @@ public class SteamService {
 
         Long userId;
         try {
-            userId = jwtUtil.extraerUserId(params.get("openid.state"), SCOPE_VINCULACION);
+            userId = jwtUtil.extraerUserId(params.get("state"), SCOPE_VINCULACION);
         } catch (Exception e) {
             return "expirado";
         }
@@ -104,19 +108,40 @@ public class SteamService {
     }
 
     public SteamAuthResult autenticarOCrear(Map<String, String> params) {
+        log.info("Steam callback recibido: mode={} return_to={} identity={} state={}",
+                params.get("openid.mode"),
+                params.get("openid.return_to"),
+                params.get("openid.identity"),
+                params.get("state") != null ? "(presente)" : "(null)");
+
         String guidSteam = validarYExtraerSteamId(params, returnToAuth);
         if (guidSteam == null) {
+            log.warn("Steam auth falló: validarYExtraerSteamId retornó null");
             return new SteamAuthResult("invalido", null);
         }
+        log.info("Steam auth: guidSteam={}", guidSteam);
+
         try {
-            jwtUtil.validarState(params.get("openid.state"), SCOPE_AUTH);
+            jwtUtil.validarState(params.get("state"), SCOPE_AUTH);
         } catch (Exception e) {
+            log.warn("Steam auth falló: state expirado o inválido", e);
             return new SteamAuthResult("expirado", null);
         }
 
         Usuario usuario = usuarioRepository.findByGuidSteam(guidSteam).orElse(null);
         if (usuario == null) {
-            usuario = crearConSteam(guidSteam);
+            String emailGenerado = "steam_" + guidSteam + SUFFIX_EMAIL;
+            usuario = usuarioRepository.findByEmail(emailGenerado).orElse(null);
+            if (usuario != null) {
+                usuario.setGuidSteam(guidSteam);
+                usuarioRepository.save(usuario);
+                log.info("Steam auth: guidSteam vinculado a usuario existente id={}", usuario.getId());
+            } else {
+                usuario = crearConSteam(guidSteam);
+                log.info("Steam auth: usuario nuevo creado id={}", usuario.getId());
+            }
+        } else {
+            log.info("Steam auth: usuario existente id={}", usuario.getId());
         }
         return new SteamAuthResult("ok", jwtUtil.generarToken(usuario));
     }
@@ -130,7 +155,7 @@ public class SteamService {
         return usuarioRepository.save(usuario);
     }
 
-    private String buildOpenIdUrl(String returnToUrl, String state) {
+    private String buildOpenIdUrl(String returnToUrl) {
         return UriComponentsBuilder.fromUriString(STEAM_OPENID_ENDPOINT)
                 .queryParam("openid.ns", OPENID_NS)
                 .queryParam("openid.mode", "checkid_setup")
@@ -138,28 +163,46 @@ public class SteamService {
                 .queryParam("openid.realm", realm)
                 .queryParam("openid.identity", OPENID_SELECT)
                 .queryParam("openid.claimed_id", OPENID_SELECT)
-                .queryParam("openid.state", state)
                 .build()
                 .toUriString();
     }
 
     private String validarYExtraerSteamId(Map<String, String> params, String expectedReturnTo) {
-        if (!"id_res".equals(params.get("openid.mode"))) {
+        String mode = params.get("openid.mode");
+        if (!"id_res".equals(mode)) {
+            log.warn("Steam validation falló: openid.mode={} (esperado id_res)", mode);
             return null;
         }
-        if (!expectedReturnTo.equals(params.get("openid.return_to"))) {
+
+        String receivedReturnTo = params.get("openid.return_to");
+        if (receivedReturnTo == null || !normalizarUrl(expectedReturnTo).equals(normalizarUrl(receivedReturnTo))) {
+            log.warn("Steam validation falló: return_to esperado='{}' recibido='{}'",
+                    expectedReturnTo, receivedReturnTo);
             return null;
         }
+
         if (!verificarFirma(params)) {
+            log.warn("Steam validation falló: verificación de firma inválida");
             return null;
         }
 
         String identidad = params.get("openid.identity");
         Matcher matcher = identidad != null ? STEAM_ID_PATTERN.matcher(identidad) : null;
         if (matcher == null || !matcher.matches()) {
+            log.warn("Steam validation falló: openid.identity={} no matchea patrón", identidad);
             return null;
         }
         return matcher.group(1);
+    }
+
+    private String normalizarUrl(String url) {
+        if (url == null) return "";
+        try {
+            java.net.URI uri = java.net.URI.create(url);
+            return uri.getScheme() + "://" + uri.getAuthority() + uri.getRawPath();
+        } catch (Exception e) {
+            return url;
+        }
     }
 
     private boolean verificarFirma(Map<String, String> params) {
@@ -177,6 +220,7 @@ public class SteamService {
             }
             form.put("openid." + campo, valor);
         }
+        form.put("openid.ns", OPENID_NS);
         form.put("openid.mode", "check_authentication");
         form.put("openid.sig", sig);
         form.put("openid.signed", signedRaw);
@@ -188,11 +232,17 @@ public class SteamService {
                     .timeout(Duration.ofSeconds(10))
                     .build();
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-            return response.body() != null && response.body().contains("is_valid:true");
+            boolean valido = response.body() != null && response.body().contains("is_valid:true");
+            if (!valido) {
+                log.warn("Steam verificación de firma: respuesta NO válida. body={}", response.body());
+            }
+            return valido;
         } catch (IOException e) {
+            log.error("Steam verificación de firma: error de conexión", e);
             return false;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
+            log.error("Steam verificación de firma: interrumpido", e);
             return false;
         }
     }

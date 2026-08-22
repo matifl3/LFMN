@@ -3,7 +3,6 @@
 
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.1.0-6DB33F?logo=springboot&logoColor=white)
 ![Java](https://img.shields.io/badge/Java-17-orange?logo=openjdk&logoColor=white)
-![Angular](https://img.shields.io/badge/Angular-19-red?logo=angular&logoColor=white)
 ![MySQL](https://img.shields.io/badge/MySQL-8-blue?logo=mysql&logoColor=white)
 ![License](https://img.shields.io/badge/Licencia-Private-blue)
 
@@ -56,7 +55,7 @@ recompensas.
 | Backend | Spring Boot 4.1.0 (Java 17, Maven) |
 | Seguridad | Spring Security, JWT (jjwt 0.12.6), OAuth Steam, bcrypt |
 | Persistencia | Spring Data JPA, MySQL (mysql-connector-j) |
-| Frontend | Angular (build servido junto al backend) + design system estático (SCSS) |
+| Frontend | HTML/CSS/JS estático (`files/`) con design system SCSS |
 | Extra | Folder watcher de sesiones de Assetto Corsa |
 
 ## Arquitectura y flujos
@@ -75,7 +74,7 @@ Detalles técnicos:
 
 ## Capturas
 
-> Agregar capturas de las pantallas del design system (`files/`):
+> Capturas de las pantallas del frontend (`files/`):
 
 - Home y próximas carreras
 - Login / Registro
@@ -94,7 +93,6 @@ Detalles técnicos:
 - **Java 17** (JDK)
 - **Maven** (o usar el wrapper `mvnw`)
 - **MySQL 8+** corriendo en `localhost:3306`
-- **Node.js + npm** (solo si vas a hacer build del frontend Angular)
 
 ### 2. Crear la base de datos
 
@@ -157,16 +155,9 @@ cd lfmNacional
 
 La app queda disponible en `http://localhost:8080`.
 
-### 5. (Opcional) Build del frontend Angular
+### 5. Abrir el frontend
 
-```bash
-cd lfmFront
-npm install
-ng build
-```
-
-El build se sirve junto al backend; también hay un design system estático en
-`files/` con las pantallas de referencia.
+Abrí `files/index.html` en tu navegador (o serví la carpeta `files/` con cualquier servidor estático). El frontend se comunica con el backend en `http://localhost:8080` vía la API REST.
 
 ### 6. Procesar sesiones de carrera
 

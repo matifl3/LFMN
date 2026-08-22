@@ -42,6 +42,12 @@ public class SancionService {
     }
 
     @Transactional(readOnly = true)
+    public List<SancionResponse> listAll() {
+        return sancionRepository.findAll().stream()
+                .map(this::toResponse).toList();
+    }
+
+    @Transactional(readOnly = true)
     public List<SancionResponse> listarPorUsuario(Long usuarioId) {
         return sancionRepository.findByUsuario_IdOrderByFechaDesc(usuarioId).stream()
                 .map(this::toResponse).toList();
@@ -288,7 +294,7 @@ public class SancionService {
                 sancion.getUsuario().getId(),
                 sancion.getCarrera() != null ? sancion.getCarrera().getId() : null,
                 sancion.getCarrera() != null ? sancion.getCarrera().getNombre() : null,
-                sancion.getCarrera() != null ? sancion.getCarrera().getCategoria().getNombre() : null,
+                sancion.getCarrera() != null ? sancion.getCarrera().getCampeonato().getCategoria().getNombre() : null,
                 sancion.getResolucion() != null ? sancion.getResolucion().getId() : null,
                 sancion.getTipo(),
                 sancion.getValor(),

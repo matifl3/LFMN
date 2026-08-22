@@ -30,8 +30,10 @@ public class AnuncioService {
     }
 
     public AnuncioResponse getUltimo() {
-        return toResponse(anuncioRepository.findFirstByOrderByFechaDesc()
-                .orElseThrow(() -> new ResourceNotFoundException("No hay anuncios registrados")));
+        Anuncio anuncio = anuncioRepository.findFirstByDestacadoTrueOrderByFechaDesc()
+                .orElseGet(() -> anuncioRepository.findFirstByOrderByFechaDesc()
+                        .orElseThrow(() -> new ResourceNotFoundException("No hay anuncios registrados")));
+        return toResponse(anuncio);
     }
 
     @Transactional
@@ -49,12 +51,26 @@ public class AnuncioService {
         anuncioRepository.delete(getEntity(id));
     }
 
+    @Transactional
+    public AnuncioResponse toggleDestacado(Long id) {
+        Anuncio anuncio = getEntity(id);
+        if (Boolean.TRUE.equals(anuncio.getDestacado())) {
+            anuncio.setDestacado(false);
+        } else {
+            anuncioRepository.findFirstByDestacadoTrueOrderByFechaDesc()
+                    .ifPresent(a -> a.setDestacado(false));
+            anuncio.setDestacado(true);
+        }
+        return toResponse(anuncioRepository.save(anuncio));
+    }
+
     private AnuncioResponse toResponse(Anuncio anuncio) {
         return new AnuncioResponse(
                 anuncio.getId(),
                 anuncio.getTitulo(),
                 anuncio.getContenido(),
                 anuncio.getUrlImagen(),
-                anuncio.getFecha());
+                anuncio.getFecha(),
+                anuncio.getDestacado());
     }
 }

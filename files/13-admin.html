@@ -19,8 +19,9 @@
       <a href="03-races-list.html">Carreras</a>
       <a href="05-championship.html">Campeonato</a>
       <a href="06-categories.html">Categorías</a>
+      <a href="12-incidents.html">Incidentes</a>
       <a href="07-setups.html">Setups</a>
-      <a href="13-admin.html" class="active">Admin</a>
+      <a href="11-achievements.html" class="active">Logros</a>
     </nav>
     <div class="header-actions">
       <a href="10-notifications.html" class="icon-btn" aria-label="Notificaciones">
@@ -114,10 +115,10 @@
           <div class="table-wrap" style="margin-bottom:var(--sp-8)">
             <table class="table">
               <thead>
-                <tr><th>Fecha</th><th>Título</th><th>Contenido</th><th>Imagen</th><th></th></tr>
+                <tr><th>Fecha</th><th>Título</th><th>Contenido</th><th>Imagen</th><th>Destacado</th><th></th></tr>
               </thead>
               <tbody id="adm-tabla-anuncios">
-                <tr><td colspan="5" class="text-tertiary">Cargando…</td></tr>
+                <tr><td colspan="6" class="text-tertiary">Cargando…</td></tr>
               </tbody>
             </table>
           </div>
@@ -152,6 +153,12 @@
           <div class="field">
             <label for="a-cat">Categoría</label>
             <select class="select" id="a-cat"></select>
+          </div>
+          <div class="field">
+            <label for="a-camp">Campeonato</label>
+            <select class="select" id="a-camp">
+              <option value="">Elegí categoría primero…</option>
+            </select>
           </div>
           <div class="input-group">
             <div class="field">
@@ -256,8 +263,8 @@
             <textarea class="textarea" id="an-contenido" style="min-height:120px" placeholder="Texto del anuncio…"></textarea>
           </div>
           <div class="field" style="margin-bottom:0">
-            <label for="an-imagen">URL de imagen (opcional)</label>
-            <input class="input" id="an-imagen" placeholder="https://…">
+            <label for="an-imagen">Imagen (opcional)</label>
+            <input class="input" id="an-imagen" type="file" accept="image/jpeg,image/png,image/gif,image/webp">
           </div>
           <div class="flex gap-2" style="margin-top:var(--sp-6)">
             <button class="btn btn-ghost btn-block" id="an-cancelar">Limpiar</button>

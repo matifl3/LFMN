@@ -97,10 +97,41 @@
     // Último anuncio
     L.api('/anuncios/ultimo').then(function (an) {
       if (!an) return;
+      var img = document.getElementById('home-anuncio-img');
+      if (an.urlImagen) {
+        img.src = an.urlImagen;
+        img.alt = an.titulo;
+        img.style.display = 'block';
+      }
       document.getElementById('home-anuncio-fecha').textContent = L.fechaRelativa(an.fecha);
       document.getElementById('home-anuncio-contenido').textContent = an.contenido || an.titulo;
       document.getElementById('home-anuncio-link').textContent = 'Leer completo';
-      document.getElementById('home-anuncio-link').href = '03-races-list.html';
+
+      var modal = document.getElementById('anuncio-modal');
+      var modalImg = document.getElementById('anuncio-modal-img');
+      var modalTitulo = document.getElementById('anuncio-modal-titulo');
+      var modalFecha = document.getElementById('anuncio-modal-fecha');
+      var modalContenido = document.getElementById('anuncio-modal-contenido');
+
+      document.getElementById('home-anuncio-link').addEventListener('click', function (e) {
+        e.preventDefault();
+        modalTitulo.textContent = an.titulo;
+        modalFecha.textContent = L.fechaRelativa(an.fecha);
+        modalContenido.textContent = an.contenido || an.titulo;
+        if (an.urlImagen) {
+          modalImg.src = an.urlImagen;
+          modalImg.alt = an.titulo;
+          modalImg.style.display = 'block';
+        } else {
+          modalImg.style.display = 'none';
+        }
+        modal.style.display = 'flex';
+      });
+
+      function cerrarModal() { modal.style.display = 'none'; }
+      document.getElementById('anuncio-modal-close').addEventListener('click', cerrarModal);
+      modal.addEventListener('click', function (e) { if (e.target === modal) cerrarModal(); });
+      document.addEventListener('keydown', function (e) { if (e.key === 'Escape') cerrarModal(); });
     }).catch(function () {});
   }
 

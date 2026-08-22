@@ -5,6 +5,8 @@
 
   let setups = [];
   let selectedId = null;
+  const currentUser = L.getUser();
+  const isAdmin = currentUser && currentUser.rol === 'ADMIN';
 
   const listBox = document.getElementById('setup-list');
   const detailBox = document.getElementById('setup-detail');
@@ -45,7 +47,7 @@
     }
     listBox.innerHTML = list.map(function (s) {
       const a = autor(s);
-      return '<div class="card setup-card ' + (s.id === selectedId ? 'bracket' : 'card-hover') + '" style="cursor:pointer" data-setup="' + s.id + '">' +
+      return '<div class="card setup-card ' + (s.id === selectedId ? 'bracket' : 'card-hover') + '" style="cursor:pointer;position:relative" data-setup="' + s.id + '">' +
         '<div class="setup-card-cover"><span class="chip chip-category">' + L.esc(s.circuito || '') + '</span></div>' +
         '<h4>' + L.esc(s.titulo) + '</h4>' +
         '<div class="flex-between">' +
@@ -53,16 +55,36 @@
         stars(s.promedioCalificacion) +
         '</div>' +
         '<div class="text-tertiary mono" style="font-size:var(--fs-2xs)">' + (s.promedioCalificacion != null ? s.promedioCalificacion.toFixed(1) + ' · ' : '') + 'publicado ' + L.fmtRel(s.fechaPublicacion) + '</div>' +
+        (isAdmin ? '<button class="btn btn-danger btn-sm btn-icon" data-del-setup="' + s.id + '" title="Eliminar setup" style="position:absolute;top:var(--sp-3);right:var(--sp-3);z-index:1">🗑️</button>' : '') +
         '</div>';
     }).join('');
 
     listBox.querySelectorAll('[data-setup]').forEach(function (el) {
-      el.addEventListener('click', function () {
+      el.addEventListener('click', function (e) {
+        if (e.target.closest('[data-del-setup]')) return;
         selectedId = Number(el.dataset.setup);
         renderList();
         loadDetail(selectedId);
       });
     });
+
+    if (isAdmin) {
+      listBox.querySelectorAll('[data-del-setup]').forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          const id = Number(btn.getAttribute('data-del-setup'));
+          if (!confirm('¿Eliminar este setup y todos sus comentarios?')) return;
+          L.del('/setups/' + id).then(function () {
+            L.toast('Setup eliminado', 'success');
+            setups = setups.filter(function (s) { return s.id !== id; });
+            if (selectedId === id) selectedId = null;
+            renderList();
+            if (selectedId) loadDetail(selectedId);
+            else detailBox.innerHTML = '<p class="text-tertiary">Seleccioná un setup de la lista para ver el detalle.</p>';
+          }).catch(function (e) { L.toast(e.message, 'error'); });
+        });
+      });
+    }
   }
 
   function loadDetail(id) {
@@ -78,7 +100,7 @@
       '<span class="author-row" style="margin-top:var(--sp-2)">' + L.avatarHtml(a, 24) + 'Subido por ' + L.esc(a.nombrePiloto) + ' · ' + L.fmtRel(s.fechaPublicacion) + '</span>' +
       '</div>' +
       (s.archivo
-        ? '<a href="' + L.esc(s.archivo) + '" target="_blank" rel="noopener" class="btn btn-primary">Descargar .json</a>'
+        ? '<a href="/api/setups/' + s.id + '/descargar" class="btn btn-primary">Descargar setup</a>'
         : '<span class="chip chip-closed">Sin archivo</span>') +
       '</div>' +
       '<p class="text-secondary" style="font-size:var(--fs-sm); margin:var(--sp-4) 0 var(--sp-5)">' + L.esc(s.descripcion || 'Sin descripción.') + '</p>' +
@@ -133,7 +155,9 @@
             '<div style="flex:1">' +
             '<div class="flex-between"><strong style="font-size:var(--fs-sm)">' + L.esc(cu.nombrePiloto) + '</strong><span class="text-tertiary mono" style="font-size:var(--fs-2xs)">' + L.fmtRel(c.fecha) + '</span></div>' +
             '<p class="text-secondary" style="font-size:var(--fs-sm); margin-top:var(--sp-1)">' + L.esc(c.texto) + '</p>' +
-            '</div></div>';
+            '</div>' +
+            (isAdmin ? '<button class="btn btn-danger btn-sm btn-icon" data-del-comentario="' + c.id + '" data-setup-id="' + id + '" title="Eliminar comentario" style="align-self:flex-start;margin-left:var(--sp-2)">🗑️</button>' : '') +
+            '</div>';
         }).join('') : '<p class="text-tertiary" style="font-size:var(--fs-sm)">Todavía no hay comentarios.</p>');
 
       if (user) {
@@ -145,6 +169,20 @@
           '</div>');
       }
       commentsBox.innerHTML = inner.innerHTML;
+
+      if (isAdmin) {
+        commentsBox.querySelectorAll('[data-del-comentario]').forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            const cId = Number(btn.getAttribute('data-del-comentario'));
+            const sId = Number(btn.getAttribute('data-setup-id'));
+            if (!confirm('¿Eliminar este comentario?')) return;
+            L.del('/setups/' + sId + '/comentarios/' + cId).then(function () {
+              L.toast('Comentario eliminado', 'success');
+              loadDetail(sId);
+            }).catch(function (e) { L.toast(e.message, 'error'); });
+          });
+        });
+      }
 
       const pubBtn = document.getElementById('setup-pub-comentario');
       if (pubBtn) {
@@ -210,27 +248,66 @@
     form.style.display = form.style.display === 'none' ? 'block' : 'none';
   });
 
+  let archivoSeleccionado = null;
+
+  const dropzone = document.getElementById('sf-dropzone');
+  const fileInput = document.getElementById('sf-archivo');
+  const archivoNombre = document.getElementById('sf-archivo-nombre');
+
+  dropzone.addEventListener('click', function () { fileInput.click(); });
+  dropzone.addEventListener('dragover', function (e) { e.preventDefault(); dropzone.classList.add('drop-zone-active'); });
+  dropzone.addEventListener('dragleave', function () { dropzone.classList.remove('drop-zone-active'); });
+  dropzone.addEventListener('drop', function (e) {
+    e.preventDefault();
+    dropzone.classList.remove('drop-zone-active');
+    if (e.dataTransfer.files.length) {
+      fileInput.files = e.dataTransfer.files;
+      archivoSeleccionado = e.dataTransfer.files[0];
+      archivoNombre.textContent = archivoSeleccionado.name;
+    }
+  });
+  fileInput.addEventListener('change', function () {
+    if (fileInput.files.length) {
+      archivoSeleccionado = fileInput.files[0];
+      archivoNombre.textContent = archivoSeleccionado.name;
+    }
+  });
+
   document.getElementById('sf-publicar').addEventListener('click', async function () {
     const user = L.requireAuth();
     if (!user) return;
-    const body = {
-      titulo: document.getElementById('sf-titulo').value.trim(),
-      descripcion: document.getElementById('sf-descripcion').value.trim(),
-      circuito: document.getElementById('sf-circuito').value.trim(),
-      vehiculo: document.getElementById('sf-vehiculo').value.trim(),
-      archivo: document.getElementById('sf-archivo').value.trim() || null,
-      autorId: user.id,
-      categoriaId: document.getElementById('sf-categoria').value ? Number(document.getElementById('sf-categoria').value) : null
-    };
-    if (!body.titulo || !body.circuito || !body.vehiculo) {
+    const titulo = document.getElementById('sf-titulo').value.trim();
+    const circuito = document.getElementById('sf-circuito').value.trim();
+    const vehiculo = document.getElementById('sf-vehiculo').value.trim();
+    if (!titulo || !circuito || !vehiculo) {
       L.toast('Completá título, circuito y vehículo.', 'error');
       return;
     }
+    const body = {
+      titulo: titulo,
+      descripcion: document.getElementById('sf-descripcion').value.trim(),
+      circuito: circuito,
+      vehiculo: vehiculo,
+      autorId: user.id,
+      categoriaId: document.getElementById('sf-categoria').value ? Number(document.getElementById('sf-categoria').value) : null
+    };
     try {
       const nuevo = await L.post('/setups', body);
+      if (archivoSeleccionado) {
+        var fd = new FormData();
+        fd.append('archivo', archivoSeleccionado);
+        await L.post('/setups/' + nuevo.id + '/archivo', fd);
+      }
       setups.unshift(nuevo);
       selectedId = nuevo.id;
       document.getElementById('setup-form-card').style.display = 'none';
+      archivoSeleccionado = null;
+      fileInput.value = null;
+      archivoNombre.textContent = '';
+      document.getElementById('sf-titulo').value = '';
+      document.getElementById('sf-descripcion').value = '';
+      document.getElementById('sf-circuito').value = '';
+      document.getElementById('sf-vehiculo').value = '';
       renderList();
       loadDetail(nuevo.id);
       L.toast('Setup publicado', 'success');

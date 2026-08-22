@@ -7,6 +7,7 @@ public record AnuncioResponse(
         String titulo,
         String contenido,
         String urlImagen,
-        LocalDateTime fecha
+        LocalDateTime fecha,
+        Boolean destacado
 ) {
 }

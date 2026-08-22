@@ -19,6 +19,11 @@ public class SancionController {
 
     private final SancionService sancionService;
 
+    @GetMapping
+    public List<SancionResponse> listAll() {
+        return sancionService.listAll();
+    }
+
     @GetMapping("/usuario/{usuarioId}")
     public List<SancionResponse> listarPorUsuario(@PathVariable Long usuarioId) {
         return sancionService.listarPorUsuario(usuarioId);

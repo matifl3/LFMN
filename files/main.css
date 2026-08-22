@@ -623,6 +623,64 @@ h4 {
   margin-bottom: var(--sp-4);
 }
 
+.anuncio-img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  border-radius: var(--r-sm);
+  margin-bottom: var(--sp-4);
+  border: 1px solid var(--line);
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  background: rgba(6, 8, 11, .8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-5);
+}
+
+.modal-box {
+  background: var(--bg-panel);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: var(--sp-6);
+  max-width: 640px;
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: var(--shadow-lift);
+}
+
+.modal-close {
+  position: absolute;
+  top: var(--sp-3);
+  right: var(--sp-4);
+  background: none;
+  border: none;
+  color: var(--text-tertiary);
+  font-size: 1.5rem;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.modal-close:hover {
+  color: var(--text-primary);
+}
+
+.anuncio-modal-img {
+  width: 100%;
+  height: 240px;
+  object-fit: cover;
+  border-radius: var(--r-sm);
+  margin-bottom: var(--sp-5);
+  border: 1px solid var(--line);
+}
+
 .chip {
   display: inline-flex;
   align-items: center;
@@ -1117,6 +1175,28 @@ textarea.textarea {
   position: sticky;
   top: calc(var(--header-h) + var(--sp-5));
 }
+
+/* ---- Modal overlay --------------------------------------------------- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-5);
+}
+.modal-panel {
+  background: var(--bg-panel);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  padding: var(--sp-5);
+  box-shadow: 0 24px 80px rgba(0,0,0,0.5);
+  animation: modalIn 0.2s ease;
+}
+@keyframes modalIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 
 .vote-row {
   display: flex;
@@ -1690,4 +1770,34 @@ input[type=range] {
 .auth-tabs {
   display: flex;
   margin-bottom: var(--sp-6);
+}
+
+.drop-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-5) var(--sp-4);
+  border: 2px dashed var(--line-bright);
+  border-radius: var(--r-sm);
+  background: var(--bg-inset);
+  color: var(--text-secondary);
+  font-size: var(--fs-sm);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  text-align: center;
+}
+
+.drop-zone:hover {
+  border-color: var(--celeste);
+  background: var(--bg-panel-hover);
+}
+
+.drop-zone-active {
+  border-color: var(--amber);
+  background: rgba(255, 176, 32, 0.06);
+}
+
+.drop-zone svg {
+  color: var(--text-tertiary);
 }
