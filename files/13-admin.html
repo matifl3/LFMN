@@ -21,7 +21,7 @@
       <a href="06-categories.html">Categorías</a>
       <a href="12-incidents.html">Incidentes</a>
       <a href="07-setups.html">Setups</a>
-      <a href="11-achievements.html" class="active">Logros</a>
+      <a href="11-achievements.html">Logros</a>
     </nav>
     <div class="header-actions">
       <a href="10-notifications.html" class="icon-btn" aria-label="Notificaciones">
@@ -53,7 +53,6 @@
       <span class="tab" data-tab="categorias">Categorías</span>
       <span class="tab" data-tab="pilotos">Pilotos</span>
       <span class="tab" data-tab="anuncios">Anuncios</span>
-      <span class="tab" data-tab="importar">Importar datos</span>
     </div>
 
     <div class="admin-layout">
@@ -123,23 +122,6 @@
             </table>
           </div>
         </div>
-
-        <div class="pane" id="pane-importar" style="display:none">
-          <div class="card">
-            <p class="text-tertiary" style="font-size:var(--fs-sm); margin-bottom:var(--sp-4)">Pegá el JSON de una sesión (clasificación o carrera) exportada desde el simulador y seleccioná la carrera a la que corresponde.</p>
-            <div class="field">
-              <label for="adm-import-carrera">Carrera</label>
-              <select class="select" id="adm-import-carrera"></select>
-            </div>
-            <div class="import-zone">
-              <textarea class="textarea" id="adm-import-json" style="min-height:200px" placeholder='{ "sessionType": "QUALIFY", "entries": [] }'></textarea>
-            </div>
-            <div class="flex gap-3" style="justify-content:flex-end; margin-top:var(--sp-4)">
-              <button class="btn btn-ghost" id="adm-import-validar">Validar JSON</button>
-              <button class="btn btn-primary" id="adm-import-enviar">Importar</button>
-            </div>
-          </div>
-        </div>
       </div>
 
       <aside class="panel-aside">
@@ -181,6 +163,14 @@
           <div class="field" style="margin-bottom:0">
             <label for="a-servidor">Servidor</label>
             <input class="input" id="a-servidor" placeholder="LFM-AR-03 · 128 tick">
+          </div>
+          <div class="field">
+            <label for="a-link-pista">Link Pista</label>
+            <input class="input" id="a-link-pista" placeholder="URL de descarga de la pista">
+          </div>
+          <div class="field" style="margin-bottom:0">
+            <label for="a-link-auto">Link Auto</label>
+            <input class="input" id="a-link-auto" placeholder="URL de descarga del auto">
           </div>
           <div class="flex gap-2" style="margin-top:var(--sp-6)">
             <button class="btn btn-ghost btn-block" id="a-cancelar">Cancelar</button>

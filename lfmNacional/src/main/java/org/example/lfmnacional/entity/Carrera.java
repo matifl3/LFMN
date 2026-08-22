@@ -48,6 +48,12 @@ public class Carrera {
     @Column(name = "contrasena_servidor", length = 100)
     private String contrasenaServidor;
 
+    @Column(length = 500)
+    private String linkPista;
+
+    @Column(length = 500)
+    private String linkAuto;
+
     @OneToMany(mappedBy = "carrera")
     private List<Inscripcion> inscripciones = new ArrayList<>();
 

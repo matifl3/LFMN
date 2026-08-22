@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class SteamService {
 
-    public record SteamAuthResult(String resultado, String token) {
+    public record SteamAuthResult(String resultado, String token, String guidSteam) {
     }
 
     private static final String STEAM_OPENID_ENDPOINT = "https://steamcommunity.com/openid/login";
@@ -117,7 +117,7 @@ public class SteamService {
         String guidSteam = validarYExtraerSteamId(params, returnToAuth);
         if (guidSteam == null) {
             log.warn("Steam auth falló: validarYExtraerSteamId retornó null");
-            return new SteamAuthResult("invalido", null);
+            return new SteamAuthResult("invalido", null, null);
         }
         log.info("Steam auth: guidSteam={}", guidSteam);
 
@@ -125,7 +125,7 @@ public class SteamService {
             jwtUtil.validarState(params.get("state"), SCOPE_AUTH);
         } catch (Exception e) {
             log.warn("Steam auth falló: state expirado o inválido", e);
-            return new SteamAuthResult("expirado", null);
+            return new SteamAuthResult("expirado", null, null);
         }
 
         Usuario usuario = usuarioRepository.findByGuidSteam(guidSteam).orElse(null);
@@ -137,13 +137,13 @@ public class SteamService {
                 usuarioRepository.save(usuario);
                 log.info("Steam auth: guidSteam vinculado a usuario existente id={}", usuario.getId());
             } else {
-                usuario = crearConSteam(guidSteam);
-                log.info("Steam auth: usuario nuevo creado id={}", usuario.getId());
+                log.info("Steam auth: usuario nuevo detectado, guiando a completar perfil guidSteam={}", guidSteam);
+                return new SteamAuthResult("nuevo", null, guidSteam);
             }
         } else {
             log.info("Steam auth: usuario existente id={}", usuario.getId());
         }
-        return new SteamAuthResult("ok", jwtUtil.generarToken(usuario));
+        return new SteamAuthResult("ok", jwtUtil.generarToken(usuario), null);
     }
 
     private Usuario crearConSteam(String guidSteam) {

@@ -39,7 +39,7 @@ public class Usuario {
     private String password;
 
     @Size(max = 100)
-    @Column(name = "nombre_piloto", length = 100)
+    @Column(name = "nombre_piloto", unique = true, length = 100)
     private String nombrePiloto;
 
     @Size(max = 255)

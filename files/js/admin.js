@@ -36,11 +36,11 @@
     document.querySelectorAll('.tabs-pill .tab').forEach(function (t) {
       t.classList.toggle('active', t.getAttribute('data-tab') === name);
     });
-    ['carreras', 'campeonatos', 'categorias', 'pilotos', 'anuncios', 'importar'].forEach(function (p) {
+    ['carreras', 'campeonatos', 'categorias', 'pilotos', 'anuncios'].forEach(function (p) {
       $('pane-' + p).style.display = p === name ? 'block' : 'none';
     });
     const aside = document.querySelector('.panel-aside');
-    aside.style.display = (name === 'importar' || name === 'pilotos') ? 'none' : 'block';
+    aside.style.display = name === 'pilotos' ? 'none' : 'block';
     $('form-carrera').style.display = name === 'carreras' ? 'block' : 'none';
     $('form-campeonato').style.display = name === 'campeonatos' ? 'block' : 'none';
     $('form-categoria').style.display = name === 'categorias' ? 'block' : 'none';
@@ -144,6 +144,8 @@
     $('a-circuito').value = '';
     $('a-cupo').value = '32';
     $('a-servidor').value = '';
+    $('a-link-pista').value = '';
+    $('a-link-auto').value = '';
     $('a-camp').innerHTML = '<option value="">Elegí categoría primero…</option>';
   }
 
@@ -161,6 +163,8 @@
     $('a-circuito').value = c.circuito || '';
     $('a-cupo').value = c.cupoMaximo != null ? c.cupoMaximo : '';
     $('a-servidor').value = c.servidor || '';
+    $('a-link-pista').value = c.linkPista || '';
+    $('a-link-auto').value = c.linkAuto || '';
     const sel = $('a-cat');
     if (c.categoriaId) sel.value = String(c.categoriaId);
     cargarCampeonatosSelect(c.categoriaId, c.campeonatoId);
@@ -180,7 +184,9 @@
       circuito: $('a-circuito').value.trim() || 'Por definir',
       campeonatoId: Number($('a-camp').value),
       cupoMaximo: Number($('a-cupo').value) || 32,
-      servidor: $('a-servidor').value.trim() || null
+      servidor: $('a-servidor').value.trim() || null,
+      linkPista: $('a-link-pista').value.trim() || null,
+      linkAuto: $('a-link-auto').value.trim() || null
     };
     const req = editCarreraId ? L.put('/carreras/' + editCarreraId, body) : L.post('/carreras', body);
     req.then(function () {
@@ -544,46 +550,6 @@
     }
   }
 
-  /* ---------- Importar sesión ---------- */
-
-  function cargarCarrerasImport() {
-    const sel = $('adm-import-carrera');
-    L.get('/carreras').then(function (carreras) {
-      sel.innerHTML = carreras.length
-        ? '<option value="">Seleccioná una carrera…</option>' + carreras.map(function (c) {
-            return '<option value="' + c.id + '">' + L.esc(c.nombre + ' — ' + (c.categoriaNombre || '')) + '</option>';
-          }).join('')
-        : '<option value="">No hay carreras</option>';
-    }).catch(function () {
-      sel.innerHTML = '<option value="">No hay carreras</option>';
-    });
-  }
-
-  $('adm-import-validar').addEventListener('click', function () {
-    const txt = $('adm-import-json').value.trim();
-    if (!txt) { L.toast('Pegá un JSON primero.', 'error'); return; }
-    try {
-      const obj = JSON.parse(txt);
-      const keys = Object.keys(obj).join(', ');
-      L.toast('JSON válido (' + keys + ')', 'success');
-    } catch (e) {
-      L.toast('JSON inválido: ' + e.message, 'error');
-    }
-  });
-
-  $('adm-import-enviar').addEventListener('click', function () {
-    const carreraId = $('adm-import-carrera').value;
-    const txt = $('adm-import-json').value.trim();
-    if (!carreraId) { L.toast('Seleccioná una carrera.', 'error'); return; }
-    if (!txt) { L.toast('Pegá el JSON de la sesión.', 'error'); return; }
-    let body;
-    try { body = JSON.parse(txt); } catch (e) { L.toast('JSON inválido: ' + e.message, 'error'); return; }
-    L.post('/sesiones/importar?carreraId=' + carreraId, body).then(function (res) {
-      L.toast('Sesión importada: ' + (res.tipo || '') + ' (' + res.estado + ')', 'success');
-      $('adm-import-json').value = '';
-    }).catch(function (e) { L.toast(e.message, 'error'); });
-  });
-
   function cargarSelectoresCategorias() {
     L.get('/categorias').then(function (cats) {
       categorias = cats;
@@ -624,5 +590,4 @@
   cargarCategorias();
   cargarPilotos();
   cargarAnuncios();
-  cargarCarrerasImport();
 })();
