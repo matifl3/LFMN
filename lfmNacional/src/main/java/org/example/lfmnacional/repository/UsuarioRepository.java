@@ -17,5 +17,7 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
 
     boolean existsByGuidSteam(String guidSteam);
 
+    boolean existsByNombrePiloto(String nombrePiloto);
+
     List<Usuario> findByRol(Rol rol);
 }

@@ -18,6 +18,8 @@ public record CarreraResponse(
         String servidor,
         String contrasenaServidor,
         Long archivoId,
-        String archivoNombre
+        String archivoNombre,
+        String linkPista,
+        String linkAuto
 ) {
 }
