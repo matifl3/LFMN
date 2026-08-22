@@ -31,9 +31,30 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        // Auth endpoints (public)
                         .requestMatchers("/api/usuarios/registro", "/api/usuarios/login", "/api/usuarios/registro-steam").permitAll()
-                        .requestMatchers("/api/steam/vincular-url").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/**").permitAll()
+                        // Steam OAuth flow (public)
+                        .requestMatchers("/api/steam/**").permitAll()
+                        // Public read-only endpoints
+                        .requestMatchers(HttpMethod.GET, "/api/categorias/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/campeonatos/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/carreras/proximas").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/carreras/pasadas").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/carreras/{id}").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/usuarios/{id}").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/usuarios/{id}/stats").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/usuarios/{id}/historial-elo").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/usuarios/{id}/historial-safety-rating").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/usuarios/{id}/logros/obtenidos").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/anuncios/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/logros/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/inscripciones/carrera/{id}").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/inscripciones/carrera/{id}/count").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/resultados/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/clasificaciones/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/setups").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/setups/{id}").permitAll()
+                        // Everything else requires authentication
                         .anyRequest().authenticated())
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint((request, response, authException) -> {
