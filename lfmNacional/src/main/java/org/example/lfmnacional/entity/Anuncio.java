@@ -30,6 +30,10 @@ public class Anuncio {
     @Column(nullable = false)
     private LocalDateTime fecha;
 
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean destacado = false;
+
     @PrePersist
     public void prePersist() {
         if (fecha == null) {

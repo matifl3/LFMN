@@ -14,4 +14,6 @@ public interface VueltaRepository extends JpaRepository<VueltaCarrera, Long> {
     boolean existsByCarrera_IdAndTipo(Long carreraId, String tipo);
 
     void deleteByCarrera_IdAndTipo(Long carreraId, String tipo);
+
+    void deleteByCarrera_Id(Long carreraId);
 }

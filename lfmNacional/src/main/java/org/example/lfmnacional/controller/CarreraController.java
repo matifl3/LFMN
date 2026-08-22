@@ -36,9 +36,9 @@ public class CarreraController {
         return carreraService.pasadas();
     }
 
-    @GetMapping("/categoria/{categoriaId}")
-    public List<CarreraResponse> porCategoria(@PathVariable Long categoriaId) {
-        return carreraService.porCategoria(categoriaId);
+    @GetMapping("/campeonato/{campeonatoId}")
+    public List<CarreraResponse> porCampeonato(@PathVariable Long campeonatoId) {
+        return carreraService.porCampeonato(campeonatoId);
     }
 
     @GetMapping("/{id}")

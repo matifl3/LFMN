@@ -8,12 +8,19 @@ import org.example.lfmnacional.enums.EstadoCarrera;
 import org.example.lfmnacional.exception.BusinessException;
 import org.example.lfmnacional.exception.ResourceNotFoundException;
 import org.example.lfmnacional.repository.CarreraRepository;
+import org.example.lfmnacional.repository.EloSancionRepository;
 import org.example.lfmnacional.repository.IncidenteRepository;
+import org.example.lfmnacional.repository.IncidentePilotoRepository;
 import org.example.lfmnacional.repository.InscripcionRepository;
+import org.example.lfmnacional.repository.ResolucionIncidenteRepository;
 import org.example.lfmnacional.repository.ResultadoCarreraRepository;
+import org.example.lfmnacional.repository.SafetyRatingSancionRepository;
 import org.example.lfmnacional.repository.SancionRepository;
 import org.example.lfmnacional.repository.SesionClasificacionRepository;
 import org.example.lfmnacional.repository.SesionProcesadaRepository;
+import org.example.lfmnacional.repository.ApelacionRepository;
+import org.example.lfmnacional.repository.VotoComisarioRepository;
+import org.example.lfmnacional.repository.VueltaRepository;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,7 +36,7 @@ public class CarreraService {
     private static final int MINUTOS_CIERRE_PREVIO = 5;
 
     private final CarreraRepository carreraRepository;
-    private final CategoriaService categoriaService;
+    private final CampeonatoService campeonatoService;
     private final ArchivoCarreraService archivoCarreraService;
     private final InscripcionRepository inscripcionRepository;
     private final ResultadoCarreraRepository resultadoCarreraRepository;
@@ -37,6 +44,13 @@ public class CarreraService {
     private final SesionClasificacionRepository sesionClasificacionRepository;
     private final SesionProcesadaRepository sesionProcesadaRepository;
     private final SancionRepository sancionRepository;
+    private final VueltaRepository vueltaRepository;
+    private final EloSancionRepository eloSancionRepository;
+    private final SafetyRatingSancionRepository safetyRatingSancionRepository;
+    private final ApelacionRepository apelacionRepository;
+    private final IncidentePilotoRepository incidentePilotoRepository;
+    private final VotoComisarioRepository votoComisarioRepository;
+    private final ResolucionIncidenteRepository resolucionIncidenteRepository;
 
     public Carrera getEntity(Long id) {
         return carreraRepository.findById(id)
@@ -66,8 +80,8 @@ public class CarreraService {
     }
 
     @Transactional(readOnly = true)
-    public List<CarreraResponse> porCategoria(Long categoriaId) {
-        return carreraRepository.findByCategoria_IdOrderByFechaDesc(categoriaId)
+    public List<CarreraResponse> porCampeonato(Long campeonatoId) {
+        return carreraRepository.findByCampeonato_IdOrderByFechaDesc(campeonatoId)
                 .stream().map(this::toResponse).toList();
     }
 
@@ -77,7 +91,7 @@ public class CarreraService {
                 .nombre(request.nombre())
                 .fecha(request.fecha())
                 .circuito(request.circuito())
-                .categoria(categoriaService.getEntity(request.categoriaId()))
+                .campeonato(campeonatoService.getEntity(request.campeonatoId()))
                 .estado(request.estado())
                 .cupoMaximo(request.cupoMaximo())
                 .servidor(request.servidor())
@@ -93,7 +107,7 @@ public class CarreraService {
         carrera.setNombre(request.nombre());
         carrera.setFecha(request.fecha());
         carrera.setCircuito(request.circuito());
-        carrera.setCategoria(categoriaService.getEntity(request.categoriaId()));
+        carrera.setCampeonato(campeonatoService.getEntity(request.campeonatoId()));
         carrera.setEstado(request.estado() != null ? request.estado() : carrera.getEstado());
         carrera.setCupoMaximo(request.cupoMaximo());
         carrera.setServidor(request.servidor());
@@ -133,30 +147,22 @@ public class CarreraService {
     @Transactional
     public void delete(Long id) {
         Carrera carrera = getEntity(id);
-        List<String> dependencias = new ArrayList<>();
-        if (inscripcionRepository.existsByCarrera_Id(id)) {
-            dependencias.add("inscripciones");
-        }
-        if (resultadoCarreraRepository.existsByCarrera_Id(id)) {
-            dependencias.add("resultados");
-        }
-        if (incidenteRepository.existsByCarrera_Id(id)) {
-            dependencias.add("incidentes");
-        }
-        if (sesionClasificacionRepository.existsByCarrera_Id(id)) {
-            dependencias.add("sesiones de clasificacion");
-        }
-        if (sesionProcesadaRepository.existsByCarrera_Id(id)) {
-            dependencias.add("sesiones procesadas");
-        }
-        if (sancionRepository.existsByCarrera_Id(id)) {
-            dependencias.add("sanciones");
-        }
-        if (!dependencias.isEmpty()) {
-            throw new BusinessException(
-                    "No se puede eliminar la carrera '" + carrera.getNombre()
-                            + "' porque tiene " + String.join(", ", dependencias) + " asociadas");
-        }
+
+        apelacionRepository.deleteByCarreraId(id);
+        sancionRepository.deleteByCarrera_Id(id);
+        incidentePilotoRepository.deleteByCarreraId(id);
+        votoComisarioRepository.deleteByCarreraId(id);
+        resolucionIncidenteRepository.deleteByCarreraId(id);
+        incidenteRepository.deleteByCarrera_Id(id);
+
+        inscripcionRepository.deleteByCarrera_Id(id);
+        resultadoCarreraRepository.deleteByCarrera_Id(id);
+        sesionClasificacionRepository.deleteByCarrera_Id(id);
+        sesionProcesadaRepository.deleteByCarrera_Id(id);
+        vueltaRepository.deleteByCarrera_Id(id);
+        eloSancionRepository.deleteByCarrera_Id(id);
+        safetyRatingSancionRepository.deleteByCarrera_Id(id);
+
         carreraRepository.delete(carrera);
     }
 
@@ -187,8 +193,10 @@ public class CarreraService {
                 carrera.getNombre(),
                 carrera.getFecha(),
                 carrera.getCircuito(),
-                carrera.getCategoria().getId(),
-                carrera.getCategoria().getNombre(),
+                carrera.getCampeonato().getId(),
+                carrera.getCampeonato().getNombre(),
+                carrera.getCampeonato().getCategoria().getId(),
+                carrera.getCampeonato().getCategoria().getNombre(),
                 carrera.getEstado(),
                 carrera.getCupoMaximo(),
                 carrera.getServidor(),

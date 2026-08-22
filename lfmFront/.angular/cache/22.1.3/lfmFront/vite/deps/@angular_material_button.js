@@ -1,2 +1,0 @@
-import { a as MatFabAnchor, c as MatMiniFabButton, d as MatIconButton, i as MatButtonModule, l as MAT_BUTTON_CONFIG, n as MatAnchor, o as MatFabButton, r as MatButton, s as MatMiniFabAnchor, t as MAT_FAB_DEFAULT_OPTIONS, u as MatIconAnchor } from "./button-DRrZs8KR.js";
-export { MAT_BUTTON_CONFIG, MAT_FAB_DEFAULT_OPTIONS, MatAnchor, MatButton, MatButtonModule, MatFabAnchor, MatFabButton, MatIconAnchor, MatIconButton, MatMiniFabAnchor, MatMiniFabButton };

@@ -14,4 +14,6 @@ public interface SesionProcesadaRepository extends JpaRepository<SesionProcesada
     List<SesionProcesada> findByCarrera_IdOrderByFechaProcesamientoDesc(Long carreraId);
 
     boolean existsByCarrera_Id(Long carreraId);
+
+    void deleteByCarrera_Id(Long carreraId);
 }

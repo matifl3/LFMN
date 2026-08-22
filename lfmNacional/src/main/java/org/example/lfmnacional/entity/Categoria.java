@@ -38,8 +38,5 @@ public class Categoria {
     private Boolean setupFijo;
 
     @OneToMany(mappedBy = "categoria")
-    private List<Carrera> carreras = new ArrayList<>();
-
-    @OneToMany(mappedBy = "categoria")
     private List<Campeonato> campeonatos = new ArrayList<>();
 }

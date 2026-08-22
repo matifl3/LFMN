@@ -6,6 +6,7 @@ public record IncidentePilotoResponse(
         Long id,
         Long incidenteId,
         Long usuarioId,
+        String nombrePiloto,
         RolPilotoIncidente rol
 ) {
 }

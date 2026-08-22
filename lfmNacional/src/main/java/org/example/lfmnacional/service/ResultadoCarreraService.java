@@ -100,9 +100,6 @@ public class ResultadoCarreraService {
     }
 
     private void validarCarga(Carrera carrera) {
-        if (carrera.getEstado() == EstadoCarrera.PROGRAMADA) {
-            throw new BusinessException("No se pueden cargar resultados de una carrera programada");
-        }
         if (carrera.getEstado() == EstadoCarrera.CANCELADA) {
             throw new BusinessException("No se pueden cargar resultados de una carrera cancelada");
         }
@@ -119,8 +116,9 @@ public class ResultadoCarreraService {
                 continue;
             }
             Integer eloPropio = elos.get(resultado.getUsuario().getId());
-            List<Integer> rivales = elos.values().stream()
-                    .filter(elo -> !elo.equals(eloPropio))
+            List<Integer> rivales = elos.entrySet().stream()
+                    .filter(e -> !e.getKey().equals(resultado.getUsuario().getId()))
+                    .map(Map.Entry::getValue)
                     .toList();
             int cambioElo = eloCalculator.calcularCambio(eloPropio, posicion, resultados.size(), rivales);
             boolean finalizo = resultado.getFinalizo() != null && resultado.getFinalizo();
@@ -131,8 +129,8 @@ public class ResultadoCarreraService {
             resultadoCarreraRepository.save(resultado);
 
             Usuario usuario = resultado.getUsuario();
-            usuario.setElo(usuario.getElo() + cambioElo);
-            usuario.setSafetyRating(usuario.getSafetyRating() + cambioSr);
+            usuario.setElo(Math.max(0, usuario.getElo() + cambioElo));
+            usuario.setSafetyRating(Math.max(0, usuario.getSafetyRating() + cambioSr));
             usuarioRepository.save(usuario);
 
             eloSancionRepository.save(EloSancion.builder()
@@ -155,7 +153,7 @@ public class ResultadoCarreraService {
                 resultado.getId(),
                 resultado.getCarrera().getId(),
                 resultado.getCarrera().getNombre(),
-                resultado.getCarrera().getCategoria().getNombre(),
+                resultado.getCarrera().getCampeonato().getCategoria().getNombre(),
                 resultado.getUsuario().getId(),
                 resultado.getUsuario().getNombrePiloto(),
                 resultado.getPosicionFinal(),

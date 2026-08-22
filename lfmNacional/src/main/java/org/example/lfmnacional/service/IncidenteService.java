@@ -110,6 +110,7 @@ public class IncidenteService {
                         piloto.getId(),
                         piloto.getIncidente().getId(),
                         piloto.getUsuario().getId(),
+                        piloto.getUsuario().getNombrePiloto(),
                         piloto.getRol()))
                 .toList();
     }
@@ -232,7 +233,7 @@ public class IncidenteService {
                 incidente.getId(),
                 incidente.getCarrera().getId(),
                 incidente.getCarrera().getNombre(),
-                incidente.getCarrera().getCategoria().getNombre(),
+                incidente.getCarrera().getCampeonato().getCategoria().getNombre(),
                 incidente.getReportante().getId(),
                 incidente.getReportante().getNombrePiloto(),
                 incidente.getVuelta(),

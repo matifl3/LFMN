@@ -20,4 +20,6 @@ public interface SancionRepository extends JpaRepository<Sancion, Long> {
     boolean existsByOrigenAndIdExterno(OrigenSancion origen, String idExterno);
 
     boolean existsByCarrera_Id(Long carreraId);
+
+    void deleteByCarrera_Id(Long carreraId);
 }

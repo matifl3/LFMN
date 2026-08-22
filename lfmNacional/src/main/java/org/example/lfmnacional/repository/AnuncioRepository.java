@@ -11,4 +11,6 @@ public interface AnuncioRepository extends JpaRepository<Anuncio, Long> {
     List<Anuncio> findAllByOrderByFechaDesc();
 
     Optional<Anuncio> findFirstByOrderByFechaDesc();
+
+    Optional<Anuncio> findFirstByDestacadoTrueOrderByFechaDesc();
 }

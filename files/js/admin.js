@@ -116,6 +116,23 @@
     });
   }
 
+  function cargarCampeonatosSelect(categoriaId, selectedId) {
+    const sel = $('a-camp');
+    if (!categoriaId) {
+      sel.innerHTML = '<option value="">Elegí categoría primero…</option>';
+      return;
+    }
+    L.get('/campeonatos/categoria/' + categoriaId).then(function (cams) {
+      sel.innerHTML = cams.length
+        ? '<option value="">Elegí campeonato…</option>' + cams.map(function (c) {
+            return '<option value="' + c.id + '"' + (selectedId && c.id === selectedId ? ' selected' : '') + '>' + L.esc(c.nombre) + '</option>';
+          }).join('')
+        : '<option value="">Sin campeonatos</option>';
+    }).catch(function () {
+      sel.innerHTML = '<option value="">Error al cargar</option>';
+    });
+  }
+
   function limpiarFormCarrera() {
     editCarreraId = null;
     $('adm-form-titulo').textContent = 'Nueva carrera';
@@ -127,6 +144,7 @@
     $('a-circuito').value = '';
     $('a-cupo').value = '32';
     $('a-servidor').value = '';
+    $('a-camp').innerHTML = '<option value="">Elegí categoría primero…</option>';
   }
 
   function editarCarrera(c) {
@@ -145,6 +163,7 @@
     $('a-servidor').value = c.servidor || '';
     const sel = $('a-cat');
     if (c.categoriaId) sel.value = String(c.categoriaId);
+    cargarCampeonatosSelect(c.categoriaId, c.campeonatoId);
     sel.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 
@@ -153,12 +172,13 @@
     const hora = $('a-hora').value;
     if (!$('a-nombre').value.trim()) { L.toast('Ingresá el nombre.', 'error'); return; }
     if (!$('a-cat').value) { L.toast('Elegí una categoría.', 'error'); return; }
+    if (!$('a-camp').value) { L.toast('Elegí un campeonato.', 'error'); return; }
     if (!fecha) { L.toast('Ingresá la fecha.', 'error'); return; }
     const body = {
       nombre: $('a-nombre').value.trim(),
-      categoriaId: Number($('a-cat').value),
       fecha: fecha + (hora ? 'T' + hora : 'T20:00') + ':00',
       circuito: $('a-circuito').value.trim() || 'Por definir',
+      campeonatoId: Number($('a-camp').value),
       cupoMaximo: Number($('a-cupo').value) || 32,
       servidor: $('a-servidor').value.trim() || null
     };
@@ -445,28 +465,42 @@
     $('an-form-titulo').textContent = 'Nuevo anuncio';
     $('an-titulo').value = '';
     $('an-contenido').value = '';
-    $('an-imagen').value = '';
+    $('an-imagen').value = null;
   }
 
   function cargarAnuncios() {
     const tbody = $('adm-tabla-anuncios');
-    tbody.innerHTML = '<tr><td colspan="5" class="text-tertiary">Cargando…</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" class="text-tertiary">Cargando…</td></tr>';
     L.get('/anuncios').then(function (anuncios) {
       tbody.innerHTML = anuncios.length ? anuncios.map(function (a) {
         const img = a.urlImagen
           ? '<img src="' + L.esc(a.urlImagen) + '" alt="" style="width:56px;height:36px;object-fit:cover;border-radius:var(--r-sm);border:1px solid var(--line-bright)">'
           : '<span class="text-tertiary">—</span>';
+        const star = a.destacado
+          ? '<button class="btn btn-sm btn-icon btn-star-active" data-dest-acar="' + a.id + '" title="Quitar destacado" style="color:var(--amber);cursor:pointer;background:none;border:none;font-size:1.2rem">★</button>'
+          : '<button class="btn btn-sm btn-icon" data-dest-acar="' + a.id + '" title="Destacar en inicio" style="color:var(--text-tertiary);cursor:pointer;background:none;border:none;font-size:1.2rem">☆</button>';
         return '<tr>' +
           '<td class="mono" style="font-size:var(--fs-2xs)">' + L.fmtFechaHora(a.fecha) + '</td>' +
           '<td class="data">' + L.esc(a.titulo) + '</td>' +
           '<td class="text-secondary" style="font-size:var(--fs-xs); max-width:340px">' + L.esc(a.contenido) + '</td>' +
           '<td>' + img + '</td>' +
+          '<td style="text-align:center">' + star + '</td>' +
           '<td>' + (isAdmin ?
             '<div class="row-actions">' +
               '<button class="btn btn-danger btn-sm btn-icon" data-del-anuncio="' + a.id + '" aria-label="Eliminar">' + icono('del') + '</button>' +
             '</div>' : '') +
           '</td></tr>';
-      }).join('') : '<tr><td colspan="5" class="text-tertiary">No hay anuncios publicados.</td></tr>';
+      }).join('') : '<tr><td colspan="6" class="text-tertiary">No hay anuncios publicados.</td></tr>';
+
+      tbody.querySelectorAll('[data-dest-acar]').forEach(function (b) {
+        b.addEventListener('click', function () {
+          const id = Number(b.getAttribute('data-dest-acar'));
+          L.api('/anuncios/' + id + '/destacar', { method: 'PATCH' }).then(function () {
+            L.toast('Anuncio destacado actualizado', 'success');
+            cargarAnuncios();
+          }).catch(function (e) { L.toast(e.message, 'error'); });
+        });
+      });
 
       tbody.querySelectorAll('[data-del-anuncio]').forEach(function (b) {
         b.addEventListener('click', function () {
@@ -479,23 +513,35 @@
         });
       });
     }).catch(function (e) {
-      tbody.innerHTML = '<tr><td colspan="5" class="text-tertiary">' + L.esc(e.message) + '</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6" class="text-tertiary">' + L.esc(e.message) + '</td></tr>';
     });
   }
 
   function guardarAnuncio() {
     if (!$('an-titulo').value.trim()) { L.toast('Ingresá el título.', 'error'); return; }
     if (!$('an-contenido').value.trim()) { L.toast('Ingresá el contenido.', 'error'); return; }
-    const body = {
-      titulo: $('an-titulo').value.trim(),
-      contenido: $('an-contenido').value.trim(),
-      urlImagen: $('an-imagen').value.trim() || null
+    const archivo = $('an-imagen').files[0];
+    const crearAnuncio = function (urlImagen) {
+      const body = {
+        titulo: $('an-titulo').value.trim(),
+        contenido: $('an-contenido').value.trim(),
+        urlImagen: urlImagen || null
+      };
+      L.post('/anuncios', body).then(function () {
+        L.toast('Anuncio publicado', 'success');
+        limpiarFormAnuncio();
+        cargarAnuncios();
+      }).catch(function (e) { L.toast(e.message, 'error'); });
     };
-    L.post('/anuncios', body).then(function () {
-      L.toast('Anuncio publicado', 'success');
-      limpiarFormAnuncio();
-      cargarAnuncios();
-    }).catch(function (e) { L.toast(e.message, 'error'); });
+    if (archivo) {
+      var fd = new FormData();
+      fd.append('archivo', archivo);
+      L.post('/imagenes', fd).then(function (res) {
+        crearAnuncio(res.url);
+      }).catch(function (e) { L.toast('Error al subir imagen: ' + e.message, 'error'); });
+    } else {
+      crearAnuncio(null);
+    }
   }
 
   /* ---------- Importar sesión ---------- */
@@ -560,6 +606,9 @@
 
   $('a-guardar').addEventListener('click', guardarCarrera);
   $('a-cancelar').addEventListener('click', limpiarFormCarrera);
+  $('a-cat').addEventListener('change', function () {
+    cargarCampeonatosSelect($('a-cat').value);
+  });
   $('c-guardar').addEventListener('click', guardarCampeonato);
   $('c-cancelar').addEventListener('click', limpiarFormCampeonato);
   $('cat-guardar').addEventListener('click', guardarCategoria);

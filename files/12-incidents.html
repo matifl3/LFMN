@@ -19,6 +19,7 @@
       <a href="03-races-list.html">Carreras</a>
       <a href="05-championship.html">Campeonato</a>
       <a href="06-categories.html">Categorías</a>
+      <a href="12-incidents.html" class="active">Incidentes</a>
       <a href="07-setups.html">Setups</a>
       <a href="11-achievements.html">Logros</a>
     </nav>
@@ -74,6 +75,109 @@
     </aside>
 
   </div>
+
+  <!-- Modal: Detalle de incidente -->
+  <div class="modal-overlay" id="modal-incidente" style="display:none">
+    <div class="modal-panel" style="max-width:640px;width:100%;max-height:90vh;overflow-y:auto">
+      <div class="flex gap-3" style="justify-content:space-between;align-items:center;margin-bottom:var(--sp-4)">
+        <h3 style="margin:0">Detalle del incidente</h3>
+        <button type="button" class="btn btn-ghost btn-sm" id="modal-incidente-cerrar">&times;</button>
+      </div>
+      <div id="modal-incidente-body">
+        <p class="text-tertiary">Cargando…</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Crear apelación -->
+  <div class="modal-overlay" id="modal-apelar" style="display:none">
+    <div class="modal-panel" style="max-width:480px;width:100%">
+      <div class="flex gap-3" style="justify-content:space-between;align-items:center;margin-bottom:var(--sp-4)">
+        <h3 style="margin:0">Apelar sanción</h3>
+        <button type="button" class="btn btn-ghost btn-sm" id="modal-apelar-cerrar">&times;</button>
+      </div>
+      <p class="text-tertiary" style="font-size:var(--fs-sm);margin-bottom:var(--sp-4)" id="modal-apelar-sancion-info"></p>
+      <input type="hidden" id="apelar-sancion-id">
+      <div class="field">
+        <label for="apelar-motivo">Motivo de la apelación</label>
+        <textarea class="textarea" id="apelar-motivo" placeholder="Explicá por qué creés que la sanción no es justa…" rows="4"></textarea>
+      </div>
+      <div class="flex gap-2" style="margin-top:var(--sp-4);justify-content:flex-end">
+        <button type="button" class="btn btn-ghost" id="apelar-cancelar">Cancelar</button>
+        <button type="button" class="btn btn-primary" id="apelar-enviar">Enviar apelación</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Resolver apelación -->
+  <div class="modal-overlay" id="modal-resolver-apelacion" style="display:none">
+    <div class="modal-panel" style="max-width:480px;width:100%">
+      <div class="flex gap-3" style="justify-content:space-between;align-items:center;margin-bottom:var(--sp-4)">
+        <h3 style="margin:0">Resolver apelación</h3>
+        <button type="button" class="btn btn-ghost btn-sm" id="modal-resolver-apelacion-cerrar">&times;</button>
+      </div>
+      <p class="text-tertiary" style="font-size:var(--fs-sm);margin-bottom:var(--sp-4)" id="modal-resolver-apelacion-info"></p>
+      <input type="hidden" id="resolver-apelacion-id">
+      <div class="field">
+        <label>Decisión</label>
+        <div class="flex gap-2">
+          <button type="button" class="btn btn-primary" id="resolver-apelacion-aprobar" style="flex:1">Aprobar</button>
+          <button type="button" class="btn btn-ghost" id="resolver-apelacion-rechazar" style="flex:1;border-color:var(--danger)">Rechazar</button>
+        </div>
+      </div>
+      <div class="field" style="margin-top:var(--sp-3)">
+        <label for="resolver-apelacion-respuesta">Respuesta al piloto</label>
+        <textarea class="textarea" id="resolver-apelacion-respuesta" placeholder="Explicación de la decisión…" rows="3"></textarea>
+      </div>
+      <div class="flex gap-2" style="margin-top:var(--sp-4);justify-content:flex-end">
+        <button type="button" class="btn btn-ghost" id="resolver-apelacion-cancelar">Cancelar</button>
+        <button type="button" class="btn btn-primary" id="resolver-apelacion-enviar">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Crear sanción manual -->
+  <div class="modal-overlay" id="modal-sancion" style="display:none">
+    <div class="modal-panel" style="max-width:480px;width:100%">
+      <div class="flex gap-3" style="justify-content:space-between;align-items:center;margin-bottom:var(--sp-4)">
+        <h3 style="margin:0">Nueva sanción</h3>
+        <button type="button" class="btn btn-ghost btn-sm" id="modal-sancion-cerrar">&times;</button>
+      </div>
+      <div class="field">
+        <label for="sancion-piloto">Piloto</label>
+        <select class="select" id="sancion-piloto"><option value="">Seleccionar piloto…</option></select>
+      </div>
+      <div class="field">
+        <label for="sancion-carrera">Carrera</label>
+        <select class="select" id="sancion-carrera"><option value="">Seleccionar carrera…</option></select>
+      </div>
+      <div class="field">
+        <label for="sancion-tipo">Tipo de sanción</label>
+        <select class="select" id="sancion-tipo">
+          <option value="ELO">Elo</option>
+          <option value="SAFETY_RATING">Safety Rating</option>
+          <option value="PUESTOS">Puestos</option>
+          <option value="SEGUNDOS">Segundos</option>
+          <option value="DRIVE_THROUGH">Drive Through</option>
+          <option value="STOP_AND_GO">Stop &amp; Go</option>
+          <option value="DESCALIFICACION">Descalificación</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="sancion-valor">Valor (puntos/segundos/puestos)</label>
+        <input class="input" id="sancion-valor" type="number" placeholder="Ej. -50">
+      </div>
+      <div class="field">
+        <label for="sancion-motivo">Motivo</label>
+        <textarea class="textarea" id="sancion-motivo" placeholder="Descripción de la sanción…" rows="3"></textarea>
+      </div>
+      <div class="flex gap-2" style="margin-top:var(--sp-4);justify-content:flex-end">
+        <button type="button" class="btn btn-ghost" id="sancion-cancelar">Cancelar</button>
+        <button type="button" class="btn btn-primary" id="sancion-enviar">Crear sanción</button>
+      </div>
+    </div>
+  </div>
+
 </main>
 
 <footer class="site-footer">
