@@ -204,7 +204,6 @@ public class CarreraService {
                 carrera.getEstado(),
                 carrera.getCupoMaximo(),
                 carrera.getServidor(),
-                carrera.getContrasenaServidor(),
                 carrera.getArchivo() != null ? carrera.getArchivo().getId() : null,
                 carrera.getArchivo() != null ? carrera.getArchivo().getNombre() : null,
                 carrera.getLinkPista(),
