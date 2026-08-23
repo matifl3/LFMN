@@ -48,7 +48,7 @@
     L.api('/usuarios/' + id + '/stats').catch(function () { return null; }),
     L.api('/usuarios/' + id + '/historial-elo').catch(function () { return []; }),
     L.api('/usuarios/' + id + '/historial-safety-rating').catch(function () { return []; }),
-    L.api('/resultados/usuario/' + id).catch(function () { return []; }),
+    L.api('/resultados/usuario/' + id).then(function (r) { return r.content || r; }).catch(function () { return []; }),
     L.api('/usuarios/' + id + '/logros/obtenidos').catch(function () { return []; }),
     L.api('/categorias').catch(function () { return []; })
   ]).then(function (res) {

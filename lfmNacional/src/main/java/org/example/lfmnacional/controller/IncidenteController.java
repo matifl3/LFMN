@@ -2,10 +2,15 @@ package org.example.lfmnacional.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.example.lfmnacional.dto.PageResponse;
 import org.example.lfmnacional.dto.incidente.*;
 import org.example.lfmnacional.entity.Usuario;
 import org.example.lfmnacional.enums.EstadoIncidente;
 import org.example.lfmnacional.service.IncidenteService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -28,8 +33,13 @@ public class IncidenteController {
     }
 
     @GetMapping
-    public List<IncidenteResponse> listAll() {
-        return incidenteService.listAll();
+    public PageResponse<IncidenteResponse> listAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "100") int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("fecha").descending());
+        Page<IncidenteResponse> result = incidenteService.listAll(pageable);
+        return new PageResponse<>(result.getContent(), result.getNumber(), result.getSize(),
+                result.getTotalElements(), result.getTotalPages());
     }
 
     @GetMapping("/estado/{estado}")

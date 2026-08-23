@@ -1,6 +1,8 @@
 package org.example.lfmnacional.repository;
 
 import org.example.lfmnacional.entity.ResultadoCarrera;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -19,6 +21,8 @@ public interface ResultadoCarreraRepository extends JpaRepository<ResultadoCarre
     Optional<ResultadoCarrera> findByCarrera_IdAndUsuario_Id(Long carreraId, Long usuarioId);
 
     List<ResultadoCarrera> findByUsuario_Id(Long usuarioId);
+
+    Page<ResultadoCarrera> findByUsuario_Id(Long usuarioId, Pageable pageable);
 
     long countByUsuario_Id(Long usuarioId);
 

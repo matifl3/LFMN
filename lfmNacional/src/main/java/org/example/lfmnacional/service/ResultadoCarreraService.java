@@ -26,6 +26,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 @Service
 @RequiredArgsConstructor
 public class ResultadoCarreraService {
@@ -58,9 +61,9 @@ public class ResultadoCarreraService {
     }
 
     @Transactional(readOnly = true)
-    public List<ResultadoCarreraResponse> listarPorUsuario(Long usuarioId) {
-        return resultadoCarreraRepository.findByUsuario_Id(usuarioId)
-                .stream().map(this::toResponse).toList();
+    public Page<ResultadoCarreraResponse> listarPorUsuario(Long usuarioId, Pageable pageable) {
+        return resultadoCarreraRepository.findByUsuario_Id(usuarioId, pageable)
+                .map(this::toResponse);
     }
 
     @Transactional

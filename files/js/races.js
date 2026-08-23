@@ -11,30 +11,8 @@
   let pasadas = [];
   let view = 'proximas';
   let filtroCat = '';
-  let cacheCounts = {};
 
-  function estadoChip(r, inscriptos) {
-    if (r.estado === 'CANCELADA') return L.chipCarrera('CANCELADA');
-    const cupo = r.cupoMaximo || 0;
-    const lleno = inscriptos >= cupo && cupo > 0;
-    if (r.estado === 'PROGRAMADA' || r.estado === 'INSCRIPCIONES_ABIERTAS') {
-      return lleno ? '<span class="chip chip-closed">Cupo lleno</span>' : L.chipCarrera('INSCRIPCIONES_ABIERTAS');
-    }
-    return L.chipCarrera(r.estado);
-  }
-
-  async function countFor(r) {
-    if (cacheCounts[r.id] !== undefined) return cacheCounts[r.id];
-    try {
-      const c = await L.api('/inscripciones/carrera/' + r.id + '/count');
-      cacheCounts[r.id] = c ? (c.inscriptos || 0) : 0;
-    } catch (e) {
-      cacheCounts[r.id] = 0;
-    }
-    return cacheCounts[r.id];
-  }
-
-  async function render() {
+  function render() {
     const lista = view === 'proximas' ? proximas : pasadas;
     const filtradas = filtroCat ? lista.filter(function (r) { return String(r.categoriaId) === filtroCat; }) : lista;
     const tabCount = view === 'proximas' ? tabProx : tabPasadas;
@@ -47,6 +25,9 @@
 
     box.innerHTML = filtradas.map(function (r) {
       const dias = Math.floor((new Date(r.fecha) - Date.now()) / 86400000);
+      const n = r.cuposInscritos || 0;
+      const cupo = r.cupoMaximo || 0;
+      const pct = cupo ? Math.round((n / cupo) * 100) : 0;
       return '<div class="race-row"' + (view === 'pasadas' ? ' style="opacity:.75"' : '') + '>' +
         '<div class="race-date"><span class="day">' + L.fmtFecha(r.fecha).split(' ')[0] + '</span><span class="mon">' + (L.fmtFecha(r.fecha).split(' ')[1] || '') + '</span></div>' +
         '<div>' +
@@ -54,29 +35,21 @@
         '<div class="text-tertiary" style="font-size:var(--fs-sm)">' + L.esc(r.circuito || '') + (r.fecha ? ' · ' + L.fmtHora(r.fecha) : '') + '</div>' +
         '</div>' +
         '<div><span class="chip chip-category">' + L.esc(r.categoriaNombre || '') + '</span></div>' +
-        '<div class="race-ocup" data-race="' + r.id + '" style="min-width:110px">' +
-        '<div class="progress-label" style="margin-top:0"><span>Inscriptos</span><span class="mono">… / ' + (r.cupoMaximo || '—') + '</span></div>' +
-        '<div class="progress"><div class="progress-bar" style="width:0%"></div></div>' +
+        '<div class="race-ocup" style="min-width:110px">' +
+        '<div class="progress-label" style="margin-top:0"><span>Inscriptos</span><span class="mono">' + n + ' / ' + (cupo || '—') + '</span></div>' +
+        '<div class="progress"><div class="progress-bar' + (n >= cupo && cupo > 0 ? ' full' : '') + '" style="width:' + pct + '%"></div></div>' +
         '</div>' +
-        '<span class="chip chip-pending" data-chip="' + r.id + '">…</span>' +
+        '<span class="chip chip-pending">' + (function () {
+          if (r.estado === 'CANCELADA') return L.chipCarrera('CANCELADA');
+          const lleno = n >= cupo && cupo > 0;
+          if (r.estado === 'PROGRAMADA' || r.estado === 'INSCRIPCIONES_ABIERTAS') {
+            return lleno ? '<span class="chip chip-closed">Cupo lleno</span>' : L.chipCarrera('INSCRIPCIONES_ABIERTAS');
+          }
+          return L.chipCarrera(r.estado);
+        })() + '</span>' +
         '<a href="04-race-detail.html?id=' + r.id + '" class="btn btn-primary btn-sm">' + (view === 'pasadas' ? 'Resultados' : 'Ver carrera') + '</a>' +
         '</div>';
     }).join('');
-
-    filtradas.forEach(function (r) {
-      countFor(r).then(function (n) {
-        const cupo = r.cupoMaximo || 0;
-        const pct = cupo ? Math.round((n / cupo) * 100) : 0;
-        const ocup = box.querySelector('.race-ocup[data-race="' + r.id + '"]');
-        if (ocup) {
-          ocup.querySelector('.mono').textContent = n + ' / ' + (cupo || '—');
-          ocup.querySelector('.progress-bar').style.width = pct + '%';
-          if (n >= cupo && cupo > 0) ocup.querySelector('.progress-bar').classList.add('full');
-        }
-        const chip = box.querySelector('[data-chip="' + r.id + '"]');
-        if (chip) chip.outerHTML = estadoChip(r, n);
-      });
-    });
   }
 
   L.api('/categorias').then(function (cats) {

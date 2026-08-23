@@ -17,6 +17,9 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 @Service
 @RequiredArgsConstructor
 public class SancionService {
@@ -42,9 +45,8 @@ public class SancionService {
     }
 
     @Transactional(readOnly = true)
-    public List<SancionResponse> listAll() {
-        return sancionRepository.findAll().stream()
-                .map(this::toResponse).toList();
+    public Page<SancionResponse> listAll(Pageable pageable) {
+        return sancionRepository.findAll(pageable).map(this::toResponse);
     }
 
     @Transactional(readOnly = true)

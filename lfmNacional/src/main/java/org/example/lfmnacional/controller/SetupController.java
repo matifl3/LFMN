@@ -2,6 +2,7 @@ package org.example.lfmnacional.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.example.lfmnacional.dto.PageResponse;
 import org.example.lfmnacional.dto.setup.SetupRequest;
 import org.example.lfmnacional.dto.setup.SetupResponse;
 import org.example.lfmnacional.entity.Setup;
@@ -11,6 +12,10 @@ import org.example.lfmnacional.exception.BusinessException;
 import org.example.lfmnacional.service.SetupService;
 import org.springframework.core.io.PathResource;
 import org.springframework.core.io.Resource;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -35,15 +40,25 @@ public class SetupController {
     private final SetupService setupService;
 
     @GetMapping
-    public List<SetupResponse> listAll() {
-        return setupService.listAll();
+    public PageResponse<SetupResponse> listAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "100") int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("fechaPublicacion").descending());
+        Page<SetupResponse> result = setupService.listAll(pageable);
+        return new PageResponse<>(result.getContent(), result.getNumber(), result.getSize(),
+                result.getTotalElements(), result.getTotalPages());
     }
 
     @GetMapping("/buscar")
-    public List<SetupResponse> buscar(
+    public PageResponse<SetupResponse> buscar(
             @RequestParam(required = false) String circuito,
-            @RequestParam(required = false) String vehiculo) {
-        return setupService.buscar(circuito, vehiculo);
+            @RequestParam(required = false) String vehiculo,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "100") int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("fechaPublicacion").descending());
+        Page<SetupResponse> result = setupService.buscar(circuito, vehiculo, pageable);
+        return new PageResponse<>(result.getContent(), result.getNumber(), result.getSize(),
+                result.getTotalElements(), result.getTotalPages());
     }
 
     @GetMapping("/autor/{autorId}")
