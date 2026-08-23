@@ -10,7 +10,11 @@
 
   function next() {
     const p = new URLSearchParams(location.search).get('next');
-    return p ? decodeURIComponent(p) : '01-home.html';
+    if (!p) return '01-home.html';
+    const decoded = decodeURIComponent(p);
+    if (decoded.startsWith('//') || decoded.startsWith('http://') || decoded.startsWith('https://') || decoded.startsWith('javascript:')) return '01-home.html';
+    if (!decoded.startsWith('/')) return '01-home.html';
+    return decoded;
   }
 
   function setTab(register) {

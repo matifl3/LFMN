@@ -24,6 +24,7 @@ import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.OptionalDouble;
+import java.util.Set;
 import java.util.UUID;
 
 @Slf4j
@@ -32,6 +33,7 @@ import java.util.UUID;
 public class SetupService {
 
     private static final String SUBDIRECTORIO = "setups";
+    private static final Set<String> EXTENSIONES_PERMITIDAS = Set.of(".ini", ".acd", ".json", ".rar", ".zip");
 
     private final SetupRepository setupRepository;
     private final SetupCalificacionRepository setupCalificacionRepository;
@@ -127,7 +129,10 @@ public class SetupService {
         }
         Setup setup = getEntity(setupId);
         eliminarArchivo(setup);
-        String extension = obtenerExtension(archivo.getOriginalFilename());
+        String extension = obtenerExtension(archivo.getOriginalFilename()).toLowerCase();
+        if (!EXTENSIONES_PERMITIDAS.contains(extension)) {
+            throw new BusinessException("Tipo de archivo no permitido. Extensiones aceptadas: .ini, .acd, .json, .rar, .zip");
+        }
         String nombreAlmacenado = UUID.randomUUID() + extension;
         Path destino = Paths.get(baseDir, SUBDIRECTORIO, nombreAlmacenado).toAbsolutePath().normalize();
         try {
