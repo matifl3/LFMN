@@ -6,6 +6,7 @@ import org.example.lfmnacional.dto.sancion.SancionRequest;
 import org.example.lfmnacional.entity.Incidente;
 import org.example.lfmnacional.entity.IncidentePiloto;
 import org.example.lfmnacional.entity.ResolucionIncidente;
+import org.example.lfmnacional.entity.Usuario;
 import org.example.lfmnacional.entity.VotoComisario;
 import org.example.lfmnacional.enums.DecisionComisario;
 import org.example.lfmnacional.enums.EstadoIncidente;
@@ -68,14 +69,14 @@ public class IncidenteService {
     }
 
     @Transactional
-    public IncidenteResponse reportar(IncidenteRequest request) {
+    public IncidenteResponse reportar(IncidenteRequest request, Usuario reportante) {
         Incidente incidente = Incidente.builder()
                 .carrera(carreraService.getEntity(request.carreraId()))
-                .reportante(usuarioService.getEntity(request.reportanteId()))
+                .reportante(reportante)
                 .vuelta(request.vuelta())
                 .descripcion(request.descripcion())
                 .videoUrl(request.videoUrl())
-                .estado(request.estado())
+                .estado(EstadoIncidente.PENDIENTE)
                 .build();
         incidente = incidenteRepository.save(incidente);
         incidentePilotoRepository.save(IncidentePiloto.builder()

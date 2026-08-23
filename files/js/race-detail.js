@@ -220,7 +220,7 @@
       btn.addEventListener('click', async function (e) {
         e.preventDefault();
         try {
-          await L.post('/inscripciones', { carreraId: Number(id), usuarioId: user.id });
+          await L.post('/inscripciones', { carreraId: Number(id) });
           L.toast('¡Te inscribiste correctamente!', 'success');
           location.reload();
         } catch (err) { L.toast(err.message, 'error'); }

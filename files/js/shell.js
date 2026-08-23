@@ -51,7 +51,7 @@
 
       // Badge de notificaciones
       if (dot) {
-        L.api('/notificaciones/usuario/' + user.id + '/no-leidas/contar')
+        L.api('/notificaciones/me/no-leidas/contar')
           .then(function (n) {
             dot.style.display = n > 0 ? 'block' : 'none';
             if (n > 0) dot.textContent = n > 9 ? '9+' : n;

@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.lfmnacional.dto.usuario.*;
 import org.example.lfmnacional.entity.Usuario;
 import org.example.lfmnacional.enums.Rol;
+import org.example.lfmnacional.exception.BusinessException;
 import org.example.lfmnacional.service.UsuarioService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -52,22 +53,41 @@ public class UsuarioController {
     }
 
     @PutMapping("/{id}/perfil")
-    public UsuarioResponse updatePerfil(@PathVariable Long id, @Valid @RequestBody UsuarioRequest request) {
+    public UsuarioResponse updatePerfil(@PathVariable Long id,
+                                        @AuthenticationPrincipal Usuario actual,
+                                        @Valid @RequestBody UsuarioRequest request) {
+        if (!actual.getRol().equals(Rol.ADMIN) && !actual.getId().equals(id)) {
+            throw new BusinessException("No tenes permiso para editar el perfil de otro usuario");
+        }
         return usuarioService.updatePerfil(id, request);
     }
 
     @PutMapping("/{id}/password")
-    public void updatePassword(@PathVariable Long id, @Valid @RequestBody CambioPasswordRequest request) {
+    public void updatePassword(@PathVariable Long id,
+                               @AuthenticationPrincipal Usuario actual,
+                               @Valid @RequestBody CambioPasswordRequest request) {
+        if (!actual.getId().equals(id)) {
+            throw new BusinessException("No tenes permiso para cambiar la password de otro usuario");
+        }
         usuarioService.updatePassword(id, request);
     }
 
     @PutMapping("/{id}/steam")
-    public UsuarioResponse vincularSteam(@PathVariable Long id, @Valid @RequestBody SteamRequest request) {
+    public UsuarioResponse vincularSteam(@PathVariable Long id,
+                                         @AuthenticationPrincipal Usuario actual,
+                                         @Valid @RequestBody SteamRequest request) {
+        if (!actual.getId().equals(id)) {
+            throw new BusinessException("No tenes permiso para vincular Steam de otro usuario");
+        }
         return usuarioService.vincularSteam(id, request);
     }
 
     @DeleteMapping("/{id}/steam")
-    public UsuarioResponse desvincularSteam(@PathVariable Long id) {
+    public UsuarioResponse desvincularSteam(@PathVariable Long id,
+                                            @AuthenticationPrincipal Usuario actual) {
+        if (!actual.getId().equals(id)) {
+            throw new BusinessException("No tenes permiso para desvincular Steam de otro usuario");
+        }
         return usuarioService.desvincularSteam(id);
     }
 

@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.lfmnacional.dto.setup.SetupRequest;
 import org.example.lfmnacional.dto.setup.SetupResponse;
 import org.example.lfmnacional.entity.Setup;
+import org.example.lfmnacional.entity.Usuario;
 import org.example.lfmnacional.exception.BusinessException;
 import org.example.lfmnacional.exception.ResourceNotFoundException;
 import org.example.lfmnacional.repository.SetupCalificacionRepository;
@@ -84,14 +85,14 @@ public class SetupService {
     }
 
     @Transactional
-    public SetupResponse create(SetupRequest request) {
+    public SetupResponse create(SetupRequest request, Usuario autor) {
         Setup setup = Setup.builder()
                 .titulo(request.titulo())
                 .descripcion(request.descripcion())
                 .circuito(request.circuito())
                 .vehiculo(request.vehiculo())
                 .archivo(request.archivo())
-                .autor(usuarioService.getEntity(request.autorId()))
+                .autor(autor)
                 .categoria(request.categoriaId() != null ? categoriaService.getEntity(request.categoriaId()) : null)
                 .fechaPublicacion(LocalDateTime.now())
                 .build();
@@ -106,7 +107,6 @@ public class SetupService {
         setup.setCircuito(request.circuito());
         setup.setVehiculo(request.vehiculo());
         setup.setArchivo(request.archivo());
-        setup.setAutor(usuarioService.getEntity(request.autorId()));
         setup.setCategoria(request.categoriaId() != null ? categoriaService.getEntity(request.categoriaId()) : null);
         return toResponse(setupRepository.save(setup));
     }

@@ -5,7 +5,6 @@ import org.example.lfmnacional.enums.EstadoInscripcion;
 
 public record InscripcionRequest(
         @NotNull Long carreraId,
-        @NotNull Long usuarioId,
         EstadoInscripcion estado
 ) {
 }

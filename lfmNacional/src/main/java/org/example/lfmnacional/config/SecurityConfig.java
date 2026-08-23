@@ -40,6 +40,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/campeonatos/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/carreras/proximas").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/carreras/pasadas").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/carreras").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/carreras/{id}").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/usuarios/{id}").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/usuarios/{id}/stats").permitAll()
