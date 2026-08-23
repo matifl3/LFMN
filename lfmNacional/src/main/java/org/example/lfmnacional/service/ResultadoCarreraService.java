@@ -88,8 +88,9 @@ public class ResultadoCarreraService {
             resultado.setFinalizo(item.finalizo() != null && item.finalizo());
             resultado.setModeloAuto(item.modeloAuto());
             resultado.setSkinAuto(item.skinAuto());
-            resultados.add(resultadoCarreraRepository.save(resultado));
+            resultados.add(resultado);
         }
+        resultadoCarreraRepository.saveAll(resultados);
 
         recalcularEloYSafetyRating(carrera, resultados);
         campeonatoService.actualizarPuntos(carrera, resultados);
@@ -110,6 +111,9 @@ public class ResultadoCarreraService {
         for (ResultadoCarrera resultado : resultados) {
             elos.put(resultado.getUsuario().getId(), resultado.getUsuario().getElo());
         }
+        List<Usuario> usuariosActualizar = new ArrayList<>();
+        List<EloSancion> eloSanciones = new ArrayList<>();
+        List<SafetyRatingSancion> srSanciones = new ArrayList<>();
         for (ResultadoCarrera resultado : resultados) {
             Integer posicion = resultado.getPosicionFinal();
             if (posicion == null) {
@@ -126,26 +130,29 @@ public class ResultadoCarreraService {
 
             resultado.setEloGanado(cambioElo);
             resultado.setSrGanado(cambioSr);
-            resultadoCarreraRepository.save(resultado);
 
             Usuario usuario = resultado.getUsuario();
             usuario.setElo(Math.max(0, usuario.getElo() + cambioElo));
             usuario.setSafetyRating(Math.max(0, usuario.getSafetyRating() + cambioSr));
-            usuarioRepository.save(usuario);
+            usuariosActualizar.add(usuario);
 
-            eloSancionRepository.save(EloSancion.builder()
+            eloSanciones.add(EloSancion.builder()
                     .usuario(usuario)
                     .cambio(cambioElo)
                     .motivo("Resultado carrera " + carrera.getNombre() + " (posicion " + posicion + ")")
                     .carrera(carrera)
                     .build());
-            safetyRatingSancionRepository.save(SafetyRatingSancion.builder()
+            srSanciones.add(SafetyRatingSancion.builder()
                     .usuario(usuario)
                     .cambio(cambioSr)
                     .motivo("Resultado carrera " + carrera.getNombre() + " (posicion " + posicion + ")")
                     .carrera(carrera)
                     .build());
         }
+        resultadoCarreraRepository.saveAll(resultados);
+        usuarioRepository.saveAll(usuariosActualizar);
+        eloSancionRepository.saveAll(eloSanciones);
+        safetyRatingSancionRepository.saveAll(srSanciones);
     }
 
     private ResultadoCarreraResponse toResponse(ResultadoCarrera resultado) {
