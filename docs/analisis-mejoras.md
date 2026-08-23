@@ -30,13 +30,13 @@ Proyecto de plataforma web para liga de sim racing (Assetto Corsa) con Spring Bo
 
 - [x] **Asignacion masiva en incidentes** -- IncidenteRequest.java:12 permite crear incidentes ya RESUELTO; SetupRequest.autorId permite elegir el autor
   - Fix: Ignorar campos de estado/autor en el request, derivarlos del contexto del usuario autenticado
-- [ ] **JWT secret con valor por defecto** -- application.properties:32 tiene un secret predecible; si no se setea la env var, se puede forjar tokens admin
+- [x] **JWT secret con valor por defecto** -- application.properties:32 tiene un secret predecible; si no se setea la env var, se puede forjar tokens admin
   - Fix: Quitar default, forzar que el startup falle si JWT_SECRETO no esta configurado
-- [ ] **CORS abierto + credenciales** -- WebConfig.java:32 usa allowedOriginPatterns(*) con allowCredentials(true); default en properties es *
+- [x] **CORS abierto + credenciales** -- WebConfig.java:32 usa allowedOriginPatterns(*) con allowCredentials(true); default en properties es *
   - Fix: Default restrictivo en application.properties, solo * en dev
-- [ ] **Sin validacion de tipo de archivo** -- SetupService.guardarArchivo() (linea 124) acepta cualquier extension hasta 10MB, incluyendo .html/.svg (XSS almacenado)
-  - Fix: Whitelist de extensiones MIME permitidas (.ini, .acd, .json)
-- [ ] **Open redirect en login** -- auth.js:11-14 usa next del query string sin validar
+- [x] **Sin validacion de tipo de archivo** -- SetupService.guardarArchivo() (linea 124) acepta cualquier extension hasta 10MB, incluyendo .html/.svg (XSS almacenado)
+  - Fix: Whitelist de extensiones MIME permitidas (.ini, .acd, .json, .rar, .zip)
+- [x] **Open redirect en login** -- auth.js:11-14 usa next del query string sin validar
   - Fix: Validar que next empiece con / (relativo)
 - [ ] **Token JWT en URL** -- Steam callback devuelve token como query param, quedando en historial y logs
   - Fix: Usar cookie de sesion temporal o codigo intercambiado via POST
