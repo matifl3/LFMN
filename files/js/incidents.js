@@ -625,7 +625,6 @@
     try {
       await L.post('/incidentes', {
         carreraId: Number(carreraId),
-        reportanteId: user.id,
         vuelta: vuelta,
         descripcion: descripcion,
         videoUrl: videoUrl

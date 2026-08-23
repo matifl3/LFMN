@@ -4,9 +4,13 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.lfmnacional.dto.notificacion.NotificacionRequest;
 import org.example.lfmnacional.dto.notificacion.NotificacionResponse;
+import org.example.lfmnacional.entity.Notificacion;
+import org.example.lfmnacional.entity.Usuario;
+import org.example.lfmnacional.exception.BusinessException;
 import org.example.lfmnacional.service.NotificacionService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -24,38 +28,53 @@ public class NotificacionController {
     }
 
     @GetMapping("/{id}")
-    public NotificacionResponse getById(@PathVariable Long id) {
+    public NotificacionResponse getById(@PathVariable Long id,
+                                        @AuthenticationPrincipal Usuario actual) {
+        Notificacion notificacion = notificacionService.getEntity(id);
+        if (!notificacion.getUsuario().getId().equals(actual.getId())) {
+            throw new BusinessException("No tenes permiso para ver esta notificacion");
+        }
         return notificacionService.getById(id);
     }
 
-    @GetMapping("/usuario/{usuarioId}")
-    public List<NotificacionResponse> listarPorUsuario(@PathVariable Long usuarioId) {
-        return notificacionService.listarPorUsuario(usuarioId);
+    @GetMapping("/me")
+    public List<NotificacionResponse> listarPorUsuario(@AuthenticationPrincipal Usuario actual) {
+        return notificacionService.listarPorUsuario(actual.getId());
     }
 
-    @GetMapping("/usuario/{usuarioId}/no-leidas")
-    public List<NotificacionResponse> listarNoLeidas(@PathVariable Long usuarioId) {
-        return notificacionService.listarNoLeidas(usuarioId);
+    @GetMapping("/me/no-leidas")
+    public List<NotificacionResponse> listarNoLeidas(@AuthenticationPrincipal Usuario actual) {
+        return notificacionService.listarNoLeidas(actual.getId());
     }
 
-    @GetMapping("/usuario/{usuarioId}/no-leidas/contar")
-    public long contarNoLeidas(@PathVariable Long usuarioId) {
-        return notificacionService.contarNoLeidas(usuarioId);
+    @GetMapping("/me/no-leidas/contar")
+    public long contarNoLeidas(@AuthenticationPrincipal Usuario actual) {
+        return notificacionService.contarNoLeidas(actual.getId());
     }
 
     @PutMapping("/{id}/leida")
-    public NotificacionResponse marcarLeida(@PathVariable Long id) {
+    public NotificacionResponse marcarLeida(@PathVariable Long id,
+                                            @AuthenticationPrincipal Usuario actual) {
+        Notificacion notificacion = notificacionService.getEntity(id);
+        if (!notificacion.getUsuario().getId().equals(actual.getId())) {
+            throw new BusinessException("No tenes permiso para marcar esta notificacion");
+        }
         return notificacionService.marcarLeida(id);
     }
 
-    @PutMapping("/usuario/{usuarioId}/leidas")
-    public ResponseEntity<Void> marcarTodasLeidas(@PathVariable Long usuarioId) {
-        notificacionService.marcarTodasLeidas(usuarioId);
+    @PutMapping("/me/leidas")
+    public ResponseEntity<Void> marcarTodasLeidas(@AuthenticationPrincipal Usuario actual) {
+        notificacionService.marcarTodasLeidas(actual.getId());
         return ResponseEntity.noContent().build();
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
+    public ResponseEntity<Void> delete(@PathVariable Long id,
+                                       @AuthenticationPrincipal Usuario actual) {
+        Notificacion notificacion = notificacionService.getEntity(id);
+        if (!notificacion.getUsuario().getId().equals(actual.getId())) {
+            throw new BusinessException("No tenes permiso para borrar esta notificacion");
+        }
         notificacionService.delete(id);
         return ResponseEntity.noContent().build();
     }

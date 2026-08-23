@@ -3,11 +3,13 @@ package org.example.lfmnacional.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.lfmnacional.dto.incidente.*;
+import org.example.lfmnacional.entity.Usuario;
 import org.example.lfmnacional.enums.EstadoIncidente;
 import org.example.lfmnacional.service.IncidenteService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,8 +22,9 @@ public class IncidenteController {
     private final IncidenteService incidenteService;
 
     @PostMapping
-    public ResponseEntity<IncidenteResponse> reportar(@Valid @RequestBody IncidenteRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(incidenteService.reportar(request));
+    public ResponseEntity<IncidenteResponse> reportar(@AuthenticationPrincipal Usuario actual,
+                                                      @Valid @RequestBody IncidenteRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(incidenteService.reportar(request, actual));
     }
 
     @GetMapping

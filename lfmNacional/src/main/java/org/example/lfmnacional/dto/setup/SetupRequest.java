@@ -9,7 +9,6 @@ public record SetupRequest(
         @NotBlank String circuito,
         @NotBlank String vehiculo,
         String archivo,
-        @NotNull Long autorId,
         Long categoriaId
 ) {
 }

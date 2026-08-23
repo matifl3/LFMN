@@ -4,9 +4,14 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.lfmnacional.dto.inscripcion.InscripcionRequest;
 import org.example.lfmnacional.dto.inscripcion.InscripcionResponse;
+import org.example.lfmnacional.entity.Inscripcion;
+import org.example.lfmnacional.entity.Usuario;
+import org.example.lfmnacional.enums.Rol;
+import org.example.lfmnacional.exception.BusinessException;
 import org.example.lfmnacional.service.InscripcionService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,18 +25,29 @@ public class InscripcionController {
     private final InscripcionService inscripcionService;
 
     @PostMapping
-    public ResponseEntity<InscripcionResponse> inscribirse(@Valid @RequestBody InscripcionRequest request) {
-        InscripcionResponse response = inscripcionService.inscribirse(request.carreraId(), request.usuarioId());
+    public ResponseEntity<InscripcionResponse> inscribirse(@AuthenticationPrincipal Usuario actual,
+                                                           @Valid @RequestBody InscripcionRequest request) {
+        InscripcionResponse response = inscripcionService.inscribirse(request.carreraId(), actual.getId());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<InscripcionResponse> baja(@PathVariable Long id) {
+    public ResponseEntity<InscripcionResponse> baja(@PathVariable Long id,
+                                                    @AuthenticationPrincipal Usuario actual) {
+        Inscripcion inscripcion = inscripcionService.getEntity(id);
+        if (!actual.getRol().equals(Rol.ADMIN) && !inscripcion.getUsuario().getId().equals(actual.getId())) {
+            throw new BusinessException("No tenes permiso para cancelar la inscripcion de otro usuario");
+        }
         return ResponseEntity.ok(inscripcionService.baja(id));
     }
 
     @DeleteMapping("/carrera/{carreraId}/usuario/{usuarioId}")
-    public ResponseEntity<InscripcionResponse> cancelar(@PathVariable Long carreraId, @PathVariable Long usuarioId) {
+    public ResponseEntity<InscripcionResponse> cancelar(@PathVariable Long carreraId,
+                                                        @PathVariable Long usuarioId,
+                                                        @AuthenticationPrincipal Usuario actual) {
+        if (!actual.getRol().equals(Rol.ADMIN) && !actual.getId().equals(usuarioId)) {
+            throw new BusinessException("No tenes permiso para cancelar la inscripcion de otro usuario");
+        }
         return ResponseEntity.ok(inscripcionService.cancelar(carreraId, usuarioId));
     }
 

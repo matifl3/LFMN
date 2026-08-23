@@ -78,7 +78,7 @@
   }
 
   function load() {
-    L.api('/notificaciones/usuario/' + user.id).then(render).catch(function (err) {
+    L.api('/notificaciones/me').then(render).catch(function (err) {
       feed.innerHTML = '<p class="text-tertiary">' + L.esc(err.message) + '</p>';
     });
   }
@@ -86,7 +86,7 @@
   document.getElementById('nt-marcar-todas').addEventListener('click', async function (e) {
     e.preventDefault();
     try {
-      await L.put('/notificaciones/usuario/' + user.id + '/leidas');
+      await L.put('/notificaciones/me/leidas');
       L.toast('Todas marcadas como leídas', 'success');
       load();
     } catch (err) { L.toast(err.message, 'error'); }
