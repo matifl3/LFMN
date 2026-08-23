@@ -1,6 +1,6 @@
 ﻿# Analisis y Mejoras - LFM Nacional
 
-> Ultima actualizacion: 2026-08-22
+> Ultima actualizacion: 2026-08-23
 
 ---
 
@@ -20,14 +20,15 @@ Proyecto de plataforma web para liga de sim racing (Assetto Corsa) con Spring Bo
 
 - [x] **GET publico masivo** -- SecurityConfig.java:36 tiene requestMatchers(GET, /**).permitAll() que expone usuarios, passwords de servidor, incidentes y setups a anonimos
   - Fix: Eliminar wildcard y enumerar explicitamente los endpoints publicos (categorias, campeonatos basicos, anuncios)
-- [ ] **Password del servidor visible** -- CarreraResponse.java:19 incluye contrasenaServidor en todas las respuestas de carrera
+- [x] **Password del servidor visible** -- CarreraResponse.java:19 incluye contrasenaServidor en todas las respuestas de carrera
   - Fix: Quitar del DTO publico, crear endpoint autenticado GET /api/carreras/{id}/credenciales que verifique inscripcion activa (RF-028/NFR-005)
-- [ ] **IDOR generalizado** -- cualquier usuario puede cambiar passwords, perfiles, setups y notificaciones de otros usuarios
-  - Fix: Agregar ownership checks usando @AuthenticationPrincipal en todos los endpoints afectados (UsuarioController.java:59-72, SetupController.java:98-107, NotificacionController.java:31-44)
+  - Nota: DTO limpio. Falta endpoint autenticado para que inscriptos vean la password en la UI (race-detail.js no la muestra actualmente).
+- [x] **IDOR generalizado** -- cualquier usuario puede cambiar passwords, perfiles, setups y notificaciones de otros usuarios
+  - Fix: Agregar ownership checks usando @AuthenticationPrincipal en todos los endpoints afectados (UsuarioController, SetupController, NotificacionController, InscripcionController, IncidenteController)
 
 ### 1.2 Altos
 
-- [ ] **Asignacion masiva en incidentes** -- IncidenteRequest.java:12 permite crear incidentes ya RESUELTO; SetupRequest.autorId permite elegir el autor
+- [x] **Asignacion masiva en incidentes** -- IncidenteRequest.java:12 permite crear incidentes ya RESUELTO; SetupRequest.autorId permite elegir el autor
   - Fix: Ignorar campos de estado/autor en el request, derivarlos del contexto del usuario autenticado
 - [ ] **JWT secret con valor por defecto** -- application.properties:32 tiene un secret predecible; si no se setea la env var, se puede forjar tokens admin
   - Fix: Quitar default, forzar que el startup falle si JWT_SECRETO no esta configurado
