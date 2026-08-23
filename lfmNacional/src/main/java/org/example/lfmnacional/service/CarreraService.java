@@ -28,6 +28,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @Service
 @RequiredArgsConstructor
@@ -59,30 +63,42 @@ public class CarreraService {
 
     @Transactional(readOnly = true)
     public CarreraResponse getById(Long id) {
-        return toResponse(getEntity(id));
+        return toResponse(getEntity(id), null);
     }
 
     @Transactional(readOnly = true)
     public List<CarreraResponse> listAll() {
-        return carreraRepository.findAll().stream().map(this::toResponse).toList();
+        List<Carrera> carreras = carreraRepository.findAll();
+        Map<Long, Long> counts = inscripcionRepository.countInscriptosPorCarrera();
+        return carreras.stream().map(c -> toResponse(c, counts)).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public Page<CarreraResponse> listAll(Pageable pageable) {
+        Page<Carrera> carreras = carreraRepository.findAll(pageable);
+        Map<Long, Long> counts = inscripcionRepository.countInscriptosPorCarrera();
+        return carreras.map(c -> toResponse(c, counts));
     }
 
     @Transactional(readOnly = true)
     public List<CarreraResponse> proximas() {
-        return carreraRepository.findByFechaAfterOrderByFechaAsc(LocalDateTime.now())
-                .stream().map(this::toResponse).toList();
+        List<Carrera> carreras = carreraRepository.findByFechaAfterOrderByFechaAsc(LocalDateTime.now());
+        Map<Long, Long> counts = inscripcionRepository.countInscriptosPorCarrera();
+        return carreras.stream().map(c -> toResponse(c, counts)).toList();
     }
 
     @Transactional(readOnly = true)
     public List<CarreraResponse> pasadas() {
-        return carreraRepository.findByFechaBeforeOrderByFechaDesc(LocalDateTime.now())
-                .stream().map(this::toResponse).toList();
+        List<Carrera> carreras = carreraRepository.findByFechaBeforeOrderByFechaDesc(LocalDateTime.now());
+        Map<Long, Long> counts = inscripcionRepository.countInscriptosPorCarrera();
+        return carreras.stream().map(c -> toResponse(c, counts)).toList();
     }
 
     @Transactional(readOnly = true)
     public List<CarreraResponse> porCampeonato(Long campeonatoId) {
-        return carreraRepository.findByCampeonato_IdOrderByFechaDesc(campeonatoId)
-                .stream().map(this::toResponse).toList();
+        List<Carrera> carreras = carreraRepository.findByCampeonato_IdOrderByFechaDesc(campeonatoId);
+        Map<Long, Long> counts = inscripcionRepository.countInscriptosPorCarrera();
+        return carreras.stream().map(c -> toResponse(c, counts)).toList();
     }
 
     @Transactional
@@ -100,7 +116,7 @@ public class CarreraService {
                 .linkPista(request.linkPista())
                 .linkAuto(request.linkAuto())
                 .build();
-        return toResponse(carreraRepository.save(carrera));
+        return toResponse(carreraRepository.save(carrera), null);
     }
 
     @Transactional
@@ -119,28 +135,28 @@ public class CarreraService {
         }
         carrera.setLinkPista(request.linkPista());
         carrera.setLinkAuto(request.linkAuto());
-        return toResponse(carreraRepository.save(carrera));
+        return toResponse(carreraRepository.save(carrera), null);
     }
 
     @Transactional
     public CarreraResponse vincularArchivo(Long id, Long archivoId) {
         Carrera carrera = getEntity(id);
         carrera.setArchivo(archivoCarreraService.getEntity(archivoId));
-        return toResponse(carreraRepository.save(carrera));
+        return toResponse(carreraRepository.save(carrera), null);
     }
 
     @Transactional
     public CarreraResponse desvincularArchivo(Long id) {
         Carrera carrera = getEntity(id);
         carrera.setArchivo(null);
-        return toResponse(carreraRepository.save(carrera));
+        return toResponse(carreraRepository.save(carrera), null);
     }
 
     @Transactional
     public CarreraResponse changeEstado(Long id, EstadoCarrera estado) {
         Carrera carrera = getEntity(id);
         carrera.setEstado(estado);
-        return toResponse(carreraRepository.save(carrera));
+        return toResponse(carreraRepository.save(carrera), null);
     }
 
     @Transactional
@@ -191,7 +207,8 @@ public class CarreraService {
         cerrarInscripcionesAutomaticamente();
     }
 
-    private CarreraResponse toResponse(Carrera carrera) {
+    private CarreraResponse toResponse(Carrera carrera, Map<Long, Long> counts) {
+        Long inscritos = counts != null ? counts.getOrDefault(carrera.getId(), 0L) : null;
         return new CarreraResponse(
                 carrera.getId(),
                 carrera.getNombre(),
@@ -203,6 +220,7 @@ public class CarreraService {
                 carrera.getCampeonato().getCategoria().getNombre(),
                 carrera.getEstado(),
                 carrera.getCupoMaximo(),
+                inscritos,
                 carrera.getServidor(),
                 carrera.getArchivo() != null ? carrera.getArchivo().getId() : null,
                 carrera.getArchivo() != null ? carrera.getArchivo().getNombre() : null,

@@ -66,14 +66,11 @@
   function cargarCarreras() {
     const tbody = $('adm-tabla-carreras');
     tbody.innerHTML = '<tr><td colspan="6" class="text-tertiary">Cargando…</td></tr>';
-    L.get('/carreras').then(function (carreras) {
-      Promise.all(carreras.map(function (c) {
-        return L.get('/inscripciones/carrera/' + c.id + '/count')
-          .then(function (n) { c._count = n; })
-          .catch(function () { c._count = null; });
-      })).then(function () {
+    L.get('/carreras').then(function (res) {
+        var carreras = res.content || res;
         tbody.innerHTML = carreras.length ? carreras.map(function (c) {
-          const cupo = c.cupoMaximo ? (c._count != null ? c._count + ' / ' + c.cupoMaximo : c.cupoMaximo) : (c._count != null ? String(c._count) : '—');
+          const count = c.cuposInscritos != null ? c.cuposInscritos : 0;
+          const cupo = c.cupoMaximo ? count + ' / ' + c.cupoMaximo : String(count);
           return '<tr>' +
             '<td class="data">' + L.esc(c.nombre) + '</td>' +
             '<td><span class="chip chip-category">' + L.esc(c.categoriaNombre || '—') + '</span></td>' +
@@ -110,7 +107,6 @@
               .catch(function (e) { L.toast(e.message, 'error'); });
           });
         });
-      });
     }).catch(function (e) {
       tbody.innerHTML = '<tr><td colspan="6" class="text-tertiary">' + L.esc(e.message) + '</td></tr>';
     });

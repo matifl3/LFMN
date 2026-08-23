@@ -15,6 +15,7 @@ public record CarreraResponse(
         String categoriaNombre,
         EstadoCarrera estado,
         Integer cupoMaximo,
+        Long cuposInscritos,
         String servidor,
         Long archivoId,
         String archivoNombre,

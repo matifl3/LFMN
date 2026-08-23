@@ -27,6 +27,9 @@ import java.util.OptionalDouble;
 import java.util.Set;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -60,6 +63,11 @@ public class SetupService {
     }
 
     @Transactional(readOnly = true)
+    public Page<SetupResponse> listAll(Pageable pageable) {
+        return setupRepository.findAll(pageable).map(this::toResponse);
+    }
+
+    @Transactional(readOnly = true)
     public List<SetupResponse> listarPorAutor(Long autorId) {
         return setupRepository.findByAutor_Id(autorId).stream().map(this::toResponse).toList();
     }
@@ -84,6 +92,21 @@ public class SetupService {
             resultados = setupRepository.findAll();
         }
         return resultados.stream().map(this::toResponse).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public Page<SetupResponse> buscar(String circuito, String vehiculo, Pageable pageable) {
+        boolean hayCircuito = circuito != null && !circuito.isBlank();
+        boolean hayVehiculo = vehiculo != null && !vehiculo.isBlank();
+        if (hayCircuito && hayVehiculo) {
+            return setupRepository.findByCircuitoContainingIgnoreCaseAndVehiculoContainingIgnoreCase(circuito, vehiculo, pageable).map(this::toResponse);
+        } else if (hayCircuito) {
+            return setupRepository.findByCircuitoContainingIgnoreCase(circuito, pageable).map(this::toResponse);
+        } else if (hayVehiculo) {
+            return setupRepository.findByVehiculoContainingIgnoreCase(vehiculo, pageable).map(this::toResponse);
+        } else {
+            return setupRepository.findAll(pageable).map(this::toResponse);
+        }
     }
 
     @Transactional

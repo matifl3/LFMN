@@ -26,6 +26,9 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 @Service
 @RequiredArgsConstructor
 public class IncidenteService {
@@ -51,8 +54,8 @@ public class IncidenteService {
     }
 
     @Transactional(readOnly = true)
-    public List<IncidenteResponse> listAll() {
-        return incidenteRepository.findAll().stream().map(this::toResponse).toList();
+    public Page<IncidenteResponse> listAll(Pageable pageable) {
+        return incidenteRepository.findAll(pageable).map(this::toResponse);
     }
 
     @Transactional(readOnly = true)

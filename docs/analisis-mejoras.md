@@ -54,7 +54,7 @@ Proyecto de plataforma web para liga de sim racing (Assetto Corsa) con Spring Bo
 
 ### 2.1 Criticos
 
-- [ ] **Cero paginacion** -- 17 llamadas a findAll().stream()...toList() en todo el backend. Viola NFR-003
+- [x] **Cero paginacion** -- 17 llamadas a findAll().stream()...toList() en todo el backend. Viola NFR-003
   - Fix: Agregar Pageable a todos los endpoints de listado, empezando por historiales, resultados y carreras
   - Archivos: CarreraService.java:67, UsuarioService.java:105, IncidenteService.java:52, LogroService.java:56
 
@@ -73,7 +73,7 @@ Proyecto de plataforma web para liga de sim racing (Assetto Corsa) con Spring Bo
   - Fix: Query findByEstadoInAndFechaBefore en vez de traer todo
 - [ ] **Sin cache** -- categorias, campeonatos y logros se consultan a DB en cada request; home carga 5 endpoints
   - Fix: @Cacheable en datos estaticos/referencia
-- [ ] **N+1 en admin** -- admin.js:69-74 hace 1 request por carrera para contar inscriptos
+- [x] **N+1 en admin** -- admin.js:69-74 hace 1 request por carrera para contar inscriptos
   - Fix: Agregar count al CarreraResponse o crear endpoint batch
 
 ---
@@ -154,7 +154,7 @@ Proyecto de plataforma web para liga de sim racing (Assetto Corsa) con Spring Bo
 
 ### 5.3 Performance
 
-- [ ] **N+1 en admin** -- admin.js:69-74 dispara 1 GET /inscripciones/carrera/{id}/count por fila de carrera
+- [x] **N+1 en admin** -- admin.js:69-74 dispara 1 GET /inscripciones/carrera/{id}/count por fila de carrera
   - Fix: Agregar count al CarreraResponse o crear endpoint batch
 - [ ] **Home carga 5 endpoints** en paralelo al abrir (home.js:51-57) sin cache
   - Fix: @Cacheable en backend o localStorage con TTL en frontend

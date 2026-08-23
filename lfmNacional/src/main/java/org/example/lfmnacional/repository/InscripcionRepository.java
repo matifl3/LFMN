@@ -3,8 +3,10 @@ package org.example.lfmnacional.repository;
 import org.example.lfmnacional.entity.Inscripcion;
 import org.example.lfmnacional.enums.EstadoInscripcion;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public interface InscripcionRepository extends JpaRepository<Inscripcion, Long> {
@@ -22,4 +24,7 @@ public interface InscripcionRepository extends JpaRepository<Inscripcion, Long> 
     boolean existsByCarrera_Id(Long carreraId);
 
     void deleteByCarrera_Id(Long carreraId);
+
+    @Query("select i.carrera.id, count(i) from Inscripcion i where i.estado = 'INSCRIPTO' group by i.carrera.id")
+    Map<Long, Long> countInscriptosPorCarrera();
 }

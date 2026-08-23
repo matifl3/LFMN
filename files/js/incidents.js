@@ -642,12 +642,12 @@
   function load() {
     const user = L.getUser();
     Promise.all([
-      L.api('/incidentes').catch(function () { return []; }),
-      L.api('/carreras').catch(function () { return []; }),
+      L.api('/incidentes').then(function (r) { return r.content || r; }).catch(function () { return []; }),
+      L.api('/carreras').then(function (r) { return r.content || r; }).catch(function () { return []; }),
       L.api('/apelaciones').catch(function () { return []; }),
       user ? L.api('/sanciones/usuario/' + user.id).catch(function () { return []; }) : Promise.resolve([]),
       L.api('/usuarios').catch(function () { return []; }),
-      isComisarioOrAdmin() ? L.api('/sanciones').catch(function () { return []; }) : Promise.resolve([])
+      isComisarioOrAdmin() ? L.api('/sanciones').then(function (r) { return r.content || r; }).catch(function () { return []; }) : Promise.resolve([])
     ]).then(function (res) {
       incidentes = res[0];
       carreras = res[1];

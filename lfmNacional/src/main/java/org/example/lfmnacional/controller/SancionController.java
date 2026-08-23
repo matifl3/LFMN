@@ -2,9 +2,14 @@ package org.example.lfmnacional.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.example.lfmnacional.dto.PageResponse;
 import org.example.lfmnacional.dto.sancion.SancionRequest;
 import org.example.lfmnacional.dto.sancion.SancionResponse;
 import org.example.lfmnacional.service.SancionService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,8 +25,13 @@ public class SancionController {
     private final SancionService sancionService;
 
     @GetMapping
-    public List<SancionResponse> listAll() {
-        return sancionService.listAll();
+    public PageResponse<SancionResponse> listAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "100") int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("fecha").descending());
+        Page<SancionResponse> result = sancionService.listAll(pageable);
+        return new PageResponse<>(result.getContent(), result.getNumber(), result.getSize(),
+                result.getTotalElements(), result.getTotalPages());
     }
 
     @GetMapping("/usuario/{usuarioId}")

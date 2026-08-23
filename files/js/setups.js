@@ -216,7 +216,7 @@
     }).join('');
   }).catch(function () {});
 
-  L.api('/setups').catch(function () { return []; }).then(function (list) {
+  L.api('/setups').then(function (r) { return r.content || r; }).catch(function () { return []; }).then(function (list) {
     setups = list;
 
     const circ = new Set();
