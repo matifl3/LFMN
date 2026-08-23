@@ -274,8 +274,8 @@ public class SancionService {
                 continue;
             }
             resultado.setPosicionFinal(pos++);
-            resultadoCarreraRepository.save(resultado);
         }
+        resultadoCarreraRepository.saveAll(ordenados);
     }
 
     private void notificar(Sancion sancion) {

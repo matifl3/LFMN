@@ -105,6 +105,7 @@ public class CampeonatoService {
         if (campeonato.getEstado() != EstadoCampeonato.ACTIVO) {
             return;
         }
+        List<CampeonatoPosicion> aGuardar = new java.util.ArrayList<>();
         for (ResultadoCarrera resultado : resultados) {
             if (resultado.getPosicionFinal() == null) {
                 continue;
@@ -122,8 +123,9 @@ public class CampeonatoService {
                                 .build();
                     });
             posicion.setPuntos(posicion.getPuntos() + puntos);
-            campeonatoPosicionRepository.save(posicion);
+            aGuardar.add(posicion);
         }
+        campeonatoPosicionRepository.saveAll(aGuardar);
         recalcularPosiciones(campeonato.getId());
     }
 
@@ -133,8 +135,8 @@ public class CampeonatoService {
         int rank = 1;
         for (CampeonatoPosicion posicion : ordenadas) {
             posicion.setPosicion(rank++);
-            campeonatoPosicionRepository.save(posicion);
         }
+        campeonatoPosicionRepository.saveAll(ordenadas);
     }
 
     private int puntosPorPosicion(int posicion) {

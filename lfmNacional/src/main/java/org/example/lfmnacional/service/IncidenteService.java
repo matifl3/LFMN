@@ -22,6 +22,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Service
@@ -90,16 +92,22 @@ public class IncidenteService {
     @Transactional
     public List<IncidentePilotoResponse> asignarPilotos(Long incidenteId, List<IncidentePilotoRequest> pilotos) {
         Incidente incidente = getEntity(incidenteId);
+        Map<Long, IncidentePiloto> existentes = incidentePilotoRepository.findByIncidente_Id(incidenteId).stream()
+                .collect(Collectors.toMap(ip -> ip.getUsuario().getId(), ip -> ip));
         for (IncidentePilotoRequest request : pilotos) {
-            incidentePilotoRepository.findByIncidente_Id(incidenteId).stream()
-                    .filter(existing -> existing.getUsuario().getId().equals(request.usuarioId()))
-                    .findFirst()
-                    .ifPresentOrElse(existing -> existing.setRol(request.rol()),
-                            () -> incidentePilotoRepository.save(IncidentePiloto.builder()
-                                    .incidente(incidente)
-                                    .usuario(usuarioService.getEntity(request.usuarioId()))
-                                    .rol(request.rol())
-                                    .build()));
+            IncidentePiloto existing = existentes.get(request.usuarioId());
+            if (existing != null) {
+                existing.setRol(request.rol());
+                incidentePilotoRepository.save(existing);
+            } else {
+                IncidentePiloto nuevo = IncidentePiloto.builder()
+                        .incidente(incidente)
+                        .usuario(usuarioService.getEntity(request.usuarioId()))
+                        .rol(request.rol())
+                        .build();
+                incidentePilotoRepository.save(nuevo);
+                existentes.put(request.usuarioId(), nuevo);
+            }
         }
         return listarPilotos(incidenteId);
     }

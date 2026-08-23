@@ -28,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -121,11 +122,15 @@ public class LogroService {
     @Transactional(readOnly = true)
     public List<UsuarioLogroResponse> listarLogrosUsuario(Long usuarioId) {
         usuarioService.getEntity(usuarioId);
+        List<Logro> logros = logroRepository.findAll();
+        Map<Long, UsuarioLogro> existentes = usuarioLogroRepository
+                .findByUsuario_IdOrderByLogro_Id(usuarioId).stream()
+                .collect(java.util.stream.Collectors.toMap(
+                        ul -> ul.getLogro().getId(), ul -> ul));
         List<UsuarioLogroResponse> response = new ArrayList<>();
-        for (Logro logro : logroRepository.findAll()) {
-            UsuarioLogro usuarioLogro = usuarioLogroRepository
-                    .findByLogro_IdAndUsuario_Id(logro.getId(), usuarioId)
-                    .orElseGet(() -> UsuarioLogro.builder().progreso(0).obtenido(false).build());
+        for (Logro logro : logros) {
+            UsuarioLogro usuarioLogro = existentes.getOrDefault(logro.getId(),
+                    UsuarioLogro.builder().progreso(0).obtenido(false).build());
             response.add(toUsuarioLogroResponse(logro, usuarioLogro));
         }
         return response;
@@ -133,11 +138,16 @@ public class LogroService {
 
     @Transactional
     public void evaluarLogros(Usuario usuario) {
-        for (Logro logro : logroRepository.findAll()) {
+        List<Logro> logros = logroRepository.findAll();
+        Map<Long, UsuarioLogro> existentes = usuarioLogroRepository
+                .findByUsuario_IdOrderByLogro_Id(usuario.getId()).stream()
+                .collect(java.util.stream.Collectors.toMap(
+                        ul -> ul.getLogro().getId(), ul -> ul));
+
+        for (Logro logro : logros) {
             int valor = (int) calcularValorMetrica(logro.getTipoCondicion(), usuario);
-            UsuarioLogro usuarioLogro = usuarioLogroRepository
-                    .findByLogro_IdAndUsuario_Id(logro.getId(), usuario.getId())
-                    .orElseGet(() -> UsuarioLogro.builder()
+            UsuarioLogro usuarioLogro = existentes.getOrDefault(logro.getId(),
+                    UsuarioLogro.builder()
                             .logro(logro)
                             .usuario(usuario)
                             .progreso(0)

@@ -60,14 +60,14 @@ Proyecto de plataforma web para liga de sim racing (Assetto Corsa) con Spring Bo
 
 ### 2.2 Altos
 
-- [ ] **N+1 en logros** -- evaluarLogros (LogroService.java:135-159) hace ~300 queries para 30 pilotos x 7 logros
+- [x] **N+1 en logros** -- evaluarLogros (LogroService.java:135-159) hace ~300 queries para 30 pilotos x 7 logros
   - Fix: Batch load de logros y UsuarioLogro existentes en una sola query
-- [ ] **N+1 en incidentes** -- asignarPilotos (IncidenteService.java:90-104) re-fetchea TODOS los pilotos del incidente por cada piloto nuevo
+- [x] **N+1 en incidentes** -- asignarPilotos (IncidenteService.java:90-104) re-fetchea TODOS los pilotos del incidente por cada piloto nuevo
   - Fix: Cachear pilotos del incidente en memoria durante la operacion
 
 ### 2.3 Medios
 
-- [ ] **Guardado individual en bulk** -- save() dentro de loops en vez de saveAll()
+- [x] **Guardado individual en bulk** -- save() dentro de loops en vez de saveAll()
   - Archivos: ResultadoCarreraService.java:91,129,134, CampeonatoService.java:136, SancionService.java:272-278
 - [ ] **Job cada minuto escanea todas las carreras** -- cerrarInscripcionesAutomaticamente carga todas las carreras de dos estados y filtra fechas en Java
   - Fix: Query findByEstadoInAndFechaBefore en vez de traer todo
