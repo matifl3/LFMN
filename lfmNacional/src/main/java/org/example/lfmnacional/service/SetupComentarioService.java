@@ -4,6 +4,9 @@ import lombok.RequiredArgsConstructor;
 import org.example.lfmnacional.dto.setup.SetupComentarioRequest;
 import org.example.lfmnacional.dto.setup.SetupComentarioResponse;
 import org.example.lfmnacional.entity.SetupComentario;
+import org.example.lfmnacional.entity.Usuario;
+import org.example.lfmnacional.enums.Rol;
+import org.example.lfmnacional.exception.BusinessException;
 import org.example.lfmnacional.exception.ResourceNotFoundException;
 import org.example.lfmnacional.repository.SetupComentarioRepository;
 import org.springframework.stereotype.Service;
@@ -17,7 +20,6 @@ public class SetupComentarioService {
 
     private final SetupComentarioRepository setupComentarioRepository;
     private final SetupService setupService;
-    private final UsuarioService usuarioService;
 
     public SetupComentario getEntity(Long id) {
         return setupComentarioRepository.findById(id)
@@ -36,25 +38,32 @@ public class SetupComentarioService {
     }
 
     @Transactional
-    public SetupComentarioResponse create(Long setupId, SetupComentarioRequest request) {
+    public SetupComentarioResponse create(Long setupId, SetupComentarioRequest request, Usuario usuario) {
         SetupComentario comentario = SetupComentario.builder()
                 .setup(setupService.getEntity(setupId))
-                .usuario(usuarioService.getEntity(request.usuarioId()))
+                .usuario(usuario)
                 .texto(request.texto())
                 .build();
         return toResponse(setupComentarioRepository.save(comentario));
     }
 
     @Transactional
-    public SetupComentarioResponse update(Long id, SetupComentarioRequest request) {
+    public SetupComentarioResponse update(Long id, SetupComentarioRequest request, Usuario actual) {
         SetupComentario comentario = getEntity(id);
+        if (!comentario.getUsuario().getId().equals(actual.getId()) && !actual.getRol().equals(Rol.ADMIN)) {
+            throw new BusinessException("No tenes permiso para editar este comentario");
+        }
         comentario.setTexto(request.texto());
         return toResponse(setupComentarioRepository.save(comentario));
     }
 
     @Transactional
-    public void delete(Long id) {
-        setupComentarioRepository.delete(getEntity(id));
+    public void delete(Long id, Usuario actual) {
+        SetupComentario comentario = getEntity(id);
+        if (!comentario.getUsuario().getId().equals(actual.getId()) && !actual.getRol().equals(Rol.ADMIN)) {
+            throw new BusinessException("No tenes permiso para borrar este comentario");
+        }
+        setupComentarioRepository.delete(comentario);
     }
 
     private SetupComentarioResponse toResponse(SetupComentario comentario) {

@@ -7,6 +7,8 @@ import org.example.lfmnacional.entity.Categoria;
 import org.example.lfmnacional.exception.BusinessException;
 import org.example.lfmnacional.exception.ResourceNotFoundException;
 import org.example.lfmnacional.repository.CategoriaRepository;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,14 +25,17 @@ public class CategoriaService {
                 .orElseThrow(() -> new ResourceNotFoundException("Categoria no encontrada con id " + id));
     }
 
+    @Cacheable(value = "categorias", key = "#id")
     public CategoriaResponse getById(Long id) {
         return toResponse(getEntity(id));
     }
 
+    @Cacheable("categorias")
     public List<CategoriaResponse> listAll() {
         return categoriaRepository.findAll().stream().map(this::toResponse).toList();
     }
 
+    @Cacheable(value = "categorias_elo", key = "#elo")
     public List<CategoriaResponse> disponiblesPorElo(Integer elo) {
         return categoriaRepository
                 .findByEloMinimoLessThanEqualAndEloMaximoGreaterThanEqual(elo, elo)
@@ -38,6 +43,7 @@ public class CategoriaService {
     }
 
     @Transactional
+    @CacheEvict(value = {"categorias", "categorias_elo"}, allEntries = true)
     public CategoriaResponse create(CategoriaRequest request) {
         if (categoriaRepository.existsByNombre(request.nombre())) {
             throw new BusinessException("Ya existe una categoria con el nombre " + request.nombre());
@@ -55,6 +61,7 @@ public class CategoriaService {
     }
 
     @Transactional
+    @CacheEvict(value = {"categorias", "categorias_elo"}, allEntries = true)
     public CategoriaResponse update(Long id, CategoriaRequest request) {
         validarRangoElo(request);
         Categoria categoria = getEntity(id);
@@ -68,6 +75,7 @@ public class CategoriaService {
     }
 
     @Transactional
+    @CacheEvict(value = {"categorias", "categorias_elo"}, allEntries = true)
     public void delete(Long id) {
         categoriaRepository.delete(getEntity(id));
     }

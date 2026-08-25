@@ -131,7 +131,7 @@
     if (user) {
       rateInput.addEventListener('change', async function () {
         try {
-          await L.post('/setups/' + id + '/calificaciones', { usuarioId: user.id, puntaje: Number(rateInput.value) });
+          await L.post('/setups/' + id + '/calificaciones', { puntaje: Number(rateInput.value) });
           L.toast('Calificación guardada', 'success');
           reloadRating(id);
         } catch (err) { L.toast(err.message, 'error'); }
@@ -190,7 +190,7 @@
           const texto = document.getElementById('setup-comentario').value.trim();
           if (!texto) { L.toast('Escribí un comentario primero.', 'error'); return; }
           try {
-            await L.post('/setups/' + id + '/comentarios', { usuarioId: user.id, texto: texto });
+            await L.post('/setups/' + id + '/comentarios', { texto: texto });
             L.toast('Comentario publicado', 'success');
             loadDetail(id);
           } catch (err) { L.toast(err.message, 'error'); }

@@ -38,8 +38,14 @@ public class UsuarioController {
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public List<UsuarioResponse> listAll() {
         return usuarioService.listAll();
+    }
+
+    @GetMapping("/basico")
+    public List<UsuarioBasicoResponse> listAllBasico() {
+        return usuarioService.listAllBasico();
     }
 
     @GetMapping("/me")

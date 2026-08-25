@@ -10,6 +10,7 @@ import org.example.lfmnacional.exception.BusinessException;
 import org.example.lfmnacional.service.NotificacionService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,6 +24,7 @@ public class NotificacionController {
     private final NotificacionService notificacionService;
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<NotificacionResponse> create(@Valid @RequestBody NotificacionRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(notificacionService.create(request));
     }

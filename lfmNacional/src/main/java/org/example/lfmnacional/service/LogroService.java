@@ -22,6 +22,8 @@ import org.example.lfmnacional.repository.RecompensaRepository;
 import org.example.lfmnacional.repository.ResultadoCarreraRepository;
 import org.example.lfmnacional.repository.UsuarioLogroRepository;
 import org.example.lfmnacional.repository.UsuarioRecompensaRepository;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -48,16 +50,19 @@ public class LogroService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "logros", key = "#id")
     public LogroResponse getById(Long id) {
         return toResponse(getEntity(id));
     }
 
     @Transactional(readOnly = true)
+    @Cacheable("logros")
     public List<LogroResponse> listAll() {
         return logroRepository.findAll().stream().map(this::toResponse).toList();
     }
 
     @Transactional
+    @CacheEvict(value = "logros", allEntries = true)
     public LogroResponse create(LogroRequest request) {
         if (logroRepository.existsByNombre(request.nombre())) {
             throw new BusinessException("Ya existe un logro con el nombre " + request.nombre());
@@ -73,6 +78,7 @@ public class LogroService {
     }
 
     @Transactional
+    @CacheEvict(value = "logros", allEntries = true)
     public LogroResponse update(Long id, LogroRequest request) {
         Logro logro = getEntity(id);
         if (!logro.getNombre().equals(request.nombre()) && logroRepository.existsByNombre(request.nombre())) {
@@ -87,6 +93,7 @@ public class LogroService {
     }
 
     @Transactional
+    @CacheEvict(value = "logros", allEntries = true)
     public void delete(Long id) {
         Logro logro = getEntity(id);
         for (Recompensa recompensa : logro.getRecompensas()) {

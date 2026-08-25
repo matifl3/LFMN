@@ -5,6 +5,9 @@ import org.example.lfmnacional.dto.setup.SetupCalificacionRequest;
 import org.example.lfmnacional.dto.setup.SetupCalificacionResponse;
 import org.example.lfmnacional.entity.Setup;
 import org.example.lfmnacional.entity.SetupCalificacion;
+import org.example.lfmnacional.entity.Usuario;
+import org.example.lfmnacional.enums.Rol;
+import org.example.lfmnacional.exception.BusinessException;
 import org.example.lfmnacional.exception.ResourceNotFoundException;
 import org.example.lfmnacional.repository.SetupCalificacionRepository;
 import org.springframework.stereotype.Service;
@@ -18,7 +21,6 @@ public class SetupCalificacionService {
 
     private final SetupCalificacionRepository setupCalificacionRepository;
     private final SetupService setupService;
-    private final UsuarioService usuarioService;
 
     public SetupCalificacion getEntity(Long id) {
         return setupCalificacionRepository.findById(id)
@@ -37,13 +39,13 @@ public class SetupCalificacionService {
     }
 
     @Transactional
-    public SetupCalificacionResponse calificar(Long setupId, SetupCalificacionRequest request) {
+    public SetupCalificacionResponse calificar(Long setupId, SetupCalificacionRequest request, Usuario usuario) {
         Setup setup = setupService.getEntity(setupId);
         SetupCalificacion calificacion = setupCalificacionRepository
-                .findBySetup_IdAndUsuario_Id(setupId, request.usuarioId())
+                .findBySetup_IdAndUsuario_Id(setupId, usuario.getId())
                 .orElseGet(() -> SetupCalificacion.builder()
                         .setup(setup)
-                        .usuario(usuarioService.getEntity(request.usuarioId()))
+                        .usuario(usuario)
                         .build());
         calificacion.setPuntaje(request.puntaje());
         SetupCalificacion guardada = setupCalificacionRepository.save(calificacion);
@@ -52,8 +54,11 @@ public class SetupCalificacionService {
     }
 
     @Transactional
-    public void delete(Long id) {
+    public void delete(Long id, Usuario actual) {
         SetupCalificacion calificacion = getEntity(id);
+        if (!calificacion.getUsuario().getId().equals(actual.getId()) && !actual.getRol().equals(Rol.ADMIN)) {
+            throw new BusinessException("No tenes permiso para borrar esta calificacion");
+        }
         Setup setup = calificacion.getSetup();
         setupCalificacionRepository.delete(calificacion);
         setupService.recalcularPromedio(setup);

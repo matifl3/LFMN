@@ -9,6 +9,8 @@ import org.example.lfmnacional.service.ApelacionService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.example.lfmnacional.entity.Usuario;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,8 +23,9 @@ public class ApelacionController {
     private final ApelacionService apelacionService;
 
     @PostMapping
-    public ResponseEntity<ApelacionResponse> create(@Valid @RequestBody ApelacionRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(apelacionService.create(request));
+    public ResponseEntity<ApelacionResponse> create(@Valid @RequestBody ApelacionRequest request,
+                                                     @AuthenticationPrincipal Usuario actual) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(apelacionService.create(request, actual));
     }
 
     @GetMapping

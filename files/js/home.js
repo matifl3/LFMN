@@ -58,7 +58,7 @@
     racesBox.innerHTML = '<p class="text-tertiary" style="font-size:var(--fs-sm)">Cargando carreras…</p>';
 
     const [usuarios, pasadas, categorias, proximas, campeonatos] = await Promise.all([
-      L.api('/usuarios').catch(function () { L.toast('Error al cargar pilotos', 'error'); return []; }),
+      L.api('/usuarios/basico').catch(function () { L.toast('Error al cargar pilotos', 'error'); return []; }),
       L.api('/carreras/pasadas').catch(function () { L.toast('Error al cargar carreras', 'error'); return []; }),
       L.api('/categorias').catch(function () { L.toast('Error al cargar categorías', 'error'); return []; }),
       L.api('/carreras/proximas').catch(function () { L.toast('Error al cargar carreras próximas', 'error'); return []; }),

@@ -6,6 +6,8 @@ import org.example.lfmnacional.dto.anuncio.AnuncioResponse;
 import org.example.lfmnacional.entity.Anuncio;
 import org.example.lfmnacional.exception.ResourceNotFoundException;
 import org.example.lfmnacional.repository.AnuncioRepository;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,10 +27,12 @@ public class AnuncioService {
         return toResponse(getEntity(id));
     }
 
+    @Cacheable("anuncios")
     public List<AnuncioResponse> listAll() {
         return anuncioRepository.findAllByOrderByFechaDesc().stream().map(this::toResponse).toList();
     }
 
+    @Cacheable("anuncio_ultimo")
     public AnuncioResponse getUltimo() {
         Anuncio anuncio = anuncioRepository.findFirstByDestacadoTrueOrderByFechaDesc()
                 .orElseGet(() -> anuncioRepository.findFirstByOrderByFechaDesc()
@@ -37,6 +41,7 @@ public class AnuncioService {
     }
 
     @Transactional
+    @CacheEvict(value = {"anuncio_ultimo", "anuncios"}, allEntries = true)
     public AnuncioResponse create(AnuncioRequest request) {
         Anuncio anuncio = Anuncio.builder()
                 .titulo(request.titulo())
@@ -47,11 +52,13 @@ public class AnuncioService {
     }
 
     @Transactional
+    @CacheEvict(value = {"anuncio_ultimo", "anuncios"}, allEntries = true)
     public void delete(Long id) {
         anuncioRepository.delete(getEntity(id));
     }
 
     @Transactional
+    @CacheEvict(value = {"anuncio_ultimo", "anuncios"}, allEntries = true)
     public AnuncioResponse toggleDestacado(Long id) {
         Anuncio anuncio = getEntity(id);
         if (Boolean.TRUE.equals(anuncio.getDestacado())) {

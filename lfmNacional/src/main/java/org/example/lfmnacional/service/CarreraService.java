@@ -8,6 +8,8 @@ import org.example.lfmnacional.enums.EstadoCarrera;
 import org.example.lfmnacional.exception.ResourceNotFoundException;
 import org.example.lfmnacional.repository.CarreraRepository;
 import org.example.lfmnacional.repository.InscripcionRepository;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -55,6 +57,7 @@ public class CarreraService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable("carreras_proximas")
     public List<CarreraResponse> proximas() {
         List<Carrera> carreras = carreraRepository.findByFechaAfterOrderByFechaAsc(LocalDateTime.now());
         Map<Long, Long> counts = inscripcionRepository.countInscriptosPorCarrera();
@@ -62,6 +65,7 @@ public class CarreraService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable("carreras_pasadas")
     public List<CarreraResponse> pasadas() {
         List<Carrera> carreras = carreraRepository.findByFechaBeforeOrderByFechaDesc(LocalDateTime.now());
         Map<Long, Long> counts = inscripcionRepository.countInscriptosPorCarrera();
@@ -76,6 +80,7 @@ public class CarreraService {
     }
 
     @Transactional
+    @CacheEvict(value = {"carreras_proximas", "carreras_pasadas"}, allEntries = true)
     public CarreraResponse create(CarreraRequest request) {
         Carrera carrera = Carrera.builder()
                 .nombre(request.nombre())
@@ -94,6 +99,7 @@ public class CarreraService {
     }
 
     @Transactional
+    @CacheEvict(value = {"carreras_proximas", "carreras_pasadas"}, allEntries = true)
     public CarreraResponse update(Long id, CarreraRequest request) {
         Carrera carrera = getEntity(id);
         carrera.setNombre(request.nombre());
@@ -127,6 +133,7 @@ public class CarreraService {
     }
 
     @Transactional
+    @CacheEvict(value = {"carreras_proximas", "carreras_pasadas"}, allEntries = true)
     public CarreraResponse changeEstado(Long id, EstadoCarrera estado) {
         Carrera carrera = getEntity(id);
         carrera.setEstado(estado);
@@ -139,6 +146,7 @@ public class CarreraService {
     }
 
     @Transactional
+    @CacheEvict(value = {"carreras_proximas", "carreras_pasadas"}, allEntries = true)
     public void delete(Long id) {
         Carrera carrera = getEntity(id);
         carreraRepository.delete(carrera);

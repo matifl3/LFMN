@@ -5,7 +5,6 @@ import jakarta.validation.constraints.NotNull;
 
 public record ApelacionRequest(
         @NotNull Long sancionId,
-        @NotNull Long usuarioId,
         @NotBlank String motivo
 ) {
 }

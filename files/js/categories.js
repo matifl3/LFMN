@@ -11,7 +11,7 @@
 
   Promise.all([
     L.api('/categorias').catch(function () { return []; }),
-    L.api('/usuarios').catch(function () { return []; })
+    L.api('/usuarios/basico').catch(function () { return []; })
   ]).then(function (res) {
     const cats = res[0];
     const users = res[1];
