@@ -48,12 +48,21 @@
   }
 
   async function load() {
+    var statPilotos = document.getElementById('stat-pilotos');
+    var statCarreras = document.getElementById('stat-carreras');
+    var statCategorias = document.getElementById('stat-categorias');
+    var racesBox = document.getElementById('home-next-races');
+    statPilotos.textContent = '---';
+    statCarreras.textContent = '---';
+    statCategorias.textContent = '---';
+    racesBox.innerHTML = '<p class="text-tertiary" style="font-size:var(--fs-sm)">Cargando carreras…</p>';
+
     const [usuarios, pasadas, categorias, proximas, campeonatos] = await Promise.all([
-      L.api('/usuarios').catch(() => []),
-      L.api('/carreras/pasadas').catch(() => []),
-      L.api('/categorias').catch(() => []),
-      L.api('/carreras/proximas').catch(() => []),
-      L.api('/campeonatos').catch(() => [])
+      L.api('/usuarios').catch(function () { L.toast('Error al cargar pilotos', 'error'); return []; }),
+      L.api('/carreras/pasadas').catch(function () { L.toast('Error al cargar carreras', 'error'); return []; }),
+      L.api('/categorias').catch(function () { L.toast('Error al cargar categorías', 'error'); return []; }),
+      L.api('/carreras/proximas').catch(function () { L.toast('Error al cargar carreras próximas', 'error'); return []; }),
+      L.api('/campeonatos').catch(function () { L.toast('Error al cargar campeonatos', 'error'); return []; })
     ]);
 
     document.getElementById('stat-pilotos').textContent = (usuarios.length || 0).toLocaleString('es-AR');
@@ -61,7 +70,6 @@
     document.getElementById('stat-categorias').textContent = (categorias.length || 0).toLocaleString('es-AR');
 
     // Próximas carreras
-    const racesBox = document.getElementById('home-next-races');
     if (proximas.length) {
       racesBox.innerHTML = proximas.slice(0, 2).map(function (r) {
         return L.raceRow(r);
@@ -91,7 +99,7 @@
             '<span class="flex gap-2" style="align-items:center"><span class="rank-badge ' + (medal[i] || '') + '">' + t.posicion + '</span> ' + L.esc(t.nombrePiloto) + '</span>' +
             '<span class="mono data">' + t.puntos + ' pts</span></div>';
         }).join('');
-      }).catch(function () {});
+      }).catch(function () { document.getElementById('home-champ-top').innerHTML = '<p class="text-tertiary" style="font-size:var(--fs-sm)">Error al cargar posiciones.</p>'; });
     }
 
     // Último anuncio

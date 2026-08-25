@@ -26,7 +26,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -190,15 +189,12 @@ public class CarreraService {
     public void cerrarInscripcionesAutomaticamente() {
         LocalDateTime limite = LocalDateTime.now().plusMinutes(MINUTOS_CIERRE_PREVIO);
         List<EstadoCarrera> abiertas = List.of(EstadoCarrera.PROGRAMADA, EstadoCarrera.INSCRIPCIONES_ABIERTAS);
-        List<Carrera> porCerrar = new ArrayList<>();
-        for (EstadoCarrera estado : abiertas) {
-            carreraRepository.findByEstado(estado).stream()
-                    .filter(carrera -> carrera.getFecha() != null && !carrera.getFecha().isAfter(limite))
-                    .forEach(porCerrar::add);
-        }
+        List<Carrera> porCerrar = carreraRepository.findByEstadoInAndFechaBefore(abiertas, limite);
         for (Carrera carrera : porCerrar) {
             carrera.setEstado(EstadoCarrera.INSCRIPCIONES_CERRADAS);
-            carreraRepository.save(carrera);
+        }
+        if (!porCerrar.isEmpty()) {
+            carreraRepository.saveAll(porCerrar);
         }
     }
 

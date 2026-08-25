@@ -10,7 +10,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "carrera")
+@Table(name = "carrera",
+        indexes = {
+                @Index(name = "idx_carrera_estado_fecha", columnList = "estado, fecha"),
+                @Index(name = "idx_carrera_campeonato_fecha", columnList = "campeonato_id, fecha")
+        })
 @Getter
 @Setter
 @NoArgsConstructor

@@ -59,6 +59,9 @@ public class Usuario {
     @Column(name = "safety_rating", nullable = false)
     private Integer safetyRating;
 
+    @Version
+    private Long version;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Rol rol;

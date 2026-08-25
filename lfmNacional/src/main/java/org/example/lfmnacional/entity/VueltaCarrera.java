@@ -5,7 +5,11 @@ import lombok.*;
 
 @Entity
 @Table(name = "vuelta_carrera",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"carrera_id", "usuario_id", "numero_vuelta", "tipo"}))
+        uniqueConstraints = @UniqueConstraint(columnNames = {"carrera_id", "usuario_id", "numero_vuelta", "tipo"}),
+        indexes = {
+                @Index(name = "idx_vc_carrera_usuario", columnList = "carrera_id, usuario_id"),
+                @Index(name = "idx_vc_carrera_tipo", columnList = "carrera_id, tipo")
+        })
 @Getter
 @Setter
 @NoArgsConstructor

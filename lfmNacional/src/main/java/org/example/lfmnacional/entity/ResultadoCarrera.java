@@ -5,7 +5,13 @@ import lombok.*;
 
 @Entity
 @Table(name = "resultado_carrera",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"carrera_id", "usuario_id"}))
+        uniqueConstraints = @UniqueConstraint(columnNames = {"carrera_id", "usuario_id"}),
+        indexes = {
+                @Index(name = "idx_rc_usuario", columnList = "usuario_id"),
+                @Index(name = "idx_rc_usuario_finalizo", columnList = "usuario_id, finalizo"),
+                @Index(name = "idx_rc_usuario_posicion", columnList = "usuario_id, posicion_final"),
+                @Index(name = "idx_rc_carrera_vuelta_rapida", columnList = "carrera_id, vuelta_rapida")
+        })
 @Getter
 @Setter
 @NoArgsConstructor
@@ -40,9 +46,11 @@ public class ResultadoCarrera {
     @Column(name = "skin_auto")
     private String skinAuto;
 
-    private Boolean poles;
+    @Column(nullable = false)
+    private boolean poles = false;
 
-    private Boolean finalizo;
+    @Column(nullable = false)
+    private boolean finalizo = false;
 
     @Column(name = "elo_ganado")
     private Integer eloGanado;

@@ -102,8 +102,8 @@
   }
 
   function renderResultados() {
+    const tbody = document.getElementById('race-resultados');
     L.api('/resultados/carrera/' + id).then(function (res) {
-      const tbody = document.getElementById('race-resultados');
       if (!res.length) {
         tbody.innerHTML = '<tr><td colspan="8" class="text-tertiary">Sin resultados publicados.</td></tr>';
         return;
@@ -132,12 +132,12 @@
           '<td class="num">' + srHtml + '</td>' +
           '</tr>';
       }).join('');
-    }).catch(function () {});
+    }).catch(function () { tbody.innerHTML = '<tr><td colspan="8" class="text-tertiary">Error al cargar resultados.</td></tr>'; });
   }
 
   function renderClasificacion() {
+    const tbody = document.getElementById('race-clasificacion');
     L.api('/clasificaciones/carrera/' + id).then(function (res) {
-      const tbody = document.getElementById('race-clasificacion');
       if (!res.length) {
         tbody.innerHTML = '<tr><td colspan="5" class="text-tertiary">Sin tiempos registrados.</td></tr>';
         return;
@@ -154,7 +154,7 @@
           '<td class="num">' + autoHtml(c.modeloAuto, c.skinAuto) + '</td>' +
           '</tr>';
       }).join('');
-    }).catch(function () {});
+    }).catch(function () { tbody.innerHTML = '<tr><td colspan="5" class="text-tertiary">Error al cargar clasificación.</td></tr>'; });
   }
 
   function renderAnalisis() {
@@ -180,7 +180,7 @@
           '<td class="mono">' + L.esc(v.neumatico || '—') + '</td>' +
           '</tr>';
       }).join('');
-    }).catch(function () {});
+    }).catch(function () { tbody.innerHTML = '<tr><td colspan="7" class="text-tertiary">Error al cargar análisis de vueltas.</td></tr>'; });
   }
 
   function setupInscribir() {
@@ -208,29 +208,40 @@
       btn.href = '#';
       btn.addEventListener('click', async function (e) {
         e.preventDefault();
+        btn.disabled = true;
+        btn.textContent = 'Procesando...';
         try {
           await L.del('/inscripciones/carrera/' + id + '/usuario/' + user.id);
           L.toast('Te diste de baja de la carrera.', 'success');
-          location.reload();
-        } catch (err) { L.toast(err.message, 'error'); }
+          inscriptos = inscriptos.filter(function (i) { return !(i.usuarioId === user.id && i.estado !== 'CANCELADA'); });
+          renderInscriptos();
+          renderCarrera();
+          setupInscribir();
+        } catch (err) { L.toast(err.message, 'error'); btn.disabled = false; btn.textContent = 'Darme de baja'; }
       });
     } else {
       btn.textContent = 'Inscribirme';
       btn.href = '#';
       btn.addEventListener('click', async function (e) {
         e.preventDefault();
+        btn.disabled = true;
+        btn.textContent = 'Procesando...';
         try {
           await L.post('/inscripciones', { carreraId: Number(id) });
           L.toast('¡Te inscribiste correctamente!', 'success');
-          location.reload();
-        } catch (err) { L.toast(err.message, 'error'); }
+          const nueva = await L.api('/inscripciones/carrera/' + id).catch(function () { return []; });
+          inscriptos = nueva;
+          renderInscriptos();
+          renderCarrera();
+          setupInscribir();
+        } catch (err) { L.toast(err.message, 'error'); btn.disabled = false; btn.textContent = 'Inscribirme'; }
       });
     }
   }
 
   Promise.all([
     L.api('/carreras/' + id),
-    L.api('/inscripciones/carrera/' + id).catch(function () { return []; })
+    L.api('/inscripciones/carrera/' + id).catch(function () { L.toast('Error al cargar inscripciones', 'error'); return []; })
   ]).then(function (res) {
     carrera = res[0];
     inscriptos = res[1];

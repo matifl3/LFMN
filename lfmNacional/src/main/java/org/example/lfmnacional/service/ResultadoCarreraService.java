@@ -87,7 +87,7 @@ public class ResultadoCarreraService {
             resultado.setPosicionFinal(item.posicionFinal());
             resultado.setTiempoTotal(item.tiempoTotal());
             resultado.setVueltaRapida(item.vueltaRapida());
-            resultado.setPoles(item.poles());
+            resultado.setPoles(item.poles() != null && item.poles());
             resultado.setFinalizo(item.finalizo() != null && item.finalizo());
             resultado.setModeloAuto(item.modeloAuto());
             resultado.setSkinAuto(item.skinAuto());
@@ -128,8 +128,7 @@ public class ResultadoCarreraService {
                     .map(Map.Entry::getValue)
                     .toList();
             int cambioElo = eloCalculator.calcularCambio(eloPropio, posicion, resultados.size(), rivales);
-            boolean finalizo = resultado.getFinalizo() != null && resultado.getFinalizo();
-            int cambioSr = srCalculator.calcularCambio(finalizo, posicion);
+            int cambioSr = srCalculator.calcularCambio(resultado.isFinalizo(), posicion);
 
             resultado.setEloGanado(cambioElo);
             resultado.setSrGanado(cambioSr);
@@ -171,8 +170,8 @@ public class ResultadoCarreraService {
                 resultado.getVueltaRapida(),
                 resultado.getModeloAuto(),
                 resultado.getSkinAuto(),
-                resultado.getPoles(),
-                resultado.getFinalizo(),
+                resultado.isPoles(),
+                resultado.isFinalizo(),
                 resultado.getEloGanado(),
                 resultado.getSrGanado());
     }

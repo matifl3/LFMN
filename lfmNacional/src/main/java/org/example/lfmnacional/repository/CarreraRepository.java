@@ -15,6 +15,8 @@ public interface CarreraRepository extends JpaRepository<Carrera, Long> {
 
     List<Carrera> findByEstado(EstadoCarrera estado);
 
+    List<Carrera> findByEstadoInAndFechaBefore(List<EstadoCarrera> estados, LocalDateTime fecha);
+
     List<Carrera> findByFechaAfterOrderByFechaAsc(LocalDateTime fecha);
 
     List<Carrera> findByFechaBeforeOrderByFechaDesc(LocalDateTime fecha);
