@@ -78,10 +78,10 @@
     }
     var html = '';
     if (hasPista) {
-      html += '<a href="' + L.esc(carrera.linkPista) + '" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">Descargar Pista</a>';
+      html += '<a href="' + L.esc(L.sanitizeUrl(carrera.linkPista)) + '" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">Descargar Pista</a>';
     }
     if (hasAuto) {
-      html += '<a href="' + L.esc(carrera.linkAuto) + '" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">Descargar Auto</a>';
+      html += '<a href="' + L.esc(L.sanitizeUrl(carrera.linkAuto)) + '" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">Descargar Auto</a>';
     }
     box.innerHTML = html;
   }

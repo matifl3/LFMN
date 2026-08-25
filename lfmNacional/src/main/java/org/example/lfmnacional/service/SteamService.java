@@ -6,7 +6,6 @@ import org.example.lfmnacional.entity.Usuario;
 import org.example.lfmnacional.repository.UsuarioRepository;
 import org.example.lfmnacional.security.JwtUtil;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -45,7 +44,6 @@ public class SteamService {
 
     private final UsuarioRepository usuarioRepository;
     private final JwtUtil jwtUtil;
-    private final PasswordEncoder passwordEncoder;
 
     @Value("${steam.realm}")
     private String realm;
@@ -144,15 +142,6 @@ public class SteamService {
             log.info("Steam auth: usuario existente id={}", usuario.getId());
         }
         return new SteamAuthResult("ok", jwtUtil.generarToken(usuario), null);
-    }
-
-    private Usuario crearConSteam(String guidSteam) {
-        Usuario usuario = Usuario.builder()
-                .email("steam_" + guidSteam + SUFFIX_EMAIL)
-                .password(passwordEncoder.encode(UUID.randomUUID().toString()))
-                .guidSteam(guidSteam)
-                .build();
-        return usuarioRepository.save(usuario);
     }
 
     private String buildOpenIdUrl(String returnToUrl) {

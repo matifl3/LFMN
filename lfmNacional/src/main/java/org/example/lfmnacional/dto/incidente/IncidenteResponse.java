@@ -12,6 +12,7 @@ public record IncidenteResponse(
         Integer vuelta,
         String descripcion,
         String videoUrl,
-        EstadoIncidente estado
+        EstadoIncidente estado,
+        int quorumRequerido
 ) {
 }

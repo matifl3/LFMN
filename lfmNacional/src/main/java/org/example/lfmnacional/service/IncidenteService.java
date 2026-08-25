@@ -251,6 +251,7 @@ public class IncidenteService {
                 incidente.getVuelta(),
                 incidente.getDescripcion(),
                 incidente.getVideoUrl(),
-                incidente.getEstado());
+                incidente.getEstado(),
+                QUORUM_A_FAVOR);
     }
 }
