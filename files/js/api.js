@@ -44,13 +44,25 @@
     localStorage.removeItem(SESSION_KEY);
   }
 
-  /* Si no hay sesión, redirige a login y devuelve null. */
+  /* Si no hay sesión o el token expiró, redirige a login y devuelve null. */
   function requireAuth() {
     const u = getUser();
-    if (!u) {
+    const t = getToken();
+    if (!u || !t) {
       location.href = '02-auth.html?next=' + encodeURIComponent(location.pathname.split('/').pop() + location.search);
       return null;
     }
+    try {
+      var parts = t.split('.');
+      if (parts.length === 3) {
+        var payload = JSON.parse(atob(parts[1]));
+        if (payload.exp && payload.exp < Date.now() / 1000) {
+          clearSession();
+          location.href = '02-auth.html?next=' + encodeURIComponent(location.pathname.split('/').pop() + location.search);
+          return null;
+        }
+      }
+    } catch (e) { /* token malformado, limpiar sesión */ clearSession(); location.href = '02-auth.html'; return null; }
     return u;
   }
 
