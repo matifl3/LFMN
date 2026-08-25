@@ -13,6 +13,7 @@ import org.example.lfmnacional.enums.EstadoIncidente;
 import org.example.lfmnacional.enums.RolPilotoIncidente;
 import org.example.lfmnacional.exception.BusinessException;
 import org.example.lfmnacional.exception.ResourceNotFoundException;
+import org.example.lfmnacional.mapper.EntityMapper;
 import org.example.lfmnacional.repository.IncidentePilotoRepository;
 import org.example.lfmnacional.repository.IncidenteRepository;
 import org.example.lfmnacional.repository.ResolucionIncidenteRepository;
@@ -241,13 +242,15 @@ public class IncidenteService {
     }
 
     private IncidenteResponse toResponse(Incidente incidente) {
+        var c = EntityMapper.resolveCarreraInfo(incidente.getCarrera());
+        var u = EntityMapper.resolveUsuarioBasico(incidente.getReportante());
         return new IncidenteResponse(
                 incidente.getId(),
-                incidente.getCarrera().getId(),
-                incidente.getCarrera().getNombre(),
-                incidente.getCarrera().getCampeonato().getCategoria().getNombre(),
-                incidente.getReportante().getId(),
-                incidente.getReportante().getNombrePiloto(),
+                c.id(),
+                c.nombre(),
+                c.categoriaNombre(),
+                u.id(),
+                u.nombrePiloto(),
                 incidente.getVuelta(),
                 incidente.getDescripcion(),
                 incidente.getVideoUrl(),

@@ -12,6 +12,7 @@ import org.example.lfmnacional.entity.Usuario;
 import org.example.lfmnacional.enums.EstadoCarrera;
 import org.example.lfmnacional.exception.BusinessException;
 import org.example.lfmnacional.exception.ResourceNotFoundException;
+import org.example.lfmnacional.mapper.EntityMapper;
 import org.example.lfmnacional.repository.EloSancionRepository;
 import org.example.lfmnacional.repository.ResultadoCarreraRepository;
 import org.example.lfmnacional.repository.SafetyRatingSancionRepository;
@@ -158,11 +159,12 @@ public class ResultadoCarreraService {
     }
 
     private ResultadoCarreraResponse toResponse(ResultadoCarrera resultado) {
+        var c = EntityMapper.resolveCarreraInfo(resultado.getCarrera());
         return new ResultadoCarreraResponse(
                 resultado.getId(),
-                resultado.getCarrera().getId(),
-                resultado.getCarrera().getNombre(),
-                resultado.getCarrera().getCampeonato().getCategoria().getNombre(),
+                c.id(),
+                c.nombre(),
+                c.categoriaNombre(),
                 resultado.getUsuario().getId(),
                 resultado.getUsuario().getNombrePiloto(),
                 resultado.getPosicionFinal(),

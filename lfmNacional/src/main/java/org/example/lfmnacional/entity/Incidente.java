@@ -42,13 +42,13 @@ public class Incidente {
     @Column(nullable = false)
     private EstadoIncidente estado;
 
-    @OneToMany(mappedBy = "incidente")
+    @OneToMany(mappedBy = "incidente", cascade = CascadeType.REMOVE)
     private List<IncidentePiloto> pilotos = new ArrayList<>();
 
-    @OneToMany(mappedBy = "incidente")
+    @OneToMany(mappedBy = "incidente", cascade = CascadeType.REMOVE)
     private List<VotoComisario> votos = new ArrayList<>();
 
-    @OneToOne(mappedBy = "incidente", cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "incidente", cascade = CascadeType.ALL, orphanRemoval = true)
     private ResolucionIncidente resolucion;
 
     @PrePersist

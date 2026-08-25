@@ -58,19 +58,36 @@ public class Carrera {
     @Column(length = 500)
     private String linkAuto;
 
-    @OneToMany(mappedBy = "carrera")
+    @OneToMany(mappedBy = "carrera", cascade = CascadeType.REMOVE)
     private List<Inscripcion> inscripciones = new ArrayList<>();
 
-    @OneToMany(mappedBy = "carrera")
+    @OneToMany(mappedBy = "carrera", cascade = CascadeType.REMOVE)
     private List<ResultadoCarrera> resultados = new ArrayList<>();
-
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "archivo_id")
     private ArchivoCarrera archivo;
 
-    @OneToMany(mappedBy = "carrera")
+    @OneToMany(mappedBy = "carrera", cascade = CascadeType.REMOVE)
     private List<Incidente> incidentes = new ArrayList<>();
+
+    @OneToMany(mappedBy = "carrera", cascade = CascadeType.REMOVE)
+    private List<Sancion> sanciones = new ArrayList<>();
+
+    @OneToMany(mappedBy = "carrera", cascade = CascadeType.REMOVE)
+    private List<EloSancion> eloSanciones = new ArrayList<>();
+
+    @OneToMany(mappedBy = "carrera", cascade = CascadeType.REMOVE)
+    private List<SafetyRatingSancion> safetyRatingSanciones = new ArrayList<>();
+
+    @OneToMany(mappedBy = "carrera", cascade = CascadeType.REMOVE)
+    private List<VueltaCarrera> vueltas = new ArrayList<>();
+
+    @OneToMany(mappedBy = "carrera", cascade = CascadeType.REMOVE)
+    private List<SesionClasificacion> sesionesClasificacion = new ArrayList<>();
+
+    @OneToMany(mappedBy = "carrera", cascade = CascadeType.REMOVE)
+    private List<SesionProcesada> sesionesProcesadas = new ArrayList<>();
 
     @PrePersist
     public void prePersist() {
