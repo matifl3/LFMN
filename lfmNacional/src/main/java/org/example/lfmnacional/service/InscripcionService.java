@@ -9,6 +9,7 @@ import org.example.lfmnacional.enums.EstadoCarrera;
 import org.example.lfmnacional.enums.EstadoInscripcion;
 import org.example.lfmnacional.exception.BusinessException;
 import org.example.lfmnacional.exception.ResourceNotFoundException;
+import org.example.lfmnacional.mapper.EntityMapper;
 import org.example.lfmnacional.repository.InscripcionRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -145,15 +146,17 @@ public class InscripcionService {
     }
 
     private InscripcionResponse toResponse(Inscripcion inscripcion) {
+        var c = EntityMapper.resolveCarreraInfo(inscripcion.getCarrera());
+        var u = EntityMapper.resolveUsuarioBasico(inscripcion.getUsuario());
         return new InscripcionResponse(
                 inscripcion.getId(),
-                inscripcion.getCarrera().getId(),
-                inscripcion.getCarrera().getNombre(),
-                inscripcion.getCarrera().getCampeonato().getCategoria().getNombre(),
+                c.id(),
+                c.nombre(),
+                c.categoriaNombre(),
                 inscripcion.getCarrera().getFecha(),
-                inscripcion.getUsuario().getId(),
-                inscripcion.getUsuario().getNombrePiloto(),
-                inscripcion.getUsuario().getFotoPerfil(),
+                u.id(),
+                u.nombrePiloto(),
+                u.fotoPerfil(),
                 inscripcion.getUsuario().getElo(),
                 inscripcion.getUsuario().getSafetyRating(),
                 inscripcion.getEstado(),

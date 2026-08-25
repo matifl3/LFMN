@@ -8,6 +8,7 @@ import org.example.lfmnacional.enums.TipoNotificacion;
 import org.example.lfmnacional.enums.TipoSancion;
 import org.example.lfmnacional.exception.BusinessException;
 import org.example.lfmnacional.exception.ResourceNotFoundException;
+import org.example.lfmnacional.mapper.EntityMapper;
 import org.example.lfmnacional.repository.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -291,12 +292,13 @@ public class SancionService {
     }
 
     private SancionResponse toResponse(Sancion sancion) {
+        var c = EntityMapper.resolveCarreraInfo(sancion.getCarrera());
         return new SancionResponse(
                 sancion.getId(),
                 sancion.getUsuario().getId(),
-                sancion.getCarrera() != null ? sancion.getCarrera().getId() : null,
-                sancion.getCarrera() != null ? sancion.getCarrera().getNombre() : null,
-                sancion.getCarrera() != null ? sancion.getCarrera().getCampeonato().getCategoria().getNombre() : null,
+                c != null ? c.id() : null,
+                c != null ? c.nombre() : null,
+                c != null ? c.categoriaNombre() : null,
                 sancion.getResolucion() != null ? sancion.getResolucion().getId() : null,
                 sancion.getTipo(),
                 sancion.getValor(),

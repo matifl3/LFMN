@@ -5,22 +5,9 @@ import org.example.lfmnacional.dto.carrera.CarreraRequest;
 import org.example.lfmnacional.dto.carrera.CarreraResponse;
 import org.example.lfmnacional.entity.Carrera;
 import org.example.lfmnacional.enums.EstadoCarrera;
-import org.example.lfmnacional.exception.BusinessException;
 import org.example.lfmnacional.exception.ResourceNotFoundException;
 import org.example.lfmnacional.repository.CarreraRepository;
-import org.example.lfmnacional.repository.EloSancionRepository;
-import org.example.lfmnacional.repository.IncidenteRepository;
-import org.example.lfmnacional.repository.IncidentePilotoRepository;
 import org.example.lfmnacional.repository.InscripcionRepository;
-import org.example.lfmnacional.repository.ResolucionIncidenteRepository;
-import org.example.lfmnacional.repository.ResultadoCarreraRepository;
-import org.example.lfmnacional.repository.SafetyRatingSancionRepository;
-import org.example.lfmnacional.repository.SancionRepository;
-import org.example.lfmnacional.repository.SesionClasificacionRepository;
-import org.example.lfmnacional.repository.SesionProcesadaRepository;
-import org.example.lfmnacional.repository.ApelacionRepository;
-import org.example.lfmnacional.repository.VotoComisarioRepository;
-import org.example.lfmnacional.repository.VueltaRepository;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,18 +29,6 @@ public class CarreraService {
     private final CampeonatoService campeonatoService;
     private final ArchivoCarreraService archivoCarreraService;
     private final InscripcionRepository inscripcionRepository;
-    private final ResultadoCarreraRepository resultadoCarreraRepository;
-    private final IncidenteRepository incidenteRepository;
-    private final SesionClasificacionRepository sesionClasificacionRepository;
-    private final SesionProcesadaRepository sesionProcesadaRepository;
-    private final SancionRepository sancionRepository;
-    private final VueltaRepository vueltaRepository;
-    private final EloSancionRepository eloSancionRepository;
-    private final SafetyRatingSancionRepository safetyRatingSancionRepository;
-    private final ApelacionRepository apelacionRepository;
-    private final IncidentePilotoRepository incidentePilotoRepository;
-    private final VotoComisarioRepository votoComisarioRepository;
-    private final ResolucionIncidenteRepository resolucionIncidenteRepository;
 
     public Carrera getEntity(Long id) {
         return carreraRepository.findById(id)
@@ -166,22 +141,6 @@ public class CarreraService {
     @Transactional
     public void delete(Long id) {
         Carrera carrera = getEntity(id);
-
-        apelacionRepository.deleteByCarreraId(id);
-        sancionRepository.deleteByCarrera_Id(id);
-        incidentePilotoRepository.deleteByCarreraId(id);
-        votoComisarioRepository.deleteByCarreraId(id);
-        resolucionIncidenteRepository.deleteByCarreraId(id);
-        incidenteRepository.deleteByCarrera_Id(id);
-
-        inscripcionRepository.deleteByCarrera_Id(id);
-        resultadoCarreraRepository.deleteByCarrera_Id(id);
-        sesionClasificacionRepository.deleteByCarrera_Id(id);
-        sesionProcesadaRepository.deleteByCarrera_Id(id);
-        vueltaRepository.deleteByCarrera_Id(id);
-        eloSancionRepository.deleteByCarrera_Id(id);
-        safetyRatingSancionRepository.deleteByCarrera_Id(id);
-
         carreraRepository.delete(carrera);
     }
 

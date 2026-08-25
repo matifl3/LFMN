@@ -7,6 +7,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "sancion",
@@ -58,6 +60,9 @@ public class Sancion {
 
     @Column(name = "efectos_aplicados", nullable = false)
     private Boolean efectosAplicados = true;
+
+    @OneToMany(mappedBy = "sancion", cascade = CascadeType.REMOVE)
+    private List<Apelacion> apelaciones = new ArrayList<>();
 
     @PrePersist
     public void prePersist() {
