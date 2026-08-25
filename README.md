@@ -121,8 +121,8 @@ CORS_ALLOWED_ORIGINS=*
 ```
 
 > **Seguridad**: el archivo `.env` está en `.gitignore` y nunca se sube a git.
-> En desarrollo local, los valores por defecto de `application.properties` funcionan
-> sin necesidad de `.env`.
+> En desarrollo local, `application.properties` tiene un default para `JWT_SECRETO`
+> pero es recomendable crear `.env` con valores seguros.
 
 ### 4. Configurar sesiones de Assetto Corsa
 
@@ -233,7 +233,6 @@ El script genera credenciales aleatorias, crea la BD MySQL y configura el servic
 ## Scripts de utilidad
 
 - `setup-oracle-cloud.sh` — setup automático para Oracle Cloud Free Tier
-- `scripts/simular-carrera.ps1` — simula el flujo de una carrera para pruebas
 
 ## Pendientes (TBD)
 

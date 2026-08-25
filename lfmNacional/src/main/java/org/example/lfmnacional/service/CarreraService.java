@@ -43,13 +43,6 @@ public class CarreraService {
     }
 
     @Transactional(readOnly = true)
-    public List<CarreraResponse> listAll() {
-        List<Carrera> carreras = carreraRepository.findAll();
-        Map<Long, Long> counts = inscripcionRepository.countInscriptosPorCarrera();
-        return carreras.stream().map(c -> toResponse(c, counts)).toList();
-    }
-
-    @Transactional(readOnly = true)
     public Page<CarreraResponse> listAll(Pageable pageable) {
         Page<Carrera> carreras = carreraRepository.findAll(pageable);
         Map<Long, Long> counts = inscripcionRepository.countInscriptosPorCarrera();

@@ -18,7 +18,6 @@
   height: 6px;
   top: 0;
 }
-.hero-checker.bottom { top: auto; bottom: 0; }
 .hero-grid-bg {
   position: absolute; inset: 0;
   mask-image: radial-gradient(700px 380px at 25% 20%, black, transparent 75%);
@@ -156,20 +155,12 @@ input[type="range"] {
 
 // ---- Incidents / sanciones -----------------------------------------
 .report-form-panel { max-width: 640px; }
-.incident-section { margin-bottom: var(--sp-7); }
-.incident-section h3 { margin-bottom: var(--sp-3); display: flex; align-items: center; gap: var(--sp-2); }
-.evidence-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: var(--sp-3); }
-.evidence-thumb { aspect-ratio: 16/9; background: var(--bg-inset); border: 1px solid var(--line); border-radius: var(--r-sm); display: grid; place-items: center; color: var(--text-tertiary); }
-.driver-pair { display: flex; align-items: center; gap: var(--sp-4); }
-.driver-pair .vs { font-family: var(--font-display); color: var(--text-tertiary); }
 
 // ---- Admin -----------------------------------------
 .admin-layout { display: grid; grid-template-columns: 1fr 340px; gap: var(--sp-6); align-items: start; }
 @media (max-width: 980px) { .admin-layout { grid-template-columns: 1fr; } }
 .row-actions { display: flex; gap: var(--sp-2); justify-content: flex-end; }
-.import-zone { border: 1px dashed var(--line-bright); border-radius: var(--r-md); padding: var(--sp-5); background: var(--bg-inset); }
 
 // ---- Auth card -----------------------------------------
 .auth-shell { min-height: calc(100vh - var(--header-h)); display: grid; place-items: center; padding: var(--sp-6); position: relative; overflow: hidden; }
 .auth-card { width: 100%; max-width: 420px; padding: var(--sp-7); position: relative; z-index: 1; }
-.auth-tabs { display: flex; margin-bottom: var(--sp-6); }

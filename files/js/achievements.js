@@ -7,7 +7,7 @@
   const eyebrow = document.getElementById('ach-eyebrow');
   const progress = document.getElementById('ach-progress');
 
-  function cardHtml(lg, idx) {
+  function cardHtml(lg) {
     const icon = lg.icono
       ? L.esc(lg.icono)
       : '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 2 3 7h7l-5.5 4.5L18 21l-6-4-6 4 1.5-7.5L2 9h7z"/></svg>';
@@ -25,7 +25,7 @@
       extra = '<span class="chip chip-pending" style="margin-top:var(--sp-2);padding:.2em .6em">Sin desbloquear</span>';
     }
 
-    return '<div class="card achievement-card' + cls + (obtenido ? ' bracket' : '') + '" style="' + (idx >= 0 ? '' : '') + '">' +
+    return '<div class="card achievement-card' + cls + (obtenido ? ' bracket' : '') + '">' +
       check +
       '<div class="achievement-icon">' + icon + '</div>' +
       '<h4>' + L.esc(lg.nombre || 'Logro') + '</h4>' +

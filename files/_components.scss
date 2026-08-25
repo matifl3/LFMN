@@ -250,9 +250,6 @@ textarea.textarea { min-height: 110px; resize: vertical; font-family: var(--font
 .input-group { display: flex; gap: var(--sp-3); }
 .input-group .field { flex: 1; margin-bottom: 0; }
 
-.checkbox-row { display: flex; align-items: center; gap: var(--sp-2); font-size: var(--fs-sm); color: var(--text-secondary); }
-.checkbox-row input[type="checkbox"] { accent-color: var(--amber); width: 16px; height: 16px; }
-
 .divider-or { display: flex; align-items: center; gap: var(--sp-3); color: var(--text-tertiary); font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: 0.1em; margin-block: var(--sp-5); }
 .divider-or::before, .divider-or::after { content: ''; flex: 1; height: 1px; background: var(--line); }
 
@@ -308,9 +305,6 @@ textarea.textarea { min-height: 110px; resize: vertical; font-family: var(--font
 }
 .stat-card .stat-label { font-family: var(--font-display); font-size: var(--fs-xs); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-tertiary); margin-bottom: var(--sp-2); }
 .stat-card .stat-value { font-size: var(--fs-2xl); font-weight: 700; color: var(--text-primary); }
-.stat-card .stat-delta { font-family: var(--font-mono); font-size: var(--fs-xs); margin-top: var(--sp-1); }
-.stat-delta.up { color: var(--success); }
-.stat-delta.down { color: var(--danger); }
 
 // ---- Star rating -------------------------------------------------------------
 .stars { display: inline-flex; gap: 2px; color: var(--amber); font-size: var(--fs-md); }
@@ -332,9 +326,6 @@ textarea.textarea { min-height: 110px; resize: vertical; font-family: var(--font
 // ---- Comment thread -----------------------------------------------
 .comment { display: flex; gap: var(--sp-3); padding-block: var(--sp-4); border-bottom: 1px solid var(--line-hair); }
 .comment:last-child { border-bottom: none; }
-
-// ---- Empty state -----------------------------------------------
-.empty-state { text-align: center; padding: var(--sp-9) var(--sp-5); color: var(--text-tertiary); }
 
 // ---- Modal-style side panel (admin) -----------------------------------------
 .panel-aside {
@@ -368,10 +359,6 @@ textarea.textarea { min-height: 110px; resize: vertical; font-family: var(--font
   animation: modalIn 0.2s ease;
 }
 @keyframes modalIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
-
-// ---- Vote row (incidentes) -----------------------------------------
-.vote-row { display: flex; align-items: center; justify-content: space-between; padding: var(--sp-3) 0; border-bottom: 1px solid var(--line-hair); }
-.vote-row:last-child { border-bottom: none; }
 
 // ---- Footer -----------------------------------------------
 .site-footer { border-top: 1px solid var(--line-hair); padding-block: var(--sp-7); margin-top: var(--sp-9); }

@@ -2,6 +2,8 @@ package org.example.lfmnacional.dto.incidente;
 
 import org.example.lfmnacional.enums.EstadoIncidente;
 
+import java.time.LocalDateTime;
+
 public record IncidenteResponse(
         Long id,
         Long carreraId,
@@ -12,6 +14,7 @@ public record IncidenteResponse(
         Integer vuelta,
         String descripcion,
         String videoUrl,
+        LocalDateTime fecha,
         EstadoIncidente estado,
         int quorumRequerido
 ) {

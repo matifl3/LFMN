@@ -82,6 +82,7 @@ public class IncidenteService {
                 .vuelta(request.vuelta())
                 .descripcion(request.descripcion())
                 .videoUrl(request.videoUrl())
+                .fecha(LocalDateTime.now())
                 .estado(EstadoIncidente.PENDIENTE)
                 .build();
         incidente = incidenteRepository.save(incidente);
@@ -254,6 +255,7 @@ public class IncidenteService {
                 incidente.getVuelta(),
                 incidente.getDescripcion(),
                 incidente.getVideoUrl(),
+                incidente.getFecha(),
                 incidente.getEstado(),
                 QUORUM_A_FAVOR);
     }

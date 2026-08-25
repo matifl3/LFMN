@@ -5,9 +5,7 @@
 
   const grid = document.getElementById('categorias-grid');
 
-  const ICONS = {
-    default: '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 17V7l8-4 8 4v10l-8 4-8-4Z"/><path d="M4 7l8 4 8-4M12 11v10"/></svg>'
-  };
+  const DEFAULT_ICON = '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 17V7l8-4 8 4v10l-8 4-8-4Z"/><path d="M4 7l8 4 8-4M12 11v10"/></svg>';
 
   Promise.all([
     L.api('/categorias').catch(function () { return []; }),
@@ -37,7 +35,7 @@
         : '<span class="chip chip-closed">Próximamente</span>';
 
       return '<a href="03-races-list.html?cat=' + c.id + '" class="card card-hover category-card" style="text-decoration:none;color:inherit">' +
-        '<div class="category-icon">' + (ICONS[c.nombre] || ICONS.default) + '</div>' +
+        '<div class="category-icon">' + DEFAULT_ICON + '</div>' +
         '<div>' +
         '<h3>' + L.esc(c.nombre) + '</h3>' +
         '<p class="text-secondary" style="font-size:var(--fs-sm); margin-top:var(--sp-2)">' + L.esc(c.descripcion || '') + '</p>' +

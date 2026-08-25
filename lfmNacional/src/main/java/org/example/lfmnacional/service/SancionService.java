@@ -32,6 +32,7 @@ public class SancionService {
     private final NotificacionRepository notificacionRepository;
     private final ApelacionRepository apelacionRepository;
     private final UsuarioRepository usuarioRepository;
+    private final ResolucionIncidenteRepository resolucionIncidenteRepository;
     private final UsuarioService usuarioService;
     private final CarreraService carreraService;
 
@@ -120,9 +121,14 @@ public class SancionService {
     private Sancion buildSancion(SancionRequest request) {
         Usuario usuario = usuarioService.getEntity(request.usuarioId());
         Carrera carrera = request.carreraId() != null ? carreraService.getEntity(request.carreraId()) : null;
+        ResolucionIncidente resolucion = request.resolucionId() != null
+                ? resolucionIncidenteRepository.findById(request.resolucionId())
+                        .orElse(null)
+                : null;
         return Sancion.builder()
                 .usuario(usuario)
                 .carrera(carrera)
+                .resolucion(resolucion)
                 .tipo(request.tipo())
                 .valor(request.valor())
                 .motivo(request.motivo())

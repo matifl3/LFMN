@@ -186,30 +186,32 @@
   function setupInscribir() {
     const btn = document.getElementById('race-inscribir');
     const user = L.getUser();
+    const newBtn = btn.cloneNode(true);
+    btn.parentNode.replaceChild(newBtn, btn);
 
     if (!user) {
-      btn.textContent = 'Ingresar para inscribirme';
-      btn.href = '02-auth.html?next=' + encodeURIComponent('04-race-detail.html?id=' + id);
+      newBtn.textContent = 'Ingresar para inscribirme';
+      newBtn.href = '02-auth.html?next=' + encodeURIComponent('04-race-detail.html?id=' + id);
       return;
     }
 
     const yaInscripto = inscriptos.some(function (i) { return i.usuarioId === user.id && i.estado !== 'CANCELADA'; });
 
     if (carrera.estado !== 'PROGRAMADA' && carrera.estado !== 'INSCRIPCIONES_ABIERTAS') {
-      btn.textContent = 'Inscripción cerrada';
-      btn.setAttribute('aria-disabled', 'true');
-      btn.style.pointerEvents = 'none';
-      btn.style.opacity = '.5';
+      newBtn.textContent = 'Inscripción cerrada';
+      newBtn.setAttribute('aria-disabled', 'true');
+      newBtn.style.pointerEvents = 'none';
+      newBtn.style.opacity = '.5';
       return;
     }
 
     if (yaInscripto) {
-      btn.textContent = 'Darme de baja';
-      btn.href = '#';
-      btn.addEventListener('click', async function (e) {
+      newBtn.textContent = 'Darme de baja';
+      newBtn.href = '#';
+      newBtn.addEventListener('click', async function (e) {
         e.preventDefault();
-        btn.disabled = true;
-        btn.textContent = 'Procesando...';
+        newBtn.disabled = true;
+        newBtn.textContent = 'Procesando...';
         try {
           await L.del('/inscripciones/carrera/' + id + '/usuario/' + user.id);
           L.toast('Te diste de baja de la carrera.', 'success');
@@ -217,15 +219,15 @@
           renderInscriptos();
           renderCarrera();
           setupInscribir();
-        } catch (err) { L.toast(err.message, 'error'); btn.disabled = false; btn.textContent = 'Darme de baja'; }
+        } catch (err) { L.toast(err.message, 'error'); newBtn.disabled = false; newBtn.textContent = 'Darme de baja'; }
       });
     } else {
-      btn.textContent = 'Inscribirme';
-      btn.href = '#';
-      btn.addEventListener('click', async function (e) {
+      newBtn.textContent = 'Inscribirme';
+      newBtn.href = '#';
+      newBtn.addEventListener('click', async function (e) {
         e.preventDefault();
-        btn.disabled = true;
-        btn.textContent = 'Procesando...';
+        newBtn.disabled = true;
+        newBtn.textContent = 'Procesando...';
         try {
           await L.post('/inscripciones', { carreraId: Number(id) });
           L.toast('¡Te inscribiste correctamente!', 'success');
@@ -234,7 +236,7 @@
           renderInscriptos();
           renderCarrera();
           setupInscribir();
-        } catch (err) { L.toast(err.message, 'error'); btn.disabled = false; btn.textContent = 'Inscribirme'; }
+        } catch (err) { L.toast(err.message, 'error'); newBtn.disabled = false; newBtn.textContent = 'Inscribirme'; }
       });
     }
   }

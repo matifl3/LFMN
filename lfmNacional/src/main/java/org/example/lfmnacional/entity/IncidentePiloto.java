@@ -1,6 +1,5 @@
 package org.example.lfmnacional.entity;
 
-import org.example.lfmnacional.enums.Rol;
 import org.example.lfmnacional.enums.RolPilotoIncidente;
 
 import jakarta.persistence.*;

@@ -81,7 +81,7 @@
       document.getElementById('dp-st-podios').textContent = stats.podios;
       document.getElementById('dp-st-poles').textContent = stats.poles;
       document.getElementById('dp-st-vr').textContent = stats.vueltasRapidas;
-      document.getElementById('dp-st-fin').textContent = (Math.round(stats.porcentajeFinalizacion * 100) / 100) + '%';
+      document.getElementById('dp-st-fin').textContent = stats.porcentajeFinalizacion != null ? (Math.round(stats.porcentajeFinalizacion * 100) / 100) + '%' : '—';
     }
 
     document.getElementById('dp-elo-actual').textContent = user.elo ?? '—';

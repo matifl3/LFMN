@@ -1,0 +1,19 @@
+# IDE
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+
+# User uploads & session data
+lfmNacional/archivos/
+lfmNacional/sesiones/
+
+# Test data
+testJsonServidor/

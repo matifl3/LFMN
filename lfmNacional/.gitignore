@@ -36,3 +36,7 @@ build/
 .env
 *.env
 !*.env.example
+
+### User uploads & session data ###
+archivos/
+sesiones/
