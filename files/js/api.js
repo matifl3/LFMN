@@ -168,6 +168,13 @@
       .replace(/'/g, '&#39;');
   }
 
+  function sanitizeUrl(url) {
+    if (!url) return '';
+    var s = String(url).trim().toLowerCase();
+    if (s.startsWith('javascript:') || s.startsWith('data:') || s.startsWith('vbscript:')) return '';
+    return url;
+  }
+
   /* Formatea milisegundos como tiempo de vuelta (mm:ss.mmm) */
   function fmtLap(ms) {
     if (ms === null || ms === undefined || isNaN(ms)) return '—';
@@ -225,7 +232,7 @@
 
   function avatarHtml(user, size) {
     const s = size || 38;
-    const src = user && user.fotoPerfil ? 'src="' + esc(user.fotoPerfil) + '"' : '';
+    const src = user && user.fotoPerfil ? 'src="' + esc(sanitizeUrl(user.fotoPerfil)) + '"' : '';
     if (src) {
       return '<img class="avatar" width="' + s + '" height="' + s + '" ' + src + ' alt="">';
     }
@@ -257,7 +264,7 @@
     API_BASE,
     api, get, post, put, del,
     getUser, getToken, setSession, updateUser, clearSession, requireAuth,
-    fmtFecha, fmtFechaHora, fmtHora, fmtRel, fechaRelativa: fmtRel, fmtLap, esc,
+    fmtFecha, fmtFechaHora, fmtHora, fmtRel, fechaRelativa: fmtRel, fmtLap, esc, sanitizeUrl,
     chipCarrera, chipEstado, raceRow, avatarHtml, toast
   };
 })();

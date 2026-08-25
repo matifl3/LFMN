@@ -82,7 +82,7 @@
         '<div class="text-tertiary" style="font-size:var(--fs-sm)">' + L.esc(fmtCarrera(i.carreraNombre, i.categoriaNombre)) + ' · reportado por ' + L.esc(i.reportanteNombre || ('Piloto #' + i.reportanteId)) + '</div>' +
         '</div>' +
         '<span class="text-tertiary mono" style="font-size:var(--fs-xs)">' + (i.vuelta ? 'Vuelta ' + i.vuelta : '—') + '</span>' +
-        (i.videoUrl ? '<a href="' + L.esc(i.videoUrl) + '" target="_blank" rel="noopener" class="btn btn-ghost btn-sm" onclick="event.stopPropagation()">Evidencia</a>' : '<span></span>') +
+        (i.videoUrl ? '<a href="' + L.esc(L.sanitizeUrl(i.videoUrl)) + '" target="_blank" rel="noopener" class="btn btn-ghost btn-sm" onclick="event.stopPropagation()">Evidencia</a>' : '<span></span>') +
         '</div>';
     }).join('');
 
@@ -119,7 +119,7 @@
       html += '<div class="text-tertiary" style="font-size:var(--fs-sm);margin-bottom:var(--sp-2)">' + L.esc(fmtCarrera(inc.carreraNombre, inc.categoriaNombre)) + '</div>';
       html += '<div class="text-tertiary" style="font-size:var(--fs-sm);margin-bottom:var(--sp-2)">Reportado por: ' + L.esc(inc.reportanteNombre || ('Piloto #' + inc.reportanteId)) + (inc.vuelta ? ' · Vuelta ' + inc.vuelta : '') + '</div>';
       if (inc.videoUrl) {
-        html += '<div style="margin-bottom:var(--sp-4)"><a href="' + L.esc(inc.videoUrl) + '" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">Ver evidencia</a></div>';
+        html += '<div style="margin-bottom:var(--sp-4)"><a href="' + L.esc(L.sanitizeUrl(inc.videoUrl)) + '" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">Ver evidencia</a></div>';
       }
 
       /* Pilotos involucrados */
@@ -187,7 +187,7 @@
       }
 
       /* Resolver incidente */
-      if (isComisarioOrAdmin() && esPendiente && votos.length >= 2) {
+      if (isComisarioOrAdmin() && esPendiente && votos.length >= (inc.quorumRequerido || 2)) {
         html += '<h4 style="margin:var(--sp-5) 0 var(--sp-3)">Resolver incidente</h4>';
         html += '<div class="field"><label style="font-size:var(--fs-xs)">Explicación</label><textarea class="textarea" id="det-resolucion-explicacion" rows="3" placeholder="Explicá la resolución del incidente…"></textarea></div>';
         html += '<div id="det-sanciones-list" style="margin-bottom:var(--sp-3)"></div>';
@@ -233,7 +233,7 @@
         });
       }
 
-      if (isComisarioOrAdmin() && esPendiente && votos.length >= 2) {
+      if (isComisarioOrAdmin() && esPendiente && votos.length >= (inc.quorumRequerido || 2)) {
         setupResolucionForm(incidenteId);
       }
 
