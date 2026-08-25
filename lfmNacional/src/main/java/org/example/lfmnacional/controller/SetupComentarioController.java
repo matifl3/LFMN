@@ -4,9 +4,12 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.lfmnacional.dto.setup.SetupComentarioRequest;
 import org.example.lfmnacional.dto.setup.SetupComentarioResponse;
+import org.example.lfmnacional.entity.Usuario;
+import org.example.lfmnacional.exception.BusinessException;
 import org.example.lfmnacional.service.SetupComentarioService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -26,21 +29,24 @@ public class SetupComentarioController {
     @PostMapping
     public ResponseEntity<SetupComentarioResponse> create(
             @PathVariable Long setupId,
-            @Valid @RequestBody SetupComentarioRequest request) {
+            @Valid @RequestBody SetupComentarioRequest request,
+            @AuthenticationPrincipal Usuario actual) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(setupComentarioService.create(setupId, request));
+                .body(setupComentarioService.create(setupId, request, actual));
     }
 
     @PutMapping("/{comentarioId}")
     public SetupComentarioResponse update(
             @PathVariable Long comentarioId,
-            @Valid @RequestBody SetupComentarioRequest request) {
-        return setupComentarioService.update(comentarioId, request);
+            @Valid @RequestBody SetupComentarioRequest request,
+            @AuthenticationPrincipal Usuario actual) {
+        return setupComentarioService.update(comentarioId, request, actual);
     }
 
     @DeleteMapping("/{comentarioId}")
-    public ResponseEntity<Void> delete(@PathVariable Long comentarioId) {
-        setupComentarioService.delete(comentarioId);
+    public ResponseEntity<Void> delete(@PathVariable Long comentarioId,
+                                       @AuthenticationPrincipal Usuario actual) {
+        setupComentarioService.delete(comentarioId, actual);
         return ResponseEntity.noContent().build();
     }
 }

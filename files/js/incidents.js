@@ -538,7 +538,6 @@
     try {
       await L.post('/apelaciones', {
         sancionId: sancionId,
-        usuarioId: user.id,
         motivo: motivo
       });
       L.toast('Apelación enviada. El panel de administración la va a revisar.', 'success');
@@ -646,7 +645,7 @@
       L.api('/carreras').then(function (r) { return r.content || r; }).catch(function () { return []; }),
       L.api('/apelaciones').catch(function () { return []; }),
       user ? L.api('/sanciones/usuario/' + user.id).catch(function () { return []; }) : Promise.resolve([]),
-      L.api('/usuarios').catch(function () { return []; }),
+      L.api('/usuarios/basico').catch(function () { return []; }),
       isComisarioOrAdmin() ? L.api('/sanciones').then(function (r) { return r.content || r; }).catch(function () { return []; }) : Promise.resolve([])
     ]).then(function (res) {
       incidentes = res[0];

@@ -10,6 +10,8 @@ import org.example.lfmnacional.exception.BusinessException;
 import org.example.lfmnacional.exception.ResourceNotFoundException;
 import org.example.lfmnacional.repository.RecompensaRepository;
 import org.example.lfmnacional.repository.UsuarioRecompensaRepository;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,11 +32,13 @@ public class RecompensaService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "recompensas", key = "#id")
     public RecompensaResponse getById(Long id) {
         return toResponse(getEntity(id));
     }
 
     @Transactional(readOnly = true)
+    @Cacheable("recompensas")
     public List<RecompensaResponse> listAll() {
         return recompensaRepository.findAll().stream().map(this::toResponse).toList();
     }
@@ -46,6 +50,7 @@ public class RecompensaService {
     }
 
     @Transactional
+    @CacheEvict(value = "recompensas", allEntries = true)
     public RecompensaResponse create(Long logroId, RecompensaRequest request) {
         Recompensa recompensa = Recompensa.builder()
                 .logro(logroService.getEntity(logroId))
@@ -56,6 +61,7 @@ public class RecompensaService {
     }
 
     @Transactional
+    @CacheEvict(value = "recompensas", allEntries = true)
     public RecompensaResponse update(Long id, RecompensaRequest request) {
         Recompensa recompensa = getEntity(id);
         recompensa.setDescripcion(request.descripcion());
@@ -64,6 +70,7 @@ public class RecompensaService {
     }
 
     @Transactional
+    @CacheEvict(value = "recompensas", allEntries = true)
     public void delete(Long id) {
         usuarioRecompensaRepository.deleteByRecompensa_Id(id);
         recompensaRepository.delete(getEntity(id));

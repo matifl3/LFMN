@@ -13,6 +13,8 @@ import org.example.lfmnacional.exception.BusinessException;
 import org.example.lfmnacional.exception.ResourceNotFoundException;
 import org.example.lfmnacional.repository.CampeonatoPosicionRepository;
 import org.example.lfmnacional.repository.CampeonatoRepository;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,11 +38,13 @@ public class CampeonatoService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "campeonatos", key = "#id")
     public CampeonatoResponse getById(Long id) {
         return toResponse(getEntity(id));
     }
 
     @Transactional(readOnly = true)
+    @Cacheable("campeonatos")
     public List<CampeonatoResponse> listAll() {
         return campeonatoRepository.findAll().stream().map(this::toResponse).toList();
     }
@@ -51,6 +55,7 @@ public class CampeonatoService {
     }
 
     @Transactional
+    @CacheEvict(value = "campeonatos", allEntries = true)
     public CampeonatoResponse create(CampeonatoRequest request) {
         Campeonato campeonato = Campeonato.builder()
                 .nombre(request.nombre())
@@ -63,6 +68,7 @@ public class CampeonatoService {
     }
 
     @Transactional
+    @CacheEvict(value = "campeonatos", allEntries = true)
     public CampeonatoResponse update(Long id, CampeonatoRequest request) {
         Campeonato campeonato = getEntity(id);
         campeonato.setNombre(request.nombre());
@@ -74,6 +80,7 @@ public class CampeonatoService {
     }
 
     @Transactional
+    @CacheEvict(value = "campeonatos", allEntries = true)
     public CampeonatoResponse cerrar(Long id) {
         Campeonato campeonato = getEntity(id);
         campeonato.setEstado(EstadoCampeonato.CERRADO);
@@ -81,6 +88,7 @@ public class CampeonatoService {
     }
 
     @Transactional
+    @CacheEvict(value = "campeonatos", allEntries = true)
     public void delete(Long id) {
         Campeonato campeonato = getEntity(id);
         if (campeonatoPosicionRepository.existsByCampeonato_Id(id)) {
@@ -92,6 +100,7 @@ public class CampeonatoService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "tabla_posiciones", key = "#id")
     public List<TablaPosicionResponse> getTabla(Long id) {
         getEntity(id);
         return campeonatoPosicionRepository.findByCampeonato_IdOrderByPuntosDesc(id).stream()
@@ -100,6 +109,7 @@ public class CampeonatoService {
     }
 
     @Transactional
+    @CacheEvict(value = "tabla_posiciones", key = "#carrera.campeonato.id")
     public void actualizarPuntos(Carrera carrera, List<ResultadoCarrera> resultados) {
         Campeonato campeonato = carrera.getCampeonato();
         if (campeonato.getEstado() != EstadoCampeonato.ACTIVO) {

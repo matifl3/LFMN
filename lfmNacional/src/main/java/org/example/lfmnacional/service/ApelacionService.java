@@ -6,6 +6,7 @@ import org.example.lfmnacional.dto.apelacion.ApelacionResolucionRequest;
 import org.example.lfmnacional.dto.apelacion.ApelacionResponse;
 import org.example.lfmnacional.entity.Apelacion;
 import org.example.lfmnacional.entity.Notificacion;
+import org.example.lfmnacional.entity.Usuario;
 import org.example.lfmnacional.enums.EstadoApelacion;
 import org.example.lfmnacional.enums.TipoNotificacion;
 import org.example.lfmnacional.exception.BusinessException;
@@ -23,7 +24,6 @@ public class ApelacionService {
 
     private final ApelacionRepository apelacionRepository;
     private final SancionService sancionService;
-    private final UsuarioService usuarioService;
     private final NotificacionRepository notificacionRepository;
 
     public Apelacion getEntity(Long id) {
@@ -55,13 +55,13 @@ public class ApelacionService {
     }
 
     @Transactional
-    public ApelacionResponse create(ApelacionRequest request) {
-        if (apelacionRepository.existsBySancion_IdAndUsuario_Id(request.sancionId(), request.usuarioId())) {
+    public ApelacionResponse create(ApelacionRequest request, Usuario usuario) {
+        if (apelacionRepository.existsBySancion_IdAndUsuario_Id(request.sancionId(), usuario.getId())) {
             throw new BusinessException("Ya existe una apelacion para esta sancion");
         }
         Apelacion apelacion = Apelacion.builder()
                 .sancion(sancionService.getEntity(request.sancionId()))
-                .usuario(usuarioService.getEntity(request.usuarioId()))
+                .usuario(usuario)
                 .motivo(request.motivo())
                 .build();
         return toResponse(apelacionRepository.save(apelacion));

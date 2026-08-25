@@ -13,6 +13,8 @@ import org.example.lfmnacional.repository.ResultadoCarreraRepository;
 import org.example.lfmnacional.repository.SafetyRatingSancionRepository;
 import org.example.lfmnacional.repository.UsuarioRepository;
 import org.example.lfmnacional.security.JwtUtil;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +36,7 @@ public class UsuarioService {
     private final JwtUtil jwtUtil;
 
     @Transactional
+    @CacheEvict(value = "usuarios", allEntries = true)
     public UsuarioResponse registrar(UsuarioRequest request) {
         if (request.password() == null || request.password().isBlank()) {
             throw new BusinessException("La contrasena es obligatoria");
@@ -103,6 +106,14 @@ public class UsuarioService {
 
     public List<UsuarioResponse> listAll() {
         return usuarioRepository.findAll().stream().map(this::toResponse).toList();
+    }
+
+    @Cacheable("usuarios")
+    public List<UsuarioBasicoResponse> listAllBasico() {
+        return usuarioRepository.findAll().stream()
+                .map(u -> new UsuarioBasicoResponse(
+                        u.getId(), u.getNombrePiloto(), u.getFotoPerfil(), u.getElo(), u.getSafetyRating()))
+                .toList();
     }
 
     @Transactional
@@ -194,6 +205,7 @@ public class UsuarioService {
     }
 
     @Transactional
+    @CacheEvict(value = "usuarios", allEntries = true)
     public void delete(Long id) {
         Usuario usuario = getEntity(id);
         usuarioRepository.delete(usuario);
