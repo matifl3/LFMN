@@ -99,8 +99,8 @@ public class UsuarioController {
 
     @PutMapping("/{id}/rol")
     @PreAuthorize("hasRole('ADMIN')")
-    public UsuarioResponse changeRol(@PathVariable Long id, @RequestParam Rol rol) {
-        return usuarioService.changeRol(id, rol);
+    public UsuarioResponse cambiarRol(@PathVariable Long id, @RequestParam Rol rol) {
+        return usuarioService.cambiarRol(id, rol);
     }
 
     @PutMapping("/{id}/rating")

@@ -100,7 +100,7 @@
       '<span class="author-row" style="margin-top:var(--sp-2)">' + L.avatarHtml(a, 24) + 'Subido por ' + L.esc(a.nombrePiloto) + ' · ' + L.fmtRel(s.fechaPublicacion) + '</span>' +
       '</div>' +
       (s.archivo
-        ? '<a href="/api/setups/' + s.id + '/descargar" class="btn btn-primary">Descargar setup</a>'
+        ? '<a href="' + L.API_BASE + '/api/setups/' + s.id + '/descargar" class="btn btn-primary">Descargar setup</a>'
         : '<span class="chip chip-closed">Sin archivo</span>') +
       '</div>' +
       '<p class="text-secondary" style="font-size:var(--fs-sm); margin:var(--sp-4) 0 var(--sp-5)">' + L.esc(s.descripcion || 'Sin descripción.') + '</p>' +

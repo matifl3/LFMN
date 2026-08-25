@@ -27,6 +27,8 @@ import java.util.OptionalDouble;
 import java.util.Set;
 import java.util.UUID;
 
+import org.example.lfmnacional.util.FileUtil;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -58,11 +60,6 @@ public class SetupService {
     }
 
     @Transactional(readOnly = true)
-    public List<SetupResponse> listAll() {
-        return setupRepository.findAll().stream().map(this::toResponse).toList();
-    }
-
-    @Transactional(readOnly = true)
     public Page<SetupResponse> listAll(Pageable pageable) {
         return setupRepository.findAll(pageable).map(this::toResponse);
     }
@@ -75,23 +72,6 @@ public class SetupService {
     @Transactional(readOnly = true)
     public List<SetupResponse> listarPorCategoria(Long categoriaId) {
         return setupRepository.findByCategoria_Id(categoriaId).stream().map(this::toResponse).toList();
-    }
-
-    @Transactional(readOnly = true)
-    public List<SetupResponse> buscar(String circuito, String vehiculo) {
-        List<Setup> resultados;
-        boolean hayCircuito = circuito != null && !circuito.isBlank();
-        boolean hayVehiculo = vehiculo != null && !vehiculo.isBlank();
-        if (hayCircuito && hayVehiculo) {
-            resultados = setupRepository.findByCircuitoContainingIgnoreCaseAndVehiculoContainingIgnoreCase(circuito, vehiculo);
-        } else if (hayCircuito) {
-            resultados = setupRepository.findByCircuitoContainingIgnoreCase(circuito);
-        } else if (hayVehiculo) {
-            resultados = setupRepository.findByVehiculoContainingIgnoreCase(vehiculo);
-        } else {
-            resultados = setupRepository.findAll();
-        }
-        return resultados.stream().map(this::toResponse).toList();
     }
 
     @Transactional(readOnly = true)
@@ -152,7 +132,7 @@ public class SetupService {
         }
         Setup setup = getEntity(setupId);
         eliminarArchivo(setup);
-        String extension = obtenerExtension(archivo.getOriginalFilename()).toLowerCase();
+        String extension = FileUtil.obtenerExtension(archivo.getOriginalFilename()).toLowerCase();
         if (!EXTENSIONES_PERMITIDAS.contains(extension)) {
             throw new BusinessException("Tipo de archivo no permitido. Extensiones aceptadas: .ini, .acd, .json, .rar, .zip");
         }
@@ -196,12 +176,6 @@ public class SetupService {
             }
         }
         setup.setArchivo(null);
-    }
-
-    private String obtenerExtension(String nombreOriginal) {
-        if (nombreOriginal == null) return "";
-        int index = nombreOriginal.lastIndexOf('.');
-        return index >= 0 ? nombreOriginal.substring(index) : "";
     }
 
     @Transactional

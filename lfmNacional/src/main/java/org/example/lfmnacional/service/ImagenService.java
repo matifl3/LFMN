@@ -14,6 +14,8 @@ import java.nio.file.StandardCopyOption;
 import java.util.Set;
 import java.util.UUID;
 
+import org.example.lfmnacional.util.FileUtil;
+
 @Slf4j
 @Service
 public class ImagenService {
@@ -33,7 +35,7 @@ public class ImagenService {
         if (contentType == null || !TIPOS_PERMITIDOS.contains(contentType)) {
             throw new BusinessException("Tipo de archivo no permitido. Se aceptan: JPG, PNG, GIF, WebP");
         }
-        String extension = obtenerExtension(archivo.getOriginalFilename());
+        String extension = FileUtil.obtenerExtension(archivo.getOriginalFilename());
         String nombreAlmacenado = UUID.randomUUID() + extension;
         Path destino = Paths.get(baseDir, SUBDIRECTORIO, nombreAlmacenado).toAbsolutePath().normalize();
         try {
@@ -56,11 +58,5 @@ public class ImagenService {
             throw new BusinessException("Imagen no encontrada");
         }
         return resuelta;
-    }
-
-    private String obtenerExtension(String nombreOriginal) {
-        if (nombreOriginal == null) return "";
-        int index = nombreOriginal.lastIndexOf('.');
-        return index >= 0 ? nombreOriginal.substring(index) : "";
     }
 }

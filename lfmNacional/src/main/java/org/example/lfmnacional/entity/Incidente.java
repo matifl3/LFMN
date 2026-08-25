@@ -5,6 +5,7 @@ import org.example.lfmnacional.enums.EstadoIncidente;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -38,6 +39,9 @@ public class Incidente {
     @Column(name = "video_url", length = 500)
     private String videoUrl;
 
+    @Column(nullable = false)
+    private LocalDateTime fecha;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private EstadoIncidente estado;
@@ -53,6 +57,9 @@ public class Incidente {
 
     @PrePersist
     public void prePersist() {
+        if (fecha == null) {
+            fecha = LocalDateTime.now();
+        }
         if (estado == null) {
             estado = EstadoIncidente.PENDIENTE;
         }

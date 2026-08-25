@@ -91,7 +91,8 @@
 
   document.getElementById('mp-steam-desvincular').addEventListener('click', async function () {
     try {
-      const updated = await L.del('/usuarios/' + user.id + '/steam');
+      await L.del('/usuarios/' + user.id + '/steam');
+      const updated = await L.api('/usuarios/' + user.id);
       L.updateUser(updated);
       renderSteam();
       L.toast('Cuenta de Steam desvinculada', 'success');

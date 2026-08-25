@@ -22,6 +22,8 @@ import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.UUID;
 
+import org.example.lfmnacional.util.FileUtil;
+
 @Service
 @RequiredArgsConstructor
 public class ArchivoCarreraService {
@@ -54,7 +56,7 @@ public class ArchivoCarreraService {
         if (archivo == null || archivo.isEmpty()) {
             throw new BusinessException("El archivo no puede estar vacio");
         }
-        String extension = obtenerExtension(archivo.getOriginalFilename());
+        String extension = FileUtil.obtenerExtension(archivo.getOriginalFilename());
         String nombreAlmacenado = UUID.randomUUID() + extension;
         Path destino = Paths.get(baseDir).toAbsolutePath().normalize().resolve(nombreAlmacenado);
         try {
@@ -89,14 +91,6 @@ public class ArchivoCarreraService {
             throw new ResourceNotFoundException("Archivo no encontrado en el servidor");
         }
         return resuelta;
-    }
-
-    private String obtenerExtension(String nombreOriginal) {
-        if (nombreOriginal == null) {
-            return "";
-        }
-        int index = nombreOriginal.lastIndexOf('.');
-        return index >= 0 ? nombreOriginal.substring(index) : "";
     }
 
     private ArchivoCarreraResponse toResponse(ArchivoCarrera archivo) {

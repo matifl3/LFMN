@@ -170,7 +170,7 @@ public class UsuarioService {
     }
 
     @Transactional
-    public UsuarioResponse changeRol(Long id, Rol rol) {
+    public UsuarioResponse cambiarRol(Long id, Rol rol) {
         Usuario usuario = getEntity(id);
         usuario.setRol(rol);
         return toResponse(usuarioRepository.save(usuario));
