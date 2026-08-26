@@ -1,0 +1,89 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2026-08-26T14:00:00.000Z" agent="5.0" version="24.0.0" type="device">
+  <diagram name="Secuencia: Incidentes y Resolucion" id="seq-5e8bdf82">
+    <mxGraphModel dx="1600" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+    <mxCell id="2" value="USUARIO" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;outline=none;fillColor=#000000;strokeColor=#000000;" vertex="1" parent="1">
+      <mxGeometry x="50" y="40" width="100" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="3" value=":Sistema" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;size=40;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="230" y="40" width="100" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="4" value=":Incidente" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;size=40;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="430" y="40" width="100" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="5" value=":IncidentePiloto" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;size=40;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="630" y="40" width="100" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="6" value=":VotoComisario" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;size=40;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="830" y="40" width="100" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="7" value=":ResolucionIncidente" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;size=40;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="1030" y="40" width="100" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="8" value=":Sancion" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;size=40;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="1230" y="40" width="100" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="9" value="PASO 1: REPORTE" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;size=14;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="50" y="140" width="220" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="10" value="reportarIncidente(carreraId, desc, video)" style="html=1;verticalAlign=bottom;endArrow=block;endFill=1;fontSize=11;" edge="1" parent="1" source="2" target="3">
+      <mxGeometry relative="1" y="150" as="geometry" />
+    </mxCell>
+    <mxCell id="11" value="crear(carrera, reportante, PENDIENTE)" style="html=1;verticalAlign=bottom;endArrow=block;endFill=1;fontSize=11;" edge="1" parent="1" source="3" target="4">
+      <mxGeometry relative="1" y="190" as="geometry" />
+    </mxCell>
+    <mxCell id="12" value="incidente" style="html=1;verticalAlign=bottom;endArrow=block;endFill=0;dashed=1;fontSize=11;" edge="1" parent="1" source="4" target="3">
+      <mxGeometry relative="1" y="230" as="geometry" />
+    </mxCell>
+    <mxCell id="13" value="agregar(incidente, causante, CAUSANTE)" style="html=1;verticalAlign=bottom;endArrow=block;endFill=1;fontSize=11;" edge="1" parent="1" source="3" target="5">
+      <mxGeometry relative="1" y="270" as="geometry" />
+    </mxCell>
+    <mxCell id="14" value="agregar(incidente, afectado, AFECTADO)" style="html=1;verticalAlign=bottom;endArrow=block;endFill=1;fontSize=11;" edge="1" parent="1" source="3" target="5">
+      <mxGeometry relative="1" y="310" as="geometry" />
+    </mxCell>
+    <mxCell id="15" value="RF-052 reportar | RF-053 evidencia" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;size=14;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="50" y="350" width="220" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="16" value="PASO 2: VOTACION (RF-099)" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;size=14;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="50" y="380" width="220" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="17" value="votar(incidente, comisario1, A_FAVOR)" style="html=1;verticalAlign=bottom;endArrow=block;endFill=1;fontSize=11;" edge="1" parent="1" source="3" target="6">
+      <mxGeometry relative="1" y="390" as="geometry" />
+    </mxCell>
+    <mxCell id="18" value="votar(incidente, comisario2, A_FAVOR)" style="html=1;verticalAlign=bottom;endArrow=block;endFill=1;fontSize=11;" edge="1" parent="1" source="3" target="6">
+      <mxGeometry relative="1" y="430" as="geometry" />
+    </mxCell>
+    <mxCell id="19" value="TBD-6: quorum minimo 2 votos" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;size=14;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="250" y="470" width="220" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="20" value="PASO 3: RESOLUCION" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;size=14;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="50" y="500" width="220" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="21" value="[quorum alcanzado] -> RESUELTO" style="shape=frame;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=20;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="200" y="510" width="900" height="120" as="geometry" />
+    </mxCell>
+    <mxCell id="22" value="crear(incidente, comisario, explicacion)" style="html=1;verticalAlign=bottom;endArrow=block;endFill=1;fontSize=11;" edge="1" parent="1" source="3" target="7">
+      <mxGeometry relative="1" y="540" as="geometry" />
+    </mxCell>
+    <mxCell id="23" value="setEstado(RESUELTO)" style="html=1;verticalAlign=bottom;endArrow=block;endFill=1;fontSize=11;" edge="1" parent="1" source="3" target="4">
+      <mxGeometry relative="1" y="580" as="geometry" />
+    </mxCell>
+    <mxCell id="24" value="PASO 4: SANCION (RF-093)" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;size=14;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="50" y="640" width="220" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="25" value="crear(usuario, carrera, resolucion, tipo, valor)" style="html=1;verticalAlign=bottom;endArrow=block;endFill=1;fontSize=11;" edge="1" parent="1" source="3" target="8">
+      <mxGeometry relative="1" y="650" as="geometry" />
+    </mxCell>
+    <mxCell id="26" value="RF-094/095: ajustar Elo y SR" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;size=14;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="250" y="690" width="220" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="27" value="notificar(usuario, PENALIZACION)" style="html=1;verticalAlign=bottom;endArrow=block;endFill=1;fontSize=11;" edge="1" parent="1" source="3" target="3">
+      <mxGeometry relative="1" y="700" as="geometry" />
+    </mxCell>
+    <mxCell id="28" value="RF-088-100: flujo completo comisarios" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;size=14;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="50" y="740" width="220" height="50" as="geometry" />
+    </mxCell>
+
