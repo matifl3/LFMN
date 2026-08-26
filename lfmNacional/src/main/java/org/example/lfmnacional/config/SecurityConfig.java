@@ -55,6 +55,13 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/clasificaciones/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/setups").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/setups/{id}").permitAll()
+                        // Static frontend files (public)
+                        .requestMatchers("/*.html").permitAll()
+                        .requestMatchers("/**/*.html").permitAll()
+                        .requestMatchers("/**/*.css").permitAll()
+                        .requestMatchers("/**/*.js").permitAll()
+                        .requestMatchers("/**/*.png", "/**/*.jpg", "/**/*.jpeg", "/**/*.svg", "/**/*.ico", "/**/*.gif").permitAll()
+                        .requestMatchers("/**/*.woff", "/**/*.woff2", "/**/*.ttf", "/**/*.eot").permitAll()
                         // Everything else requires authentication
                         .anyRequest().authenticated())
                 .exceptionHandling(ex -> ex
