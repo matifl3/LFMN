@@ -1,0 +1,100 @@
+@startuml uml-seq-incidentes
+' ═══════════════════════════════════════════════════════════════════════
+' Diagrama de Secuencia: Incidentes → Resolución → Sanción
+' Flujo C del sistema Low Fuel Motorsport
+' ═══════════════════════════════════════════════════════════════════════
+
+skinparam sequenceMessageAlign center
+skinparam defaultFontSize 11
+skinparam shadowing false
+skinparam responseMessageBelowArrow true
+
+skinparam sequence {
+  ParticipantBackgroundColor #dae8fc
+  ParticipantBorderColor #6c8ebf
+  ActorBackgroundColor #000000
+  ActorBorderColor #000000
+  LifeLineBackgroundColor #f5f5f5
+  LifeLineBorderColor #6c8ebf
+  ArrowColor #333333
+  DividerBackgroundColor #e1d5e7
+  DividerBorderColor #9673a6
+  GroupBackgroundColor #d5e8d4
+  GroupBorderColor #82b366
+  NoteBackgroundColor #fff2cc
+  NoteBorderColor #d6b656
+}
+
+title **Secuencia: Incidentes → Resolución → Sanción**\nRF-052 a RF-100
+
+actor "USUARIO\n(reportante)" as U
+participant ":Sistema" as S
+participant ":Incidente" as INC
+participant ":IncidentePiloto" as IP
+participant ":VotoComisario" as VC
+participant ":ResolucionIncidente" as RES
+participant ":Sancion" as SAN
+
+== PASO 1: REPORTE DEL INCIDENTE ==
+
+U -> S : reportarIncidente(carreraId, desc, videoUrl)
+activate S #dae8fc
+
+note right of U : RF-052: El usuario\nselecciona la carrera\ny describe el incidente
+
+S -> INC : crear(carrera, reportante, PENDIENTE)
+activate INC #f8cecc
+INC --> S : incidente
+deactivate INC
+
+S -> IP : agregar(incidente, causante, CAUSANTE)
+activate IP #f8cecc
+S -> IP : agregar(incidente, afectado, AFECTADO)
+deactivate IP
+
+note right of S : RF-053: Se adjunta video\no enlace como evidencia
+
+== PASO 2: VOTACIÓN DE COMISARIOS ==
+
+note right of S : RF-099: Se asignan\ncomisarios al incidente\n(TBD-6: quorum ≥ 2)
+
+S -> VC : votar(incidente, comisario1, A_FAVOR)
+activate VC #f8cecc
+S -> VC : votar(incidente, comisario2, A_FAVOR)
+deactivate VC
+
+note right of VC : RF-100: Cada voto queda\nregistrado para auditoría
+
+== PASO 3: RESOLUCIÓN ==
+
+group alt [quorum ≥ 2 votos concordantes]
+  S -> RES : crear(incidente, comisarioCierra, explicacion)
+  activate RES #f8cecc
+  RES --> S : resolucion
+  deactivate RES
+
+  S -> INC : setEstado(RESUELTO)
+
+  == PASO 4: SANCIÓN ==
+  S -> SAN : crear(usuario, carrera, resolucion, tipo, valor)
+  activate SAN #f8cecc
+
+  note right of SAN : RF-093: Tipos de sanción:\nPUESTOS, SEGUNDOS,\nDRIVE_THROUGH, STOP_AND_GO,\nDESCALIFICACION
+
+  note right of SAN : RF-094: Ajustar Elo\nRF-095: Ajustar SR
+
+  SAN --> S : sancion
+  deactivate SAN
+
+  S -> S : notificar(usuarioPiloto, PENALIZACION)
+
+else [quorum NO alcanzado]
+  note right of S : El incidente permanece\nPENDIENTE
+end
+
+S --> U : reporte registrado
+deactivate S
+
+note over U, SAN : **RF-052** Reportar | **RF-099** Votación | **RF-097** Resolución | **RF-093** Sanción
+
+@enduml

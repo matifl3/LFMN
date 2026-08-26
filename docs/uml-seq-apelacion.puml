@@ -1,0 +1,87 @@
+@startuml uml-seq-apelacion
+' ═══════════════════════════════════════════════════════════════════════
+' Diagrama de Secuencia: Apelación de Sanción
+' Flujo D del sistema Low Fuel Motorsport
+' ═══════════════════════════════════════════════════════════════════════
+
+skinparam sequenceMessageAlign center
+skinparam defaultFontSize 11
+skinparam shadowing false
+skinparam responseMessageBelowArrow true
+
+skinparam sequence {
+  ParticipantBackgroundColor #dae8fc
+  ParticipantBorderColor #6c8ebf
+  ActorBackgroundColor #000000
+  ActorBorderColor #000000
+  LifeLineBackgroundColor #f5f5f5
+  LifeLineBorderColor #6c8ebf
+  ArrowColor #333333
+  DividerBackgroundColor #e1d5e7
+  DividerBorderColor #9673a6
+  GroupBackgroundColor #d5e8d4
+  GroupBorderColor #82b366
+  NoteBackgroundColor #fff2cc
+  NoteBorderColor #d6b656
+}
+
+title **Secuencia: Apelación de Sanción**\nRF-065, RF-080
+
+actor "USUARIO\n(piloto)" as U
+participant ":Sistema" as S
+participant ":Apelacion" as AP
+participant ":Sancion" as SAN
+actor "ADMIN" as A
+
+== PASO 1: PILOTO APELA ==
+
+U -> S : apelar(sancionId, motivo)
+activate S #dae8fc
+
+S -> SAN : buscarPorId(sancionId)
+activate SAN #f8cecc
+SAN --> S : sancion
+deactivate SAN
+
+S -> AP : crear(sancion, usuario, motivo, PENDIENTE)
+activate AP #d5e8d4
+AP --> S : apelacion
+deactivate AP
+
+note right of AP : RF-065: El piloto presenta\nargumentos para\nrevertir la sanción
+
+== PASO 2: ADMIN RESUELVE ==
+
+A -> S : resolverApelacion(apelacionId, decision)
+activate S #dae8fc
+
+S -> AP : buscarPorId(apelacionId)
+activate AP
+AP --> S : apelacion
+deactivate AP
+
+group alt [APROBADA]
+  S -> SAN : setEstado(REVERTIDA)
+  activate SAN
+  note right of SAN : Se revierten los\ncambios de Elo/SR\naplicados en la sanción
+  S -> S : revertirEloSR(sancion)
+  SAN --> S : ok
+  deactivate SAN
+
+else [RECHAZADA]
+  S -> SAN : setEfectosAplicados(true)
+  activate SAN
+  note right of SAN : La sanción queda\nfirme
+  SAN --> S : ok
+  deactivate SAN
+end
+
+S -> AP : setEstado(decision) + respuestaAdmin
+S -> U : notificar(RESOLUCION_APELACION)
+
+S --> U : apelación resuelta
+deactivate S
+
+note over U, A : **RF-065** Apelar | **RF-080** Resolver apelación
+
+@enduml

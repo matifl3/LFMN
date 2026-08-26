@@ -1,0 +1,159 @@
+@startuml uml-clases-nucleo
+' ═══════════════════════════════════════════════════════════════════════
+' Diagrama de Clases - NÚCLEO: Usuarios, Categorías, Campeonatos, Carreras
+' Proyecto: Low Fuel Motorsport
+' ═══════════════════════════════════════════════════════════════════════
+
+skinparam classAttributeIconSize 0
+skinparam classFontSize 13
+skinparam classFontName Consolas
+skinparam defaultFontSize 11
+skinparam shadowing false
+skinparam monochrome false
+
+skinparam class {
+  BackgroundColor #dae8fc
+  BorderColor #6c8ebf
+  HeaderBackgroundColor #6c8ebf
+  HeaderFontColor #ffffff
+  AttributeFontColor #333333
+  ArrowColor #333333
+}
+
+skinparam package {
+  BackgroundColor #f5f5f5
+  BorderColor #aaaaaa
+  FontStyle bold
+}
+
+' ── Enums ─────────────────────────────────────────────────────────────
+
+enum Rol {
+  USUARIO
+  ADMIN
+  COMISARIO
+}
+
+enum EstadoCampeonato {
+  ACTIVO
+  CERRADO
+}
+
+enum EstadoCarrera {
+  PROGRAMADA
+  INSCRIPCIONES_ABIERTAS
+  INSCRIPCIONES_CERRADAS
+  EN_CURSO
+  FINALIZADA
+  CANCELADA
+}
+
+enum EstadoInscripcion {
+  INSCRIPTO
+  CANCELADA
+  LISTA_ESPERA
+}
+
+' ── Entidades ─────────────────────────────────────────────────────────
+
+class Usuario {
+  - id : Long
+  - email : String <<unique>>
+  - password : String
+  - nombrePiloto : String <<unique>>
+  - fotoPerfil : String
+  - guidSteam : String <<unique>>
+  - elo : Integer = 1500
+  - safetyRating : Integer = 100
+  - version : Long <<@Version>>
+  - rol : Rol
+  - fechaRegistro : LocalDateTime
+}
+
+class Categoria {
+  - id : Long
+  - nombre : String
+  - descripcion : String
+  - eloMinimo : Integer
+  - eloMaximo : Integer
+  - setupAbierto : Boolean
+  - setupFijo : Boolean
+}
+
+class Campeonato {
+  - id : Long
+  - nombre : String
+  - temporada : String
+  - estado : EstadoCampeonato
+  - sistemaPuntos : String
+}
+
+class CampeonatoPosicion {
+  - id : Long
+  - puntos : Integer
+  - posicion : Integer
+}
+
+class Carrera {
+  - id : Long
+  - nombre : String
+  - fecha : LocalDateTime
+  - circuito : String
+  - estado : EstadoCarrera
+  - cupoMaximo : Integer
+  - servidor : String
+  - contrasenaServidor : String
+  - linkPista : String
+  - linkAuto : String
+}
+
+class Inscripcion {
+  - id : Long
+  - estado : EstadoInscripcion
+  - fechaInscripcion : LocalDateTime
+}
+
+class ResultadoCarrera {
+  - id : Long
+  - posicionFinal : Integer
+  - tiempoTotal : Long
+  - vueltaRapida : Long
+  - modeloAuto : String
+  - skinAuto : String
+  - poles : boolean
+  - finalizo : boolean
+  - eloGanado : Integer
+  - srGanado : Integer
+}
+
+' ── Relaciones ────────────────────────────────────────────────────────
+
+Categoria "1" -- "0..*" Campeonato : tiene >
+Campeonato "1" -- "0..*" CampeonatoPosicion : tabla >
+Campeonato "1" -- "0..*" Carrera : contiene >
+
+Carrera "1" -- "0..*" Inscripcion : tiene >
+Carrera "1" -- "0..*" ResultadoCarrera : genera >
+
+Usuario "1" -- "0..*" Inscripcion : se inscribe en >
+Usuario "1" -- "0..*" ResultadoCarrera : obtiene >
+Usuario "1" -- "0..*" CampeonatoPosicion : participa en >
+
+CampeonatoPosicion }o--|| Usuario
+Inscripcion }o--|| Usuario
+ResultadoCarrera }o--|| Usuario
+
+' ── Constraints ───────────────────────────────────────────────────────
+note bottom of Inscripcion
+  <<unique>> (carrera_id, usuario_id)
+end note
+
+note bottom of ResultadoCarrera
+  <<unique>> (carrera_id, usuario_id)
+end note
+
+note bottom of CampeonatoPosicion
+  <<unique>> (campeonato_id, usuario_id)
+end note
+
+@enduml

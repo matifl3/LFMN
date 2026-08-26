@@ -6,7 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 public interface InscripcionRepository extends JpaRepository<Inscripcion, Long> {
@@ -26,5 +25,5 @@ public interface InscripcionRepository extends JpaRepository<Inscripcion, Long> 
     void deleteByCarrera_Id(Long carreraId);
 
     @Query("select i.carrera.id, count(i) from Inscripcion i where i.estado = 'INSCRIPTO' group by i.carrera.id")
-    Map<Long, Long> countInscriptosPorCarrera();
+    List<Object[]> countInscriptosPorCarreraRaw();
 }

@@ -1,0 +1,174 @@
+@startuml uml-clases-setups-logros
+' ═══════════════════════════════════════════════════════════════════════
+' Diagrama de Clases - SETUPS, LOGROS, RECOMPENSAS, NOTIFICACIONES
+' Proyecto: Low Fuel Motorsport
+' ═══════════════════════════════════════════════════════════════════════
+
+skinparam classAttributeIconSize 0
+skinparam classFontSize 13
+skinparam classFontName Consolas
+skinparam defaultFontSize 11
+skinparam shadowing false
+
+skinparam class {
+  BackgroundColor #d5e8d4
+  BorderColor #82b366
+  HeaderBackgroundColor #82b366
+  HeaderFontColor #ffffff
+  AttributeFontColor #333333
+  ArrowColor #333333
+}
+
+skinparam package {
+  BackgroundColor #f5f5f5
+  BorderColor #aaaaaa
+}
+
+' ── Enums ─────────────────────────────────────────────────────────────
+
+enum TipoCondicionLogro {
+  VICTORIAS
+  PODIOS
+  CARRERAS
+  POLES
+  VUELTAS_RAPIDAS
+  CARRERAS_COMPLETADAS
+  ELO
+}
+
+enum TipoRecompensa {
+  VIRTUAL
+  FISICA
+  DESCUENTO
+  OTRA
+}
+
+enum TipoNotificacion {
+  CARRERA_INICIO
+  PENALIZACION
+  LOGRO
+  RECOMPENSA
+  ANUNCIO
+  INCIDENTE
+  APELACION
+}
+
+' ── Entidades ─────────────────────────────────────────────────────────
+
+package "Setups" #f5f5f5 {
+  class Setup {
+    - id : Long
+    - titulo : String
+    - descripcion : String
+    - circuito : String
+    - vehiculo : String
+    - archivo : String
+    - fechaPublicacion : LocalDateTime
+    - promedioCalificacion : Double
+  }
+
+  class SetupCalificacion {
+    - id : Long
+    - puntaje : Integer
+  }
+
+  class SetupComentario {
+    - id : Long
+    - texto : String
+    - fecha : LocalDateTime
+  }
+}
+
+package "Logros y Recompensas" #f5f5f5 {
+  class Logro {
+    - id : Long
+    - nombre : String
+    - descripcion : String
+    - tipoCondicion : TipoCondicionLogro
+    - valorCondicion : Integer
+    - icono : String
+  }
+
+  class Recompensa {
+    - id : Long
+    - descripcion : String
+    - tipo : TipoRecompensa
+  }
+
+  class UsuarioLogro {
+    - id : Long
+    - progreso : Integer
+    - obtenido : Boolean
+    - fechaObtencion : LocalDateTime
+  }
+
+  class UsuarioRecompensa {
+    - id : Long
+    - reclamada : Boolean
+    - fecha : LocalDateTime
+  }
+}
+
+package "Notificaciones" #f5f5f5 {
+  class Notificacion {
+    - id : Long
+    - tipo : TipoNotificacion
+    - mensaje : String
+    - leida : Boolean
+    - fecha : LocalDateTime
+    - link : String
+  }
+
+  class Anuncio {
+    - id : Long
+    - titulo : String
+    - contenido : String
+    - urlImagen : String
+    - fecha : LocalDateTime
+    - destacado : Boolean
+  }
+}
+
+' ── Referencias ───────────────────────────────────────────────────────
+
+class Usuario <<Ref>>
+class Categoria <<Ref>>
+
+' ── Relaciones Setups ─────────────────────────────────────────────────
+
+Setup "1" -- "0..*" SetupCalificacion : tiene >
+Setup "1" -- "0..*" SetupComentario : tiene >
+
+Setup }o--|| Usuario : autor >
+Setup }o--|| Categoria : categoría (opcional) >
+
+SetupCalificacion }o--|| Usuario
+SetupComentario }o--|| Usuario
+
+note bottom of SetupCalificacion
+  <<unique>> (setup_id, usuario_id)
+  Un usuario califica 1 vez
+end note
+
+' ── Relaciones Logros ─────────────────────────────────────────────────
+
+Logro "1" -- "0..*" Recompensa : otorga >
+Logro "1" -- "0..*" UsuarioLogro : progreso >
+Recompensa "1" -- "0..*" UsuarioRecompensa : reclamo >
+
+UsuarioLogro }o--|| Usuario
+UsuarioRecompensa }o--|| Usuario
+
+note bottom of UsuarioLogro
+  <<unique>> (logro_id, usuario_id)
+end note
+
+note bottom of UsuarioRecompensa
+  <<unique>> (recompensa_id, usuario_id)
+end note
+
+' ── Relaciones Notificaciones ─────────────────────────────────────────
+
+Notificacion }o--|| Usuario : notifica >
+
+@enduml

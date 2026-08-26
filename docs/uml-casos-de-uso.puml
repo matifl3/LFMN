@@ -1,0 +1,279 @@
+@startuml uml-casos-de-uso
+' ═══════════════════════════════════════════════════════════════════════
+' Diagrama de Casos de Uso - Low Fuel Motorsport
+' 3 Actores: USUARIO, ADMIN, COMISARIO
+' ═══════════════════════════════════════════════════════════════════════
+
+left to right direction
+skinparam actorStyle awesome
+skinparam packageStyle rectangle
+skinparam defaultFontSize 11
+skinparam shadowing false
+skinparam handwritten false
+
+skinparam actor {
+  BackgroundColor #000000
+  BorderColor #000000
+  FontColor #000000
+}
+
+skinparam usecase {
+  BackgroundColor #d5e8d4
+  BorderColor #82b366
+  FontSize 10
+}
+
+skinparam rectangle {
+  BackgroundColor #f5f5f5
+  BorderColor #6c8ebf
+}
+
+' ── Actores ───────────────────────────────────────────────────────────
+
+actor "USUARIO" as U
+actor "ADMIN" as A
+actor "COMISARIO" as C
+
+' ── Sistema ───────────────────────────────────────────────────────────
+
+rectangle "**Low Fuel Motorsport**" {
+
+  ' ── USUARIO: Cuenta y Sesión ──────────────────────────────────────
+
+  package "Cuenta y Sesión" {
+    (RF-001: Registro de usuario)        as UC001
+    (RF-002: Inicio de sesión)           as UC002
+    (RF-003: Login con Steam)            as UC003
+    (RF-004: Cambiar contraseña)         as UC004
+    (RF-005: Vincular Steam)             as UC005
+    (RF-006: Editar perfil)              as UC006
+    (RF-007: Cambiar foto de perfil)     as UC007
+  }
+
+  ' ── USUARIO: Perfil y Estadísticas ────────────────────────────────
+
+  package "Perfil y Estadísticas" {
+    (RF-008: Ver perfil propio)          as UC008
+    (RF-009: Ver Elo actual)             as UC009
+    (RF-010: Ver Safety Rating)          as UC010
+    (RF-011: Ver estadísticas)           as UC011
+    (RF-018: Historial de Elo)           as UC018
+    (RF-019: Historial de SR)            as UC019
+    (RF-020: Ver penalizaciones)         as UC020
+  }
+
+  ' ── USUARIO: Categorías ──────────────────────────────────────────
+
+  package "Categorías" {
+    (RF-021: Ver categorías)             as UC021
+    (RF-022/023: Categorías por Elo)     as UC022
+  }
+
+  ' ── USUARIO: Carreras ────────────────────────────────────────────
+
+  package "Carreras" {
+    (RF-024: Ver próximas carreras)      as UC024
+    (RF-025: Ver resultados)             as UC025
+    (RF-026: Ver inscriptos)             as UC026
+    (RF-027/028: Ver servidor)           as UC027
+    (RF-029: Ver/descargar archivos)     as UC029
+    (RF-030: Inscribirse)                as UC030
+    (RF-031: Bajarse de carrera)         as UC031
+    (RF-033: Lista de espera)            as UC033
+  }
+
+  ' ── USUARIO: Campeonato ──────────────────────────────────────────
+
+  package "Campeonato" {
+    (RF-035: Ver campeonato)             as UC035
+  }
+
+  ' ── USUARIO: Elo y Safety Rating ─────────────────────────────────
+
+  package "Elo y Safety Rating" {
+    (RF-038/039: Elo estimado)           as UC038
+  }
+
+  ' ── USUARIO: Setups ─────────────────────────────────────────────
+
+  package "Setups" {
+    (RF-043: Crear/publicar setup)       as UC043
+    (RF-046: Descargar setups)           as UC046
+    (RF-047: Calificar setup)            as UC047
+    (RF-048: Comentar setup)             as UC048
+    (RF-049: Buscar setups)              as UC049
+  }
+
+  ' ── USUARIO: Incidentes (reporte) ───────────────────────────────
+
+  package "Reporte de Incidentes" {
+    (RF-052: Reportar incidente)         as UC052
+    (RF-053: Subir evidencia)            as UC053
+    (RF-054: Consultar estado)           as UC054
+    (RF-055: Ver resolución)             as UC055
+  }
+
+  ' ── USUARIO: Logros y Recompensas ───────────────────────────────
+
+  package "Logros y Recompensas" {
+    (RF-056: Ver logros)                 as UC056
+    (RF-057: Ver progreso)               as UC057
+    (RF-059: Ver recompensas)            as UC059
+    (RF-060: Reclamar recompensa)        as UC060
+  }
+
+  ' ── USUARIO: Notificaciones ─────────────────────────────────────
+
+  package "Notificaciones y Anuncios" {
+    (RF-061: Notif. carrera)             as UC061
+    (RF-062: Notif. penalización)        as UC062
+    (RF-063: Notif. logro)               as UC063
+    (RF-064: Ver anuncios)               as UC064
+  }
+
+  ' ── USUARIO: Apelaciones ────────────────────────────────────────
+
+  package "Apelaciones" {
+    (RF-065: Apelar sanción)             as UC065
+  }
+
+  ' ── ADMIN ──────────────────────────────────────────────────────
+
+  package "Administración" {
+    (RF-066: ABM de usuarios)            as UC066
+    (RF-068: Crear categorías)           as UC068
+    (RF-069: Editar categorías)          as UC069
+    (RF-070: ABM de carreras)            as UC070
+    (RF-072: Asignar servidores)         as UC072
+    (RF-074: Cargar resultados)          as UC074
+    (RF-075: Crear campeonatos)          as UC075
+    (RF-076: Editar campeonatos)         as UC076
+    (RF-077/078: Penalizar)              as UC077
+    (RF-079: Dar/quitar Elo)             as UC079
+    (RF-080: Resolver apelaciones)       as UC080
+    (RF-081: ABM de logros)              as UC081
+    (RF-082: Agregar recompensas)        as UC082
+    (RF-083: Publicar anuncios)          as UC083
+    (RF-084: Asignar incidente)          as UC084
+    (RF-085: Ver estadísticas admin)     as UC085
+    (RF-086: Moderar setups)             as UC086
+    (RF-087: Cancelar carrera)           as UC087
+  }
+
+  ' ── COMISARIO ──────────────────────────────────────────────────
+
+  package "Gestión de Incidentes" {
+    (RF-088: Ver incidentes)             as UC088
+    (RF-089: Ver video/evidencia)        as UC089
+    (RF-090: Ver info carrera)           as UC090
+    (RF-091: Ver pilotos involucrados)   as UC091
+    (RF-092: Analizar incidente)         as UC092
+    (RF-093: Asignar penalización)       as UC093
+    (RF-094: Ajustar Elo)                as UC094
+    (RF-095: Ajustar SR)                 as UC095
+    (RF-096: Comentar sanción)           as UC096
+    (RF-097: Guardar resolución)         as UC097
+    (RF-098: Historial incidentes)       as UC098
+    (RF-099: Votación comisarios)        as UC099
+    (RF-100: Hist. decisiones)           as UC100
+  }
+}
+
+' ── Asociaciones USUARIO ─────────────────────────────────────────────
+
+U --> UC001
+U --> UC002
+U --> UC003
+U --> UC004
+U --> UC005
+U --> UC006
+U --> UC007
+U --> UC008
+U --> UC009
+U --> UC010
+U --> UC011
+U --> UC018
+U --> UC019
+U --> UC020
+U --> UC021
+U --> UC022
+U --> UC024
+U --> UC025
+U --> UC026
+U --> UC027
+U --> UC029
+U --> UC030
+U --> UC031
+U --> UC033
+U --> UC035
+U --> UC038
+U --> UC043
+U --> UC046
+U --> UC047
+U --> UC048
+U --> UC049
+U --> UC052
+U --> UC053
+U --> UC054
+U --> UC055
+U --> UC056
+U --> UC057
+U --> UC059
+U --> UC060
+U --> UC061
+U --> UC062
+U --> UC063
+U --> UC064
+U --> UC065
+
+' ── Asociaciones ADMIN ───────────────────────────────────────────────
+
+A --> UC066
+A --> UC068
+A --> UC069
+A --> UC070
+A --> UC072
+A --> UC074
+A --> UC075
+A --> UC076
+A --> UC077
+A --> UC079
+A --> UC080
+A --> UC081
+A --> UC082
+A --> UC083
+A --> UC084
+A --> UC085
+A --> UC086
+A --> UC087
+
+' ── Asociaciones COMISARIO ───────────────────────────────────────────
+
+C --> UC088
+C --> UC089
+C --> UC090
+C --> UC091
+C --> UC092
+C --> UC093
+C --> UC094
+C --> UC095
+C --> UC096
+C --> UC097
+C --> UC098
+C --> UC099
+C --> UC100
+
+' ── Include / Extend ─────────────────────────────────────────────────
+
+UC003 ..> UC002 : <<include>>
+UC053 ..> UC052 : <<include>>
+UC091 ..> UC090 : <<include>>
+UC094 ..> UC093 : <<include>>
+UC095 ..> UC093 : <<include>>
+UC096 ..> UC093 : <<include>>
+UC097 ..> UC093 : <<include>>
+
+UC057 ..> UC056 : <<extend>>
+UC022 ..> UC021 : <<extend>>
+
+@enduml

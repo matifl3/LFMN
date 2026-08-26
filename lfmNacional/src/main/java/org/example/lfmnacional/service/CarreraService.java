@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -45,7 +46,7 @@ public class CarreraService {
     @Transactional(readOnly = true)
     public Page<CarreraResponse> listAll(Pageable pageable) {
         Page<Carrera> carreras = carreraRepository.findAll(pageable);
-        Map<Long, Long> counts = inscripcionRepository.countInscriptosPorCarrera();
+        Map<Long, Long> counts = countInscriptos();
         return carreras.map(c -> toResponse(c, counts));
     }
 
@@ -53,7 +54,7 @@ public class CarreraService {
     @Cacheable("carreras_proximas")
     public List<CarreraResponse> proximas() {
         List<Carrera> carreras = carreraRepository.findByFechaAfterOrderByFechaAsc(LocalDateTime.now());
-        Map<Long, Long> counts = inscripcionRepository.countInscriptosPorCarrera();
+        Map<Long, Long> counts = countInscriptos();
         return carreras.stream().map(c -> toResponse(c, counts)).toList();
     }
 
@@ -61,14 +62,14 @@ public class CarreraService {
     @Cacheable("carreras_pasadas")
     public List<CarreraResponse> pasadas() {
         List<Carrera> carreras = carreraRepository.findByFechaBeforeOrderByFechaDesc(LocalDateTime.now());
-        Map<Long, Long> counts = inscripcionRepository.countInscriptosPorCarrera();
+        Map<Long, Long> counts = countInscriptos();
         return carreras.stream().map(c -> toResponse(c, counts)).toList();
     }
 
     @Transactional(readOnly = true)
     public List<CarreraResponse> porCampeonato(Long campeonatoId) {
         List<Carrera> carreras = carreraRepository.findByCampeonato_IdOrderByFechaDesc(campeonatoId);
-        Map<Long, Long> counts = inscripcionRepository.countInscriptosPorCarrera();
+        Map<Long, Long> counts = countInscriptos();
         return carreras.stream().map(c -> toResponse(c, counts)).toList();
     }
 
@@ -161,6 +162,14 @@ public class CarreraService {
     @Scheduled(cron = "0 * * * * *")
     public void scheduledCierreInscripciones() {
         cerrarInscripcionesAutomaticamente();
+    }
+
+    private Map<Long, Long> countInscriptos() {
+        return inscripcionRepository.countInscriptosPorCarreraRaw().stream()
+                .collect(Collectors.toMap(
+                        row -> ((Number) row[0]).longValue(),
+                        row -> ((Number) row[1]).longValue()
+                ));
     }
 
     private CarreraResponse toResponse(Carrera carrera, Map<Long, Long> counts) {

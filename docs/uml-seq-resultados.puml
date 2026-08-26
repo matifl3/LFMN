@@ -1,0 +1,90 @@
+@startuml uml-seq-resultados
+' ═══════════════════════════════════════════════════════════════════════
+' Diagrama de Secuencia: Resultados → Rating → Campeonato
+' Flujo B del sistema Low Fuel Motorsport
+' ═══════════════════════════════════════════════════════════════════════
+
+skinparam sequenceMessageAlign center
+skinparam defaultFontSize 11
+skinparam shadowing false
+skinparam responseMessageBelowArrow true
+
+skinparam sequence {
+  ParticipantBackgroundColor #dae8fc
+  ParticipantBorderColor #6c8ebf
+  ActorBackgroundColor #000000
+  ActorBorderColor #000000
+  LifeLineBackgroundColor #f5f5f5
+  LifeLineBorderColor #6c8ebf
+  ArrowColor #333333
+  DividerBackgroundColor #e1d5e7
+  DividerBorderColor #9673a6
+  GroupBackgroundColor #d5e8d4
+  GroupBorderColor #82b366
+  NoteBackgroundColor #fff2cc
+  NoteBorderColor #d6b656
+}
+
+title **Secuencia: Resultados → Rating → Campeonato**\nRF-074, RF-040, RF-041, RF-035
+
+actor "ADMIN" as ADM
+participant ":Sistema" as S
+participant ":ResultadoCarrera" as RC
+participant "EloCalculator" as EC
+participant "SrCalculator" as SR
+participant ":EloSancion" as ES
+participant ":CampeonatoPosicion" as CP
+
+== Carga de Resultados ==
+
+ADM -> S : cargarResultados(carreraId, resultados[])
+activate S #dae8fc
+
+note right of S : RF-074: Carga manual\no automática desde JSON AC
+
+S -> S : verificarIdempotencia(carreraId)
+note right of S : Rechaza si la carrera\nya tiene resultados\n(evita duplicar Elo/SR)
+
+group Para cada piloto en resultados[]
+
+  S -> RC : crear(carrera, usuario, pos, tiempo)
+  activate RC #d5e8d4
+  RC --> S : resultadoCarrera
+  deactivate RC
+
+  == Cálculo de Elo ==
+  S -> EC : calcularElo(usuario, posicion, promCategoria)
+  activate EC #e1d5e7
+  note right of EC : RF-040: K=32\nDispersión=400\nFórmula Elo ajedrez
+  EC --> S : eloGanado (±delta)
+  deactivate EC
+
+  == Cálculo de Safety Rating ==
+  S -> SR : calcularSR(usuario, finalizo, posicion)
+  activate SR #e1d5e7
+  note right of SR : RF-041: +5 finalizo\n-5 DNF\n+10 victoria, +8 2°, +6 3°
+  SR --> S : srGanado
+  deactivate SR
+
+  == Registro en Historial ==
+  S -> ES : registrar(usuario, eloGanado, carrera)
+  activate ES #fff2cc
+  note right of ES : RF-018: Historial\nde cambios de Elo
+  ES --> S : ok
+  deactivate ES
+
+end
+
+== Tabla de Campeonato ==
+S -> CP : upsert(campeonato, usuario, puntos)
+activate CP #d5e8d4
+note right of CP : RF-035: Puntos estilo F1\n25-18-15-12-10-8-6-4-2-1\nOrdenar por puntos → posición
+CP --> S : posicion
+deactivate CP
+
+S --> ADM : resultados cargados + rating actualizado
+deactivate S
+
+note over ADM, CP : **RF-074** Cargar resultados | **RF-040** Elo | **RF-041** SR | **RF-035** Campeonato
+
+@enduml

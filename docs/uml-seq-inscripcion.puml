@@ -1,0 +1,84 @@
+@startuml uml-seq-inscripcion
+' ═══════════════════════════════════════════════════════════════════════
+' Diagrama de Secuencia: Inscripción a Carrera
+' Flujo A del sistema Low Fuel Motorsport
+' ═══════════════════════════════════════════════════════════════════════
+
+skinparam sequenceMessageAlign center
+skinparam defaultFontSize 11
+skinparam shadowing false
+skinparam responseMessageBelowArrow true
+
+skinparam sequence {
+  ParticipantBackgroundColor #dae8fc
+  ParticipantBorderColor #6c8ebf
+  ActorBackgroundColor #000000
+  ActorBorderColor #000000
+  LifeLineBackgroundColor #f5f5f5
+  LifeLineBorderColor #6c8ebf
+  ArrowColor #333333
+  DividerBackgroundColor #e1d5e7
+  DividerBorderColor #9673a6
+  GroupBackgroundColor #d5e8d4
+  GroupBorderColor #82b366
+  NoteBackgroundColor #fff2cc
+  NoteBorderColor #d6b656
+}
+
+title **Secuencia: Inscripción a Carrera**\nRF-030, RF-033, RF-073
+
+actor "USUARIO" as U
+participant ":Sistema" as S
+participant ":Carrera" as C
+participant ":Inscripcion" as I
+participant ":Notificacion" as N
+
+== Solicitud de Inscripción ==
+
+U -> S : inscribirse(carreraId)
+activate S #dae8fc
+
+S -> C : buscarPorId(carreraId)
+activate C #dae8fc
+C --> S : carrera
+deactivate C
+
+note right of S : RF-073: Validar que\nfecha > ahora + 5min\n(inscripciones abiertas)
+
+S -> S : validarFecha(carrera.fecha)
+
+group alt [fecha válida]
+  S -> C : getCupoMaximo()
+  activate C
+  C --> S : cupoMaximo
+  deactivate C
+
+  group alt [cupo > 0]
+    S -> I : crear(usuario, carrera, INSCRIPTO)
+    activate I #d5e8d4
+    I --> S : inscripcion
+    deactivate I
+  else [cupo == 0] **LISTA_ESPERA**
+    note right of I : RF-033: Se ordena\npor fecha de inscripción
+    S -> I : crear(usuario, carrera, LISTA_ESPERA)
+    activate I #fff2cc
+    I --> S : inscripcion
+    deactivate I
+  end
+
+  S -> N : notificar(usuario, INSCRIPCION)
+  activate N #f5f5f5
+  N --> S : ok
+  deactivate N
+
+  S --> U : inscripcion creada exitosamente
+deactivate S
+
+else [fecha inválida]
+  S --> U : error 400: inscripciones cerradas
+  deactivate S
+end
+
+note over U, N : **RF-030** Inscribirse | **RF-031** Bajarse | **RF-033** Lista espera
+
+@enduml
