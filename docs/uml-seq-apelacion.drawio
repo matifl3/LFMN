@@ -1,0 +1,83 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2026-08-26T14:00:00.000Z" agent="5.0" version="24.0.0" type="device">
+  <diagram name="Secuencia: Apelacion de Sancion" id="seq-704e98eb">
+    <mxGraphModel dx="1600" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+    <mxCell id="2" value="USUARIO" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;outline=none;fillColor=#000000;strokeColor=#000000;" vertex="1" parent="1">
+      <mxGeometry x="50" y="40" width="100" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="3" value=":Sistema" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;size=40;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="230" y="40" width="100" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="4" value=":Apelacion" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;size=40;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="430" y="40" width="100" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="5" value=":Sancion" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;size=40;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+      <mxGeometry x="630" y="40" width="100" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="6" value="ADMIN" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;outline=none;fillColor=#000000;strokeColor=#000000;" vertex="1" parent="1">
+      <mxGeometry x="830" y="40" width="100" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="7" value="PASO 1: PILOTO APELA" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;size=14;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="50" y="140" width="220" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="8" value="apelar(sancionId, motivo)" style="html=1;verticalAlign=bottom;endArrow=block;endFill=1;fontSize=11;" edge="1" parent="1" source="2" target="3">
+      <mxGeometry relative="1" y="150" as="geometry" />
+    </mxCell>
+    <mxCell id="9" value="buscarPorId(sancionId)" style="html=1;verticalAlign=bottom;endArrow=block;endFill=1;fontSize=11;" edge="1" parent="1" source="3" target="5">
+      <mxGeometry relative="1" y="190" as="geometry" />
+    </mxCell>
+    <mxCell id="10" value="sancion" style="html=1;verticalAlign=bottom;endArrow=block;endFill=0;dashed=1;fontSize=11;" edge="1" parent="1" source="5" target="3">
+      <mxGeometry relative="1" y="230" as="geometry" />
+    </mxCell>
+    <mxCell id="11" value="crear(sancion, usuario, motivo, PENDIENTE)" style="html=1;verticalAlign=bottom;endArrow=block;endFill=1;fontSize=11;" edge="1" parent="1" source="3" target="4">
+      <mxGeometry relative="1" y="270" as="geometry" />
+    </mxCell>
+    <mxCell id="12" value="apelacion" style="html=1;verticalAlign=bottom;endArrow=block;endFill=0;dashed=1;fontSize=11;" edge="1" parent="1" source="4" target="3">
+      <mxGeometry relative="1" y="310" as="geometry" />
+    </mxCell>
+    <mxCell id="13" value="RF-065: apelar sancion" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;size=14;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="50" y="350" width="220" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="14" value="PASO 2: ADMIN RESUELVE (RF-080)" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;size=14;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="50" y="380" width="220" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="15" value="resolverApelacion(apelacionId, decision)" style="html=1;verticalAlign=bottom;endArrow=block;endFill=1;fontSize=11;" edge="1" parent="1" source="6" target="3">
+      <mxGeometry relative="1" y="390" as="geometry" />
+    </mxCell>
+    <mxCell id="16" value="buscarPorId(apelacionId)" style="html=1;verticalAlign=bottom;endArrow=block;endFill=1;fontSize=11;" edge="1" parent="1" source="3" target="4">
+      <mxGeometry relative="1" y="430" as="geometry" />
+    </mxCell>
+    <mxCell id="17" value="apelacion" style="html=1;verticalAlign=bottom;endArrow=block;endFill=0;dashed=1;fontSize=11;" edge="1" parent="1" source="4" target="3">
+      <mxGeometry relative="1" y="470" as="geometry" />
+    </mxCell>
+    <mxCell id="18" value="[APROBADA] -> revertir sancion" style="shape=frame;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=20;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="200" y="510" width="700" height="100" as="geometry" />
+    </mxCell>
+    <mxCell id="19" value="setEstado(REVERTIDA)" style="html=1;verticalAlign=bottom;endArrow=block;endFill=1;fontSize=11;" edge="1" parent="1" source="3" target="5">
+      <mxGeometry relative="1" y="540" as="geometry" />
+    </mxCell>
+    <mxCell id="20" value="revertirEloSR(sancion)" style="html=1;verticalAlign=bottom;endArrow=block;endFill=1;fontSize=11;" edge="1" parent="1" source="3" target="3">
+      <mxGeometry relative="1" y="580" as="geometry" />
+    </mxCell>
+    <mxCell id="21" value="Compensar Elo/SR afectados" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;size=14;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="250" y="620" width="220" height="50" as="geometry" />
+    </mxCell>
+    <mxCell id="22" value="[RECHAZADA] -> sancion firme" style="shape=frame;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=20;fillColor=#d5e8d4;strokeColor=#82b366;fontSize=10;fontStyle=1;" vertex="1" parent="1">
+      <mxGeometry x="200" y="650" width="700" height="60" as="geometry" />
+    </mxCell>
+    <mxCell id="23" value="setEfectosAplicados(true)" style="html=1;verticalAlign=bottom;endArrow=block;endFill=1;fontSize=11;" edge="1" parent="1" source="3" target="5">
+      <mxGeometry relative="1" y="675" as="geometry" />
+    </mxCell>
+    <mxCell id="24" value="setEstado(decision)" style="html=1;verticalAlign=bottom;endArrow=block;endFill=1;fontSize=11;" edge="1" parent="1" source="3" target="4">
+      <mxGeometry relative="1" y="705" as="geometry" />
+    </mxCell>
+    <mxCell id="25" value="notificar(RESOLUCION_APELACION)" style="html=1;verticalAlign=bottom;endArrow=block;endFill=1;fontSize=11;" edge="1" parent="1" source="3" target="2">
+      <mxGeometry relative="1" y="745" as="geometry" />
+    </mxCell>
+    <mxCell id="26" value="RF-065 apelar | RF-080 resolver" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;size=14;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=10;" vertex="1" parent="1">
+      <mxGeometry x="50" y="785" width="220" height="50" as="geometry" />
+    </mxCell>
+
