@@ -1,0 +1,112 @@
+@startuml uml-clases-datos
+' ═══════════════════════════════════════════════════════════════════════
+' Diagrama de Clases - DATOS DE CARRERA: Vueltas, Sesiones, Archivos
+' Proyecto: Low Fuel Motorsport
+' ═══════════════════════════════════════════════════════════════════════
+
+skinparam classAttributeIconSize 0
+skinparam classFontSize 13
+skinparam classFontName Consolas
+skinparam defaultFontSize 11
+skinparam shadowing false
+
+skinparam class {
+  BackgroundColor #fff2cc
+  BorderColor #d6b656
+  HeaderBackgroundColor #d6b656
+  HeaderFontColor #ffffff
+  AttributeFontColor #333333
+  ArrowColor #333333
+}
+
+skinparam package {
+  BackgroundColor #f5f5f5
+  BorderColor #aaaaaa
+}
+
+' ── Enums ─────────────────────────────────────────────────────────────
+
+enum TipoArchivo {
+  SETUP
+  PAQUETE
+  CARGA
+  OTRO
+}
+
+' ── Entidades ─────────────────────────────────────────────────────────
+
+class ArchivoCarrera {
+  - id : Long
+  - nombre : String
+  - ruta : String
+  - tipo : TipoArchivo
+}
+
+class VueltaCarrera {
+  - id : Long
+  - numeroVuelta : Integer
+  - tiempoMs : Long
+  - sector1 : Long
+  - sector2 : Long
+  - sector3 : Long
+  - cortes : Integer
+  - neumatico : String
+  - tipo : String
+}
+
+class SesionClasificacion {
+  - id : Long
+  - fecha : LocalDateTime
+  - tiempo : Long
+  - diferenciaPole : Long
+  - modeloAuto : String
+  - skinAuto : String
+}
+
+class SesionProcesada {
+  - id : Long
+  - nombreArchivo : String
+  - tipo : String
+  - fechaProcesamiento : LocalDateTime
+}
+
+' ── Referencias ───────────────────────────────────────────────────────
+
+class Carrera <<Ref>>
+class Usuario <<Ref>>
+
+' ── Relaciones ────────────────────────────────────────────────────────
+
+ArchivoCarrera "1" -- "0..*" Carrera : archivos >
+Carrera "1" -- "0..*" VueltaCarrera : vueltas >
+Carrera "1" -- "0..*" SesionClasificacion : clasificación >
+Carrera "1" -- "0..*" SesionProcesada : sesiones procesadas >
+
+VueltaCarrera }o--|| Carrera
+VueltaCarrera }o--|| Usuario
+
+SesionClasificacion }o--|| Carrera
+SesionClasificacion }o--|| Usuario
+
+SesionProcesada }o--|| Carrera
+
+' ── Constraints ───────────────────────────────────────────────────────
+
+note bottom of VueltaCarrera
+  <<unique>> (carrera_id, usuario_id,
+  numero_vuelta, tipo)
+end note
+
+note bottom of SesionProcesada
+  <<unique>> (nombre_archivo)
+  Garantiza idempotencia:
+  un JSON se procesa 1 sola vez
+end note
+
+note right of ArchivoCarrera
+  FK en Carrera (nullable)
+  Una carrera puede no tener
+  archivos asociados
+end note
+
+@enduml

@@ -1,0 +1,183 @@
+@startuml uml-clases-incidentes
+' ═══════════════════════════════════════════════════════════════════════
+' Diagrama de Clases - INCIDENTES, SANCIONES, APELACIONES, RATING
+' Proyecto: Low Fuel Motorsport
+' ═══════════════════════════════════════════════════════════════════════
+
+skinparam classAttributeIconSize 0
+skinparam classFontSize 13
+skinparam classFontName Consolas
+skinparam defaultFontSize 11
+skinparam shadowing false
+
+skinparam class {
+  BackgroundColor #f8cecc
+  BorderColor #b85450
+  HeaderBackgroundColor #b85450
+  HeaderFontColor #ffffff
+  AttributeFontColor #333333
+  ArrowColor #333333
+}
+
+skinparam package {
+  BackgroundColor #f5f5f5
+  BorderColor #aaaaaa
+}
+
+' ── Enums ─────────────────────────────────────────────────────────────
+
+enum EstadoIncidente {
+  PENDIENTE
+  EN_ANALISIS
+  RESUELTO
+}
+
+enum RolPilotoIncidente {
+  CAUSANTE
+  AFECTADO
+}
+
+enum DecisionComisario {
+  A_FAVOR
+  EN_CONTRA
+  ABSTENCION
+}
+
+enum TipoSancion {
+  PUESTOS
+  SEGUNDOS
+  DRIVE_THROUGH
+  STOP_AND_GO
+  DESCALIFICACION
+  ELO
+  SAFETY_RATING
+}
+
+enum OrigenSancion {
+  REAL_PENALTY
+  COMISARIO
+  ADMIN
+}
+
+enum EstadoApelacion {
+  PENDIENTE
+  APROBADA
+  RECHAZADA
+}
+
+' ── Entidades ─────────────────────────────────────────────────────────
+
+class Incidente {
+  - id : Long
+  - vuelta : Integer
+  - descripcion : String
+  - videoUrl : String
+  - fecha : LocalDateTime
+  - estado : EstadoIncidente
+}
+
+class IncidentePiloto {
+  - id : Long
+  - rol : RolPilotoIncidente
+}
+
+class VotoComisario {
+  - id : Long
+  - decision : DecisionComisario
+  - comentario : String
+  - fecha : LocalDateTime
+}
+
+class ResolucionIncidente {
+  - id : Long
+  - explicacion : String
+  - fecha : LocalDateTime
+}
+
+class Sancion {
+  - id : Long
+  - tipo : TipoSancion
+  - valor : Integer
+  - motivo : String
+  - origen : OrigenSancion
+  - idExterno : String
+  - fecha : LocalDateTime
+  - efectosAplicados : Boolean
+}
+
+class Apelacion {
+  - id : Long
+  - motivo : String
+  - estado : EstadoApelacion
+  - respuestaAdmin : String
+  - fecha : LocalDateTime
+}
+
+class EloSancion {
+  - id : Long
+  - cambio : Integer
+  - motivo : String
+  - fecha : LocalDateTime
+}
+
+class SafetyRatingSancion {
+  - id : Long
+  - cambio : Integer
+  - motivo : String
+  - fecha : LocalDateTime
+}
+
+' ── Relaciones ────────────────────────────────────────────────────────
+
+class Carrera <<Ref>>
+class Usuario <<Ref>>
+
+Incidente "1" -- "1..*" IncidentePiloto : involucra >
+Incidente "1" -- "0..*" VotoComisario : recibe >
+Incidente "1" -- "0..1" ResolucionIncidente : tiene >
+
+ResolucionIncidente "1" -- "1" Incidente : resuelve >
+ResolucionIncidente }o--|| Usuario : comisario >
+
+IncidentePiloto }o--|| Usuario : piloto >
+VotoComisario }o--|| Usuario : comisario >
+
+Incidente }o--|| Carrera : ocurre en >
+Incidente }o--|| Usuario : reportado por >
+
+Sancion "1" -- "0..*" Apelacion : puede apelarse >
+Sancion }o--|| Usuario : aplica a >
+Sancion }o--|| Carrera : de >
+Sancion }o--|| ResolucionIncidente : originada por >
+
+Apelacion }o--|| Usuario : presenta >
+
+EloSancion }o--|| Usuario : ajusta >
+EloSancion }o--|| Carrera : de >
+
+SafetyRatingSancion }o--|| Usuario : ajusta >
+SafetyRatingSancion }o--|| Carrera : de >
+
+' ── Notes ─────────────────────────────────────────────────────────────
+
+note bottom of IncidentePiloto
+  <<unique>> (incidente_id, usuario_id)
+end note
+
+note bottom of VotoComisario
+  <<unique>> (incidente_id, comisario_id)
+  Un comisario = 1 voto por incidente
+end note
+
+note right of ResolucionIncidente
+  <<1:1>> con Incidente
+  (unique en incidente_id)
+end note
+
+note bottom of Sancion
+  resolucion_id es nullable
+  (sanciones directas del admin
+  no tienen resolución previa)
+end note
+
+@enduml

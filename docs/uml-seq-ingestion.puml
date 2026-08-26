@@ -1,0 +1,111 @@
+@startuml uml-seq-ingestion
+' ═══════════════════════════════════════════════════════════════════════
+' Diagrama de Secuencia: Ingestión de Sesiones de Assetto Corsa
+' Flujo G del sistema Low Fuel Motorsport
+' ═══════════════════════════════════════════════════════════════════════
+
+skinparam sequenceMessageAlign center
+skinparam defaultFontSize 11
+skinparam shadowing false
+skinparam responseMessageBelowArrow true
+
+skinparam sequence {
+  ParticipantBackgroundColor #dae8fc
+  ParticipantBorderColor #6c8ebf
+  ActorBackgroundColor #000000
+  ActorBorderColor #000000
+  LifeLineBackgroundColor #f5f5f5
+  LifeLineBorderColor #6c8ebf
+  ArrowColor #333333
+  DividerBackgroundColor #e1d5e7
+  DividerBorderColor #9673a6
+  GroupBackgroundColor #d5e8d4
+  GroupBorderColor #82b366
+  NoteBackgroundColor #fff2cc
+  NoteBorderColor #d6b656
+}
+
+title **Secuencia: Ingestión Sesiones Assetto Corsa**\nFlujo G
+
+participant "SesionFolder\nWatcher" as W
+participant ":SesionServidor\nService" as S
+participant ":SesionClasificacion" as SC
+participant ":ResultadoCarrera" as RC
+participant "EloCalculator" as EC
+participant "SrCalculator" as SR
+participant ":Incidente" as INC
+participant ":SesionProcesada" as SP
+
+== PASO 1: WATCHER DETECTA ARCHIVO ==
+
+note right of W : @Scheduled cada 10s\nEscanea carpeta de sesiones\nFormato: <carreraId>_<fecha>_<TIPO>.json
+
+W -> S : detectar(archivo.json)
+activate S #dae8fc
+
+S -> SP : verificarSiProcesado(nombreArchivo)
+activate SP #fff2cc
+SP --> S : noExiste
+deactivate SP
+
+note right of SP : RF: Idempotencia via\nsesion_procesada (UNIQUE\nen nombre_archivo)
+
+== PASO 2: PARSEAR JSON DE AC ==
+
+S -> S : parsearJSON(archivo)
+note right of S : Estructura AC:\nTrackName, Type, Cars[],\nResult[], Laps[], Events[]
+
+S -> S : correlacionar(driverGUID → usuario.guidSteam)
+note right of S : Se ignoran drivers\nsin GUID conocido
+
+group alt [Type == QUALIFY]
+  S -> SC : crear(carrera, usuario, tiempo, diferenciaPole)
+  activate SC #fff2cc
+  note right of SC : Se ordena por tiempo\nEl 1° obtiene pole
+  SC --> S : sesionClasificacion
+  deactivate SC
+
+  S -> S : resultado.poles = true (al 1°)
+
+else [Type == RACE]
+  S -> RC : crear(carrera, usuario, pos, tiempo, bestLap)
+  activate RC #d5e8d4
+  note right of RC : DNF (totalTime=0)\nal final, finalizo=false\nvueltaRapida = bestLap
+  RC --> S : resultadoCarrera
+  deactivate RC
+
+  == Flujo B: Rating + Campeonato ==
+  S -> EC : calcularElo(...)
+  activate EC #e1d5e7
+  EC --> S : eloGanado
+  deactivate EC
+
+  S -> SR : calcularSR(...)
+  activate SR #e1d5e7
+  SR --> S : srGanado
+  deactivate SR
+
+else [Events → colisiones]
+  S -> INC : autoGenerar(carrera, pilotos, colision)
+  activate INC #f8cecc
+  note right of INC : Autogenera incidente\npor cada colisión\ndetectada en Events[]
+  INC --> S : incidente
+  deactivate INC
+end
+
+== PASO 3: REGISTRAR PROCESAMIENTO ==
+
+S -> SP : crear(carrera, nombreArchivo, tipo)
+activate SP
+SP --> S : sesionProcesada
+deactivate SP
+
+S -> S : moverArchivo(procesadas/)
+note right of S : Si error → mover\na carpeta errores/
+
+S --> W : procesamiento completo
+deactivate S
+
+note over W, SP : **Flujo G**: Watcher → AC JSON → Clasificación + Resultados + Incidentes\nReemplaza al flujo anterior de Real Penalty
+
+@enduml
