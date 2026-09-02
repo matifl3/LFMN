@@ -71,8 +71,9 @@
       </div>
 
       <div class="card" style="margin-bottom:var(--sp-8); display:none" id="mp-panel-password">
-        <h3 style="margin-bottom:var(--sp-5)">Cambiar contraseña</h3>
-        <div class="field">
+        <h3 id="mp-pass-titulo" style="margin-bottom:var(--sp-2)">Cambiar contraseña</h3>
+        <p class="text-tertiary" style="font-size:var(--fs-sm); margin-bottom:var(--sp-5)" id="mp-pass-note">Creá una contraseña para poder ingresar también con email.</p>
+        <div class="field" id="mp-field-actual">
           <label for="mp-pass-actual">Contraseña actual</label>
           <input class="input" id="mp-pass-actual" type="password">
         </div>
@@ -130,6 +131,7 @@
 </footer>
 
 <script src="js/api.js"></script>
+<script src="js/motion.js"></script>
 <script src="js/shell.js"></script>
 <script src="js/profile.js"></script>
 </body>

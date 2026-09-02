@@ -4,9 +4,14 @@
   const L = window.LFM;
 
   const formLogin = document.getElementById('form-login');
-  const formReg = document.getElementById('form-register');
+  const panelReg = document.getElementById('panel-register');
   const tabLogin = document.getElementById('tab-login');
   const tabRegister = document.getElementById('tab-register');
+
+  if (sessionStorage.getItem('lfm_msg_pass_changed')) {
+    sessionStorage.removeItem('lfm_msg_pass_changed');
+    L.toast('Contraseña actualizada. Ingresá con tu nueva contraseña.', 'success');
+  }
 
   function next() {
     const p = new URLSearchParams(location.search).get('next');
@@ -21,7 +26,19 @@
     tabLogin.classList.toggle('active', !register);
     tabRegister.classList.toggle('active', register);
     formLogin.style.display = register ? 'none' : 'block';
-    formReg.style.display = register ? 'block' : 'none';
+    panelReg.style.display = register ? 'block' : 'none';
+  }
+
+  function iniciarConSteam() {
+    return L.api('/steam/auth-url', { auth: false }).then(function (data) {
+      if (data && data.url) {
+        window.location.href = data.url;
+      } else {
+        L.toast('No se pudo iniciar el ingreso con Steam.', 'error');
+      }
+    }).catch(function (err) {
+      L.toast(err.message, 'error');
+    });
   }
 
   if (location.hash === '#register') setTab(true);
@@ -47,43 +64,16 @@
     }
   });
 
-  formReg.addEventListener('submit', async function (e) {
-    e.preventDefault();
-    const btn = document.getElementById('btn-register');
-    btn.disabled = true;
-    const email = document.getElementById('reg-email').value.trim();
-    const password = document.getElementById('reg-pass').value;
-    try {
-      await L.post('/usuarios/registro', {
-        email: email,
-        password: password,
-        nombrePiloto: document.getElementById('reg-nombre').value.trim()
-      });
-      const data = await L.post('/usuarios/login', { email: email, password: password });
-      L.setSession(data.token, data.usuario);
-      L.toast('Cuenta creada correctamente', 'success');
-      location.href = '01-home.html';
-    } catch (err) {
-      L.toast(err.message, 'error');
-      btn.disabled = false;
-    }
-  });
-
-  document.getElementById('btn-steam').addEventListener('click', async function () {
+  document.getElementById('btn-steam').addEventListener('click', function () {
     const btn = this;
     btn.disabled = true;
-    try {
-      const data = await L.api('/steam/auth-url', { auth: false });
-      if (data && data.url) {
-        window.location.href = data.url;
-      } else {
-        L.toast('No se pudo iniciar el ingreso con Steam.', 'error');
-        btn.disabled = false;
-      }
-    } catch (err) {
-      L.toast(err.message, 'error');
-      btn.disabled = false;
-    }
+    iniciarConSteam().finally(function () { btn.disabled = false; });
+  });
+
+  document.getElementById('btn-register-steam').addEventListener('click', function () {
+    const btn = this;
+    btn.disabled = true;
+    iniciarConSteam().finally(function () { btn.disabled = false; });
   });
 
   /* Retorno del flujo Steam: ?steam=ok&token=<jwt> o ?steam=nuevo&guid=<guid> o ?steam=invalido|expirado */
@@ -105,7 +95,7 @@
       });
     } else if (steam === 'nuevo' && guid) {
       document.getElementById('form-login').style.display = 'none';
-      document.getElementById('form-register').style.display = 'none';
+      panelReg.style.display = 'none';
       document.getElementById('tab-login').style.display = 'none';
       document.getElementById('tab-register').style.display = 'none';
       document.querySelector('.divider-or').style.display = 'none';

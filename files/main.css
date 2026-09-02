@@ -538,8 +538,7 @@ h4 {
   text-transform: uppercase;
   color: var(--text-secondary);
   padding-block: var(--sp-2);
-  border-bottom: 2px solid transparent;
-  transition: color var(--dur-base) var(--ease), border-color var(--dur-base) var(--ease);
+  transition: color var(--dur-base) var(--ease), background-size var(--dur-base) var(--ease);
 }
 
 .main-nav a:hover {
@@ -548,7 +547,6 @@ h4 {
 
 .main-nav a.active {
   color: var(--amber);
-  border-color: var(--amber);
 }
 
 .header-actions {
@@ -737,6 +735,46 @@ h4 {
   color: var(--amber-hi);
   border-color: var(--amber-dim);
   background: rgba(255, 176, 32, 0.09);
+}
+
+.auth-banner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  padding: var(--sp-5);
+  border: 1px solid var(--amber-dim);
+  border-radius: var(--r-md);
+  background: rgba(255, 176, 32, 0.08);
+  color: var(--amber-hi);
+  margin-bottom: var(--sp-4);
+}
+
+.auth-banner-icon {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  font-weight: 700;
+  background: rgba(255, 176, 32, 0.16);
+  border: 1px solid var(--amber-dim);
+  margin-bottom: var(--sp-2);
+}
+
+.auth-banner-title {
+  font-weight: 700;
+  color: var(--amber-hi);
+}
+
+.auth-banner-text {
+  font-size: var(--fs-sm);
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin-bottom: var(--sp-2);
+}
+
+.auth-banner-text strong {
+  color: var(--amber-hi);
 }
 
 .chip-rejected, .chip-sanctioned, .chip-dnf {
@@ -1800,4 +1838,205 @@ input[type=range] {
 
 .drop-zone svg {
   color: var(--text-tertiary);
+}
+
+/* ============================================================
+   MOTION — animaciones y micro-interacciones
+   ============================================================ */
+
+/* --- Reveal on scroll -------------------------------------- */
+.reveal {
+  opacity: 0;
+  will-change: opacity, transform;
+  transition: opacity var(--dur-slow) var(--ease), transform var(--dur-slow) var(--ease);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+.reveal-up { transform: translateY(18px); }
+.reveal-in { transform: scale(0.98); }
+.reveal.is-in { opacity: 1; transform: none; }
+
+/* --- Entrada escalonada de filas (stagger) ----------------- */
+.motion-item {
+  animation: rowIn var(--dur-base) var(--ease) both;
+  animation-delay: calc(var(--i, 0) * var(--stagger-gap, 40ms));
+}
+@keyframes rowIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* --- Brillo de barrido en botones (sheen) ------------------ */
+.btn {
+  position: relative;
+  overflow: hidden;
+}
+.btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 32%, rgba(255, 255, 255, 0.28) 50%, transparent 68%);
+  transform: translateX(-130%);
+  transition: transform 0.6s var(--ease);
+  pointer-events: none;
+}
+.btn:hover::after {
+  transform: translateX(130%);
+}
+
+/* --- Subrayado animado de la navegación --------------------- */
+.main-nav a {
+  background-image: linear-gradient(var(--amber), var(--amber));
+  background-repeat: no-repeat;
+  background-size: 0% 2px;
+  background-position: 0 100%;
+  transition: color var(--dur-base) var(--ease), background-size var(--dur-base) var(--ease);
+}
+.main-nav a:hover {
+  background-size: 100% 2px;
+}
+.main-nav a.active {
+  background-size: 100% 2px;
+}
+
+/* --- Cards: borde con glow al hover ------------------------- */
+.card-hover:hover {
+  border-color: var(--celeste-dim);
+  box-shadow: var(--shadow-lift), 0 0 0 1px rgba(82, 183, 232, 0.12);
+}
+
+/* --- Filas de carrera: sweep de velocidad al hover ---------- */
+.race-row {
+  position: relative;
+  overflow: hidden;
+}
+.race-row::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 42%, rgba(142, 210, 245, 0.09) 50%, transparent 58%);
+  transform: translateX(-120%);
+  transition: transform 0.65s var(--ease);
+  pointer-events: none;
+}
+.race-row:hover::after {
+  transform: translateX(120%);
+}
+
+/* --- Podio: pulso de brillo en la barra del 1° -------------- */
+.table tr.podium-1 td:first-child::before {
+  animation: podiumGlow 2.6s ease-in-out infinite;
+}
+.rank-badge.gold {
+  animation: shimmer 3.4s ease-in-out infinite;
+}
+@keyframes podiumGlow {
+  0%, 100% { box-shadow: 0 0 6px var(--podium-gold); }
+  50%      { box-shadow: 0 0 16px var(--podium-gold); }
+}
+@keyframes shimmer {
+  0%   { filter: brightness(1); }
+  50%  { filter: brightness(1.22); }
+  100% { filter: brightness(1); }
+}
+
+/* --- Dot de notificaciones: pulso --------------------------- */
+.icon-btn .dot {
+  animation: dotPulse 2.2s ease-in-out infinite;
+}
+@keyframes dotPulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.28); }
+}
+
+/* --- Overlay y panel de modal ------------------------------- */
+.modal-overlay {
+  animation: overlayIn var(--dur-base) var(--ease);
+}
+@keyframes overlayIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* --- Acentos decorativos: paneo lento ----------------------- */
+.pattern-trackgrid {
+  animation: gridPan 60s linear infinite;
+}
+.pattern-checker,
+.hero-checker {
+  animation: checkerPan 40s linear infinite;
+}
+@keyframes gridPan {
+  to { background-position: 42px 42px, 42px 42px; }
+}
+@keyframes checkerPan {
+  to { background-position: 16px 16px, 24px 24px; }
+}
+
+/* --- Empty states ------------------------------------------- */
+.empty-state {
+  animation: fadeIn 0.5s var(--ease) both;
+}
+
+/* --- Logros desbloqueados: pop sutil ------------------------ */
+.achievement-card.unlocked {
+  animation: popIn 0.45s var(--ease) both;
+}
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.94); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* --- Toast -------------------------------------------------- */
+#lfm-toast {
+  position: fixed;
+  bottom: 22px;
+  right: 22px;
+  z-index: 9999;
+  max-width: 340px;
+  padding: 12px 16px;
+  border-radius: var(--r-md);
+  color: #17110a;
+  font-family: var(--font-body);
+  font-size: var(--fs-sm);
+  line-height: 1.4;
+  background: var(--amber);
+  border: 1px solid var(--line-bright);
+  box-shadow: var(--shadow-lift);
+  overflow: hidden;
+  transform: translateY(16px);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform var(--dur-base) var(--ease), opacity var(--dur-base) var(--ease);
+}
+#lfm-toast.show {
+  transform: none;
+  opacity: 1;
+  pointer-events: auto;
+}
+#lfm-toast.error {
+  background: var(--danger);
+  color: #fff;
+}
+#lfm-toast.success {
+  background: var(--success-dim);
+  color: #eafff3;
+}
+#lfm-toast .toast-bar {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 3px;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.55);
+  animation: toastBar 3.4s linear forwards;
+  border-radius: var(--r-pill);
+}
+@keyframes toastBar {
+  from { width: 100%; }
+  to   { width: 0%; }
 }

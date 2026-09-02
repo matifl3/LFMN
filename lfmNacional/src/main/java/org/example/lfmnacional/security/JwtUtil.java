@@ -30,10 +30,14 @@ public class JwtUtil {
         Map<String, Object> claims = new HashMap<>();
         claims.put("rol", usuario.getRol().name());
         claims.put("nombrePiloto", usuario.getNombrePiloto());
-        return generarToken(usuario.getEmail(), claims, expiracionMinutos);
+        return generarToken(usuario.getEmail(), claims, expiracionMinutos, usuario.getTokenVersion() != null ? usuario.getTokenVersion() : 0);
     }
 
     public String generarToken(String subject, Map<String, Object> claims, long minutos) {
+        return generarToken(subject, claims, minutos, 0);
+    }
+
+    public String generarToken(String subject, Map<String, Object> claims, long minutos, int tokenVersion) {
         Date ahora = new Date();
         Date expiracion = new Date(ahora.getTime() + minutos * 60_000L);
         var builder = Jwts.builder()
@@ -42,6 +46,7 @@ public class JwtUtil {
                 .expiration(expiracion);
         claims.forEach(builder::claim);
         return builder
+                .claim("tv", tokenVersion)
                 .signWith(secretKey)
                 .compact();
     }
@@ -76,6 +81,11 @@ public class JwtUtil {
     public boolean esValido(String token, String email) {
         Claims claims = parseClaims(token);
         return email.equals(claims.getSubject()) && claims.getExpiration().after(new Date());
+    }
+
+    public int extraerTokenVersion(String token) {
+        Object tv = parseClaims(token).get("tv");
+        return tv == null ? 0 : Integer.parseInt(String.valueOf(tv));
     }
 
     private Claims parseClaims(String token) {

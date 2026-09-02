@@ -255,19 +255,22 @@
   /* -------- Toast -------- */
 
   function toast(msg, tipo) {
-    const color = tipo === 'error' ? 'var(--danger)' : (tipo === 'success' ? 'var(--success)' : 'var(--amber)');
     let el = document.getElementById('lfm-toast');
     if (!el) {
       el = document.createElement('div');
       el.id = 'lfm-toast';
-      el.style.cssText = 'position:fixed;bottom:20px;right:20px;z-index:9999;max-width:340px;padding:12px 16px;border-radius:var(--radius,8px);color:#fff;font-family:var(--font-body);font-size:var(--fs-sm);box-shadow:0 6px 24px rgba(0,0,0,.45);opacity:0;transition:opacity .25s;background:' + color + ';';
       document.body.appendChild(el);
     }
-    el.style.background = color;
+    el.className = tipo === 'error' ? 'error' : (tipo === 'success' ? 'success' : '');
     el.textContent = msg;
-    el.style.opacity = '1';
+    let bar = el.querySelector('.toast-bar');
+    if (bar) bar.remove();
+    bar = document.createElement('span');
+    bar.className = 'toast-bar';
+    el.appendChild(bar);
+    el.classList.add('show');
     clearTimeout(el._t);
-    el._t = setTimeout(function () { el.style.opacity = '0'; }, 3500);
+    el._t = setTimeout(function () { el.classList.remove('show'); }, 3400);
   }
 
   /* -------- Export ---------- */

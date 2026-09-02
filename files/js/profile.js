@@ -43,14 +43,27 @@
   document.getElementById('mp-cambiar-pass').addEventListener('click', async function () {
     const actual = document.getElementById('mp-pass-actual').value;
     const nueva = document.getElementById('mp-pass-nueva').value;
-    if (!actual || !nueva) { L.toast('Completá ambos campos.', 'error'); return; }
+    if (!nueva) { L.toast('Escribí la nueva contraseña.', 'error'); return; }
+    const body = { nuevaPassword: nueva };
+    if (user.passwordEstablecida) {
+      if (!actual) { L.toast('Escribí tu contraseña actual.', 'error'); return; }
+      body.passwordActual = actual;
+    }
     try {
-      await L.put('/usuarios/' + user.id + '/password', { passwordActual: actual, nuevaPassword: nueva });
-      L.toast('Contraseña actualizada', 'success');
-      document.getElementById('mp-pass-actual').value = '';
-      document.getElementById('mp-pass-nueva').value = '';
+      await L.put('/usuarios/' + user.id + '/password', body);
+      L.clearSession();
+      sessionStorage.setItem('lfm_msg_pass_changed', '1');
+      location.href = '02-auth.html';
     } catch (err) { L.toast(err.message, 'error'); }
   });
+
+  function renderPasswordPanel() {
+    const sinPass = !user.passwordEstablecida;
+    document.getElementById('mp-field-actual').style.display = sinPass ? 'none' : 'block';
+    document.getElementById('mp-pass-note').style.display = sinPass ? 'block' : 'none';
+    document.getElementById('mp-pass-titulo').textContent = sinPass ? 'Crear contraseña' : 'Cambiar contraseña';
+    document.getElementById('mp-cambiar-pass').textContent = sinPass ? 'Crear contraseña' : 'Cambiar contraseña';
+  }
 
   function renderSteam() {
     const u = L.getUser();
@@ -178,6 +191,7 @@
   }
 
   refreshHeader();
+  renderPasswordPanel();
   renderSteam();
   loadInscripciones();
   loadRecompensas();
