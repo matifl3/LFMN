@@ -22,11 +22,6 @@ public class UsuarioController {
 
     private final UsuarioService usuarioService;
 
-    @PostMapping("/registro")
-    public ResponseEntity<UsuarioResponse> registrar(@Valid @RequestBody UsuarioRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(usuarioService.registrar(request));
-    }
-
     @PostMapping("/registro-steam")
     public ResponseEntity<LoginResponse> registrarSteam(@Valid @RequestBody SteamRegistroRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(usuarioService.registrarSteam(request));
