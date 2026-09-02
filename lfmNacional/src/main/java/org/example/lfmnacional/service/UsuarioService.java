@@ -36,32 +36,6 @@ public class UsuarioService {
     private final JwtUtil jwtUtil;
 
     @Transactional
-    @CacheEvict(value = "usuarios", allEntries = true)
-    public UsuarioResponse registrar(UsuarioRequest request) {
-        if (request.password() == null || request.password().isBlank()) {
-            throw new BusinessException("La contrasena es obligatoria");
-        }
-        if (usuarioRepository.existsByEmail(request.email())) {
-            throw new BusinessException("Ya existe un usuario con el email " + request.email());
-        }
-        if (request.guidSteam() != null && usuarioRepository.existsByGuidSteam(request.guidSteam())) {
-            throw new BusinessException("Ya existe un usuario vinculado a esa cuenta de Steam");
-        }
-        if (request.nombrePiloto() != null && !request.nombrePiloto().isBlank()
-                && usuarioRepository.existsByNombrePiloto(request.nombrePiloto())) {
-            throw new BusinessException("Ya existe un usuario con ese nombre de piloto");
-        }
-        Usuario usuario = Usuario.builder()
-                .email(request.email())
-                .password(passwordEncoder.encode(request.password()))
-                .nombrePiloto(request.nombrePiloto())
-                .fotoPerfil(request.fotoPerfil())
-                .guidSteam(request.guidSteam())
-                .build();
-        return toResponse(usuarioRepository.save(usuario));
-    }
-
-    @Transactional
     public LoginResponse registrarSteam(SteamRegistroRequest request) {
         if (usuarioRepository.existsByEmail(request.email())) {
             throw new BusinessException("Ya existe un usuario con el email " + request.email());
@@ -77,6 +51,7 @@ public class UsuarioService {
                 .password(passwordEncoder.encode(UUID.randomUUID().toString()))
                 .nombrePiloto(request.nombrePiloto())
                 .guidSteam(request.guidSteam())
+                .passwordEstablecida(false)
                 .build();
         usuario = usuarioRepository.save(usuario);
         return new LoginResponse(jwtUtil.generarToken(usuario), toResponse(usuario));
@@ -142,13 +117,15 @@ public class UsuarioService {
     @Transactional
     public void updatePassword(Long id, CambioPasswordRequest request) {
         Usuario usuario = getEntity(id);
-        if (!passwordEncoder.matches(request.passwordActual(), usuario.getPassword())) {
+        if (usuario.isPasswordEstablecida() && !passwordEncoder.matches(request.passwordActual(), usuario.getPassword())) {
             throw new BusinessException("La contrasena actual es incorrecta");
         }
-        if (request.nuevaPassword().length() < MIN_LENGTH_PASSWORD) {
+        if (request.nuevaPassword() == null || request.nuevaPassword().length() < MIN_LENGTH_PASSWORD) {
             throw new BusinessException("La nueva contrasena debe tener al menos " + MIN_LENGTH_PASSWORD + " caracteres");
         }
         usuario.setPassword(passwordEncoder.encode(request.nuevaPassword()));
+        usuario.setPasswordEstablecida(true);
+        usuario.setTokenVersion((usuario.getTokenVersion() != null ? usuario.getTokenVersion() : 0) + 1);
         usuarioRepository.save(usuario);
     }
 
@@ -267,6 +244,7 @@ public class UsuarioService {
                 usuario.getElo(),
                 usuario.getSafetyRating(),
                 usuario.getRol(),
-                usuario.getFechaRegistro());
+                usuario.getFechaRegistro(),
+                usuario.isPasswordEstablecida());
     }
 }

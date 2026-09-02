@@ -32,7 +32,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         // Auth endpoints (public)
-                        .requestMatchers("/api/usuarios/registro", "/api/usuarios/login", "/api/usuarios/registro-steam").permitAll()
+                        .requestMatchers("/api/usuarios/login", "/api/usuarios/registro-steam").permitAll()
                         // Steam OAuth flow (public)
                         .requestMatchers("/api/steam/**").permitAll()
                         // Public read-only endpoints

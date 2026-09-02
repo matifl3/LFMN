@@ -38,6 +38,14 @@ public class Usuario {
     @Column(nullable = false)
     private String password;
 
+    @Builder.Default
+    @Column(name = "password_establecida", nullable = false, columnDefinition = "boolean default true")
+    private boolean passwordEstablecida = true;
+
+    @Builder.Default
+    @Column(name = "token_version", nullable = false, columnDefinition = "int default 0")
+    private Integer tokenVersion = 0;
+
     @Size(max = 100)
     @Column(name = "nombre_piloto", unique = true, length = 100)
     private String nombrePiloto;

@@ -13,6 +13,7 @@ public record UsuarioResponse(
         Integer elo,
         Integer safetyRating,
         Rol rol,
-        LocalDateTime fechaRegistro
+        LocalDateTime fechaRegistro,
+        boolean passwordEstablecida
 ) {
 }
