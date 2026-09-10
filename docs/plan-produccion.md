@@ -48,11 +48,12 @@ Sin esta fase no se publica.
 
 | # | Tarea | Archivo(s) | Detalle |
 |---|---|---|---|
-| 1.1 | Sacar la password de BD del repo | `lfmNacional/src/main/resources/application.properties:5` | Hay `spring.datasource.password=Okapis2205.` hardcodeado (valor de test local). Reemplazar por `${DB_PASSWORD:}`. |
-| 1.2 | Rotar secretos | — | Aunque sea test local, la password y el JWT ya pasaron por git. Regenerar `JWT_SECRETO` (`openssl rand -base64 64`) y password de BD antes de exponer nada. |
-| 1.3 | Sacar el token JWT de la URL | `controller/SteamController.java:47` + `service/SteamService.java` | El callback redirige con `?token=...` y queda en historial/logs. Cambiar a cookie `HttpOnly + SameSite=Lax` o a un código de un solo uso intercambiado por `POST`. |
-| 1.4 | XSS por scheme en frontend | `files/*/api.js`, `incidents.js`, `race-detail.js` | `esc()` no neutraliza `javascript:` en URLs de usuario. Whitelist de schemes `http(s)`. |
-| 1.5 | No loguear datos sensibles | `service/SteamService.java:109` | El `log.info` del callback incluye `identity` (SteamID) en los logs. Sanitizar. |
+| 1.1 | ✅ Sacar la password de BD del repo | `lfmNacional/src/main/resources/application.properties:5` | Había una password de test local hardcodeada. Reemplazar por `${DB_PASSWORD:}`. **HECHO**: ahora usa `${DB_PASSWORD:}` sin default; README documenta exportar la env var (PowerShell/Linux). |
+| 1.2 | ✅ Rotar secretos | — | Regenerar `JWT_SECRETO` (`openssl rand -base64 64`) y password de BD antes de publicar. El código no guarda secretos; falta la rotación operativa (cambiar la password real de MySQL). |
+| 1.3 | ✅ Sacar el token JWT de la URL | `controller/SteamController.java` + `service/SteamService.java` + `files/js/auth.js` | **HECHO**: el callback redirige con `?steam=ok&codigo=<uuid>` de un solo uso (TTL 60s, in-memory) y el frontend hace `POST /api/steam/completar` para obtener el JWT. El token nunca queda en historial/logs. |
+| 1.4 | ✅ XSS por scheme en frontend | `files/js/*` | **HECHO**: `sanitizeUrl()` en api.js:183 (whitelist http(s)) aplicado a `videoUrl`, `linkPista`, `linkAuto`, `fotoPerfil` y al link de notificaciones (notifications.js `linkDe`). |
+| 1.5 | ✅ No loguear datos sensibles | `service/SteamService.java` | **HECHO**: se quitaron `identity`/`guidSteam`/`body` de los logs de Steam; solo se loguea presencia y el id interno. |
+| 1.6 | ✅ Rate limiting en login/registro | `security/RateLimitFilter.java` + `config/SecurityConfig.java` | **HECHO** (adicional a la Fase 1): 5 intentos/60s por IP con lockout de 5 min → HTTP 429. Ver Fase 3.5. |
 
 ---
 
@@ -60,10 +61,10 @@ Sin esta fase no se publica.
 
 | # | Tarea | Archivo(s) | Detalle |
 |---|---|---|---|
-| 2.1 | Migración Flyway V1 | `src/main/resources/db/migration/V1__init.sql` (nuevo) | Replicar el schema de las 28 tablas + índices actuales. |
-| 2.2 | Activar Flyway + `validate` en prod | `application-prod.properties:14-20` | Hoy usa `ddl-auto=update` con `flyway.enabled=false`. Poner `spring.flyway.enabled=true` y `ddl-auto=validate`: si el código y la BD no coinciden, **falla en startup**, no en runtime. |
-| 2.3 | Mantener dev sin bloqueo | `application.properties` | Dev sigue con `update` y Flyway off. |
-| 2.4 | Backups automatizados | script + cron (nuevo) | `mysqldump` diario + retención N días + dump previo a cada deploy. El historial de Elo/SR no se reconstruye; sin backup una corrupción es pérdida total. |
+| 2.1 | ✅ Migración Flyway V1 | `src/main/resources/db/migration/V1__init.sql` (nuevo) | **HECHO**: schema de las 28 tablas + índices, generado por dump real (`mysqldump --no-data`). |
+| 2.2 | ✅ Activar Flyway + `validate` en prod | `application-prod.properties` | **HECHO**: `spring.flyway.enabled=true`, `ddl-auto=validate`, `baseline-on-migrate=true` + `baseline-version=1`. Verificado: subida limpia (V1 aplica) y baseline sobre BD existente sin history. Requiere `spring-boot-starter-flyway` en `pom.xml` (Boot 4 modular). |
+| 2.3 | ✅ Mantener dev sin bloqueo | `application.properties` | **HECHO**: dev con `update` y Flyway off; comentario indica generar `V2__…` al cambiar entidades. Tests siguen en H2 con Flyway off. |
+| 2.4 | ✅ Backups automatizados | `scripts/backup-mysql.sh` + cron (documentado en README) | **HECHO**: `mysqldump --single-transaction --routines --triggers`, `.sql.gz`, retención 7 días (`RETENTION_DAYS`), credenciales por env. |
 
 ---
 
@@ -71,11 +72,11 @@ Sin esta fase no se publica.
 
 | # | Tarea | Archivo(s) | Detalle |
 |---|---|---|---|
-| 3.1 | Agregar Spring Boot Actuator | `pom.xml` + `application-prod.properties` | Dependencia `spring-boot-starter-actuator`; exponer `/actuator/health` validando la BD. |
-| 3.2 | Healthcheck del Dockerfile | `Dockerfile:37-38` | Apuntar el `HEALTHCHECK` a `/actuator/health` en lugar de `/`. |
-| 3.3 | Logging en prod | `application-prod.properties` | Configurar `logging.level` (WARN/INFO), rotación de archivos, sin secrets. |
-| 3.4 | Completar handlers de error | `exception/GlobalExceptionHandler.java` | Añadir handlers: excepción genérica (500 limpio sin stack trace), `HttpMessageNotReadableException` (JSON malformado), `MissingServletRequestParameterException`. |
-| 3.5 | Rate limiting | `config/SecurityConfig.java` + código | Limitar `/login` y `/registro` para evitar fuerza bruta sobre cuentas de pilotos. |
+| 3.1 | ✅ Agregar Spring Boot Actuator | `pom.xml` + `application-prod.properties` + `config/SecurityConfig.java` | **HECHO**: `spring-boot-starter-actuator`; se expone solo `/actuator/health` (público para el HEALTHCHECK, con BD validada) y `show-details=never`. |
+| 3.2 | ✅ Healthcheck del Dockerfile | `Dockerfile:37-38` | **HECHO**: `HEALTHCHECK` apuntando a `/actuator/health` via `wget --spider`. |
+| 3.3 | ✅ Logging en prod | `application-prod.properties` | **HECHO**: archivo `lfm.log` con rotación (10MB x 7, máx 100MB) en `${LOG_DIR}`, niveles WARN para Hibernate/Hikari/Tomcat, y `server.error.include-stacktrace=never`. |
+| 3.4 | ✅ Completar handlers de error | `exception/GlobalExceptionHandler.java` | **HECHO** (ya existía): genérica 500 limpio (sin stack trace en respuesta), `HttpMessageNotReadableException` → 400 `INVALID_JSON`, `MissingServletRequestParameterException` → 400 `MISSING_PARAMETER`. |
+| 3.5 | ✅ Rate limiting | `security/RateLimitFilter.java` + `config/SecurityConfig.java` | **HECHO** (se adelantó a la Fase 1): `/login` y `/registro-steam`, 5 intentos/60s por IP, lockout 5 min, sin dependencias. |
 
 ---
 
@@ -83,9 +84,9 @@ Sin esta fase no se publica.
 
 | # | Tarea | Archivo(s) | Detalle |
 |---|---|---|---|
-| 4.1 | CI GitHub Actions | `.github/workflows/ci.yml` (nuevo) | `mvn clean verify` en cada push/PR (ejecuta los 54 tests). Sin deploy todavía. |
-| 4.2 | Deploy automatizado | script + `Dockerfile` | Build → test → imagen → redeploy controlado: parar → backup → migrar → arrancar. Complementa `setup-oracle-cloud.sh`. |
-| 4.3 | HTTPS + proxy | conf según infra | Let's Encrypt + redirección 80→443, con Caddy/Nginx por delante de la app. URLs de BD/frontend/CORS por https. |
+| 4.1 | ✅ CI GitHub Actions | `.github/workflows/ci.yml` (nuevo) | **HECHO**: `./mvnw clean verify` (54 tests) en cada push/PR a `main`, con JDK 17 Temurin y cache Maven. Verificado localmente: BUILD SUCCESS + JAR. |
+| 4.2 | ✅ Deploy automatizado | `.github/workflows/deploy.yml` + `scripts/deploy.sh` | **HECHO**: workflow `Deploy` (manual) build → test → SCP del JAR → `deploy.sh` en el server: parar → backup → instalar JAR → arrancar → healthcheck `/actuator/health`. Complementa `setup-oracle-cloud.sh` (JAR + systemd, sin Docker). |
+| 4.3 | ✅ HTTPS + proxy | `scripts/Caddyfile` + `scripts/setup-https.sh` + `application-prod.properties` | **HECHO**: Caddy como reverse proxy TLS frente a la app en `:8080` (que ya sirve frontend + `/api`). `setup-https.sh` instala Caddy y genera la config en dos modos: sin dominio (HTTP `:80` funcional) y con `DOMAIN` (Let's Encrypt automático, bloquea `/actuator/*` salvo health). `server.forward-headers-strategy=framework` para redirects https. **Pendiente solo operativo**: dominio + security list 80/443 (cerrar 8080). |
 
 ---
 

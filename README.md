@@ -85,3 +85,199 @@ Detalles técnicos:
 - Sanciones / Incidentes (panel de comisario)
 - Panel de administración
 
+## Despliegue en producción
+
+### Opción 1: Docker (recomendado)
+
+```bash
+# Build de la imagen
+docker build -t lfm-app .
+
+# Ejecutar con variables de entorno
+docker run -d \
+  --name lfm \
+  -p 8080:8080 \
+  -e DB_USERNAME=lfm_user \
+  -e DB_PASSWORD=tu_password_seguro \
+  -e JWT_SECRETO=tu_jwt_secret_largo \
+  -e FRONTEND_URL=https://tudominio.com \
+  -e CORS_ALLOWED_ORIGINS=https://tudominio.com \
+  -e SPRING_PROFILES_ACTIVE=prod \
+  lfm-app
+```
+
+### Opción 2: Oracle Cloud Free Tier (gratis forever)
+
+El proyecto incluye un script de setup automático:
+
+```bash
+# 1. Crear instancia VM en Oracle Cloud (ARM, 4 OCPU, 24GB RAM, Ubuntu)
+# 2. Conectarse por SSH
+ssh -i tu-clave ubuntu@ip-publica
+
+# 3. Subir el proyecto
+scp -r lfmNacional/ ubuntu@ip:~/
+scp -r files/ ubuntu@ip:~/app/
+
+# 4. Ejecutar setup
+sudo bash setup-oracle-cloud.sh
+
+# 5. Subir el JAR compilado
+cd lfmNacional
+./mvnw clean package -DskipTests
+scp target/lfmNacional-0.0.1-SNAPSHOT.jar ubuntu@ip:~/app/app.jar
+
+# 6. Iniciar
+sudo systemctl start lfm
+```
+
+El script genera credenciales aleatorias, crea la BD MySQL y configura el servicio systemd.
+
+### Configuración de producción
+
+| Variable | Descripción |
+|---|---|
+| `DB_USERNAME` | Usuario de MySQL |
+| `DB_PASSWORD` | Password de MySQL |
+| `JWT_SECRETO` | Clave para firmar tokens JWT (generar con `openssl rand -base64 64`) |
+| `FRONTEND_URL` | URL pública de la app (ej: `https://tudominio.com`) |
+| `CORS_ALLOWED_ORIGINS` | Dominios permitidos (separados por coma) |
+| `SESIONES_DIR` | Ruta a la carpeta de sesiones de Assetto Corsa |
+| `SPRING_PROFILES_ACTIVE` | Usar `prod` para config segura |
+| `JPA_DDL_AUTO` | `validate` en prod (default); no usar `update` con Flyway activo |
+| `FLYWAY_BASELINE` | `true` (default) para bastear una BD existente sin migrations aplicadas |
+
+### Perfiles de Spring
+
+- **default** (desarrollo): `ddl-auto=update`, `show-sql=true`, datos de test,
+  Flyway deshabilitado
+- **prod** (producción): `ddl-auto=validate`, `show-sql=false`, Flyway habilitado,
+  sin DataSeeder
+
+## Migraciones de base de datos (Flyway)
+
+En **producción** el schema se gestiona con **Flyway** a partir de los archivos
+`lfmNacional/src/main/resources/db/migration/V*.sql`:
+
+- `V1__init.sql` contiene el schema completo (28 tablas).
+- `spring.flyway.enabled=true` y `JPA_DDL_AUTO=validate` en el perfil `prod`.
+- `FLYWAY_BASELINE=true` (default) con `baseline-version=1`: si la BD ya existe
+  pero no tiene la tabla `flyway_schema_history` (schema creado por Hibernate
+  con `ddl-auto=update`), Flyway la "bastea" marcando V1 como ya aplicado y no
+  re-crea las tablas.
+- Si cambiás entidades JPA, generá una nueva migración `V2__*.sql` (y siguientes)
+  para mantener el schema consistente en prod. En desarrollo local podés
+  seguir usando `ddl-auto=update` sin migraciones.
+
+No se necesita configuración especial de primera subida: sobre una **BD nueva**
+Flyway aplica V1 y `validate` confirma el schema.
+
+## Deploy automatizado (GitHub Actions)
+
+El workflow `.github/workflows/deploy.yml` publica una versión y hace el
+redeploy controlado en el servidor: **build → test → subir JAR → parar →
+backup → instalar → arrancar → healthcheck**.
+
+Se dispara manualmente:
+
+1. En GitHub: tab **Actions → Deploy → Run workflow** (rama `main`).
+2. El CI compila (`clean package`, con los 54 tests), sube el JAR por `scp`
+   a `$APP_DIR/staging/` y ejecuta `sudo bash $APP_DIR/scripts/deploy.sh`.
+
+### Secrets / variables del repositorio
+
+Configurar en GitHub (Settings → Secrets and variables → Actions):
+
+| Secret | Descripción |
+|---|---|
+| `DEPLOY_KEY` | Clave SSH privada del servidor (el runner sube como usuario no-root). |
+| `DEPLOY_HOST` | IP o dominio del servidor. |
+| `DEPLOY_USERNAME` | Usuario SSH (ej: `ubuntu`). |
+| `DEPLOY_PORT` | Puerto SSH (default `22`; se puede omitir). |
+| `DEPLOY_PATH` | Directorio de la app (default `/home/ubuntu/app`; se puede omitir). |
+
+### Requisitos en el servidor
+
+- Servicio systemd `lfm` operando (o ajustar `APP_SERVICE`/`APP_DIR` en
+  `scripts/deploy.sh`).
+- El usuario de `DEPLOY_USERNAME` debe poder usar `sudo` sin prompt para
+  `systemctl`, `cp` e `install`.
+- Carpeta `<APP_DIR>/staging/` con permiso de escritura para ese usuario
+  (el JAR se sube ahí).
+- Opcional: `<APP_DIR>/.env` con `DB_PASSWORD` para que el deploy haga backup
+  previo con `scripts/backup-mysql.sh`. Sin credenciales, el backup se saltea
+  y el deploy continúa.
+- Subir una vez los scripts al servidor:
+  `scp -r scripts/ ubuntu@ip:~/app/`
+
+## Scripts de utilidad
+
+- `setup-oracle-cloud.sh` — setup automático para Oracle Cloud Free Tier
+- `scripts/backup-mysql.sh` — backup de MySQL con `mysqldump`, comprimido en
+  `.sql.gz` y retención de 7 días (configurable con `RETENTION_DAYS`).
+- `scripts/deploy.sh` — redeploy controlado en el servidor, invocado por el
+  workflow de Deploy (ver sección anterior): parar → backup → instalar JAR →
+  arrancar → healthcheck `/actuator/health`.
+- `scripts/setup-https.sh` + `scripts/Caddyfile` — HTTPS con Caddy (Fase 4.3):
+  instala el proxy y genera la config en modo HTTP `:80` o HTTPS con
+  Let's Encrypt según `DOMAIN` (ver sección "HTTPS con Caddy").
+
+### Backup automático (cron)
+
+```bash
+# Backup diario a las 03:00, guardando solo copias locales del servidor
+crontab -e
+```
+
+```
+0 3 * * * DB_PASSWORD='tu_password' DB_NAME=lfm /home/ubuntu/app/scripts/backup-mysql.sh >> /home/ubuntu/app/logs/backup.log 2>&1
+```
+
+Los backups quedan en `/home/ubuntu/backups/` (o en la ruta de `BACKUP_DIR`).
+Se recomienda copiarlos también fuera del servidor (ej. a un bucket/DR).
+
+## HTTPS con Caddy (Fase 4.3)
+
+La app en `:8080` sirve el frontend estático (`files/`) y `/api`, así que el
+proxy solo agrega TLS delante. `scripts/setup-https.sh` instala Caddy y genera
+`/etc/caddy/Caddyfile` en dos modos:
+
+- **Sin `DOMAIN`**: HTTP en `:80` → `reverse_proxy 127.0.0.1:8080` (funciona hoy).
+- **Con `DOMAIN`** (ej. `lfm.tudominio.com`): Let's Encrypt automático con
+  renovación incluida, redirect 80→443 implícito y `scripts/Caddyfile` (bloquea
+  `/actuator/*` salvo `/actuator/health`).
+
+```bash
+# Modo sin dominio (proxy base activo)
+sudo bash scripts/setup-https.sh
+
+# Flip a HTTPS cuando tengas el dominio
+DOMAIN=lfm.tudominio.com ACME_EMAIL=tu@correo.com sudo bash scripts/setup-https.sh
+```
+
+Luego, en `<APP_DIR>/.env` y reiniciar la app:
+
+```
+FRONTEND_URL=https://lfm.tudominio.com
+CORS_ALLOWED_ORIGINS=https://lfm.tudominio.com
+```
+
+```bash
+sudo systemctl restart lfm
+```
+
+> **Fuera del script** (Oracle Cloud Console): abrir los puertos **80 y 443** en
+> el security list y, una vez activo HTTPS, **cerrar el 8080 externo** para que
+> todo el tráfico pase por el proxy. No requiere cambios en `deploy.sh`.
+
+## Pendientes (TBD)
+
+El modelo de requisitos tiene ambigüedades pendientes de validar con el cliente
+(detalles en la sección "PENDIENTES TBD" de `requisitos.txt`): umbrales de Elo
+por categoría, visibilidad de la contraseña del servidor, fórmula oficial de Elo,
+quórum de comisarios, entre otros. Los valores por defecto actuales están
+documentados en `docs/formulas-rating.md`.
+
+## Licencia
+
+Proyecto privado. Uso restringido.

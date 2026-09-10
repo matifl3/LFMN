@@ -28,6 +28,9 @@
   });
 
   document.getElementById('mp-guardar').addEventListener('click', async function () {
+    const btn = this;
+    L.clearFieldErrors();
+    L.busy(btn, true);
     try {
       const updated = await L.put('/usuarios/' + user.id + '/perfil', {
         email: document.getElementById('mp-mail').value.trim(),
@@ -36,25 +39,37 @@
       });
       L.updateUser(updated);
       refreshHeader();
+      L.busy(btn, false);
       L.toast('Perfil actualizado', 'success');
-    } catch (err) { L.toast(err.message, 'error'); }
+    } catch (err) { L.busy(btn, false); L.toast(err.message, 'error'); }
   });
 
   document.getElementById('mp-cambiar-pass').addEventListener('click', async function () {
-    const actual = document.getElementById('mp-pass-actual').value;
-    const nueva = document.getElementById('mp-pass-nueva').value;
-    if (!nueva) { L.toast('Escribí la nueva contraseña.', 'error'); return; }
-    const body = { nuevaPassword: nueva };
-    if (user.passwordEstablecida) {
-      if (!actual) { L.toast('Escribí tu contraseña actual.', 'error'); return; }
-      body.passwordActual = actual;
+    const btn = this;
+    const actual = document.getElementById('mp-pass-actual');
+    const nueva = document.getElementById('mp-pass-nueva');
+    L.clearFieldErrors();
+    L.setFieldInvalid(actual, false);
+    L.setFieldInvalid(nueva, false);
+    if (!nueva.value) { L.setFieldInvalid(nueva, true, 'Escribí la nueva contraseña.'); return; }
+    if (nueva.value.length < 6) { L.setFieldInvalid(nueva, true, 'Usá al menos 6 caracteres.'); return; }
+    if (user.passwordEstablecida && !actual.value) {
+      L.setFieldInvalid(actual, true, 'Escribí tu contraseña actual.');
+      return;
     }
+    const body = { nuevaPassword: nueva.value };
+    if (user.passwordEstablecida) body.passwordActual = actual.value;
+    L.busy(btn, true);
     try {
       await L.put('/usuarios/' + user.id + '/password', body);
       L.clearSession();
       sessionStorage.setItem('lfm_msg_pass_changed', '1');
       location.href = '02-auth.html';
-    } catch (err) { L.toast(err.message, 'error'); }
+    } catch (err) {
+      L.busy(btn, false);
+      L.setFieldInvalid(actual, true, err.message);
+      L.toast(err.message, 'error');
+    }
   });
 
   function renderPasswordPanel() {

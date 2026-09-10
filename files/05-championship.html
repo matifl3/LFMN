@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Campeonato — LFM Nacional</title>
 <link rel="stylesheet" href="main.css">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
 </head>
 <body>
 
@@ -52,7 +53,7 @@
     <span class="text-tertiary mono" style="font-size:var(--fs-sm); margin-left:auto" id="champ-info">—</span>
   </div>
 
-  <div class="table-wrap">
+  <div class="table-wrap table-scroll">
     <table class="table">
       <thead>
         <tr>
@@ -60,7 +61,7 @@
           <th class="num">Puntos</th>
         </tr>
       </thead>
-      <tbody id="champ-tabla">
+      <tbody id="champ-tabla" class="skeleton-zone">
         <tr><td colspan="3" class="text-tertiary">Cargando posiciones…</td></tr>
       </tbody>
     </table>

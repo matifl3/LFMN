@@ -273,6 +273,91 @@
     el._t = setTimeout(function () { el.classList.remove('show'); }, 3400);
   }
 
+  /* -------- Botón en carga (busy) -------- */
+
+  function busy(btn, on) {
+    if (!btn) return;
+    if (on) {
+      btn.classList.add('is-loading');
+      btn.setAttribute('aria-busy', 'true');
+    } else {
+      btn.classList.remove('is-loading');
+      btn.removeAttribute('aria-busy');
+    }
+  }
+
+  /* -------- Estados de campo inválido -------- */
+
+  function setFieldInvalid(input, on, msg) {
+    const field = input ? input.closest('.field') : null;
+    if (!field) return;
+    field.classList.toggle('invalid', !!on);
+    if (msg !== undefined) {
+      let el = field.querySelector('.error-msg');
+      if (!el) {
+        el = document.createElement('span');
+        el.className = 'error-msg';
+        field.appendChild(el);
+      }
+      el.textContent = msg || '';
+    }
+  }
+
+  function clearFieldErrors(root) {
+    (root || document).querySelectorAll('.field.invalid').forEach(function (f) { f.classList.remove('invalid'); });
+  }
+
+  /* -------- Skeletons en zonas de carga -------- */
+
+  function skeletonHtml(zone) {
+    const table = zone.closest ? zone.closest('.table-wrap table') : null;
+    if (zone.tagName === 'TBODY' || table) {
+      const t = zone.tagName === 'TBODY' ? zone : table;
+      const cols = Math.max(1, t.closest('.table-wrap').querySelectorAll('thead th, thead td').length);
+      let rows = '';
+      for (let i = 0; i < 5; i++) {
+        rows += '<tr><td colspan="' + cols + '"><span class="skeleton"></span></td></tr>';
+      }
+      return rows;
+    }
+    const cards = [];
+    for (let i = 0; i < 3; i++) {
+      cards.push(
+        '<div class="skeleton-card">' +
+        '<span class="skeleton" style="width:38%"></span>' +
+        '<span class="skeleton" style="width:72%"></span>' +
+        '<span class="skeleton" style="width:52%"></span>' +
+        '</div>'
+      );
+    }
+    return cards.join('');
+  }
+
+  function initSkeletons(root) {
+    (root || document).querySelectorAll('.skeleton-zone').forEach(function (zone) {
+      if (!/^cargando/i.test((zone.textContent || '').trim())) return;
+      zone.innerHTML = skeletonHtml(zone);
+    });
+  }
+
+  /* -------- Modales: cierre con Esc -------- */
+
+  function closeModalsOnEscape() {
+    document.addEventListener('keydown', function (e) {
+      if (e.key !== 'Escape') return;
+      document.querySelectorAll('.cta-dropdown-panel.open').forEach(function (p) { p.classList.remove('open'); });
+      document.querySelectorAll('.modal-overlay').forEach(function (ov) {
+        if (ov.style.display === 'none') return;
+        ov.style.display = 'none';
+        let closeBtn = null;
+        ov.querySelectorAll('button').forEach(function (b) {
+          if (!closeBtn && (b.matches('.modal-close') || /cerrar|close/i.test(b.id || ''))) closeBtn = b;
+        });
+        if (closeBtn) closeBtn.click();
+      });
+    });
+  }
+
   /* -------- Export ---------- */
 
   window.LFM = {
@@ -280,6 +365,17 @@
     api, get, post, put, del,
     getUser, getToken, setSession, updateUser, clearSession, requireAuth,
     fmtFecha, fmtFechaHora, fmtHora, fmtRel, fechaRelativa: fmtRel, fmtLap, esc, sanitizeUrl,
-    chipCarrera, chipEstado, raceRow, avatarHtml, toast
+    chipCarrera, chipEstado, raceRow, avatarHtml, toast,
+    busy, setFieldInvalid, clearFieldErrors, initSkeletons
   };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function () {
+      initSkeletons(document);
+      closeModalsOnEscape();
+    });
+  } else {
+    initSkeletons(document);
+    closeModalsOnEscape();
+  }
 })();
