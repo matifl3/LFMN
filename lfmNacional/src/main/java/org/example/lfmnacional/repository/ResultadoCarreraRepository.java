@@ -39,4 +39,7 @@ public interface ResultadoCarreraRepository extends JpaRepository<ResultadoCarre
             "and r.vueltaRapida = (select min(r2.vueltaRapida) from ResultadoCarrera r2 " +
             "where r2.carrera.id = r.carrera.id and r2.vueltaRapida is not null)")
     long countVueltaRapidaByUsuario(@Param("usuarioId") Long usuarioId);
+
+    @Query("select count(distinct r.usuario.id) from ResultadoCarrera r")
+    long countUsuariosConResultados();
 }

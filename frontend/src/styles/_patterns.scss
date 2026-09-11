@@ -137,7 +137,23 @@
 // ---- Profile header -----------------------------------------
 .profile-header { display: flex; gap: var(--sp-6); align-items: center; flex-wrap: wrap; padding: var(--sp-6); }
 .profile-avatar-wrap { position: relative; padding: var(--sp-2); }
-.profile-avatar-wrap .avatar { width: 108px; height: 108px; }
+.profile-avatar-wrap::before {
+  content: "";
+  position: absolute;
+  inset: calc(var(--sp-2) - 2px);
+  border-radius: 50%;
+  padding: 2px;
+  background: conic-gradient(var(--lbm-rojo-hi), var(--lbm-rojo-dim), var(--podio-oro), var(--lbm-rojo-hi));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  animation: ringSpin 7s linear infinite;
+  pointer-events: none;
+}
+.profile-avatar-wrap:hover::before { box-shadow: 0 0 18px -4px var(--lbm-rojo-glow); }
+@keyframes ringSpin { to { transform: rotate(360deg); } }
+.profile-avatar-wrap .avatar { width: 108px; height: 108px; border-radius: 50%; }
 .profile-name-block h1 { font-size: var(--fs-2xl); text-transform: none; }
 .profile-tagline { color: var(--texto-terciario); font-family: var(--font-mono); font-size: var(--fs-sm); margin-top: var(--sp-1); }
 .profile-ratings { display: flex; gap: var(--sp-7); margin-top: var(--sp-4); flex-wrap: wrap; }
@@ -163,6 +179,8 @@
   border-color: var(--lbm-rojo-dim);
   box-shadow: var(--shadow-rojo-glow);
 }
+.achievement-card.unlocked { animation: popIn 0.45s var(--ease) both; }
+@keyframes popIn { from { opacity: 0; transform: scale(0.94); } to { opacity: 1; transform: none; } }
 .achievement-check {
   position: absolute; top: var(--sp-4); right: var(--sp-4);
   width: 22px; height: 22px; border-radius: 50%;

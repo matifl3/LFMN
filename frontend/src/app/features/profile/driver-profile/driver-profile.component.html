@@ -1,0 +1,125 @@
+<section class="container section">
+  <a routerLink="/carreras" class="btn btn-ghost btn-sm" style="margin-bottom: var(--sp-4)">← Volver</a>
+
+  @if (usuario(); as u) {
+    <div class="card bracket profile-header">
+      <div class="profile-avatar-wrap bracket">
+        <app-avatar [user]="u" [size]="108" />
+      </div>
+      <div class="profile-name-block" style="flex: 1">
+        <span class="eyebrow">{{ categoria(u) || 'PILOTO' }} · LBM NACIONAL</span>
+        <h1>{{ u.nombrePiloto }}</h1>
+        <div class="profile-tagline">{{ tagline(u) }}</div>
+        <div class="profile-ratings">
+          <div class="rating-block">
+            <div class="rating-label">Elo</div>
+            <div class="rating-value mono glow-alerta">{{ u.elo ?? '—' }}</div>
+          </div>
+          <div class="rating-block">
+            <div class="rating-label">Safety Rating</div>
+            <div class="rating-value mono">{{ u.safetyRating ?? '—' }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    @if (stats(); as s) {
+      <div class="stat-grid">
+        <div class="stat-card"><div class="stat-label">Carreras</div><div class="stat-value mono">{{ s.carrerasDisputadas }}</div></div>
+        <div class="stat-card"><div class="stat-label">Victorias</div><div class="stat-value mono">{{ s.victorias }}</div></div>
+        <div class="stat-card"><div class="stat-label">Podios</div><div class="stat-value mono">{{ s.podios }}</div></div>
+        <div class="stat-card"><div class="stat-label">Poles</div><div class="stat-value mono">{{ s.poles }}</div></div>
+        <div class="stat-card"><div class="stat-label">Vueltas rápidas</div><div class="stat-value mono">{{ s.vueltasRapidas }}</div></div>
+        <div class="stat-card"><div class="stat-label">% Finalización</div><div class="stat-value mono">{{ s.porcentajeFinalizacion | number: '1.0-1' }}%</div></div>
+      </div>
+    }
+
+    <div class="tabs-pill" style="margin-bottom: var(--sp-6)">
+      <button type="button" class="tab" [class.active]="tab() === 'elo'" (click)="tab.set('elo')">Historial Elo</button>
+      <button type="button" class="tab" [class.active]="tab() === 'sr'" (click)="tab.set('sr')">Historial SR</button>
+      <button type="button" class="tab" [class.active]="tab() === 'resultados'" (click)="tab.set('resultados')">Resultados</button>
+      <button type="button" class="tab" [class.active]="tab() === 'logros'" (click)="tab.set('logros')">Logros</button>
+    </div>
+
+    @if (tab() === 'elo') {
+      <div class="card" style="margin-bottom: var(--sp-8)">
+        <h3 style="margin-bottom: var(--sp-5)">Evolución de Elo</h3>
+        @if (eloCum().length < 2) {
+          <p class="text-terciario">No hay datos suficientes para graficar.</p>
+        } @else {
+          <div [innerHTML]="chartSvg(eloCum(), '#e63946')"></div>
+        }
+      </div>
+    }
+
+    @if (tab() === 'sr') {
+      <div class="card" style="margin-bottom: var(--sp-8)">
+        <h3 style="margin-bottom: var(--sp-5)">Evolución de Safety Rating</h3>
+        @if (srCum().length < 2) {
+          <p class="text-terciario">No hay datos suficientes para graficar.</p>
+        } @else {
+          <div [innerHTML]="chartSvg(srCum(), '#38bdf8')"></div>
+        }
+      </div>
+    }
+
+    @if (tab() === 'resultados') {
+      @if (resultados().length === 0) {
+        <app-empty-state texto="Sin resultados registrados." />
+      } @else {
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Carrera</th>
+                <th>Categoría</th>
+                <th class="num">Pos</th>
+                <th class="num">Elo</th>
+                <th class="num">SR</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (r of resultados(); track r.id) {
+                <tr>
+                  <td class="data">{{ r.carreraNombre }}</td>
+                  <td>{{ r.categoriaNombre || '—' }}</td>
+                  <td class="num">
+                    @if (r.finalizo === false) {
+                      <span class="chip chip-dnf">DNF</span>
+                    } @else {
+                      <app-rank-badge [posicion]="r.posicionFinal ?? '—'" />
+                    }
+                  </td>
+                  <td class="num" [style.color]="ratColor(r.eloGanado)">{{ ratTxt(r.eloGanado) }}</td>
+                  <td class="num" [style.color]="ratColor(r.srGanado)">{{ ratTxt(r.srGanado) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    }
+
+    @if (tab() === 'logros') {
+      @if (logros().length === 0) {
+        <app-empty-state texto="Sin logros obtenidos." />
+      } @else {
+        <div class="grid grid-3">
+          @for (lg of logros(); track lg.logroId) {
+            <div class="card achievement-card unlocked bracket">
+              <div class="achievement-icon">🏆</div>
+              <span class="achievement-check">✓</span>
+              <h4 style="font-size: var(--fs-sm)">{{ lg.nombre }}</h4>
+              <p class="text-secondary" style="font-size: var(--fs-2xs)">{{ lg.descripcion }}</p>
+              @if (lg.fechaObtencion) {
+                <span class="text-terciario mono" style="font-size: var(--fs-2xs)">{{ lg.fechaObtencion | fmtFecha }}</span>
+              }
+            </div>
+          }
+        </div>
+      }
+    }
+  } @else {
+    <app-empty-state texto="No se pudo cargar el perfil del piloto." />
+  }
+</section>

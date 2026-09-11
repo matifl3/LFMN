@@ -17,6 +17,8 @@ public interface CarreraRepository extends JpaRepository<Carrera, Long> {
 
     List<Carrera> findByEstadoInAndFechaBefore(List<EstadoCarrera> estados, LocalDateTime fecha);
 
+    List<Carrera> findByEstadoInAndFechaBetween(List<EstadoCarrera> estados, LocalDateTime desde, LocalDateTime hasta);
+
     List<Carrera> findByFechaAfterOrderByFechaAsc(LocalDateTime fecha);
 
     List<Carrera> findByFechaBeforeOrderByFechaDesc(LocalDateTime fecha);
@@ -24,4 +26,6 @@ public interface CarreraRepository extends JpaRepository<Carrera, Long> {
     List<Carrera> findByCampeonato_IdOrderByFechaDesc(Long campeonatoId);
 
     Page<Carrera> findAll(Pageable pageable);
+
+    long countByEstado(EstadoCarrera estado);
 }

@@ -26,6 +26,8 @@ public interface ApelacionRepository extends JpaRepository<Apelacion, Long> {
 
     boolean existsBySancion_Id(Long sancionId);
 
+    long countByEstado(EstadoApelacion estado);
+
     @Modifying
     @Query(value = "DELETE FROM apelacion WHERE sancion_id IN (SELECT id FROM sancion WHERE carrera_id = ?1)", nativeQuery = true)
     void deleteByCarreraId(Long carreraId);

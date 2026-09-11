@@ -1,0 +1,127 @@
+<section class="container section">
+  <div class="section-head">
+    <div>
+      <span class="eyebrow">Cuenta</span>
+      <h2>Mi perfil</h2>
+    </div>
+    @if (user(); as u) {
+      <a [routerLink]="['/perfil', u.id]" class="btn btn-ghost">Ver perfil público</a>
+    }
+  </div>
+
+  <div class="admin-layout">
+    <div>
+      <div class="tabs-pill" style="margin-bottom: var(--sp-6)">
+        <button type="button" class="tab" [class.active]="tab() === 'datos'" (click)="tab.set('datos')">Datos personales</button>
+        <button type="button" class="tab" [class.active]="tab() === 'password'" (click)="tab.set('password')">Contraseña</button>
+        <button type="button" class="tab" [class.active]="tab() === 'steam'" (click)="tab.set('steam')">Steam</button>
+      </div>
+
+      @if (tab() === 'datos') {
+        <div class="card" style="margin-bottom: var(--sp-8)">
+          <h3 style="margin-bottom: var(--sp-5)">Datos personales</h3>
+          <div class="field">
+            <label for="mp-nombre">Nombre de piloto</label>
+            <input class="input" id="mp-nombre" [value]="nombre()" (input)="nombre.set($any($event.target).value)" />
+          </div>
+          <div class="field">
+            <label for="mp-mail">Email</label>
+            <input class="input" id="mp-mail" type="email" [value]="email()" (input)="email.set($any($event.target).value)" />
+          </div>
+          <div class="field">
+            <label for="mp-foto">Foto de perfil (URL)</label>
+            <input class="input" id="mp-foto" type="url" placeholder="https://…" [value]="foto()" (input)="foto.set($any($event.target).value)" />
+          </div>
+          <div class="flex" style="justify-content: flex-end; margin-top: var(--sp-6)">
+            <button type="button" class="btn btn-primary" [class.is-loading]="cargando()" [disabled]="cargando()" (click)="guardar()">Guardar cambios</button>
+          </div>
+        </div>
+      }
+
+      @if (tab() === 'password') {
+        <div class="card" style="margin-bottom: var(--sp-8)">
+          <h3 style="margin-bottom: var(--sp-2)">{{ user()?.passwordEstablecida ? 'Cambiar contraseña' : 'Crear contraseña' }}</h3>
+          @if (!user()?.passwordEstablecida) {
+            <p class="text-terciario" style="font-size: var(--fs-sm); margin-bottom: var(--sp-5)">Creá una contraseña para poder ingresar también con email.</p>
+          }
+          @if (user()?.passwordEstablecida) {
+            <div class="field">
+              <label for="mp-pass-actual">Contraseña actual</label>
+              <input class="input" id="mp-pass-actual" type="password" [value]="passwordActual()" (input)="passwordActual.set($any($event.target).value)" />
+            </div>
+          }
+          <div class="field">
+            <label for="mp-pass-nueva">Nueva contraseña</label>
+            <input class="input" id="mp-pass-nueva" type="password" placeholder="Mínimo 6 caracteres" [value]="passwordNueva()" (input)="passwordNueva.set($any($event.target).value)" />
+          </div>
+          <div class="flex" style="justify-content: flex-end; margin-top: var(--sp-6)">
+            <button type="button" class="btn btn-primary" [class.is-loading]="cargando()" [disabled]="cargando()" (click)="cambiarPassword()">
+              {{ user()?.passwordEstablecida ? 'Cambiar contraseña' : 'Crear contraseña' }}
+            </button>
+          </div>
+        </div>
+      }
+
+      @if (tab() === 'steam') {
+        <div class="card" style="margin-bottom: var(--sp-8)">
+          <h3 style="margin-bottom: var(--sp-2)">Vinculación con Steam</h3>
+          <p class="text-terciario" style="font-size: var(--fs-sm); margin-bottom: var(--sp-5)">Usamos tu cuenta de Steam para verificar tiempos y evitar suplantación de identidad en carrera.</p>
+          <div class="file-row">
+            <span class="flex gap-3" style="align-items: center">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style="color: #38bdf8"><path d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.87 8.37 6.84 9.73.5.1.68-.22.68-.49 0-.24-.01-.87-.01-1.71-2.78.62-3.37-1.37-3.37-1.37-.45-1.18-1.11-1.5-1.11-1.5-.91-.64.07-.63.07-.63 1 .07 1.53 1.05 1.53 1.05.89 1.57 2.34 1.11 2.91.85.09-.66.35-1.11.63-1.37-2.22-.26-4.56-1.14-4.56-5.06 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.31.1-2.73 0 0 .84-.28 2.75 1.05a9.3 9.3 0 0 1 5 0c1.91-1.33 2.75-1.05 2.75-1.05.55 1.42.2 2.47.1 2.73.64.72 1.03 1.63 1.03 2.75 0 3.93-2.34 4.8-4.57 5.05.36.32.68.94.68 1.9 0 1.37-.01 2.47-.01 2.81 0 .27.18.6.69.49A10.26 10.26 0 0 0 22 12.25C22 6.58 17.52 2 12 2z"/></svg>
+              <span>{{ user()?.guidSteam || 'Sin vincular' }}{{ user()?.guidSteam ? ' conectado' : '' }}</span>
+            </span>
+            <span class="chip" [class.chip-confirmed]="!!user()?.guidSteam" [class.chip-pending]="!user()?.guidSteam">
+              {{ user()?.guidSteam ? 'Verificado' : 'Sin vincular' }}
+            </span>
+          </div>
+          <div class="flex" style="justify-content: flex-end; gap: var(--sp-3); margin-top: var(--sp-5)">
+            <button type="button" class="btn btn-secondary" (click)="vincularSteam()">Vincular con Steam</button>
+            <button type="button" class="btn btn-danger" (click)="desvincularSteam()">Desvincular</button>
+          </div>
+        </div>
+      }
+
+      <h3 style="margin-bottom: var(--sp-4)">Mis inscripciones</h3>
+      <div class="flex-col gap-3" style="margin-bottom: var(--sp-8)">
+        @if (inscripciones().length === 0) {
+          <app-empty-state texto="No tenés inscripciones activas." />
+        } @else {
+          @for (ins of inscripciones(); track ins.id) {
+            <div class="race-row">
+              <div class="race-date">
+                <span class="day">{{ fechaDia(ins) }}</span>
+                <span class="mon">{{ fechaMes(ins) }}</span>
+              </div>
+              <div>
+                <strong style="font-family: var(--font-display); text-transform: uppercase; font-size: var(--fs-base)">{{ ins.carreraNombre }}</strong>
+                <div class="text-terciario" style="font-size: var(--fs-sm)">{{ ins.categoriaNombre || '' }}</div>
+              </div>
+              <app-chip [estado]="ins.estado" tipo="inscripcion" />
+              <button type="button" class="btn btn-danger btn-sm" (click)="cancelarInscripcion(ins)">Cancelar</button>
+            </div>
+          }
+        }
+      </div>
+    </div>
+
+    <aside class="panel-aside">
+      <h4 style="margin-bottom: var(--sp-4)">Recompensas disponibles</h4>
+      <div class="flex-col gap-3">
+        @if (recompensas().length === 0) {
+          <p class="text-terciario">No tenés recompensas pendientes.</p>
+        } @else {
+          @for (r of recompensas(); track r.id) {
+            <div class="card card-raised" style="padding: var(--sp-4)">
+              <div class="flex-between" style="margin-bottom: var(--sp-2)">
+                <strong style="font-size: var(--fs-sm)">{{ r.descripcion || 'Recompensa' }}</strong>
+                <span class="chip chip-confirmed" style="padding: 0.2em 0.6em">Lista</span>
+              </div>
+              <button type="button" class="btn btn-primary btn-sm btn-block" (click)="reclamar(r)">Reclamar</button>
+            </div>
+          }
+        }
+      </div>
+    </aside>
+  </div>
+</section>

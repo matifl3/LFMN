@@ -124,6 +124,7 @@
   font-size: 9px;
   display: grid; place-items: center;
   box-shadow: 0 0 0 2px var(--bg-principal);
+  animation: dotPulse 2.2s ease-in-out infinite;
 }
 
 .avatar {
@@ -138,6 +139,16 @@
   font-weight: 700;
   color: var(--texto-principal);
   background: var(--lbm-rojo-dim);
+}
+.header-actions .avatar,
+.header-actions .avatar-initials {
+  box-shadow: 0 0 0 2px var(--bg-principal), 0 0 0 1px var(--borde-brillo);
+  transition: box-shadow var(--dur-base) var(--ease), transform var(--dur-base) var(--ease);
+}
+.header-actions a:hover .avatar,
+.header-actions a:hover .avatar-initials {
+  box-shadow: 0 0 0 2px var(--bg-principal), 0 0 0 1px var(--lbm-rojo), 0 0 14px -2px var(--lbm-rojo-glow);
+  transform: scale(1.05);
 }
 
 // ---- Nav móvil (drawer) -----------------------------------------------------
@@ -312,7 +323,7 @@ textarea.textarea { min-height: 110px; resize: vertical; font-family: var(--font
 .table tr.podium-1 td:first-child::before, .table tr.podium-2 td:first-child::before, .table tr.podium-3 td:first-child::before {
   content: ''; position: absolute; left: 0; top: 8px; bottom: 8px; width: 3px;
 }
-.table tr.podium-1 td:first-child::before { background: var(--podio-oro); box-shadow: 0 0 10px var(--podio-oro); }
+.table tr.podium-1 td:first-child::before { background: var(--podio-oro); box-shadow: 0 0 10px var(--podio-oro); animation: podiumGlow 2.6s ease-in-out infinite; }
 .table tr.podium-2 td:first-child::before { background: var(--podio-plata); }
 .table tr.podium-3 td:first-child::before { background: var(--podio-bronce); }
 .table tr.podium-1 td { color: var(--texto-principal); }
@@ -326,7 +337,7 @@ textarea.textarea { min-height: 110px; resize: vertical; font-family: var(--font
   border: 1px solid var(--borde-brillo);
   color: var(--texto-secundario);
 }
-.rank-badge.gold { color: #241a03; background: linear-gradient(180deg, var(--podio-oro), #d9a520); border-color: transparent; }
+.rank-badge.gold { color: #241a03; background: linear-gradient(180deg, var(--podio-oro), #d9a520); border-color: transparent; animation: goldShimmer 3.4s ease-in-out infinite; }
 .rank-badge.silver { color: #1c2027; background: linear-gradient(180deg, var(--podio-plata), #9aa4b3); border-color: transparent; }
 .rank-badge.bronze { color: #2b1608; background: linear-gradient(180deg, var(--podio-bronce), #b76a37); border-color: transparent; }
 
@@ -390,6 +401,7 @@ input[type="range"] {
   align-items: center;
   justify-content: center;
   padding: var(--sp-5);
+  animation: overlayIn var(--dur-base) var(--ease);
 }
 .modal-panel {
   background: var(--bg-paneles);
@@ -397,7 +409,7 @@ input[type="range"] {
   border-radius: var(--r-md);
   padding: var(--sp-5);
   box-shadow: 0 24px 80px rgba(0,0,0,0.5);
-  animation: modalIn 0.2s ease;
+  animation: modalPop var(--dur-base) var(--ease);
   max-width: 640px;
   width: 100%;
   max-height: calc(100vh - var(--sp-9));
@@ -405,6 +417,8 @@ input[type="range"] {
 }
 .modal-header { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--sp-3); margin-bottom: var(--sp-4); }
 @keyframes modalIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes overlayIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes modalPop { from { opacity: 0; transform: scale(0.97) translateY(10px); } to { opacity: 1; transform: none; } }
 
 // ---- Footer -----------------------------------------------
 .site-footer { border-top: 1px solid var(--borde-hair); padding-block: var(--sp-7); margin-top: var(--sp-9); }
@@ -467,6 +481,7 @@ input[type="range"] {
   color: var(--texto-terciario);
   border: 1px dashed var(--borde-metal);
   border-radius: var(--r-md);
+  animation: fadeIn 0.5s var(--ease) both;
 }
 
 // ---- Rating block (profile) -------------------------------------------
@@ -484,3 +499,38 @@ input[type="range"] {
 // ---- Clase util: cursor pointer para rows ---------------------------------
 .row-link { cursor: pointer; }
 .row-link:hover td { background: var(--bg-superficie); }
+
+// ---- Micro-interacciones (efectos del front anterior) ---------------------
+.btn {
+  position: relative;
+  overflow: hidden;
+}
+.btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 32%, rgba(255,255,255,0.28) 50%, transparent 68%);
+  transform: translateX(-130%);
+  transition: transform 0.6s var(--ease);
+  pointer-events: none;
+}
+.btn:hover::after { transform: translateX(130%); }
+
+.race-row {
+  position: relative;
+  overflow: hidden;
+}
+.race-row::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 42%, rgba(198,26,26,0.09) 50%, transparent 58%);
+  transform: translateX(-120%);
+  transition: transform 0.65s var(--ease);
+  pointer-events: none;
+}
+.race-row:hover::after { transform: translateX(120%); }
+
+@keyframes dotPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.28); } }
+@keyframes podiumGlow { 0%, 100% { box-shadow: 0 0 6px var(--podio-oro); } 50% { box-shadow: 0 0 16px var(--podio-oro); } }
+@keyframes goldShimmer { 0%, 100% { filter: brightness(1); } 50% { filter: brightness(1.25); } }

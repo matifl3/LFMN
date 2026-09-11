@@ -1,0 +1,8 @@
+.race-row {
+  grid-template-columns: 64px 2fr 1fr auto;
+}
+@media (max-width: 900px) {
+  .race-row {
+    grid-template-columns: 1fr;
+  }
+}

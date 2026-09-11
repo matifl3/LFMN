@@ -20,4 +20,6 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     boolean existsByNombrePiloto(String nombrePiloto);
 
     List<Usuario> findByRol(Rol rol);
+
+    long countByRol(Rol rol);
 }

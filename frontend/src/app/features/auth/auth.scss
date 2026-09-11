@@ -1,0 +1,38 @@
+.auth-banner {
+  display: flex;
+  gap: var(--sp-3);
+  align-items: flex-start;
+  border: 1px dashed var(--status-alerta);
+  border-radius: var(--r-sm);
+  padding: var(--sp-4);
+  color: var(--texto-secundario);
+
+  .banner-icon {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: rgba(245, 166, 35, 0.15);
+    color: var(--status-alerta);
+    font-weight: 800;
+    font-family: var(--font-display);
+  }
+}
+
+.auth-shell {
+  min-height: calc(100vh - var(--header-h));
+}
+.auth-card {
+  background: var(--bg-paneles);
+  border: 1px solid var(--borde-metal);
+}
+
+.tabs-pill {
+  display: flex;
+  .tab {
+    flex: 1;
+    justify-content: center;
+  }
+}

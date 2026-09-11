@@ -1,0 +1,42 @@
+<section class="container-wide section">
+  <div class="section-head">
+    <div><span class="eyebrow">Por nivel de Elo</span><h2>Categorías</h2></div>
+  </div>
+
+  @if (cargando()) {
+    <div class="grid grid-3">
+      @for (i of [1,2,3]; track i) {
+        <div class="skeleton-card"><span class="skeleton" style="width:60%"></span><span class="skeleton" style="width:80%"></span></div>
+      }
+    </div>
+  } @else if (cats().length === 0) {
+    <app-empty-state texto="No hay categorías publicadas." />
+  } @else {
+    <div class="grid grid-3">
+      @for (c of cats(); track c.id) {
+        <a [routerLink]="['/carreras']" [queryParams]="{cat: c.id}" class="card card-hover category-card">
+          <div class="category-icon">🏆</div>
+          <h3>{{ c.nombre }}</h3>
+          @if (c.descripcion) {
+            <p class="text-secondary">{{ c.descripcion }}</p>
+          }
+          <div class="elo-range">
+            @if (c.eloMinimo != null && c.eloMaximo != null) {
+              <span>{{ c.eloMinimo }}</span><span class="arrow">→</span><span>{{ c.eloMaximo }}</span><span class="text-terciario">Elo</span>
+            } @else {
+              <span>—</span>
+            }
+          </div>
+          <div class="flex-between">
+            @if (c.eloMinimo != null && c.eloMaximo != null) {
+              <span class="chip chip-confirmed">Abierta</span>
+            } @else {
+              <span class="chip chip-closed">Próximamente</span>
+            }
+            <span class="text-terciario mono">{{ countCat(c) | number:'1.0-0':'es-AR' }} pilotos</span>
+          </div>
+        </a>
+      }
+    </div>
+  }
+</section>

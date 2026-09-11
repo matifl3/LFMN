@@ -4,10 +4,15 @@ import lombok.RequiredArgsConstructor;
 import org.example.lfmnacional.dto.carrera.CarreraRequest;
 import org.example.lfmnacional.dto.carrera.CarreraResponse;
 import org.example.lfmnacional.entity.Carrera;
+import org.example.lfmnacional.entity.Inscripcion;
+import org.example.lfmnacional.entity.Notificacion;
 import org.example.lfmnacional.enums.EstadoCarrera;
+import org.example.lfmnacional.enums.EstadoInscripcion;
+import org.example.lfmnacional.enums.TipoNotificacion;
 import org.example.lfmnacional.exception.ResourceNotFoundException;
 import org.example.lfmnacional.repository.CarreraRepository;
 import org.example.lfmnacional.repository.InscripcionRepository;
+import org.example.lfmnacional.repository.NotificacionRepository;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -27,11 +32,13 @@ import org.springframework.data.domain.Pageable;
 public class CarreraService {
 
     private static final int MINUTOS_CIERRE_PREVIO = 5;
+    private static final int MINUTOS_AVISO_INICIO = 30;
 
     private final CarreraRepository carreraRepository;
     private final CampeonatoService campeonatoService;
     private final ArchivoCarreraService archivoCarreraService;
     private final InscripcionRepository inscripcionRepository;
+    private final NotificacionRepository notificacionRepository;
 
     public Carrera getEntity(Long id) {
         return carreraRepository.findById(id)
@@ -162,6 +169,40 @@ public class CarreraService {
     @Scheduled(cron = "0 * * * * *")
     public void scheduledCierreInscripciones() {
         cerrarInscripcionesAutomaticamente();
+    }
+
+    @Transactional
+    public void notificarCarrerasPorComenzar() {
+        LocalDateTime ahora = LocalDateTime.now();
+        LocalDateTime limite = ahora.plusMinutes(MINUTOS_AVISO_INICIO);
+        List<EstadoCarrera> estados = List.of(EstadoCarrera.PROGRAMADA,
+                EstadoCarrera.INSCRIPCIONES_ABIERTAS,
+                EstadoCarrera.INSCRIPCIONES_CERRADAS);
+        List<Carrera> proximas = carreraRepository.findByEstadoInAndFechaBetween(estados, ahora, limite);
+        for (Carrera carrera : proximas) {
+            String link = "/carreras/" + carrera.getId();
+            if (notificacionRepository.existsByTipoAndLink(TipoNotificacion.CARRERA_INICIO, link)) {
+                continue;
+            }
+            List<Inscripcion> inscripciones = inscripcionRepository.findByCarrera_IdAndEstado(
+                    carrera.getId(), EstadoInscripcion.INSCRIPTO);
+            for (Inscripcion inscripcion : inscripciones) {
+                notificacionRepository.save(Notificacion.builder()
+                        .usuario(inscripcion.getUsuario())
+                        .tipo(TipoNotificacion.CARRERA_INICIO)
+                        .mensaje("La carrera \"" + carrera.getNombre()
+                                + "\" comienza en aproximadamente " + MINUTOS_AVISO_INICIO
+                                + " minutos. Preparate para ingresar al servidor.")
+                        .leida(false)
+                        .link(link)
+                        .build());
+            }
+        }
+    }
+
+    @Scheduled(cron = "0 * * * * *")
+    public void scheduledNotificacionInicioCarreras() {
+        notificarCarrerasPorComenzar();
     }
 
     private Map<Long, Long> countInscriptos() {

@@ -18,5 +18,7 @@ public interface IncidenteRepository extends JpaRepository<Incidente, Long> {
 
     boolean existsByCarrera_Id(Long carreraId);
 
+    long countByEstado(EstadoIncidente estado);
+
     void deleteByCarrera_Id(Long carreraId);
 }

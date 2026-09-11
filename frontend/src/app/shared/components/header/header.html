@@ -1,0 +1,76 @@
+<header class="site-header">
+  <div class="container-wide">
+    <a routerLink="/" class="brand">
+      <img src="logo.png" alt="" class="brand-logo" />
+      <span class="brand-name">LBM Nacional<small>Late Brake Motorsport</small></span>
+    </a>
+
+    <nav class="main-nav" [class.open]="menuAbierto()">
+      @for (link of navLinks(); track link.path) {
+        <a
+          [routerLink]="link.path"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: link.path === '/' }"
+          (click)="menuAbierto.set(false)"
+        >
+          {{ link.label }}
+        </a>
+      }
+    </nav>
+
+    <div class="header-actions">
+      <button type="button" class="nav-toggle" [class.open]="menuAbierto()" aria-label="Abrir menú" (click)="alternarMenu()">
+        <span class="hamb"><span></span></span>
+      </button>
+
+      <a routerLink="/notificaciones" class="icon-btn" aria-label="Notificaciones">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path>
+          <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path>
+        </svg>
+        @if (noLeidas() > 0) {
+          <span class="dot">{{ noLeidas() > 9 ? '9+' : noLeidas() }}</span>
+        }
+      </a>
+
+      @if (auth.autenticado()) {
+        <a routerLink="/mi-perfil" aria-label="Mi perfil">
+          <app-avatar [user]="auth.user()" [size]="38" />
+        </a>
+        <button type="button" class="btn btn-ghost btn-sm" style="font-size: var(--fs-2xs)" (click)="salir()">Salir</button>
+      } @else {
+        <a routerLink="/auth" class="btn btn-primary btn-sm">Ingresar</a>
+      }
+    </div>
+  </div>
+
+  @if (menuAbierto()) {
+    <div class="nav-overlay" (click)="menuAbierto.set(false)"></div>
+    <aside class="nav-drawer" [attr.aria-hidden]="!menuAbierto()">
+      <div class="drawer-brand">
+        <img src="logo.png" alt="" class="brand-logo" />
+        <span class="brand-name">LBM Nacional<small>Late Brake Motorsport</small></span>
+      </div>
+      @for (link of navLinks(); track link.path) {
+        <a
+          [routerLink]="link.path"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: link.path === '/' }"
+          (click)="menuAbierto.set(false)"
+        >
+          {{ link.label }}
+        </a>
+      }
+      <div class="drawer-foot">
+        @if (auth.autenticado()) {
+          <span class="text-terciario">{{ auth.user()?.nombrePiloto || auth.user()?.email }}</span>
+          <a routerLink="/mi-perfil" (click)="menuAbierto.set(false)">Mi perfil</a>
+          <a routerLink="/notificaciones" (click)="menuAbierto.set(false)">Notificaciones</a>
+          <a style="cursor:pointer; color: var(--lbm-rojo-hi)" (click)="salir()">Salir</a>
+        } @else {
+          <a routerLink="/auth" class="btn btn-primary btn-sm btn-block" (click)="menuAbierto.set(false)">Ingresar</a>
+        }
+      </div>
+    </aside>
+  }
+</header>

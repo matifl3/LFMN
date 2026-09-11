@@ -35,7 +35,7 @@ public class SteamController {
     @GetMapping("/vinculacion/callback")
     public RedirectView procesarCallback(@RequestParam Map<String, String> params) {
         String resultado = steamService.procesarCallback(params);
-        return new RedirectView(frontendUrl + "/09-my-profile.html?steam=" + resultado);
+        return new RedirectView(frontendUrl + "/mi-perfil?steam=" + resultado);
     }
 
     @GetMapping("/auth-url")
@@ -49,11 +49,11 @@ public class SteamController {
         String url;
         if (resultado.usuarioId() != null) {
             String codigo = steamService.generarCodigoAuth(resultado.usuarioId());
-            url = frontendUrl + "/02-auth.html?steam=ok&codigo=" + codigo;
+            url = frontendUrl + "/auth?steam=ok&codigo=" + codigo;
         } else if ("nuevo".equals(resultado.resultado())) {
-            url = frontendUrl + "/02-auth.html?steam=nuevo&guid=" + resultado.guidSteam();
+            url = frontendUrl + "/auth?steam=nuevo&guid=" + resultado.guidSteam();
         } else {
-            url = frontendUrl + "/02-auth.html?steam=" + resultado.resultado();
+            url = frontendUrl + "/auth?steam=" + resultado.resultado();
         }
         return new RedirectView(url);
     }

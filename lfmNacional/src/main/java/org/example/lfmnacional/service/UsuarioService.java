@@ -36,6 +36,24 @@ public class UsuarioService {
     private final JwtUtil jwtUtil;
 
     @Transactional
+    public LoginResponse registrar(RegistroRequest request) {
+        if (usuarioRepository.existsByEmail(request.email())) {
+            throw new BusinessException("Ya existe un usuario con el email " + request.email());
+        }
+        if (usuarioRepository.existsByNombrePiloto(request.nombrePiloto())) {
+            throw new BusinessException("Ya existe un usuario con ese nombre de piloto");
+        }
+        Usuario usuario = Usuario.builder()
+                .email(request.email())
+                .password(passwordEncoder.encode(request.password()))
+                .nombrePiloto(request.nombrePiloto())
+                .passwordEstablecida(true)
+                .build();
+        usuario = usuarioRepository.save(usuario);
+        return new LoginResponse(jwtUtil.generarToken(usuario), toResponse(usuario));
+    }
+
+    @Transactional
     public LoginResponse registrarSteam(SteamRegistroRequest request) {
         if (usuarioRepository.existsByEmail(request.email())) {
             throw new BusinessException("Ya existe un usuario con el email " + request.email());

@@ -1,0 +1,84 @@
+<main class="container-wide section">
+  <div class="section-head">
+    <div>
+      <span class="eyebrow">Calendario</span>
+      <h2>Carreras</h2>
+    </div>
+    <select class="select" (change)="onChangeCategoria($event)">
+      <option value="">Todas las categorías</option>
+      @for (c of cats(); track c.id) {
+        <option [value]="c.id">{{ c.nombre }}</option>
+      }
+    </select>
+  </div>
+
+  <div class="tabs-pill" style="margin-bottom: var(--sp-5)">
+    <button class="tab" [class.active]="view()==='proximas'" (click)="setView('proximas')">
+      Próximas <span class="count">{{ proximasFiltradas().length }}</span>
+    </button>
+    <button class="tab" [class.active]="view()==='pasadas'" (click)="setView('pasadas')">
+      Pasadas <span class="count">{{ pasadasFiltradas().length }}</span>
+    </button>
+  </div>
+
+  @if (cargando()) {
+    <div class="flex-col gap-3">
+      @for (i of [1, 2, 3]; track i) {
+        <div class="skeleton-card">
+          <span class="skeleton" style="width: 60%"></span>
+          <span class="skeleton" style="width: 80%"></span>
+        </div>
+      }
+    </div>
+  } @else {
+    <div class="flex-col gap-3">
+      @if (listaActual().length === 0) {
+        <app-empty-state texto="No hay carreras para mostrar." />
+      } @else {
+        @for (r of listaActual(); track r.id) {
+          <a [routerLink]="['/carreras', r.id]" class="race-row row-link">
+            <div class="race-date">
+              <span class="day">{{ raceDay(r) }}</span>
+              <span class="mon">{{ raceMon(r) }}</span>
+            </div>
+            <div class="race-meta">
+              <strong>{{ r.nombre }}{{ r.categoriaNombre ? ' — ' + r.categoriaNombre : '' }}</strong>
+              <span>{{ r.circuito }}{{ r.fecha ? ' · ' + raceHora(r) : '' }}</span>
+            </div>
+            <div>
+              <span class="chip chip-category">{{ r.categoriaNombre || '—' }}</span>
+            </div>
+            <div class="col-cupo" style="min-width: 110px">
+              <div class="progress-label">
+                <span>Inscriptos</span><span class="mono">{{ cupoN(r) }} / {{ r.cupoMaximo || '—' }}</span>
+              </div>
+              <div class="progress">
+                <div class="progress-bar" [class.full]="isFull(r)" [style.width.%]="cupoPct(r)"></div>
+              </div>
+            </div>
+            <div>
+              @if (r.estado==='CANCELADA') {
+                <app-chip estado="CANCELADA" tipo="carrera" />
+              } @else if (r.estado==='PROGRAMADA' || r.estado==='INSCRIPCIONES_ABIERTAS') {
+                @if (isFull(r)) {
+                  <span class="chip chip-closed">Cupo lleno</span>
+                } @else {
+                  <app-chip estado="INSCRIPCIONES_ABIERTAS" tipo="carrera" />
+                }
+              } @else {
+                <app-chip [estado]="r.estado" tipo="carrera" />
+              }
+            </div>
+            <div>
+              @if (view()==='pasadas') {
+                <span class="btn btn-primary btn-sm">Resultados</span>
+              } @else {
+                <span class="btn btn-primary btn-sm">Ver carrera</span>
+              }
+            </div>
+          </a>
+        }
+      }
+    </div>
+  }
+</main>

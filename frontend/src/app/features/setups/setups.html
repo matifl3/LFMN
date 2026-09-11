@@ -1,0 +1,208 @@
+<section class="container-wide section">
+  <div class="section-head">
+    <div>
+      <span class="eyebrow">Taller comunitario</span>
+      <h2>Setups</h2>
+    </div>
+    <button type="button" class="btn btn-primary" (click)="toggleUpload()">{{ uploadVisible() ? 'Cerrar' : 'Subir setup' }}</button>
+  </div>
+
+  @if (uploadVisible()) {
+    <div class="card" style="margin-bottom: var(--sp-6)">
+      <div class="card-header">
+        <h4>Subir un setup</h4>
+      </div>
+      <div class="grid grid-3" style="gap: var(--sp-4)">
+        <div class="field">
+          <label>Título</label>
+          <input class="input" placeholder="Ej. Ferrari 296 — Seco / alta velocidad" (input)="fTitulo.set(inputVal($event))" />
+        </div>
+        <div class="field">
+          <label>Circuito</label>
+          <input class="input" placeholder="Ej. Termas de Río Hondo" (input)="fCircuito.set(inputVal($event))" />
+        </div>
+        <div class="field">
+          <label>Vehículo</label>
+          <input class="input" placeholder="Ej. Ferrari 296 GT3" (input)="fVehiculo.set(inputVal($event))" />
+        </div>
+        <div class="field">
+          <label>Archivo del setup</label>
+          <div class="dropzone" role="button" (click)="fileInput.click()">
+            @if (archivoNombre()) {
+              <span>{{ archivoNombre() }}</span>
+            } @else {
+              <span>Arrastrá el archivo aquí o <strong>click para seleccionar</strong></span>
+            }
+            <span class="text-terciario" style="font-size: var(--fs-2xs)">.json, .ini u otro formato de setup</span>
+          </div>
+          <input #fileInput type="file" style="display: none" (change)="onFileSelect($event)" />
+        </div>
+        <div class="field">
+          <label>Categoría</label>
+          <select class="select" (change)="fCategoria.set(selectNum($event))">
+            <option value="">—</option>
+            @for (c of cats(); track c.id) {
+              <option [value]="c.id">{{ c.nombre }}</option>
+            }
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Descripción</label>
+        <textarea class="textarea" placeholder="Comportamiento, condiciones de uso, tips…" (input)="fDescripcion.set(inputVal($event))"></textarea>
+      </div>
+      <button type="button" class="btn btn-primary" (click)="publicar()">Publicar setup</button>
+    </div>
+  }
+
+  <div class="setup-filters">
+    <input class="input" placeholder="Buscar por vehículo, circuito o título…" (input)="searchText.set(inputVal($event))" />
+    <select class="select" (change)="filterCircuito.set(selectStr($event))">
+      <option value="">Todos los circuitos</option>
+      @for (c of circuitos(); track c) {
+        <option [value]="c">{{ c }}</option>
+      }
+    </select>
+    <select class="select" (change)="filterVehiculo.set(selectStr($event))">
+      <option value="">Todos los vehículos</option>
+      @for (v of vehiculos(); track v) {
+        <option [value]="v">{{ v }}</option>
+      }
+    </select>
+    <select class="select" style="margin-left: auto" (change)="filterOrder.set(selectStr($event))">
+      <option value="rating">Mejor puntuados</option>
+      <option value="recientes">Más recientes</option>
+    </select>
+  </div>
+
+  <div class="admin-layout" style="grid-template-columns: 1.1fr 1.5fr">
+
+    <div class="flex-col gap-4">
+      @if (cargando()) {
+        <div class="skeleton-card" style="padding: var(--sp-5)">
+          <span class="skeleton" style="width: 80%"></span>
+          <span class="skeleton" style="width: 60%"></span>
+        </div>
+      } @else if (setups().length === 0) {
+        <app-empty-state texto="Aún no hay setups publicados." />
+      } @else if (filtered().length === 0) {
+        <app-empty-state texto="No hay setups que coincidan con la búsqueda." />
+      } @else {
+        @for (s of filtered(); track s.id) {
+          <div class="card setup-card" [class.bracket]="s.id === selectedId()" style="cursor: pointer; position: relative" (click)="select(s.id)">
+            <div class="setup-card-cover">
+              <span class="chip chip-category">{{ s.circuito }}</span>
+            </div>
+            <h4>{{ s.titulo }}</h4>
+            <div class="flex-between">
+              <span class="author-row">
+                <app-avatar [user]="{ nombrePiloto: s.autorNombre, fotoPerfil: s.autorFoto }" [size]="24" />
+                {{ s.autorNombre || ('Piloto #' + s.autorId) }}
+              </span>
+              <app-star-rating [puntaje]="s.promedioCalificacion" />
+            </div>
+            <div class="text-terciario mono" style="font-size: var(--fs-2xs)">
+              @if (s.promedioCalificacion != null) {
+                {{ s.promedioCalificacion.toFixed(1) }} ·
+              }
+              publicado {{ s.fechaPublicacion | fechaRelativa }}
+            </div>
+            @if (esAdmin()) {
+              <button type="button" class="btn btn-danger btn-sm btn-icon" title="Eliminar setup" style="position: absolute; top: var(--sp-3); right: var(--sp-3); z-index: 1" (click)="eliminarSetup($event, s.id)">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+              </button>
+            }
+          </div>
+        }
+      }
+    </div>
+
+    <div class="card" style="align-self: start">
+      @if (detailCargando()) {
+        <div class="skeleton-card">
+          <span class="skeleton" style="width: 80%"></span>
+          <span class="skeleton" style="width: 60%"></span>
+        </div>
+      } @else {
+        @let s = detail();
+        @if (s) {
+          <div class="card-header">
+            <div>
+              <span class="eyebrow">{{ s.vehiculo }}</span>
+              <h3 style="margin-top: var(--sp-2)">{{ s.titulo }}</h3>
+              <span class="author-row" style="margin-top: var(--sp-2)">
+                <app-avatar [user]="{ nombrePiloto: s.autorNombre, fotoPerfil: s.autorFoto }" [size]="24" />
+                Subido por {{ s.autorNombre || ('Piloto #' + s.autorId) }} · {{ s.fechaPublicacion | fechaRelativa }}
+              </span>
+            </div>
+            @if (s.archivo) {
+              <a class="btn btn-primary" [href]="'/api/setups/' + s.id + '/descargar'">Descargar setup</a>
+            } @else {
+              <span class="chip chip-closed">Sin archivo</span>
+            }
+          </div>
+
+          <p class="text-secondary" style="font-size: var(--fs-sm); margin: var(--sp-4) 0 var(--sp-5)">{{ s.descripcion || 'Sin descripción.' }}</p>
+
+          <div class="grid grid-3" style="margin-bottom: var(--sp-6)">
+            <div class="stat-card">
+              <div class="stat-label">Circuito</div>
+              <div class="stat-value" style="font-size: var(--fs-md)">{{ s.circuito }}</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Calificación</div>
+              <div class="stat-value" style="font-size: var(--fs-md)">{{ promedio(s) }}</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Categoría</div>
+              <div class="stat-value" style="font-size: var(--fs-md)">{{ s.categoriaNombre || '—' }}</div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Tu calificación</label>
+            <div class="slider-row">
+              <app-star-rating [puntaje]="myRating()" />
+              <input class="input" type="range" min="1" max="5" step="1" [value]="myRating()" [disabled]="!autenticado()" title="Ingresá para calificar" (input)="myRating.set(+inputVal($event))" (change)="calificar($event, s.id)" />
+            </div>
+          </div>
+
+          <h4 style="margin: var(--sp-5) 0 var(--sp-3)">Comentarios <span class="text-terciario mono" style="font-size: var(--fs-sm)">({{ comentarios().length }})</span></h4>
+
+          @if (comentarios().length === 0) {
+            <p class="text-terciario" style="font-size: var(--fs-sm)">Todavía no hay comentarios.</p>
+          } @else {
+            @for (c of comentarios(); track c.id) {
+              <div class="comment">
+                <app-avatar [user]="{ nombrePiloto: c.nombrePiloto, fotoPerfil: c.fotoPerfil }" [size]="34" />
+                <div style="flex: 1">
+                  <div class="flex-between">
+                    <strong style="font-size: var(--fs-sm)">{{ c.nombrePiloto || ('Piloto #' + c.usuarioId) }}</strong>
+                    <span class="text-terciario mono" style="font-size: var(--fs-2xs)">{{ c.fecha | fechaRelativa }}</span>
+                  </div>
+                  <p class="text-secondary" style="font-size: var(--fs-sm); margin-top: var(--sp-1)">{{ c.texto }}</p>
+                </div>
+                @if (esAdmin()) {
+                  <button type="button" class="btn btn-danger btn-sm btn-icon" title="Eliminar comentario" style="align-self: flex-start; margin-left: var(--sp-2)" (click)="eliminarComentario($event, s.id, c.id)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                  </button>
+                }
+              </div>
+            }
+          }
+
+          @if (autenticado()) {
+            <div class="field" style="margin-top: var(--sp-5); margin-bottom: 0">
+              <label>Agregar comentario</label>
+              <textarea class="textarea" placeholder="Contá cómo te fue con este setup…" (input)="fComentario.set(inputVal($event))"></textarea>
+              <button type="button" class="btn btn-secondary" style="align-self: flex-end" (click)="publicarComentario(s.id)">Publicar comentario</button>
+            </div>
+          }
+        } @else {
+          <p class="text-terciario">Seleccioná un setup de la lista para ver el detalle.</p>
+        }
+      }
+    </div>
+
+  </div>
+</section>

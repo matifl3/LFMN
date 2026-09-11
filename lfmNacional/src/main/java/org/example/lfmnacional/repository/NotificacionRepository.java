@@ -14,5 +14,7 @@ public interface NotificacionRepository extends JpaRepository<Notificacion, Long
 
     List<Notificacion> findByUsuario_IdAndTipo(Long usuarioId, TipoNotificacion tipo);
 
+    boolean existsByTipoAndLink(TipoNotificacion tipo, String link);
+
     long countByUsuario_IdAndLeidaFalse(Long usuarioId);
 }

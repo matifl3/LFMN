@@ -1,0 +1,211 @@
+<section class="container-wide section">
+  @if (cargando()) {
+    <div class="flex-col gap-3">
+      <div class="skeleton-card"><span class="skeleton" style="width: 80%"></span></div>
+      <div class="skeleton-card"><span class="skeleton" style="width: 60%"></span></div>
+    </div>
+  } @else if (carrera()) {
+    <a routerLink="/carreras" class="btn btn-ghost btn-sm" style="margin-bottom: var(--sp-5)">← Volver a carreras</a>
+
+    <div class="detail-header">
+      <div>
+        <span class="eyebrow alerta">{{ carrera()?.categoriaNombre || 'CARRERA' }} · Ronda</span>
+        <h1>{{ carrera()?.nombre || 'Carrera' }}</h1>
+        <p class="text-secondary">{{ carrera()?.circuito || '—' }} — {{ carrera()?.fecha | fmtFechaHora }}</p>
+      </div>
+      <div style="display: flex; flex-direction: column; align-items: flex-end; gap: var(--sp-3)">
+        @if (carrera(); as c) {
+          <app-chip [estado]="c.estado" tipo="carrera" />
+        }
+        @if (botonLabel()) {
+          <button class="btn btn-primary btn-sm" [disabled]="botonDisabled()" (click)="toggleInscripcion()">
+            {{ botonLabel() }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <div class="tabs-pill" style="margin-bottom: var(--sp-6)">
+      <button class="tab" [class.active]="panel()==='info'" (click)="panel.set('info')">Información</button>
+      <button class="tab" [class.active]="panel()==='archivos'" (click)="panel.set('archivos')">Archivos</button>
+      <button class="tab" [class.active]="panel()==='inscriptos'" (click)="panel.set('inscriptos')">
+        Inscriptos <span class="count">{{ inscriptos().length }}</span>
+      </button>
+      <button class="tab" [class.active]="panel()==='resultados'" (click)="panel.set('resultados')">Resultados</button>
+      <button class="tab" [class.active]="panel()==='clasificacion'" (click)="panel.set('clasificacion')">Clasificación</button>
+      <button class="tab" [class.active]="panel()==='analisis'" (click)="panel.set('analisis')">Análisis</button>
+    </div>
+
+    @if (panel()==='info') {
+      <div class="info-grid">
+        <div class="info-tile">
+          <div class="label">Fecha y hora</div>
+          <div class="value">{{ carrera()?.fecha | fmtFechaHora }}</div>
+        </div>
+        <div class="info-tile">
+          <div class="label">Circuito</div>
+          <div class="value">{{ carrera()?.circuito || '—' }}</div>
+        </div>
+        <div class="info-tile">
+          <div class="label">Categoría</div>
+          <div class="value"><span class="chip chip-category">{{ carrera()?.categoriaNombre || '—' }}</span></div>
+        </div>
+        <div class="info-tile">
+          <div class="label">Servidor</div>
+          <div class="value mono">{{ carrera()?.servidor || '—' }}</div>
+        </div>
+        <div class="info-tile" style="grid-column: span 2">
+          <div class="label">Cupo</div>
+          <div class="value mono">{{ inscriptosActivos() }} / {{ carrera()?.cupoMaximo || '—' }}</div>
+          @if (carrera()?.cupoMaximo) {
+            <div class="progress" style="margin-top: var(--sp-3)">
+              <div class="progress-bar" [class.full]="cupoLleno()" [style.width.%]="cupoPct()"></div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    @if (panel()==='archivos') {
+      <h3 style="margin-bottom: var(--sp-4)">Archivos de la carrera</h3>
+      @if (carrera()?.linkPista) {
+        <a class="file-row" [href]="carrera()!.linkPista!" target="_blank" rel="noopener">
+          <span>Descargar Pista</span>
+          <span class="btn btn-ghost btn-sm">⬇</span>
+        </a>
+      }
+      @if (carrera()?.linkAuto) {
+        <a class="file-row" [href]="carrera()!.linkAuto!" target="_blank" rel="noopener">
+          <span>Descargar Auto</span>
+          <span class="btn btn-ghost btn-sm">⬇</span>
+        </a>
+      }
+      @if (!carrera()?.linkPista && !carrera()?.linkAuto) {
+        <p class="text-terciario">No hay archivos publicados para esta carrera.</p>
+      }
+    }
+
+    @if (panel()==='inscriptos') {
+      <h3>Inscriptos <span class="mono text-terciario">({{ inscriptos().length }})</span></h3>
+      @if (inscriptos().length === 0) {
+        <p class="text-terciario" style="margin-top: var(--sp-4)">Todavía no hay inscriptos. ¡Sé el primero!</p>
+      } @else {
+        <div class="card" style="margin-top: var(--sp-4)">
+          @for (i of inscriptos(); track i.id) {
+            <div class="entrant-row">
+              <app-avatar [user]="{ fotoPerfil: i.fotoPerfil, nombrePiloto: i.nombrePiloto }" [size]="36" />
+              <div style="flex: 1">
+                <a [routerLink]="['/perfil', i.usuarioId]" class="detail-link">{{ i.nombrePiloto || 'Piloto #' + i.usuarioId }}</a>
+                <div class="text-terciario" style="font-size: var(--fs-xs)">Elo {{ i.elo ?? '—' }} · SR {{ i.safetyRating ?? '—' }}</div>
+              </div>
+              <app-chip [estado]="i.estado==='LISTA_ESPERA' ? 'LISTA_ESPERA' : 'CONFIRMADA'" tipo="inscripcion" />
+            </div>
+          }
+        </div>
+      }
+    }
+
+    @if (panel()==='resultados') {
+      <h3 style="margin-bottom: var(--sp-4)">Resultados</h3>
+      @if (resultados().length === 0) {
+        <p class="text-terciario">Sin resultados publicados.</p>
+      } @else {
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Pos</th><th>Piloto</th><th class="num">Tiempo</th><th class="num">Mejor vuelta</th><th class="num">Pole</th><th class="num">Elo</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (r of resultadosSorted(); track r.id) {
+                <tr [class]="'podium-' + r.posicionFinal">
+                  <td>
+                    @if (r.finalizo === false) {
+                      <span class="chip chip-rejected">DNF</span>
+                    } @else {
+                      <app-rank-badge [posicion]="r.posicionFinal ?? 999" />
+                    }
+                  </td>
+                  <td><a [routerLink]="['/perfil', r.usuarioId]" class="detail-link">{{ r.nombrePiloto || 'Piloto #' + r.usuarioId }}</a></td>
+                  <td class="num mono">{{ r.tiempoTotal | fmtLap }}</td>
+                  <td class="num mono">{{ r.vueltaRapida | fmtLap }}</td>
+                  <td class="num mono">{{ r.poles ? 'POLE' : '—' }}</td>
+                  <td class="num mono" [style.color]="(r.eloGanado ?? 0) >= 0 ? 'var(--status-positivo)' : 'var(--lbm-rojo-hi)'">
+                    {{ (r.eloGanado ?? 0) > 0 ? '+' : '' }}{{ r.eloGanado ?? '—' }}
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    }
+
+    @if (panel()==='clasificacion') {
+      <h3 style="margin-bottom: var(--sp-4)">Clasificación</h3>
+      @if (clasificaciones().length === 0) {
+        <p class="text-terciario">Sin tiempos registrados.</p>
+      } @else {
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Pos</th><th>Piloto</th><th class="num">Vuelta</th><th class="num">Dif.</th><th class="num">Auto</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (c of clasificacionesSorted(); track c.id) {
+                <tr>
+                  <td><app-rank-badge [posicion]="$index + 1" /></td>
+                  <td>{{ c.nombrePiloto || 'Piloto #' + c.usuarioId }}</td>
+                  <td class="num mono">{{ c.tiempo | fmtLap }}</td>
+                  <td class="num mono">{{ c.diferenciaPole === 0 ? 'POLE' : (c.diferenciaPole | fmtLap) }}</td>
+                  <td class="num mono">{{ c.modeloAuto || '—' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    }
+
+    @if (panel()==='analisis') {
+      <h3 style="margin-bottom: var(--sp-4)">Análisis por vuelta</h3>
+      @if (vueltas().length === 0) {
+        <p class="text-terciario">
+          @if (auth.autenticado()) {
+            Sin vueltas registradas.
+          } @else {
+            Ingresá para ver tu análisis por vuelta.
+          }
+        </p>
+      } @else {
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th class="num">Vuelta</th><th class="num">Tiempo</th><th class="num">S1</th><th class="num">S2</th><th class="num">S3</th><th class="num">Cortes</th><th>Neum.</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (v of vueltas(); track v.id) {
+                <tr>
+                  <td class="num mono">{{ v.numeroVuelta }}</td>
+                  <td class="num mono">{{ v.tiempoMs | fmtLap }}</td>
+                  <td class="num mono">{{ v.sector1 | fmtLap }}</td>
+                  <td class="num mono">{{ v.sector2 | fmtLap }}</td>
+                  <td class="num mono">{{ v.sector3 | fmtLap }}</td>
+                  <td class="num mono">{{ v.cortes ?? '—' }}</td>
+                  <td>{{ v.neumatico || '—' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    }
+  } @else {
+    <div class="empty-state"><p>Carrera no encontrada.</p></div>
+  }
+</section>

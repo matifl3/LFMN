@@ -326,3 +326,28 @@ export interface UsuarioRecompensa {
   reclamada?: boolean;
   fechaReclamada?: string;
 }
+
+export interface Estadisticas {
+  totalUsuarios: number;
+  usuariosActivos: number;
+  usuariosAdmin: number;
+  usuariosComisario: number;
+  totalCarreras: number;
+  carrerasProgramadas: number;
+  carrerasInscripcionesAbiertas: number;
+  carrerasInscripcionesCerradas: number;
+  carrerasEnCurso: number;
+  carrerasFinalizadas: number;
+  carrerasCanceladas: number;
+  totalIncidentes: number;
+  incidentesPendientes: number;
+  incidentesEnAnalisis: number;
+  incidentesResueltos: number;
+  totalSanciones: number;
+  totalInscripciones: number;
+  apelacionesPendientes: number;
+  setupsPublicados: number;
+  anuncios: number;
+  campeonatos: number;
+  categorias: number;
+}

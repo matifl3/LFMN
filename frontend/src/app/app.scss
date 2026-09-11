@@ -1,0 +1,10 @@
+app-header {
+  display: block;
+}
+main {
+  display: block;
+  min-height: calc(100vh - var(--header-h));
+}
+.hero {
+  margin-top: calc(var(--header-h) * -1);
+}

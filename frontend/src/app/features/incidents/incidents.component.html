@@ -1,0 +1,248 @@
+<section class="container-wide section">
+  <div class="section-head">
+    <div>
+      <span class="eyebrow">Justicia deportiva</span>
+      <h2>Incidentes y sanciones</h2>
+    </div>
+  </div>
+  <div class="tabs" style="margin-bottom:var(--sp-5)">
+    <button class="tab" [class.active]="vista()==='incidentes'" (click)="setVista('incidentes')">Incidentes <span class="count">{{ incidentesFiltrados().length }}</span></button>
+    <button class="tab" [class.active]="vista()==='sanciones'" (click)="setVista('sanciones')">Sanciones <span class="count">{{ sanciones().length }}</span></button>
+    <button class="tab" [class.active]="vista()==='apelaciones'" (click)="setVista('apelaciones')">Apelaciones <span class="count">{{ apelaciones().length }}</span></button>
+  </div>
+
+  <div class="admin-layout">
+    <div class="flex-col gap-3">
+      @if (cargando()) {
+        <div class="skeleton-card" style="padding:var(--sp-5)"><span class="skeleton" style="width:70%"></span><span class="skeleton" style="width:50%"></span></div>
+      }
+
+      @if (vista()==='incidentes') {
+        @if (incidentesFiltrados().length === 0) {
+          <app-empty-state texto="No hay incidentes reportados." />
+        } @else {
+          @for (inc of incidentesFiltrados(); track inc.id) {
+            <div class="race-row incidente-row" style="cursor:pointer" (click)="abrirDetalle(inc.id)">
+              <div>
+                @if (inc.estado) { <app-chip [estado]="inc.estado" tipo="incidente" /> }
+              </div>
+              <div class="race-meta" style="font-size:var(--fs-sm)">
+                <strong style="text-transform:uppercase">{{ inc.descripcion || 'Sin descripción' }}</strong>
+                <span>{{ inc.carreraNombre || 'Carrera #' + inc.carreraId }}{{ inc.categoriaNombre ? ' — ' + inc.categoriaNombre : '' }} · reportado por {{ inc.reportanteNombre || 'Piloto #' + inc.reportanteId }}</span>
+              </div>
+              <div class="text-terciario mono" style="font-size:var(--fs-sm)">{{ inc.vuelta ? 'Vuelta ' + inc.vuelta : '—' }}</div>
+              @if (inc.videoUrl) {
+                <a [href]="inc.videoUrl" target="_blank" rel="noopener" class="btn btn-ghost btn-sm" (click)="$event.stopPropagation()">Evidencia</a>
+              }
+            </div>
+          }
+        }
+      }
+
+      @if (vista()==='sanciones') {
+        @if (!auth.autenticado()) {
+          <app-empty-state texto="Iniciá sesión para ver tus sanciones." />
+        } @else if (sanciones().length === 0) {
+          <app-empty-state texto="No tenés sanciones registradas." />
+        } @else {
+          @for (s of sanciones(); track s.id) {
+            <div class="race-row">
+              <div><span class="chip chip-sanctioned">Sanción</span></div>
+              <div class="race-meta" style="font-size:var(--fs-sm)">
+                <strong style="text-transform:uppercase">{{ s.motivo || s.tipo }}</strong>
+                <span>{{ s.carreraNombre || '' }}{{ s.categoriaNombre ? ' — ' + s.categoriaNombre : '' }}</span>
+              </div>
+              <div class="text-terciario" style="font-size:var(--fs-sm)">{{ sancionDetalle(s) }}</div>
+              <div>
+                @if (auth.user() && s.usuarioId === auth.user()?.id && !apelacionExiste(s.id)) {
+                  <button class="btn btn-ghost btn-sm" (click)="abrirApelar(s)">Apelar</button>
+                }
+              </div>
+            </div>
+          }
+        }
+        @if (auth.esModerador()) {
+          <button class="btn btn-primary btn-sm" style="margin-top:var(--sp-4)" (click)="modalNuevaSancion.set(true)">+ Nueva sanción</button>
+        }
+      }
+
+      @if (vista()==='apelaciones') {
+        @if (apelaciones().length === 0) {
+          <app-empty-state texto="No hay apelaciones." />
+        } @else {
+          @for (a of apelaciones(); track a.id) {
+            <div class="race-row">
+              <div><app-chip [estado]="a.estado" tipo="apelacion" /></div>
+              <div class="race-meta" style="font-size:var(--fs-sm)">
+                <strong style="text-transform:uppercase">{{ a.motivo }}</strong>
+                <span>{{ a.nombrePiloto || 'Piloto #' + a.usuarioId }}{{ a.respuestaAdmin ? ' — Respuesta: ' + a.respuestaAdmin : '' }}</span>
+              </div>
+              <div class="text-terciario" style="font-size:var(--fs-sm)">{{ a.fecha | fechaRelativa }}</div>
+              @if (auth.esModerador() && a.estado === 'PENDIENTE') {
+                <button class="btn btn-ghost btn-sm" (click)="abrirResolverApelacion(a)">Resolver</button>
+              }
+            </div>
+          }
+        }
+      }
+    </div>
+
+    @if (vista()==='incidentes' && auth.autenticado()) {
+      <div class="panel-aside report-form-panel">
+        <h4>Reportar un incidente</h4>
+        <div class="field"><label>Carrera *</label>
+          <select class="select" [ngModel]="reportCarreraId()" (ngModelChange)="reportCarreraId.set($event)">
+            <option value="">Seleccioná una carrera…</option>
+            @for (c of carreras(); track c.id) { <option [value]="c.id">{{ c.nombre }}{{ c.categoriaNombre ? ' — ' + c.categoriaNombre : '' }}</option> }
+          </select>
+        </div>
+        <div class="field"><label>Vuelta</label><input type="number" class="input" min="1" [ngModel]="reportVuelta()" (ngModelChange)="reportVuelta.set(toNumber($event))" placeholder="Opcional" /></div>
+        <div class="field"><label>Descripción *</label><textarea class="textarea" [ngModel]="reportDesc()" (ngModelChange)="reportDesc.set($event)" placeholder="Describí el incidente…"></textarea></div>
+        <div class="field"><label>Video (URL)</label><input class="input" [ngModel]="reportVideo()" (ngModelChange)="reportVideo.set($event)" placeholder="https://…" /></div>
+        <button class="btn btn-primary btn-block" (click)="enviarReporte()" [class.is-loading]="enviando()">Enviar reporte</button>
+      </div>
+    }
+  </div>
+</section>
+
+<app-modal [abierto]="modalDetalle()" [titulo]="'Detalle del incidente #' + (detalleIncidente()?.id || '')" (cerrado)="modalDetalle.set(false)">
+  @if (detalleIncidente(); as inc) {
+    <div style="margin-bottom:var(--sp-4)"><app-chip [estado]="inc.estado" tipo="incidente" /></div>
+    <p class="text-secondary">{{ inc.descripcion || 'Sin descripción' }}</p>
+    <p class="text-terciario" style="margin-top:var(--sp-2);font-size:var(--fs-sm)">{{ inc.carreraNombre }} · Reportado por {{ inc.reportanteNombre || 'Piloto #' + inc.reportanteId }}{{ inc.vuelta ? ' · Vuelta ' + inc.vuelta : '' }}</p>
+    @if (inc.videoUrl) {
+      <a [href]="inc.videoUrl" target="_blank" rel="noopener" class="btn btn-ghost btn-sm" style="margin-top:var(--sp-3)">Ver evidencia</a>
+    }
+
+    <h4 style="margin-top:var(--sp-5)">Pilotos involucrados</h4>
+    @if (pilotosIncidente().length === 0) {
+      <p class="text-terciario" style="font-size:var(--fs-sm)">Sin pilotos asignados.</p>
+    } @else {
+      @for (p of pilotosIncidente(); track p.id) {
+        <div class="flex-between" style="padding:var(--sp-2) 0;border-bottom:1px solid var(--borde-hair)">
+          <span>{{ p.nombrePiloto || 'Piloto #' + p.usuarioId }}</span>
+          <span class="chip" [style.borderColor]="p.rol==='CAUSANTE' ? 'var(--lbm-rojo-dim)' : 'var(--status-positivo)'" [style.color]="p.rol==='CAUSANTE' ? 'var(--lbm-rojo-hi)' : '#a6f2cf'">{{ p.rol }}</span>
+        </div>
+      }
+    }
+
+    @if (auth.esModerador() && inc.estado !== 'RESUELTO') {
+      <div style="margin-top:var(--sp-4)">
+        <div class="flex" style="gap:var(--sp-2)">
+          <select class="select" [ngModel]="asignarPilotoId()" (ngModelChange)="asignarPilotoId.set($event)" style="flex:1">
+            <option value="">Elegí piloto…</option>
+            @for (u of usuariosBase(); track u.id) { <option [value]="u.id">{{ u.nombrePiloto }} (Elo {{ u.elo ?? '—' }})</option> }
+          </select>
+          <select class="select" [ngModel]="asignarRol()" (ngModelChange)="asignarRol.set($event)" style="width:120px">
+            <option value="CAUSANTE">Causante</option>
+            <option value="AFECTADO">Afectado</option>
+          </select>
+          <button class="btn btn-primary btn-sm" (click)="asignarPiloto()">Asignar</button>
+        </div>
+      </div>
+    }
+
+    <h4 style="margin-top:var(--sp-5)">Votos de comisarios ({{ votosIncidente().length }})</h4>
+    @if (votosIncidente().length === 0) {
+      <p class="text-terciario" style="font-size:var(--fs-sm)">Sin votos todavía.</p>
+    } @else {
+      @for (v of votosIncidente(); track v.id) {
+        <div class="flex-between" style="padding:var(--sp-2) 0;border-bottom:1px solid var(--borde-hair)">
+          <div><app-chip [estado]="v.decision" tipo="voto" /><span style="margin-left:var(--sp-2)" class="text-secondary">{{ usuarioNombre(v.comisarioId) }}</span></div>
+          @if (v.comentario) { <span class="text-terciario" style="font-size:var(--fs-xs)">— {{ v.comentario }}</span> }
+        </div>
+      }
+    }
+
+    @if (auth.esModerador() && inc.estado !== 'RESUELTO') {
+      <div style="margin-top:var(--sp-4);display:flex;gap:var(--sp-2)">
+        <button class="btn btn-ghost btn-sm" style="border-color:var(--status-positivo)" (click)="votar('A_FAVOR')">A favor</button>
+        <button class="btn btn-ghost btn-sm" style="border-color:var(--lbm-rojo-dim);color:var(--lbm-rojo-hi)" (click)="votar('EN_CONTRA')">En contra</button>
+        <button class="btn btn-ghost btn-sm" (click)="votar('ABSTENCION')">Abstención</button>
+      </div>
+      <div class="field" style="margin-top:var(--sp-3)"><input class="input" [ngModel]="votoComentario()" (ngModelChange)="votoComentario.set($event)" placeholder="Comentario (opcional)" /></div>
+    }
+
+    @if (resolucionIncidente()) {
+      <div style="margin-top:var(--sp-5);padding:var(--sp-4);background:var(--bg-inset);border-radius:var(--r-sm)">
+        <h4 style="margin-bottom:var(--sp-2)">Resolución</h4>
+        <p class="text-secondary" style="font-size:var(--fs-sm)">{{ resolucionIncidente()!.explicacion }}</p>
+      </div>
+    }
+
+    @if (auth.esModerador() && inc.estado !== 'RESUELTO' && votosIncidente().length >= (inc.quorumRequerido || 2)) {
+      <div style="margin-top:var(--sp-5)">
+        <h4>Resolver incidente</h4>
+        <div class="field" style="margin-top:var(--sp-3)"><textarea class="textarea" [ngModel]="resolucionExplicacion()" (ngModelChange)="resolucionExplicacion.set($event)" placeholder="Explicá la resolución del incidente…"></textarea></div>
+        @if (sancionesResolver().length > 0) {
+          <div class="flex-col gap-2" style="margin-bottom:var(--sp-3)">
+            @for (sr of sancionesResolver(); track $index) {
+              <div class="flex-between chip chip-sanctioned" style="justify-content:flex-start;gap:var(--sp-2)">
+                <span>{{ sr.tipo }}</span><span>{{ sr.motivo }}</span>
+                <button class="btn btn-ghost btn-sm" style="margin-left:auto" (click)="quitarSancionResolver($index)">×</button>
+              </div>
+            }
+          </div>
+        }
+        <button class="btn btn-ghost btn-sm" style="margin-bottom:var(--sp-3)" (click)="modalNuevaSancion.set(true)">+ Agregar sanción</button>
+        <div><button class="btn btn-primary" [class.is-loading]="resolviendo()" (click)="resolverIncidente()">Resolver incidente</button></div>
+      </div>
+    }
+  }
+</app-modal>
+
+<app-modal [abierto]="modalApelar()" [titulo]="'Apelar sanción'" (cerrado)="modalApelar.set(false)">
+  <p class="text-secondary" style="margin-bottom:var(--sp-4)">Sanción: {{ apelarSancion()?.motivo || apelarSancion()?.tipo }}</p>
+  <div class="field"><label>Motivo de la apelación</label><textarea class="textarea" [ngModel]="apelarMotivo()" (ngModelChange)="apelarMotivo.set($event)" placeholder="Explicá por qué creés que la sanción no es justa…"></textarea></div>
+  <div style="display:flex;justify-content:flex-end;gap:var(--sp-3);margin-top:var(--sp-4)">
+    <button class="btn btn-ghost" (click)="modalApelar.set(false)">Cancelar</button>
+    <button class="btn btn-primary" [class.is-loading]="enviando()" (click)="enviarApelacion()">Enviar apelación</button>
+  </div>
+</app-modal>
+
+<app-modal [abierto]="modalResolverApelacion()" [titulo]="'Resolver apelación'" (cerrado)="modalResolverApelacion.set(false)">
+  @if (apelacionResolver(); as a) {
+    <p class="text-secondary" style="margin-bottom:var(--sp-4)">Apelación de {{ a.nombrePiloto || 'Piloto #' + a.usuarioId }}: {{ a.motivo }}</p>
+    <div style="display:flex;gap:var(--sp-2);margin-bottom:var(--sp-4)">
+      <button class="btn btn-sm" [style.borderColor]="resolverEstado()==='APROBADA' ? 'var(--status-positivo)' : 'var(--borde-metal)'" [style.color]="resolverEstado()==='APROBADA' ? '#a6f2cf' : ''" (click)="resolverEstado.set('APROBADA')">Aprobar</button>
+      <button class="btn btn-sm" [style.borderColor]="resolverEstado()==='RECHAZADA' ? 'var(--lbm-rojo)' : 'var(--borde-metal)'" [style.color]="resolverEstado()==='RECHAZADA' ? 'var(--lbm-rojo-hi)' : ''" (click)="resolverEstado.set('RECHAZADA')">Rechazar</button>
+    </div>
+    <div class="field"><label>Respuesta al piloto</label><textarea class="textarea" [ngModel]="resolverRespuesta()" (ngModelChange)="resolverRespuesta.set($event)" placeholder="Explicación de la decisión…"></textarea></div>
+    <div style="display:flex;justify-content:flex-end;gap:var(--sp-3);margin-top:var(--sp-4)">
+      <button class="btn btn-ghost" (click)="modalResolverApelacion.set(false)">Cancelar</button>
+      <button class="btn btn-primary" (click)="confirmarResolverApelacion()">Confirmar</button>
+    </div>
+  }
+</app-modal>
+
+<app-modal [abierto]="modalNuevaSancion()" [titulo]="'Nueva sanción'" (cerrado)="modalNuevaSancion.set(false)">
+  <div class="field"><label>Piloto *</label>
+    <select class="select" [ngModel]="sanPilotoId()" (ngModelChange)="sanPilotoId.set($event)">
+      <option value="">Seleccionar piloto…</option>
+      @for (u of usuariosBase(); track u.id) { <option [value]="u.id">{{ u.nombrePiloto }}</option> }
+    </select>
+  </div>
+  <div class="field"><label>Carrera</label>
+    <select class="select" [ngModel]="sanCarreraId()" (ngModelChange)="sanCarreraId.set($event)">
+      <option value="">Seleccionar carrera…</option>
+      @for (c of carreras(); track c.id) { <option [value]="c.id">{{ c.nombre }}</option> }
+    </select>
+  </div>
+  <div class="field"><label>Tipo</label>
+    <select class="select" [ngModel]="sanTipo()" (ngModelChange)="sanTipo.set($event)">
+      <option value="ELO">Elo</option>
+      <option value="SAFETY_RATING">Safety Rating</option>
+      <option value="PUESTOS">Puestos</option>
+      <option value="SEGUNDOS">Segundos</option>
+      <option value="DRIVE_THROUGH">Drive Through</option>
+      <option value="STOP_AND_GO">Stop & Go</option>
+      <option value="DESCALIFICACION">Descalificación</option>
+    </select>
+  </div>
+  <div class="field"><label>Valor</label><input class="input" [ngModel]="sanValor()" (ngModelChange)="sanValor.set(toNumber($event))" placeholder="Ej. -50" type="number" /></div>
+  <div class="field"><label>Motivo *</label><textarea class="textarea" [ngModel]="sanMotivo()" (ngModelChange)="sanMotivo.set($event)"></textarea></div>
+  <div style="display:flex;justify-content:flex-end;gap:var(--sp-3);margin-top:var(--sp-4)">
+    <button class="btn btn-ghost" (click)="modalNuevaSancion.set(false)">Cancelar</button>
+    <button class="btn btn-primary" [class.is-loading]="enviando()" (click)="crearSancion()">Crear sanción</button>
+  </div>
+</app-modal>

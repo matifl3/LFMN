@@ -1,0 +1,98 @@
+<div class="auth-shell pattern-trackgrid">
+  <div class="auth-card card bracket">
+    <img src="logo.png" alt="LBM Nacional" class="brand-logo" style="height: 48px; margin-inline: auto; margin-bottom: var(--sp-4)" />
+    <h2 style="text-align: center">Ingresar a LBM</h2>
+    <p class="text-secondary text-center" style="font-size: var(--fs-sm); margin-top: var(--sp-2)">
+      Accedé con tu cuenta de piloto para inscribirte a carreras y ver tus estadísticas.
+    </p>
+
+    @if (!modoSteamSetup()) {
+      <div class="tabs-pill" style="margin-top: var(--sp-5); width: 100%">
+        <button type="button" class="tab" [class.active]="tab() === 'login'" (click)="setTab('login')">Iniciar sesión</button>
+        <button type="button" class="tab" [class.active]="tab() === 'register'" (click)="setTab('register')">Crear cuenta</button>
+      </div>
+
+      <!-- Login -->
+      @if (tab() === 'login') {
+        <form [formGroup]="loginForm" (ngSubmit)="login()" style="margin-top: var(--sp-5)">
+          <div class="field">
+            <label for="login-email">Email</label>
+            <input id="login-email" class="input" type="email" placeholder="piloto@ejemplo.com" formControlName="email" />
+          </div>
+          <div class="field">
+            <label for="login-pass">Contraseña</label>
+            <input id="login-pass" class="input" type="password" formControlName="password" />
+          </div>
+          <button type="submit" class="btn btn-primary btn-lg btn-block" [class.is-loading]="cargando()">
+            Ingresar
+          </button>
+        </form>
+      }
+
+      <!-- Registro email + contraseña -->
+      @if (tab() === 'register') {
+        <form [formGroup]="registerForm" (ngSubmit)="registrar()" style="margin-top: var(--sp-5)">
+          <div class="field">
+            <label for="reg-nombre">Nombre de piloto</label>
+            <input id="reg-nombre" class="input" placeholder="Ej. Franco Gómez Reta" formControlName="nombrePiloto" />
+          </div>
+          <div class="field">
+            <label for="reg-email">Email</label>
+            <input id="reg-email" class="input" type="email" placeholder="piloto@ejemplo.com" formControlName="email" />
+          </div>
+          <div class="field">
+            <label for="reg-pass">Contraseña</label>
+            <input id="reg-pass" class="input" type="password" formControlName="password" />
+            <p class="hint">Mínimo 6 caracteres. Necesaria para ingresar por email.</p>
+          </div>
+          <button type="submit" class="btn btn-primary btn-lg btn-block" [class.is-loading]="cargando()">
+            Crear cuenta
+          </button>
+        </form>
+      }
+    }
+
+    <!-- Setup de cuenta Steam (usuario nuevo) -->
+    @if (modoSteamSetup()) {
+      <div class="auth-banner" style="margin-top: var(--sp-5)">
+        <div class="banner-icon">!</div>
+        <div>
+          <strong style="font-family: var(--font-display); text-transform: uppercase; font-size: var(--fs-sm)">Completá tu perfil</strong>
+          <p class="text-secondary" style="font-size: var(--fs-xs); margin-top: var(--sp-1)">para terminar de crear tu cuenta.</p>
+        </div>
+      </div>
+      <form [formGroup]="steamForm" (ngSubmit)="crearCuentaSteam()" style="margin-top: var(--sp-5)">
+        <input type="hidden" formControlName="guidSteam" />
+        <div class="field">
+          <label for="steam-nombre">Nombre de piloto</label>
+          <input id="steam-nombre" class="input" placeholder="Ej. Franco Gómez Reta" formControlName="nombrePiloto" />
+        </div>
+        <div class="field">
+          <label for="steam-email">Email</label>
+          <input id="steam-email" class="input" type="email" formControlName="email" />
+        </div>
+        <button type="submit" class="btn btn-primary btn-lg btn-block" [class.is-loading]="cargando()">Crear cuenta</button>
+      </form>
+    }
+
+    @if (!modoSteamSetup()) {
+      <div class="divider-or">o continuar con</div>
+      <button
+        type="button"
+        class="btn btn-ghost btn-lg btn-block"
+        (click)="iniciarSteam()"
+        [class.is-loading]="cargando()"
+        style="justify-content: center"
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M11.98 2C6.47 2 2 6.47 2 11.98c0 4.97 3.63 9.1 8.38 9.86l2.27-6.03a2.39 2.39 0 0 1 2.42-1.67h1.33a4.5 4.5 0 1 0-.23-1.13h-1.1a3.61 3.61 0 0 0-3.66 2.52l-2.1 5.57A8.02 8.02 0 0 1 4 11.98a8 8 0 1 1 16 0 8 8 0 0 1-3.9 6.87l.88 1.04A9.24 9.24 0 0 0 22 11.98C22 6.47 17.49 2 11.98 2Zm2.65 8.08a1.36 1.36 0 0 0 2.72 0 1.36 1.36 0 1 0-2.72 0Z"/>
+        </svg>
+        Steam
+      </button>
+    }
+
+    <p class="text-terciario" style="font-size: var(--fs-2xs); text-align: center; margin-top: var(--sp-5)">
+      Al continuar aceptás el Reglamento Deportivo y el Código de Conducta de LBM Nacional.
+    </p>
+  </div>
+</div>

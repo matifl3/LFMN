@@ -1,0 +1,44 @@
+<section class="container section">
+  <div class="section-head">
+    <div>
+      <span class="eyebrow">{{ eyebrow() }}</span>
+      <h2>Logros</h2>
+    </div>
+    <div class="progress" style="width: 220px">
+      <div class="progress-bar full" [style.width.%]="progressPct()"></div>
+    </div>
+  </div>
+
+  @if (cargando()) {
+    <div class="grid grid-4">
+      @for (i of [1, 2, 3, 4]; track i) {
+        <div class="card skeleton-card"><span class="skeleton" style="width: 100%"></span></div>
+      }
+    </div>
+  } @else if (logros().length === 0) {
+    <app-empty-state texto="No hay logros publicados." />
+  } @else {
+    <div class="grid grid-4">
+      @for (lg of logros(); track lg.logroId) {
+        <div class="card achievement-card" [class.unlocked]="lg.obtenido" [class.locked]="!lg.obtenido" [class.bracket]="lg.obtenido">
+          @if (lg.obtenido) {
+            <span class="achievement-check">✓</span>
+          }
+          <div class="achievement-icon">{{ lg.icono || '🏆' }}</div>
+          <h4 style="font-size: var(--fs-sm)">{{ lg.nombre }}</h4>
+          <p class="text-terciario" style="font-size: var(--fs-xs)">{{ lg.descripcion }}</p>
+          @if (!lg.obtenido) {
+            @if (lg.progreso !== undefined && lg.valorCondicion != null) {
+              <div class="progress" style="width: 100%">
+                <div class="progress-bar" [style.width.%]="progresoPct(lg)"></div>
+              </div>
+              <span class="text-terciario mono" style="font-size: var(--fs-2xs)">{{ lg.progreso }} / {{ lg.valorCondicion }}</span>
+            } @else {
+              <span class="chip chip-pending" style="margin-top: var(--sp-2); padding: 0.2em 0.6em">Sin desbloquear</span>
+            }
+          }
+        </div>
+      }
+    </div>
+  }
+</section>
