@@ -54,7 +54,7 @@ recompensas.
 | Backend | Spring Boot 4.1.0 (Java 17, Maven) |
 | Seguridad | Spring Security, JWT (jjwt 0.12.6), OAuth Steam, bcrypt |
 | Persistencia | Spring Data JPA, MySQL (mysql-connector-j) |
-| Frontend | HTML/CSS/JS estático (`files/`) con design system SCSS |
+| Frontend | Angular 22 (SPA en `frontend/`) |
 | Extra | Folder watcher de sesiones de Assetto Corsa |
 
 ## Arquitectura y flujos
@@ -73,7 +73,7 @@ Detalles técnicos:
 
 ## Capturas
 
-> Capturas de las pantallas del frontend (`files/`):
+> Capturas de las pantallas del frontend (Angular en `frontend/`):
 
 - Home y próximas carreras
 - Login / Registro
@@ -117,7 +117,7 @@ ssh -i tu-clave ubuntu@ip-publica
 
 # 3. Subir el proyecto
 scp -r lfmNacional/ ubuntu@ip:~/
-scp -r files/ ubuntu@ip:~/app/
+scp -r scripts/ ubuntu@ip:~/app/
 
 # 4. Ejecutar setup
 sudo bash setup-oracle-cloud.sh
@@ -238,8 +238,8 @@ Se recomienda copiarlos también fuera del servidor (ej. a un bucket/DR).
 
 ## HTTPS con Caddy (Fase 4.3)
 
-La app en `:8080` sirve el frontend estático (`files/`) y `/api`, así que el
-proxy solo agrega TLS delante. `scripts/setup-https.sh` instala Caddy y genera
+La app en `:8080` sirve `/api` y el frontend Angular se sirve por separado
+(frontend en `frontend/`), así que el proxy solo agrega TLS delante. `scripts/setup-https.sh` instala Caddy y genera
 `/etc/caddy/Caddyfile` en dos modos:
 
 - **Sin `DOMAIN`**: HTTP en `:80` → `reverse_proxy 127.0.0.1:8080` (funciona hoy).

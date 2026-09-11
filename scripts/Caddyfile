@@ -11,7 +11,7 @@
 {$DOMAIN} {
 	encode gzip
 
-	# La app sirve frontend estatico (./files/) + /api en :8080.
+	# La app sirve /api en :8080 (el frontend Angular se sirve aparte).
 	# /actuator/* esta bloqueado en el proxy salvo /actuator/health (que el
 	# HEALTHCHECK del contenedor consulta por localhost y sigue publico).
 	@actuator path /actuator/*

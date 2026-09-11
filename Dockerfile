@@ -22,13 +22,10 @@ FROM eclipse-temurin:17-jre
 WORKDIR /app
 
 # Crear directorios
-RUN mkdir -p /app/files /app/sesiones /app/archivos
+RUN mkdir -p /app/sesiones /app/archivos
 
 # Copiar JAR
 COPY --from=build /app/target/lfmNacional-0.0.1-SNAPSHOT.jar app.jar
-
-# Copiar frontend
-COPY files/ /app/files/
 
 # Puerto
 EXPOSE 8080
