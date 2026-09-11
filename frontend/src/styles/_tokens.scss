@@ -1,0 +1,95 @@
+// ==========================================================================
+// LATE BRAKE MOTORSPORT — DESIGN TOKENS
+// Sim racing league, Argentina. Dark pit-lane aesthetic, red brand
+// signature, metal surfaces, timing-tower accents.
+// ==========================================================================
+
+:root {
+  // ---- Marca
+  --lbm-rojo:        #C61A1A;
+  --lbm-rojo-hover:  #9E1515;
+  --lbm-rojo-hi:     #E63946;
+  --lbm-rojo-dim:    #7A1010;
+  --lbm-rojo-glow:   rgba(198, 26, 26, 0.35);
+
+  // ---- Fondos
+  --bg-principal:    #121212;
+  --bg-paneles:      #1E1E1E;
+  --bg-superficie:   #2A2A2A;
+  --bg-inset:        #171717;
+
+  // ---- Bordes
+  --borde-metal:     #333333;
+  --borde-brillo:    #4A4A4A;
+  --borde-hair:      #262626;
+
+  // ---- Texto
+  --texto-principal:  #E8E8E8;
+  --texto-secundario: #9AA0A6;
+  --texto-terciario:  #6C7379;
+  --texto-disabled:   #474D54;
+
+  // ---- Estado
+  --status-positivo:  #2E7D32;
+  --status-positivo-hi: #43A047;
+  --status-alerta:    #F5A623;
+  --status-peligro:   var(--lbm-rojo);
+
+  // ---- Podio
+  --podio-oro:   #FFCF4A;
+  --podio-plata: #C7D0DC;
+  --podio-bronce:#E3945A;
+
+  // ---- Tipografía
+  --font-display: 'Rajdhani', 'Oswald', 'Arial Narrow', sans-serif;
+  --font-body:    'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono:    'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
+
+  // ---- Escala tipográfica
+  --fs-2xs: 0.6875rem; // 11
+  --fs-xs:  0.75rem;   // 12
+  --fs-sm:  0.8125rem; // 13
+  --fs-base:0.9375rem; // 15
+  --fs-md:  1.0625rem; // 17
+  --fs-lg:  1.25rem;   // 20
+  --fs-xl:  1.625rem;  // 26
+  --fs-2xl: 2.125rem;  // 34
+  --fs-3xl: 2.875rem;  // 46
+  --fs-4xl: 4rem;      // 64
+
+  // ---- Espaciado (base 8px)
+  --sp-1: 0.25rem;
+  --sp-2: 0.5rem;
+  --sp-3: 0.75rem;
+  --sp-4: 1rem;
+  --sp-5: 1.5rem;
+  --sp-6: 2rem;
+  --sp-7: 2.5rem;
+  --sp-8: 3rem;
+  --sp-9: 4rem;
+  --sp-10: 6rem;
+  --sp-11: 8rem;
+
+  // ---- Radio
+  --r-sharp: 2px;
+  --r-sm: 4px;
+  --r-md: 6px;
+  --r-pill: 999px;
+
+  // ---- Sombra / elevación
+  --shadow-panel: 0 1px 0 rgba(255,255,255,0.02) inset, 0 12px 28px -16px rgba(0,0,0,0.65);
+  --shadow-lift:  0 20px 44px -20px rgba(0,0,0,0.75);
+  --shadow-rojo-glow: 0 0 0 1px rgba(198,26,26,0.25), 0 0 24px -4px rgba(198,26,26,0.35);
+
+  // ---- Movimiento
+  --ease: cubic-bezier(.2,.7,.2,1);
+  --dur-fast: 120ms;
+  --dur-base: 220ms;
+  --dur-slow: 420ms;
+
+  // ---- Layout
+  --container: 1240px;
+  --container-wide: 1440px;
+  --header-h: 68px;
+  --bracket: 14px;
+}
