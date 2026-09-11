@@ -1,0 +1,323 @@
+@startuml uml-proyecto-capas
+' ═══════════════════════════════════════════════════════════════════════
+' VISTA DE CAPAS - ARQUITECTURA LOW FUEL MOTORSPORT
+' Version ligera del diagrama completo (docs/uml-proyecto-completo.puml)
+' Stack: Java 17 · Spring Boot 4.1.0 · MySQL · JWT Stateless
+' ═══════════════════════════════════════════════════════════════════════
+
+skinparam defaultFontSize 11
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam classAttributeIconSize 0
+skinparam classFontSize 12
+skinparam classFontName Consolas
+
+skinparam class {
+  AttributeFontColor #333333
+  ArrowColor #333333
+}
+
+' ── Colores por dominio (entidades) ───────────────────────────────────
+
+skinparam classBackgroundColor #dae8fc<<Core>>
+skinparam classBorderColor #6c8ebf<<Core>>
+skinparam classHeaderBackgroundColor #6c8ebf<<Core>>
+skinparam classHeaderFontColor #ffffff<<Core>>
+
+skinparam classBackgroundColor #fff2cc<<Datos>>
+skinparam classBorderColor #d6b656<<Datos>>
+skinparam classHeaderBackgroundColor #d6b656<<Datos>>
+skinparam classHeaderFontColor #ffffff<<Datos>>
+
+skinparam classBackgroundColor #d5e8d4<<Verde>>
+skinparam classBorderColor #82b366<<Verde>>
+skinparam classHeaderBackgroundColor #82b366<<Verde>>
+skinparam classHeaderFontColor #ffffff<<Verde>>
+
+skinparam classBackgroundColor #f8cecc<<Rojo>>
+skinparam classBorderColor #b85450<<Rojo>>
+skinparam classHeaderBackgroundColor #b85450<<Rojo>>
+skinparam classHeaderFontColor #ffffff<<Rojo>>
+
+' ═══════════════════════════════════════════════════════════════════════
+' ACTORES
+' ═══════════════════════════════════════════════════════════════════════
+
+package "ACTORES" {
+  class "USUARIO / ADMIN / COMISARIO" as U
+  class "Frontend Web\n(HTML/CSS/JS)" as FE
+  class "Assetto Corsa\n(JSON de sesión)" as AC
+}
+
+' ═══════════════════════════════════════════════════════════════════════
+' CAPA DE PRESENTACIÓN - 27 Controladores REST
+' ═══════════════════════════════════════════════════════════════════════
+
+package "**PRESENTACIÓN** — Controladores REST (27)" as CTRL #e1d5e7 {
+
+  class "UsuarioController\nSteamController" as C01
+  class "CarreraController\nCategoriaController\nCampeonatoController" as C02
+  class "InscripcionController\nResultadoCarreraController\nArchivoCarreraController" as C03
+  class "SesionServidorController\nSesionClasificacionController\nVueltaController" as C04
+  class "SesionProcesadaController\nIncidenteController\nResolucionIncidenteController" as C05
+  class "SancionController\nApelacionController\nVotoComisarioController" as C06
+  class "SetupController\nSetupCalificacionController\nSetupComentarioController\nImagenController" as C07
+  class "LogroController\nRecompensaController\nUsuarioLogroController\nUsuarioRecompensaController" as C08
+  class "NotificacionController\nAnuncioController" as C09
+
+  note right
+    Rutas base: /api/usuarios, /api/carreras,
+    /api/incidentes, /api/setups, /api/logros,
+    /api/sesiones, /api/steam, ...
+    Capa sin lógica: delegan en Servicios.
+  end note
+}
+
+' ═══════════════════════════════════════════════════════════════════════
+' CAPA DE SERVICIOS - 32 + 2 calculadores de rating
+' ═══════════════════════════════════════════════════════════════════════
+
+package "**SERVICIOS** (32)" as SVC #dae8fc {
+
+  package "Cuenta / Steam" {
+    class UsuarioService
+    class SteamService
+  }
+
+  package "Carreras / Campeonato" {
+    class CarreraService
+    class CarreraResolverService
+    class CategoriaService
+    class CampeonatoService
+    class InscripcionService
+    class ResultadoCarreraService
+    class ArchivoCarreraService
+    class ImagenService
+  }
+
+  package "Incidentes / Sanciones" as svcInc {
+    class IncidenteService
+    class ResolucionIncidenteService
+    class SancionService
+    class ApelacionService
+    class VotoComisarioService
+  }
+
+  package "Setups / Logros" {
+    class SetupService
+    class SetupCalificacionService
+    class SetupComentarioService
+    class LogroService
+    class RecompensaService
+    class UsuarioLogroService
+    class UsuarioRecompensaService
+  }
+
+  package "Notificaciones" {
+    class NotificacionService
+    class AnuncioService
+  }
+
+  package "Ingesta de sesiones AC" {
+    class SesionServidorService
+    class ClasificacionImportService
+    class ResultadoImportService
+    class VueltaImportService
+    class IncidenteAutoGenService
+  }
+
+  package "Datos de carrera" as svcDatos {
+    class SesionClasificacionService
+    class SesionProcesadaService
+    class VueltaService
+  }
+
+  class EloCalculator
+  class SrCalculator
+
+  note right
+    Reglas de negocio: Elo (K=32) y SR,
+    cupos/lista de espera, quorum 2 votos,
+    cierre de inscripciones 5 min antes,
+    resolución de carrera por GUIDs o fecha.
+  end note
+}
+
+' ═══════════════════════════════════════════════════════════════════════
+' CAPA DE ACCESO A DATOS - 28 Repositorios Spring Data JPA
+' ═══════════════════════════════════════════════════════════════════════
+
+package "**ACCESO A DATOS** — Repositorios (28)" as REPO #f5f5f5 {
+
+  package "Usuarios / Carreras" {
+    interface UsuarioRepository
+    interface CategoriaRepository
+    interface CampeonatoRepository
+    interface CampeonatoPosicionRepository
+    interface CarreraRepository
+    interface InscripcionRepository
+    interface ResultadoCarreraRepository
+    interface ArchivoCarreraRepository
+  }
+
+  package "Sesiones / Vueltas" {
+    interface SesionClasificacionRepository
+    interface SesionProcesadaRepository
+    interface VueltaRepository
+  }
+
+  package "Incidentes / Sanciones" as repoInc {
+    interface IncidenteRepository
+    interface IncidentePilotoRepository
+    interface VotoComisarioRepository
+    interface ResolucionIncidenteRepository
+    interface SancionRepository
+    interface ApelacionRepository
+    interface EloSancionRepository
+    interface SafetyRatingSancionRepository
+  }
+
+  package "Setups / Logros / Otros" {
+    interface SetupRepository
+    interface SetupCalificacionRepository
+    interface SetupComentarioRepository
+    interface LogroRepository
+    interface RecompensaRepository
+    interface UsuarioLogroRepository
+    interface UsuarioRecompensaRepository
+    interface NotificacionRepository
+    interface AnuncioRepository
+  }
+
+  note right
+    Todos extienden JpaRepository<Entidad, Long>.
+    Queries derivadas + consultas nativas
+    (countInscriptosPorCarreraRaw, borrados
+    en cascada por carrera_id).
+  end note
+}
+
+' ═══════════════════════════════════════════════════════════════════════
+' CAPA DE DOMINIO - 30 Entidades (agrupadas por color)
+' ═══════════════════════════════════════════════════════════════════════
+
+package "**DOMINIO** — Entidades (30)" as ENT #f0f4fa {
+
+  package "Núcleo" {
+    class Usuario <<Core>>
+    class Categoria <<Core>>
+    class Campeonato <<Core>>
+    class CampeonatoPosicion <<Core>>
+    class Carrera <<Core>>
+    class Inscripcion <<Core>>
+    class ResultadoCarrera <<Core>>
+  }
+
+  package "Datos de carrera" as entDatos {
+    class ArchivoCarrera <<Datos>>
+    class VueltaCarrera <<Datos>>
+    class SesionClasificacion <<Datos>>
+    class SesionProcesada <<Datos>>
+  }
+
+  package "Setups / Logros / Notif." {
+    class Setup <<Verde>>
+    class SetupCalificacion <<Verde>>
+    class SetupComentario <<Verde>>
+    class Logro <<Verde>>
+    class Recompensa <<Verde>>
+    class UsuarioLogro <<Verde>>
+    class UsuarioRecompensa <<Verde>>
+    class Notificacion <<Verde>>
+    class Anuncio <<Verde>>
+  }
+
+  package "Incidentes / Sanciones" as entInc {
+    class Incidente <<Rojo>>
+    class IncidentePiloto <<Rojo>>
+    class VotoComisario <<Rojo>>
+    class ResolucionIncidente <<Rojo>>
+    class Sancion <<Rojo>>
+    class Apelacion <<Rojo>>
+    class EloSancion <<Rojo>>
+    class SafetyRatingSancion <<Rojo>>
+  }
+}
+
+' ═══════════════════════════════════════════════════════════════════════
+' INFRAESTRUCTURA
+' ═══════════════════════════════════════════════════════════════════════
+
+package "**INFRAESTRUCTURA**" as INFRA #d5e8d4 {
+
+  package "Seguridad" {
+    class SecurityConfig
+    class JwtAuthenticationFilter
+    class JwtUtil
+  }
+
+  package "Configuración" {
+    class LfmNacionalApplication
+    class AppConfig
+    class WebConfig
+    class DataSeeder
+  }
+
+  package "Tareas / Excepciones / Util" {
+    class SesionFolderWatcher
+    class GlobalExceptionHandler
+    class ApiError
+    class BusinessException
+    class ResourceNotFoundException
+    class EntityMapper
+    class FileUtil
+  }
+}
+
+' ═══════════════════════════════════════════════════════════════════════
+' DTOs
+' ═══════════════════════════════════════════════════════════════════════
+
+package "**DTOs** — 69 records" as DTO #ffe6cc {
+  class "Request/Response por dominio\n(usuario, carrera, incidente,\nsetup, logro, sesion, ...)" as DtoBox
+  class "SesionServerData / CarSesionData\n/ LapSesionData / EventoSesionData\n(resultados del JSON de AC)" as DtoAC
+}
+
+' ═══════════════════════════════════════════════════════════════════════
+' RELACIONES ENTRE CAPAS
+' ═══════════════════════════════════════════════════════════════════════
+
+FE --> CTRL : HTTP / JSON
+AC --> SVC : JSON de sesión
+
+CTRL ..> SVC : delega (inyección de dependencias) >
+SVC ..> REPO : consulta/persiste >
+REPO ..> ENT : mapea entidades >
+
+CTRL ..> DTO
+SVC ..> DTO : convierte a records >
+
+SVC ..> INFRA : usa (JwtUtil, excepciones, mapper) >
+CTRL ..> INFRA : usa (JwtAuthenticationFilter) >
+INFRA ..> REPO : auth (UsuarioRepository) >
+
+' ── Flujos clave ──────────────────────────────────────────────────────
+
+note bottom of AC
+  **Flujo G (ingesta):**
+  SesionFolderWatcher (@Scheduled 10s)
+  detecta .json → SesionServidorService →
+  ClasificacionImportService / ResultadoImportService
+  / VueltaImportService / IncidenteAutoGenService
+  → Elo/SR + campeonato. Idempotencia por
+  SesionProcesada.nombreArchivo (UNIQUE).
+end note
+
+note bottom of FE
+  JWT stateless (Bearer) en cada request.
+  Endpoints públicos: login, registro-steam,
+  /steam, GET de consulta.
+  Resto requiere ROLE_ADMIN / ROLE_COMISARIO.
+end note
+
+@enduml

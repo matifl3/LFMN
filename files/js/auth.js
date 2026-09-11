@@ -49,18 +49,22 @@
   formLogin.addEventListener('submit', async function (e) {
     e.preventDefault();
     const btn = document.getElementById('btn-login');
-    btn.disabled = true;
+    const passInput = document.getElementById('login-pass');
+    L.clearFieldErrors();
+    L.setFieldInvalid(passInput, false);
+    L.busy(btn, true);
     try {
       const data = await L.post('/usuarios/login', {
         email: document.getElementById('login-email').value.trim(),
-        password: document.getElementById('login-pass').value
+        password: passInput.value
       });
       L.setSession(data.token, data.usuario);
       L.toast('¡Bienvenido, ' + (data.usuario.nombrePiloto || 'piloto') + '!', 'success');
       location.href = next();
     } catch (err) {
+      L.setFieldInvalid(passInput, true, 'Email o contraseña incorrectos.');
+      L.busy(btn, false);
       L.toast(err.message, 'error');
-      btn.disabled = false;
     }
   });
 
@@ -76,22 +80,24 @@
     iniciarConSteam().finally(function () { btn.disabled = false; });
   });
 
-  /* Retorno del flujo Steam: ?steam=ok&token=<jwt> o ?steam=nuevo&guid=<guid> o ?steam=invalido|expirado */
+  /* Retorno del flujo Steam: ?steam=ok&codigo=<un-solo-uso> o ?steam=nuevo&guid=<guid> o ?steam=invalido|expirado */
   (function procesoSteam() {
     const params = new URLSearchParams(location.search);
     const steam = params.get('steam');
     if (!steam) return;
-    const token = params.get('token');
+    const codigo = params.get('codigo');
     const guid = params.get('guid');
     history.replaceState(null, '', location.pathname + location.hash);
-    if (steam === 'ok' && token) {
-      L.setSession(token, null);
-      L.api('/usuarios/me').then(function (usuario) {
+    if (steam === 'ok' && codigo) {
+      L.post('/steam/completar', { codigo: codigo }).then(function (data) {
+        L.setSession(data.token, null);
+        return L.api('/usuarios/me');
+      }).then(function (usuario) {
         L.updateUser(usuario);
         L.toast('¡Bienvenido, ' + (usuario.nombrePiloto || 'piloto') + '!', 'success');
         location.href = next();
-      }).catch(function () {
-        L.toast('No se pudo completar el ingreso con Steam.', 'error');
+      }).catch(function (err) {
+        L.toast((err && err.message) || 'No se pudo completar el ingreso con Steam.', 'error');
       });
     } else if (steam === 'nuevo' && guid) {
       document.getElementById('form-login').style.display = 'none';
@@ -112,7 +118,8 @@
   document.getElementById('form-steam-setup').addEventListener('submit', async function (e) {
     e.preventDefault();
     const btn = document.getElementById('btn-steam-setup');
-    btn.disabled = true;
+    L.clearFieldErrors();
+    L.busy(btn, true);
     try {
       const data = await L.post('/usuarios/registro-steam', {
         email: document.getElementById('steam-email').value.trim(),
@@ -123,8 +130,8 @@
       L.toast('Cuenta creada correctamente', 'success');
       location.href = next();
     } catch (err) {
+      L.busy(btn, false);
       L.toast(err.message, 'error');
-      btn.disabled = false;
     }
   });
 })();

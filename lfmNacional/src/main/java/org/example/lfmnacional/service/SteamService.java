@@ -23,13 +23,17 @@ import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class SteamService {
 
-    public record SteamAuthResult(String resultado, String token, String guidSteam) {
+    public record SteamAuthResult(String resultado, Long usuarioId, String guidSteam) {
+    }
+
+    private record CodigoAuth(Long usuarioId, long expiraEn) {
     }
 
     private static final String STEAM_OPENID_ENDPOINT = "https://steamcommunity.com/openid/login";
@@ -41,6 +45,7 @@ public class SteamService {
     private static final String SCOPE_AUTH = "steam-auth";
     private static final String SUFFIX_EMAIL = "@steam.local";
     private static final long STATE_TIMEOUT_MINUTOS = 10;
+    private static final long CODIGO_VIGENCIA_MILIS = 60_000;
 
     private final UsuarioRepository usuarioRepository;
     private final JwtUtil jwtUtil;
@@ -53,6 +58,8 @@ public class SteamService {
 
     @Value("${steam.return-to-auth}")
     private String returnToAuth;
+
+    private final Map<String, CodigoAuth> codigosAuth = new ConcurrentHashMap<>();
 
     private final HttpClient httpClient = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(10))
@@ -106,10 +113,10 @@ public class SteamService {
     }
 
     public SteamAuthResult autenticarOCrear(Map<String, String> params) {
-        log.info("Steam callback recibido: mode={} return_to={} identity={} state={}",
+        log.info("Steam callback recibido: mode={} return_to_presente={} identity_presente={} state={}",
                 params.get("openid.mode"),
-                params.get("openid.return_to"),
-                params.get("openid.identity"),
+                params.get("openid.return_to") != null,
+                params.get("openid.identity") != null,
                 params.get("state") != null ? "(presente)" : "(null)");
 
         String guidSteam = validarYExtraerSteamId(params, returnToAuth);
@@ -117,7 +124,6 @@ public class SteamService {
             log.warn("Steam auth falló: validarYExtraerSteamId retornó null");
             return new SteamAuthResult("invalido", null, null);
         }
-        log.info("Steam auth: guidSteam={}", guidSteam);
 
         try {
             jwtUtil.validarState(params.get("state"), SCOPE_AUTH);
@@ -135,13 +141,43 @@ public class SteamService {
                 usuarioRepository.save(usuario);
                 log.info("Steam auth: guidSteam vinculado a usuario existente id={}", usuario.getId());
             } else {
-                log.info("Steam auth: usuario nuevo detectado, guiando a completar perfil guidSteam={}", guidSteam);
+                log.info("Steam auth: usuario nuevo detectado, guiando a completar perfil");
                 return new SteamAuthResult("nuevo", null, guidSteam);
             }
         } else {
             log.info("Steam auth: usuario existente id={}", usuario.getId());
         }
-        return new SteamAuthResult("ok", jwtUtil.generarToken(usuario), null);
+        return new SteamAuthResult("ok", usuario.getId(), null);
+    }
+
+    public String generarCodigoAuth(Long usuarioId) {
+        limpiarCodigosExpirados();
+        String codigo = UUID.randomUUID().toString();
+        codigosAuth.put(codigo, new CodigoAuth(usuarioId, System.currentTimeMillis() + CODIGO_VIGENCIA_MILIS));
+        log.info("Steam auth: código de un solo uso emitido para usuario id={}", usuarioId);
+        return codigo;
+    }
+
+    public String completarCodigo(String codigo) {
+        if (codigo == null || codigo.isBlank()) {
+            return null;
+        }
+        CodigoAuth pendiente = codigosAuth.remove(codigo);
+        if (pendiente == null || pendiente.expiraEn() < System.currentTimeMillis()) {
+            log.warn("Steam auth: código inválido o expirado");
+            return null;
+        }
+        Usuario usuario = usuarioRepository.findById(pendiente.usuarioId()).orElse(null);
+        if (usuario == null) {
+            log.warn("Steam auth: usuario del código no existe");
+            return null;
+        }
+        return jwtUtil.generarToken(usuario);
+    }
+
+    private void limpiarCodigosExpirados() {
+        long ahora = System.currentTimeMillis();
+        codigosAuth.entrySet().removeIf(e -> e.getValue().expiraEn() < ahora);
     }
 
     private String buildOpenIdUrl(String returnToUrl) {
@@ -223,7 +259,7 @@ public class SteamService {
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             boolean valido = response.body() != null && response.body().contains("is_valid:true");
             if (!valido) {
-                log.warn("Steam verificación de firma: respuesta NO válida. body={}", response.body());
+                log.warn("Steam verificación de firma: respuesta NO válida (status={})", response.statusCode());
             }
             return valido;
         } catch (IOException e) {

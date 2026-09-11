@@ -38,8 +38,8 @@ Proyecto de plataforma web para liga de sim racing (Assetto Corsa) con Spring Bo
   - Fix: Whitelist de extensiones MIME permitidas (.ini, .acd, .json, .rar, .zip)
 - [x] **Open redirect en login** -- auth.js:11-14 usa next del query string sin validar
   - Fix: Validar que next empiece con / (relativo)
-- [ ] **Token JWT en URL** -- Steam callback devuelve token como query param, quedando en historial y logs
-  - Fix: Usar cookie de sesion temporal o codigo intercambiado via POST
+- [x] **Token JWT en URL** -- Steam callback ya no devuelve el JWT por query param; usa un código de un solo uso intercambiado por POST (`/api/steam/completar`)
+- [x] **XSS por scheme** -- `sanitizeUrl()` (api.js:183) neutraliza `javascript:`/`data:`/`vbscript:` y se aplica en api.js, race-detail.js, incidents.js y notifications.js
 
 ### 1.3 Medios
 
@@ -136,8 +136,7 @@ Proyecto de plataforma web para liga de sim racing (Assetto Corsa) con Spring Bo
 
 ### 5.1 Seguridad
 
-- [ ] **XSS por scheme** -- esc() no neutraliza javascript: en URLs de usuario (incidents.js:85, race-detail.js:81, api.js:228)
-  - Fix: Whitelist de schemes http(s) en URLs de usuario
+- [x] **XSS por scheme** -- esc() no neutraliza javascript: en URLs de usuario (incidents.js:85, race-detail.js:81, api.js:228); resuelto con `sanitizeUrl()` (api.js:183)
 - [ ] **Client-side-only authorization** -- admin panel gating es solo DOM-based (admin.js:22-33); un usuario normal puede llamar los endpoints directamente
   - Fix: Backend @PreAuthorize ya protege escrituras admin; agregar ownership checks server-side
 

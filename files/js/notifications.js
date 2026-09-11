@@ -20,9 +20,8 @@
   };
 
   function linkDe(n) {
-    if (n.link && n.link.indexOf('http') === 0) return n.link;
     if (!n.link) return null;
-    return n.link;
+    return L.sanitizeUrl(n.link);
   }
 
   function render(list) {

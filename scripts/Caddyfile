@@ -1,0 +1,27 @@
+# LFM Nacional - Caddy (Fase 4.3: HTTPS)
+# Plantilla usada por setup-https.sh cuando DOMAIN esta definido: busca y
+# reemplaza los placeholders {$DOMAIN} y {$ACME_EMAIL} y copia el resultado a
+# /etc/caddy/Caddyfile. Caddy pide el certificado a Let's Encrypt y renueva
+# solo (incluye el redirect 80->443).
+
+{
+	email {$ACME_EMAIL}
+}
+
+{$DOMAIN} {
+	encode gzip
+
+	# La app sirve frontend estatico (./files/) + /api en :8080.
+	# /actuator/* esta bloqueado en el proxy salvo /actuator/health (que el
+	# HEALTHCHECK del contenedor consulta por localhost y sigue publico).
+	@actuator path /actuator/*
+	handle @actuator {
+		@health path /actuator/health
+		handle @health {
+			reverse_proxy 127.0.0.1:8080
+		}
+		respond 404
+	}
+
+	reverse_proxy 127.0.0.1:8080
+}

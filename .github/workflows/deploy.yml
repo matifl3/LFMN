@@ -1,0 +1,53 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      APP_DIR: ${{ secrets.DEPLOY_PATH || '/home/ubuntu/app' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: maven
+
+      - name: Build (con tests)
+        run: ./mvnw -B --no-transfer-progress clean package
+        working-directory: lfmNacional
+
+      - name: Configurar agente SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.DEPLOY_KEY }}
+
+      - name: Subir JAR al servidor
+        run: |
+          scp -o StrictHostKeyChecking=no -P "$DEPLOY_PORT" \
+            lfmNacional/target/lfmNacional-0.0.1-SNAPSHOT.jar \
+            "$DEPLOY_USERNAME@$DEPLOY_HOST:$APP_DIR/staging/"
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USERNAME: ${{ secrets.DEPLOY_USERNAME }}
+          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT || '22' }}
+
+      - name: Ejecutar deploy en el servidor
+        run: |
+          ssh -o StrictHostKeyChecking=no -p "$DEPLOY_PORT" \
+            "$DEPLOY_USERNAME@$DEPLOY_HOST" \
+            "sudo bash $APP_DIR/scripts/deploy.sh"
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USERNAME: ${{ secrets.DEPLOY_USERNAME }}
+          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT || '22' }}

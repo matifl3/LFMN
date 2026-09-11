@@ -2,6 +2,7 @@ package org.example.lfmnacional.config;
 
 import lombok.RequiredArgsConstructor;
 import org.example.lfmnacional.security.JwtAuthenticationFilter;
+import org.example.lfmnacional.security.RateLimitFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -23,6 +24,7 @@ import java.nio.charset.StandardCharsets;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final RateLimitFilter rateLimitFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -62,7 +64,9 @@ public class SecurityConfig {
                         .requestMatchers("/**/*.js").permitAll()
                         .requestMatchers("/**/*.png", "/**/*.jpg", "/**/*.jpeg", "/**/*.svg", "/**/*.ico", "/**/*.gif").permitAll()
                         .requestMatchers("/**/*.woff", "/**/*.woff2", "/**/*.ttf", "/**/*.eot").permitAll()
-                        // Everything else requires authentication
+                        // El resto requiere autenticacion. /actuator/health se
+                        // expone publico para el HEALTHCHECK del contenedor.
+                        .requestMatchers("/actuator/health").permitAll()
                         .anyRequest().authenticated())
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint((request, response, authException) -> {
@@ -77,6 +81,7 @@ public class SecurityConfig {
                             response.setCharacterEncoding(StandardCharsets.UTF_8.name());
                             response.getWriter().write("{\"error\":\"FORBIDDEN\",\"mensaje\":\"No tienes permisos para esta accion\"}");
                         }))
+                .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
