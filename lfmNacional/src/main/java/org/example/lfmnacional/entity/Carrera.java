@@ -32,6 +32,9 @@ public class Carrera {
     @Column(nullable = false)
     private LocalDateTime fecha;
 
+    @Column(name = "practica_fecha")
+    private LocalDateTime practicaFecha;
+
     @Column(nullable = false, length = 100)
     private String circuito;
 

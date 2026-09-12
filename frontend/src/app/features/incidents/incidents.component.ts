@@ -8,6 +8,7 @@ import { AuthService } from '../../core/services/auth.service';
 import {
   Apelacion,
   Carrera,
+  DecisionComisario,
   Incidente,
   IncidentePiloto,
   Resolucion,
@@ -20,7 +21,14 @@ import { EmptyState } from '../../shared/components/empty-state/empty-state';
 import { Modal } from '../../shared/components/modal/modal';
 import { FechaRelativaPipe } from '../../core/pipes/fecha-relativa.pipe';
 
-type Vista = 'incidentes' | 'sanciones' | 'apelaciones';
+type Vista = 'incidentes' | 'sanciones' | 'apelaciones' | 'decisiones';
+type FiltroIncidente = 'TODOS' | 'PENDIENTES' | 'RESUELTOS';
+
+const DECISION_LABEL: Record<string, string> = {
+  A_FAVOR: 'A favor',
+  EN_CONTRA: 'En contra',
+  ABSTENCION: 'Abstención',
+};
 
 @Component({
   selector: 'app-incidents',
@@ -43,6 +51,9 @@ export class IncidentsComponent implements OnInit {
   readonly sanciones = signal<Sancion[]>([]);
   readonly allSanciones = signal<Sancion[]>([]);
   readonly usuariosBase = signal<UsuarioBasico[]>([]);
+  readonly decisiones = signal<DecisionComisario[]>([]);
+  readonly filtroEstado = signal<FiltroIncidente>('TODOS');
+  readonly decisionLabel = DECISION_LABEL;
 
   readonly modalDetalle = signal(false);
   readonly detalleIncidente = signal<Incidente | null>(null);
@@ -81,7 +92,14 @@ export class IncidentsComponent implements OnInit {
   readonly enviando = signal(false);
   readonly resolviendo = signal(false);
 
-  readonly incidentesFiltrados = computed(() => this.incidentes());
+  readonly incidentesFiltrados = computed(() => {
+    const f = this.filtroEstado();
+    return this.incidentes().filter((i) => {
+      if (f === 'PENDIENTES') return i.estado !== 'RESUELTO';
+      if (f === 'RESUELTOS') return i.estado === 'RESUELTO';
+      return true;
+    });
+  });
   readonly sancionesResolver = signal<Sancion[]>([]);
 
   ngOnInit(): void {
@@ -96,6 +114,9 @@ export class IncidentsComponent implements OnInit {
     const allSanciones$ = this.auth.esModerador()
       ? this.api.list<Sancion>('/sanciones').pipe(catchError(() => of([])))
       : of<Sancion[]>([]);
+    const decisiones$ = this.auth.esModerador() && userId
+      ? this.api.list<DecisionComisario>('/incidentes/comisario/' + userId + '/decisiones').pipe(catchError(() => of([])))
+      : of<DecisionComisario[]>([]);
     forkJoin({
       incidentes: this.api.list<Incidente>('/incidentes').pipe(catchError(() => of([]))),
       carreras: this.api.list<Carrera>('/carreras').pipe(catchError(() => of([]))),
@@ -103,6 +124,7 @@ export class IncidentsComponent implements OnInit {
       usuariosBase: this.api.list<UsuarioBasico>('/usuarios/basico').pipe(catchError(() => of([]))),
       sanciones: sanciones$,
       allSanciones: allSanciones$,
+      decisiones: decisiones$,
     }).subscribe({
       next: (r) => {
         this.incidentes.set(r.incidentes);
@@ -111,6 +133,7 @@ export class IncidentsComponent implements OnInit {
         this.usuariosBase.set(r.usuariosBase);
         this.sanciones.set(r.sanciones);
         this.allSanciones.set(r.allSanciones);
+        this.decisiones.set(r.decisiones);
         this.cargando.set(false);
       },
       error: (err) => {

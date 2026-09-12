@@ -70,6 +70,10 @@ public class Usuario {
     @Version
     private Long version;
 
+    @Builder.Default
+    @Column(nullable = false, columnDefinition = "boolean default true")
+    private boolean habilitado = true;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Rol rol;

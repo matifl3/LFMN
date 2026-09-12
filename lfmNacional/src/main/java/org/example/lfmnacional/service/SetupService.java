@@ -4,8 +4,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.lfmnacional.dto.setup.SetupRequest;
 import org.example.lfmnacional.dto.setup.SetupResponse;
+import org.example.lfmnacional.entity.Categoria;
 import org.example.lfmnacional.entity.Setup;
 import org.example.lfmnacional.entity.Usuario;
+import org.example.lfmnacional.enums.Rol;
 import org.example.lfmnacional.exception.BusinessException;
 import org.example.lfmnacional.exception.ResourceNotFoundException;
 import org.example.lfmnacional.repository.SetupCalificacionRepository;
@@ -91,6 +93,15 @@ public class SetupService {
 
     @Transactional
     public SetupResponse create(SetupRequest request, Usuario autor) {
+        Categoria categoria = request.categoriaId() != null ? categoriaService.getEntity(request.categoriaId()) : null;
+        if (categoria != null && Boolean.TRUE.equals(categoria.getSetupFijo())) {
+            if (autor.getRol() != Rol.ADMIN) {
+                throw new BusinessException("Esta categoria tiene setup fijo: solo el administrador publica el setup oficial");
+            }
+            if (setupRepository.existsByCategoria_Id(categoria.getId())) {
+                throw new BusinessException("La categoria ya tiene publicado su setup oficial");
+            }
+        }
         Setup setup = Setup.builder()
                 .titulo(request.titulo())
                 .descripcion(request.descripcion())
@@ -98,7 +109,7 @@ public class SetupService {
                 .vehiculo(request.vehiculo())
                 .archivo(request.archivo())
                 .autor(autor)
-                .categoria(request.categoriaId() != null ? categoriaService.getEntity(request.categoriaId()) : null)
+                .categoria(categoria)
                 .fechaPublicacion(LocalDateTime.now())
                 .build();
         return toResponse(setupRepository.save(setup));

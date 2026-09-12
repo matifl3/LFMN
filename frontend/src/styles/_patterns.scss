@@ -197,5 +197,36 @@
 .row-actions { display: flex; gap: var(--sp-2); justify-content: flex-end; }
 
 // ---- Auth -----------------------------------------
-.auth-shell { min-height: calc(100vh - var(--header-h)); display: grid; place-items: center; padding: var(--sp-6); position: relative; overflow: hidden; }
-.auth-card { width: 100%; max-width: 420px; padding: var(--sp-7); position: relative; z-index: 1; }
+.auth-shell {
+  min-height: 100vh;
+  display: grid;
+  align-items: center;
+  justify-content: start;
+  padding: var(--sp-7) max(var(--sp-8), 16vw);
+  position: relative;
+  overflow: hidden;
+}
+.auth-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: right center;
+}
+.auth-card {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 420px;
+  padding: var(--sp-7);
+}
+@media (max-width: 900px) {
+  .auth-shell {
+    justify-content: center;
+    padding: var(--sp-5);
+  }
+  .auth-photo {
+    opacity: 0.35;
+  }
+}

@@ -22,6 +22,7 @@
       <button class="tab" [class.active]="tab()==='campeonatos'" (click)="setTab('campeonatos')">Campeonatos</button>
       <button class="tab" [class.active]="tab()==='categorias'" (click)="setTab('categorias')">Categorías</button>
       <button class="tab" [class.active]="tab()==='pilotos'" (click)="setTab('pilotos')">Pilotos</button>
+      <button class="tab" [class.active]="tab()==='logros'" (click)="setTab('logros')">Logros</button>
       <button class="tab" [class.active]="tab()==='anuncios'" (click)="setTab('anuncios')">Anuncios</button>
     </div>
 
@@ -232,6 +233,7 @@
                       <td>
                         <div class="row-actions">
                           @if (u.id !== auth.user()?.id) {
+                            <button class="btn btn-ghost btn-sm" (click)="toggleHabilitado(u)" [class.chip-resolved]="u.habilitado" aria-label="Habilitar/Deshabilitar">{{ u.habilitado ? '✓' : '✕' }}</button>
                             <button class="btn btn-danger btn-sm" (click)="eliminarUsuario(u)" aria-label="Eliminar">✕</button>
                           }
                         </div>
@@ -243,47 +245,102 @@
             </div>
           }
 
-          @if (tab()==='anuncios') {
-            <div class="table-wrap">
-              <table class="table">
-                <thead>
-                  <tr>
-                    <th>Fecha</th>
-                    <th>Título</th>
-                    <th>Contenido</th>
-                    <th>Imagen</th>
-                    <th>Destacado</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  @for (a of anuncios(); track a.id) {
+@if (tab()==='anuncios') {
+              <div class="table-wrap">
+                <table class="table">
+                  <thead>
                     <tr>
-                      <td>{{ a.fecha | fmtFechaHora }}</td>
-                      <td class="data">{{ a.titulo }}</td>
-                      <td style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ a.contenido || '—' }}</td>
-                      <td>{{ a.urlImagen ? 'Sí' : 'No' }}</td>
-                      <td>
-                        @if (isAdmin()) {
-                          <button class="btn btn-ghost btn-sm" (click)="toggleDestacado(a)" [class.chip-resolved]="a.destacado" [style.color]="a.destacado ? 'var(--status-alerta)' : ''">{{ a.destacado ? '★' : '☆' }}</button>
-                        } @else {
-                          <span class="chip {{ a.destacado ? 'chip-upcoming' : 'chip-closed' }}">{{ a.destacado ? 'Destacado' : 'Normal' }}</span>
-                        }
-                      </td>
-                      <td>
-                        <div class="row-actions">
-                          @if (isAdmin()) {
-                            <button class="btn btn-ghost btn-sm" (click)="editarAnuncio(a)" aria-label="Editar">✎</button>
-                            <button class="btn btn-danger btn-sm" (click)="eliminarAnuncio(a.id)" aria-label="Eliminar">✕</button>
-                          }
-                        </div>
-                      </td>
+                      <th>Fecha</th>
+                      <th>Título</th>
+                      <th>Contenido</th>
+                      <th>Imagen</th>
+                      <th>Destacado</th>
+                      <th></th>
                     </tr>
-                  }
-                </tbody>
-              </table>
-            </div>
-          }
+                  </thead>
+                  <tbody>
+                    @for (a of anuncios(); track a.id) {
+                      <tr>
+                        <td>{{ a.fecha | fmtFechaHora }}</td>
+                        <td class="data">{{ a.titulo }}</td>
+                        <td style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ a.contenido || '—' }}</td>
+                        <td>{{ a.urlImagen ? 'Sí' : 'No' }}</td>
+                        <td>
+                          @if (isAdmin()) {
+                            <button class="btn btn-ghost btn-sm" (click)="toggleDestacado(a)" [class.chip-resolved]="a.destacado" [style.color]="a.destacado ? 'var(--status-alerta)' : ''">{{ a.destacado ? '★' : '☆' }}</button>
+                          } @else {
+                            <span class="chip {{ a.destacado ? 'chip-upcoming' : 'chip-closed' }}">{{ a.destacado ? 'Destacado' : 'Normal' }}</span>
+                          }
+                        </td>
+                        <td>
+                          <div class="row-actions">
+                            @if (isAdmin()) {
+                              <button class="btn btn-ghost btn-sm" (click)="editarAnuncio(a)" aria-label="Editar">✎</button>
+                              <button class="btn btn-danger btn-sm" (click)="eliminarAnuncio(a.id)" aria-label="Eliminar">✕</button>
+                            }
+                          </div>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+
+            @if (tab()==='logros') {
+              <div class="table-wrap">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>Logro</th>
+                      <th>Condición</th>
+                      <th>Recompensas</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (l of logros(); track l.id) {
+                      <tr>
+                        <td class="data">{{ l.icono ? l.icono + ' ' : '' }}{{ l.nombre }}</td>
+                        <td><span class="chip chip-category">{{ COND_LOGRO_LABEL[l.tipoCondicion] || l.tipoCondicion }}</span> <span class="mono">{{ l.valorCondicion }}</span></td>
+                        <td>
+                          <div class="flex-col gap-1">
+                            <div style="display:flex;flex-wrap:wrap;gap:var(--sp-1)">
+                              @for (r of l.recompensas ?? []; track r.id) {
+                                <span class="chip chip-upcoming">
+                                  {{ r.descripcion }} ({{ RECOMPENSA_LABEL[r.tipo] || r.tipo }})
+                                  @if (isAdmin()) {
+                                    <button class="btn btn-ghost btn-sm" style="padding:0 4px;margin-left:4px" (click)="quitarRecompensa(l.id, r.id)">×</button>
+                                  }
+                                </span>
+                              }
+                            </div>
+                            @if (isAdmin() && addRecompensaPara() === l.id) {
+                              <div style="display:flex;flex-wrap:wrap;gap:var(--sp-1);margin-top:var(--sp-1)">
+                                <input class="input" style="width:180px" [ngModel]="rDescripcion()" (ngModelChange)="rDescripcion.set($event)" placeholder="Descripción" />
+                                <select class="select" [ngModel]="rTipo()" (ngModelChange)="rTipo.set($event)" style="width:120px">
+                                  @for (t of objectKeys(RECOMPENSA_LABEL); track t) { <option [value]="t">{{ RECOMPENSA_LABEL[t] }}</option> }
+                                </select>
+                                <button class="btn btn-primary btn-sm" (click)="agregarRecompensa(l)">Añadir</button>
+                              </div>
+                            }
+                          </div>
+                        </td>
+                        <td>
+                          <div class="row-actions">
+                            @if (isAdmin()) {
+                              <button class="btn btn-ghost btn-sm" (click)="toggleAddRecompensa(l.id)" aria-label="Recompensa">＋</button>
+                              <button class="btn btn-ghost btn-sm" (click)="editarLogro(l)" aria-label="Editar">✎</button>
+                              <button class="btn btn-danger btn-sm" (click)="eliminarLogro(l.id)" aria-label="Eliminar">✕</button>
+                            }
+                          </div>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
 
         </div>
 
@@ -307,6 +364,10 @@
               <div class="input-group">
                 <div class="field"><label>Fecha</label><input type="date" class="input" [ngModel]="cFecha()" (ngModelChange)="cFecha.set($event)" /></div>
                 <div class="field"><label>Hora</label><input type="time" class="input" [ngModel]="cHora()" (ngModelChange)="cHora.set($event)" /></div>
+              </div>
+              <div class="input-group">
+                <div class="field"><label>Sesión de práctica</label><input type="date" class="input" [ngModel]="cPracticaFecha()" (ngModelChange)="cPracticaFecha.set($event)" /></div>
+                <div class="field"><label>Hora práctica</label><input type="time" class="input" [ngModel]="cPracticaHora()" (ngModelChange)="cPracticaHora.set($event)" /></div>
               </div>
               <div class="field"><label>Circuito</label><input class="input" [ngModel]="cCircuito()" (ngModelChange)="cCircuito.set($event)" /></div>
               <div class="field"><label>Cupo máximo</label><input type="number" class="input" [ngModel]="cCupo()" (ngModelChange)="cCupo.set(toNumber($event, 32) ?? 32)" /></div>
@@ -369,7 +430,7 @@
               </div>
             }
 
-            @if (tab()==='anuncios') {
+@if (tab()==='anuncios') {
               <h4>{{ editingAnuncioId() ? 'Editar anuncio' : 'Crear anuncio' }}</h4>
               <div class="field"><label>Título *</label><input class="input" [ngModel]="aTitulo()" (ngModelChange)="aTitulo.set($event)" /></div>
               <div class="field"><label>Contenido</label><textarea class="textarea" [ngModel]="aContenido()" (ngModelChange)="aContenido.set($event)"></textarea></div>
@@ -384,6 +445,27 @@
                 <button class="btn btn-primary btn-block" (click)="crearAnuncio()">{{ editingAnuncioId() ? 'Actualizar' : 'Crear' }}</button>
                 @if (editingAnuncioId()) {
                   <button class="btn btn-ghost" (click)="limpiarFormAnuncio()">Cancelar</button>
+                }
+              </div>
+            }
+
+            @if (tab()==='logros') {
+              <h4>{{ editingLogroId() ? 'Editar logro' : 'Crear logro' }}</h4>
+              <div class="field"><label>Nombre *</label><input class="input" [ngModel]="lNombre()" (ngModelChange)="lNombre.set($event)" /></div>
+              <div class="field"><label>Descripción</label><textarea class="textarea" [ngModel]="lDescripcion()" (ngModelChange)="lDescripcion.set($event)"></textarea></div>
+              <div class="input-group">
+                <div class="field"><label>Condición</label>
+                  <select class="select" [ngModel]="lTipoCondicion()" (ngModelChange)="lTipoCondicion.set($event)">
+                    @for (t of objectKeys(COND_LOGRO_LABEL); track t) { <option [value]="t">{{ COND_LOGRO_LABEL[t] }}</option> }
+                  </select>
+                </div>
+                <div class="field"><label>Valor *</label><input type="number" class="input" [ngModel]="lValorCondicion()" (ngModelChange)="lValorCondicion.set(toNumber($event, 1) ?? 1)" /></div>
+              </div>
+              <div class="field"><label>Icono (emoji)</label><input class="input" [ngModel]="lIcono()" (ngModelChange)="lIcono.set($event)" placeholder="🏆" /></div>
+              <div style="display:flex;gap:var(--sp-2)">
+                <button class="btn btn-primary btn-block" (click)="crearOActualizarLogro()">{{ editingLogroId() ? 'Actualizar' : 'Crear' }}</button>
+                @if (editingLogroId()) {
+                  <button class="btn btn-ghost" (click)="limpiarFormLogro()">Cancelar</button>
                 }
               </div>
             }

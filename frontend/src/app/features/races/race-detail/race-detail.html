@@ -42,6 +42,12 @@
           <div class="label">Fecha y hora</div>
           <div class="value">{{ carrera()?.fecha | fmtFechaHora }}</div>
         </div>
+        @if (carrera()?.practicaFecha) {
+          <div class="info-tile">
+            <div class="label">Sesión de práctica</div>
+            <div class="value">{{ carrera()?.practicaFecha | fmtFechaHora }}</div>
+          </div>
+        }
         <div class="info-tile">
           <div class="label">Circuito</div>
           <div class="value">{{ carrera()?.circuito || '—' }}</div>
@@ -54,6 +60,17 @@
           <div class="label">Servidor</div>
           <div class="value mono">{{ carrera()?.servidor || '—' }}</div>
         </div>
+        @if (accesoVisible()) {
+          <div class="info-tile">
+            <div class="label">Contraseña del servidor</div>
+            <div class="value mono" style="display: flex; align-items: center; gap: var(--sp-3)">
+              <span>{{ mostrarPassword() ? (acceso()?.contrasenaServidor || '—') : '••••••••' }}</span>
+              <button class="btn btn-ghost btn-sm" (click)="mostrarPassword.set(!mostrarPassword())">
+                {{ mostrarPassword() ? 'Ocultar' : 'Ver' }}
+              </button>
+            </div>
+          </div>
+        }
         <div class="info-tile" style="grid-column: span 2">
           <div class="label">Cupo</div>
           <div class="value mono">{{ inscriptosActivos() }} / {{ carrera()?.cupoMaximo || '—' }}</div>
@@ -63,6 +80,17 @@
             </div>
           }
         </div>
+        @if (eloEstimado(); as elo) {
+          <div class="info-tile" style="grid-column: span 2">
+            <div class="label">Elo estimado según tu posición</div>
+            <div class="value" style="display: flex; gap: var(--sp-4); flex-wrap: wrap">
+              <span>Esperada: <b>P{{ elo.posicionEsperada }}</b>
+                <span class="mono" [style.color]="eloColor(elo.deltaEsperado)">{{ eloTxt(elo.deltaEsperado) }}</span>
+              </span>
+              <span class="text-secondary" style="font-size: var(--fs-xs)">Mejor caso {{ eloTxt(elo.deltaMejorCaso) }} · Peor caso {{ eloTxt(elo.deltaPeorCaso) }}</span>
+            </div>
+          </div>
+        }
       </div>
     }
 
@@ -172,32 +200,42 @@
 
     @if (panel()==='analisis') {
       <h3 style="margin-bottom: var(--sp-4)">Análisis por vuelta</h3>
-      @if (vueltas().length === 0) {
+      @if (analisis().length === 0) {
         <p class="text-terciario">
           @if (auth.autenticado()) {
-            Sin vueltas registradas.
+            Sin vueltas registradas de carrera.
           } @else {
             Ingresá para ver tu análisis por vuelta.
           }
         </p>
       } @else {
+        <div class="card" style="margin-bottom: var(--sp-5); padding: var(--sp-4)">
+          <h4 style="margin-bottom: var(--sp-2)">Evolución de posición</h4>
+          <div [innerHTML]="posicionesChart()"></div>
+        </div>
+        <div class="card" style="margin-bottom: var(--sp-5); padding: var(--sp-4)">
+          <h4 style="margin-bottom: var(--sp-2)">Diferencia con el líder (seg)</h4>
+          <div [innerHTML]="deltasChart()"></div>
+        </div>
         <div class="table-wrap">
           <table class="table">
             <thead>
               <tr>
-                <th class="num">Vuelta</th><th class="num">Tiempo</th><th class="num">S1</th><th class="num">S2</th><th class="num">S3</th><th class="num">Cortes</th><th>Neum.</th>
+                <th class="num">Vuelta</th><th class="num">Pos</th><th class="num">Tiempo</th><th class="num">Dif. líder</th><th class="num">S1</th><th class="num">S2</th><th class="num">S3</th><th class="num">Cortes</th><th>Neum.</th>
               </tr>
             </thead>
             <tbody>
-              @for (v of vueltas(); track v.id) {
+              @for (a of analisis(); track a.id) {
                 <tr>
-                  <td class="num mono">{{ v.numeroVuelta }}</td>
-                  <td class="num mono">{{ v.tiempoMs | fmtLap }}</td>
-                  <td class="num mono">{{ v.sector1 | fmtLap }}</td>
-                  <td class="num mono">{{ v.sector2 | fmtLap }}</td>
-                  <td class="num mono">{{ v.sector3 | fmtLap }}</td>
-                  <td class="num mono">{{ v.cortes ?? '—' }}</td>
-                  <td>{{ v.neumatico || '—' }}</td>
+                  <td class="num mono">{{ a.numeroVuelta }}</td>
+                  <td class="num"><app-rank-badge [posicion]="a.posicionEnVuelta ?? 999" /></td>
+                  <td class="num mono">{{ a.tiempoMs | fmtLap }}</td>
+                  <td class="num mono">+{{ (a.deltaLiderMs ?? 0) / 1000 }} s</td>
+                  <td class="num mono">{{ a.sector1 | fmtLap }}</td>
+                  <td class="num mono">{{ a.sector2 | fmtLap }}</td>
+                  <td class="num mono">{{ a.sector3 | fmtLap }}</td>
+                  <td class="num mono">{{ a.cortes ?? '—' }}</td>
+                  <td>{{ a.neumatico || '—' }}</td>
                 </tr>
               }
             </tbody>

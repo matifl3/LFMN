@@ -10,7 +10,7 @@
 ## Contexto
 
 - **Stack**: Spring Boot 4.1.0 / Java 17 / MySQL 8 / JPA / frontend vanilla JS.
-- **Código**: sólido. 54 tests pasan (`mvn test` → BUILD SUCCESS). La mayoría de
+- **Código**: sólido. 69 tests pasan (`mvn test` → BUILD SUCCESS). La mayoría de
   los puntos críticos del análisis previo (`docs/analisis-mejoras.md`) ya están
   resueltos: endpoints públicos enumerados, `contrasenaServidor` fuera del DTO,
   ownership checks (IDOR) en controllers, JWT/CORS con defaults restrictivos,
@@ -84,7 +84,7 @@ Sin esta fase no se publica.
 
 | # | Tarea | Archivo(s) | Detalle |
 |---|---|---|---|
-| 4.1 | ✅ CI GitHub Actions | `.github/workflows/ci.yml` (nuevo) | **HECHO**: `./mvnw clean verify` (54 tests) en cada push/PR a `main`, con JDK 17 Temurin y cache Maven. Verificado localmente: BUILD SUCCESS + JAR. |
+| 4.1 | ✅ CI GitHub Actions | `.github/workflows/ci.yml` (nuevo) | **HECHO**: `./mvnw clean verify` (69 tests) en cada push/PR a `main`, con JDK 17 Temurin y cache Maven. Verificado localmente: BUILD SUCCESS + JAR. |
 | 4.2 | ✅ Deploy automatizado | `.github/workflows/deploy.yml` + `scripts/deploy.sh` | **HECHO**: workflow `Deploy` (manual) build → test → SCP del JAR → `deploy.sh` en el server: parar → backup → instalar JAR → arrancar → healthcheck `/actuator/health`. Complementa `setup-oracle-cloud.sh` (JAR + systemd, sin Docker). |
 | 4.3 | ✅ HTTPS + proxy | `scripts/Caddyfile` + `scripts/setup-https.sh` + `application-prod.properties` | **HECHO**: Caddy como reverse proxy TLS frente a la app en `:8080` (que ya sirve frontend + `/api`). `setup-https.sh` instala Caddy y genera la config en dos modos: sin dominio (HTTP `:80` funcional) y con `DOMAIN` (Let's Encrypt automático, bloquea `/actuator/*` salvo health). `server.forward-headers-strategy=framework` para redirects https. **Pendiente solo operativo**: dominio + security list 80/443 (cerrar 8080). |
 
@@ -102,9 +102,11 @@ Sin esta fase no se publica.
 
 ## Fuera de alcance (fase 2 de mercado, no bloquea el lanzamiento)
 
-- Features del `requisitos.txt`: RF-028 (credenciales de servidor para inscriptos),
-  puntos de campeonato configurables (hoy hardcodeados F1), quorum/desempate de
-  comisarios configurable, notificación pre-inicio de carrera, estadísticas admin.
+- Features del `requisitos.txt`: puntos de campeonato configurables (hoy
+  hardcodeados F1), quorum/desempate de comisarios configurable, notificación
+  pre-inicio de carrera, estadísticas admin.
+  (RF-028 credenciales de servidor para inscriptos YA implementado:
+  `GET /api/carreras/{id}/acceso-servidor`, visible para inscriptos.)
 - Cumplimiento/privacidad de datos de pilotos (para Argentina: Ley 25.326).
 
 ---

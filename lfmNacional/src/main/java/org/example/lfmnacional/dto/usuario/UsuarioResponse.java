@@ -14,6 +14,7 @@ public record UsuarioResponse(
         Integer safetyRating,
         Rol rol,
         LocalDateTime fechaRegistro,
-        boolean passwordEstablecida
+        boolean passwordEstablecida,
+        boolean habilitado
 ) {
 }

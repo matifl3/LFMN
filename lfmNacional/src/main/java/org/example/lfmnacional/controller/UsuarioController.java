@@ -103,6 +103,12 @@ public class UsuarioController {
         return usuarioService.cambiarRol(id, rol);
     }
 
+    @PutMapping("/{id}/habilitado")
+    @PreAuthorize("hasRole('ADMIN')")
+    public UsuarioResponse updateHabilitado(@PathVariable Long id, @RequestParam boolean habilitado) {
+        return usuarioService.updateHabilitado(id, habilitado);
+    }
+
     @PutMapping("/{id}/rating")
     @PreAuthorize("hasRole('ADMIN')")
     public UsuarioResponse updateRating(@PathVariable Long id, @Valid @RequestBody RatingRequest request) {

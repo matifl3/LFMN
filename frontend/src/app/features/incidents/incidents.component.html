@@ -9,6 +9,9 @@
     <button class="tab" [class.active]="vista()==='incidentes'" (click)="setVista('incidentes')">Incidentes <span class="count">{{ incidentesFiltrados().length }}</span></button>
     <button class="tab" [class.active]="vista()==='sanciones'" (click)="setVista('sanciones')">Sanciones <span class="count">{{ sanciones().length }}</span></button>
     <button class="tab" [class.active]="vista()==='apelaciones'" (click)="setVista('apelaciones')">Apelaciones <span class="count">{{ apelaciones().length }}</span></button>
+    @if (auth.esModerador()) {
+      <button class="tab" [class.active]="vista()==='decisiones'" (click)="setVista('decisiones')">Mis decisiones <span class="count">{{ decisiones().length }}</span></button>
+    }
   </div>
 
   <div class="admin-layout">
@@ -18,6 +21,11 @@
       }
 
       @if (vista()==='incidentes') {
+        <div class="tabs" style="margin-bottom:var(--sp-3)">
+          <button class="tab" [class.active]="filtroEstado()==='TODOS'" (click)="filtroEstado.set('TODOS')">Todos</button>
+          <button class="tab" [class.active]="filtroEstado()==='PENDIENTES'" (click)="filtroEstado.set('PENDIENTES')">Pendientes</button>
+          <button class="tab" [class.active]="filtroEstado()==='RESUELTOS'" (click)="filtroEstado.set('RESUELTOS')">Resueltos</button>
+        </div>
         @if (incidentesFiltrados().length === 0) {
           <app-empty-state texto="No hay incidentes reportados." />
         } @else {
@@ -83,6 +91,33 @@
               }
             </div>
           }
+        }
+      }
+    @if (vista()==='decisiones') {
+        @if (!auth.esModerador()) {
+          <app-empty-state texto="Este registro es exclusivo de comisarios." />
+        } @else if (decisiones().length === 0) {
+          <app-empty-state texto="Todavía no registraste decisiones." />
+        } @else {
+          <div class="flex-col gap-2">
+            @for (d of decisiones(); track $index) {
+              <div class="race-row">
+                <div>
+                  @if (d.tipo === 'VOTO') {
+                    <app-chip [estado]="d.decision || 'ABSTENCION'" tipo="voto" />
+                  } @else {
+                    <span class="chip chip-resolved">Resolución</span>
+                  }
+                </div>
+                <div class="race-meta" style="font-size:var(--fs-sm)">
+                  <strong style="text-transform:uppercase">Incidente #{{ d.incidenteId }}</strong>
+                  <span>{{ d.tipo === 'VOTO' ? (decisionLabel[d.decision || ''] || d.decision) : 'Resolución redactada' }}{{ d.comentario ? ' — ' + d.comentario : '' }}</span>
+                </div>
+                <div class="text-terciario" style="font-size:var(--fs-sm)">{{ d.fecha | fechaRelativa }}</div>
+                <button class="btn btn-ghost btn-sm" (click)="abrirDetalle(d.incidenteId)">Ver</button>
+              </div>
+            }
+          </div>
         }
       }
     </div>

@@ -1,6 +1,10 @@
-<app-header />
+@if (!esAuth()) {
+  <app-header />
+}
 <main>
   <router-outlet />
 </main>
-<app-footer />
+@if (!esAuth()) {
+  <app-footer />
+}
 <app-toast-container />

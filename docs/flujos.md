@@ -9,7 +9,7 @@
 
 ## 1. Visión general
 
-El sistema se organiza en torno a 7 flujos de negocio, todos partiendo de un
+El sistema se organiza en torno a 8 flujos de negocio, todos partiendo de un
 usuario registrado:
 
 ```
@@ -30,7 +30,8 @@ usuario registrado:
            ▼
      Sanciones (C) ──► Ajustes Elo / SR ──► Apelaciones (D)
 
-  Flujos auxiliares: Setups (E), Logros/Recompensas (F), Notificaciones.
+  Flujos auxiliares: Setups (E), Logros/Recompensas (F), Notificaciones,
+   Pre-carrera y análisis (H).
 ```
 
 Flujos:
@@ -43,6 +44,9 @@ Flujos:
 - **G — Ingestión de sesiones de Assetto Corsa**: el servidor de AC exporta un
   JSON por sesión; un watcher de carpeta lo procesa (reemplaza al flujo de
   Real Penalty).
+- **H — Pre-carrera y análisis**: práctica (RF-034), credenciales del servidor
+  para inscriptos (RF-028), Elo estimado por posición (RF-039) y análisis de
+  vueltas (RF-042).
 
 ---
 
@@ -61,6 +65,7 @@ usuario
   ├─ elo
   ├─ safety_rating
   ├─ rol            (ADMIN / COMISARIO / USUARIO)
+  ├─ habilitado     (RF-066: deshabilitar invalida tokens vía token_version)
   └─ fecha_registro
 
 categoria
@@ -80,19 +85,21 @@ categoria 1───N campeonato 1───N campeonato_posicion N───1 usu
                    │                UNIQUE(campeonato_id, usuario_id)
                    │
 categoria 1───N carrera 1───N sesion_clasificacion N───1 usuario
-                   │   │          (tiempo, diferencia_pole)
-                   │   │
-                   │   ├──N inscripcion N───1 usuario
-                   │   │     (estado, fecha_inscripcion)
-                   │   │     UNIQUE(carrera_id, usuario_id)
-                   │   │
-                   │   └──N resultado_carrera N───1 usuario
-                   │         (posicion_final, tiempo_total, vuelta_rapida,
-                   │          poles, finalizo, elo_ganado, sr_ganado)
-                   │         UNIQUE(carrera_id, usuario_id)
-                   │
-                   └──N──1 archivo_carrera        (1 archivo → muchas carreras)
-                         (nombre, ruta, tipo)      FK archivo_id vive en carrera
+                    │   │          (tiempo, diferencia_pole)
+                    │   │
+                    │   ├──N inscripcion N───1 usuario
+                    │   │     (estado, fecha_inscripcion)
+                    │   │     UNIQUE(carrera_id, usuario_id)
+                    │   │
+                    │   └──N resultado_carrera N───1 usuario
+                    │         (posicion_final, tiempo_total, vuelta_rapida,
+                    │          poles, finalizo, elo_ganado, sr_ganado)
+                    │         UNIQUE(carrera_id, usuario_id)
+                    │
+                    ├── practica_fecha (nullable, RF-034)
+                    │
+                    └──N──1 archivo_carrera        (1 archivo → muchas carreras)
+                          (nombre, ruta, tipo)      FK archivo_id vive en carrera
 
 carrera 1───N sesion_procesada
               (nombre_archivo UNIQUE, tipo, fecha_procesamiento)
@@ -318,6 +325,12 @@ Notas:
   Safety Rating (RP -20 según TBD-6).
 - `sancion.resolucion_id` opcional: permite sanciones sin resolución previa
   (ej. sanciones directas del admin).
+- **Historial por comisario (RF-100)**: `GET /api/incidentes/comisario/{id}/decisiones`
+  lista votos y resoluciones emitidas por un comisario
+  (`IncidenteService.listarDecisionesComisario`, `DecisionComisarioResponse`
+  distingue `tipo = VOTO | RESOLUCION`). Consumido en el tab "Mis decisiones".
+- **Filtros de estado (RF-098)**: el listado de incidentes permite filtrar
+  `PENDIENTES / RESUELTOS`; al abrir un resuelto se muestra la resolución.
 
 ---
 
@@ -360,6 +373,12 @@ Notas:
 - UNIQUE(setup_id, usuario_id) en calificaciones: un usuario califica una vez.
 - `categoria.setup_abierto` / `setup_fijo` condicionan la visibilidad de los
   archivos de setup según la categoría.
+- **Setup fijo (RF-044/045)**: en categorías con `setup_fijo=true` solo el
+  ADMIN publica/"oficializa" un setup por categoría (UNIQUE `categoria_id`);
+  los pilotos no pueden publicar y el frontend les muestra el hint
+  (`SetupsComponent.puedePublicar()`).
+- **Edición (RF-050)**: `PUT /api/setups/{id}` — autor o ADMIN editan título,
+  descripción, circuito, vehículo, archivo y categoría.
 
 ---
 
@@ -472,7 +491,41 @@ Permite importar una sesión a mano (pruebas o reproceso de un archivo).
 
 ---
 
-## 10. Constraints clave del modelo
+## 10. Flujo H — Pre-carrera y análisis
+
+Información que el piloto consume antes y después de la carrera, sin modificar
+rating:
+
+```
+carrera
+  ├─ practica_fecha (nullable, RF-034) ──► session de práctica del servidor
+  │     (se edita desde el form de admin y se muestra en listado y detalle:
+  │      chip "Práctica {fecha hora}")
+  │
+  ├─ GET /api/carreras/{id}/acceso-servidor   (RF-028)
+  │     público? NO — requiere usuario autenticado con inscripción activa
+  │     (estado INSCRIPTO). Devuelve {host, puerto, contrasena}.
+  │     La contraseña es visible SIEMPRE para inscriptos (no solo al cerrar).
+  │
+  ├─ GET /api/carreras/{id}/elo-estimado      (RF-039)
+  │     público — para cada posición 1..N devuelve el delta estimado
+  │     (Libre / Finalizado / DNF / Descalificado). Ver docs/formulas-rating.md.
+  │
+  └─ GET /api/vueltas/carrera/{id}/usuario/{uid}/analisis   (RF-042)
+        autenticado — acumulado por vuelta de un piloto en la sesión RACE:
+        posicion, delta_vs_lider; se filtra laps tipo "RACE".
+        VueltaAnalisisResponse (lista por vuelta + mejor vuelta + resumen).
+```
+
+Notas:
+- `practicaFecha` es una **columna en `carrera`** (no entidad separada),
+  nullable; migración `V2__add_practica_y_habilitado.sql`.
+- El análisis de vueltas se calcula **en backend por pedido** a partir de los
+  laps ya almacenados de la sesión RACE (sin correr calificación).
+
+---
+
+## 11. Constraints clave del modelo
 
 | Tabla | Constraint |
 |---|---|
@@ -491,3 +544,4 @@ Permite importar una sesión a mano (pruebas o reproceso de un archivo).
 FKs opcionales (nullable): `sancion.carrera_id`, `sancion.resolucion_id`,
 `elo_sancion.carrera_id`, `safety_rating_sancion.carrera_id`,
 `carrera.archivo_id` (una carrera puede no tener archivo aún).
+Campo opcional (nullable): `carrera.practica_fecha` (RF-034).

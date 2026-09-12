@@ -5,15 +5,17 @@ import { Component, input } from '@angular/core';
   standalone: true,
   template: `
     <div class="empty-state">
-      @if (icono()) {
-        <div class="category-icon">{{ icono() }}</div>
+      <span class="ms-icon empty-state-icon" aria-hidden="true">{{ icono() }}</span>
+      @if (titulo()) {
+        <h4 class="empty-state-title">{{ titulo() }}</h4>
       }
-      <p>{{ texto() }}</p>
+      <p class="empty-state-text">{{ texto() }}</p>
       <ng-content />
     </div>
   `,
 })
 export class EmptyState {
   readonly texto = input('No hay elementos.');
-  readonly icono = input<string | null>(null);
+  readonly titulo = input<string | null>(null);
+  readonly icono = input('inbox');
 }

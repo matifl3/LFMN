@@ -6,3 +6,25 @@
 .mt-3 {
   margin-top: var(--sp-3);
 }
+.hero-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: right center;
+  pointer-events: none;
+}
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to right, var(--bg-principal) 0%, rgba(18, 18, 18, 0.75) 38%, rgba(18, 18, 18, 0) 68%),
+    linear-gradient(180deg, rgba(18, 18, 18, 0.2) 0%, transparent 40%);
+  pointer-events: none;
+}
+@media (max-width: 900px) {
+  .hero-photo {
+    opacity: 0.35;
+  }
+}

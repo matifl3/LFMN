@@ -3,9 +3,12 @@ package org.example.lfmnacional.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.lfmnacional.dto.PageResponse;
+import org.example.lfmnacional.dto.carrera.CarreraAccesoResponse;
 import org.example.lfmnacional.dto.carrera.CarreraRequest;
 import org.example.lfmnacional.dto.carrera.CarreraResponse;
+import org.example.lfmnacional.dto.carrera.EloEstimadoResponse;
 import org.example.lfmnacional.dto.carrera.VincularArchivoRequest;
+import org.example.lfmnacional.entity.Usuario;
 import org.example.lfmnacional.enums.EstadoCarrera;
 import org.example.lfmnacional.service.CarreraService;
 import org.springframework.data.domain.Page;
@@ -15,6 +18,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -54,6 +58,18 @@ public class CarreraController {
     @GetMapping("/{id}")
     public CarreraResponse getById(@PathVariable Long id) {
         return carreraService.getById(id);
+    }
+
+    @GetMapping("/{id}/acceso-servidor")
+    public CarreraAccesoResponse accesoServidor(@PathVariable Long id,
+                                                @AuthenticationPrincipal Usuario usuario) {
+        return carreraService.accesoServidor(id, usuario != null ? usuario.getId() : null);
+    }
+
+    @GetMapping("/{id}/elo-estimado")
+    public EloEstimadoResponse eloEstimado(@PathVariable Long id,
+                                           @AuthenticationPrincipal Usuario usuario) {
+        return carreraService.eloEstimado(id, usuario != null ? usuario.getId() : null);
     }
 
     @PostMapping

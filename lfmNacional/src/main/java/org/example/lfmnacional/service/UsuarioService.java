@@ -78,6 +78,9 @@ public class UsuarioService {
     public LoginResponse login(LoginRequest request) {
         Usuario usuario = usuarioRepository.findByEmail(request.email())
                 .orElseThrow(() -> new BusinessException("Email o contrasena invalidos"));
+        if (!usuario.isHabilitado()) {
+            throw new BusinessException("El usuario esta deshabilitado. Contacta a un administrador.");
+        }
         if (!passwordEncoder.matches(request.password(), usuario.getPassword())) {
             throw new BusinessException("Email o contrasena invalidos");
         }
@@ -168,6 +171,16 @@ public class UsuarioService {
     public UsuarioResponse cambiarRol(Long id, Rol rol) {
         Usuario usuario = getEntity(id);
         usuario.setRol(rol);
+        return toResponse(usuarioRepository.save(usuario));
+    }
+
+    @Transactional
+    public UsuarioResponse updateHabilitado(Long id, boolean habilitado) {
+        Usuario usuario = getEntity(id);
+        usuario.setHabilitado(habilitado);
+        if (!habilitado) {
+            usuario.setTokenVersion((usuario.getTokenVersion() != null ? usuario.getTokenVersion() : 0) + 1);
+        }
         return toResponse(usuarioRepository.save(usuario));
     }
 
@@ -263,6 +276,7 @@ public class UsuarioService {
                 usuario.getSafetyRating(),
                 usuario.getRol(),
                 usuario.getFechaRegistro(),
-                usuario.isPasswordEstablecida());
+                usuario.isPasswordEstablecida(),
+                usuario.isHabilitado());
     }
 }

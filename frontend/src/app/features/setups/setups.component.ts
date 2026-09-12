@@ -41,11 +41,31 @@ export class SetupsComponent implements OnInit {
   readonly fVehiculo = signal('');
   readonly fCategoria = signal<number | null>(null);
   readonly fComentario = signal('');
+  readonly editingId = signal<number | null>(null);
+  readonly eTitulo = signal('');
+  readonly eDescripcion = signal('');
+  readonly eCircuito = signal('');
+  readonly eVehiculo = signal('');
+  readonly eCategoria = signal<number | null>(null);
 
   readonly archivoNombre = computed(() => this.archivo()?.name ?? '');
   readonly autenticado = computed(() => this.auth.autenticado());
   readonly esAdmin = computed(() => this.auth.esAdmin());
   readonly detail = computed(() => this.setups().find((s) => s.id === this.selectedId()) ?? null);
+  readonly catsById = computed(() => new Map(this.cats().map((c) => [c.id, c] as const)));
+  readonly fCategoriaFija = computed(() => {
+    const cat = this.catsById().get(this.fCategoria() ?? -1);
+    return cat?.setupFijo === true;
+  });
+  readonly puedePublicar = computed(() => this.esAdmin() || !this.fCategoriaFija());
+
+  esSetupFijo(s: Setup): boolean {
+    return this.catsById().get(s.categoriaId ?? -1)?.setupFijo === true;
+  }
+
+  puedeEditar(s: Setup): boolean {
+    return this.esAdmin() || s.autorId === this.auth.user()?.id;
+  }
 
   readonly circuitos = computed(() => Array.from(new Set(this.setups().map((s) => s.circuito))).sort());
   readonly vehiculos = computed(() => Array.from(new Set(this.setups().map((s) => s.vehiculo))).sort());
@@ -181,6 +201,10 @@ export class SetupsComponent implements OnInit {
       this.toast.error('Completá título, circuito y vehículo.');
       return;
     }
+    if (this.fCategoriaFija() && !this.esAdmin()) {
+      this.toast.error('Esta categoría tiene un setup fijo. Solo el comité puede publicarlo.');
+      return;
+    }
     this.api
       .post<Setup>('/setups', {
         titulo,
@@ -254,6 +278,45 @@ export class SetupsComponent implements OnInit {
       next: () => {
         this.toast.success('Comentario eliminado');
         this.comentarios.update((l) => l.filter((c) => c.id !== comentarioId));
+      },
+      error: (err) => this.toast.error(apiError(err)),
+    });
+  }
+
+  editarSetup(s: Setup): void {
+    this.editingId.set(s.id);
+    this.eTitulo.set(s.titulo);
+    this.eDescripcion.set(s.descripcion || '');
+    this.eCircuito.set(s.circuito || '');
+    this.eVehiculo.set(s.vehiculo || '');
+    this.eCategoria.set(s.categoriaId ?? null);
+  }
+
+  cancelarEdit(): void {
+    this.editingId.set(null);
+  }
+
+  guardarEdit(): void {
+    const id = this.editingId();
+    if (id === null) return;
+    const titulo = this.eTitulo().trim();
+    const circuito = this.eCircuito().trim();
+    const vehiculo = this.eVehiculo().trim();
+    if (!titulo || !circuito || !vehiculo) {
+      this.toast.error('Completá título, circuito y vehículo.');
+      return;
+    }
+    this.api.put('/setups/' + id, {
+      titulo,
+      descripcion: this.eDescripcion().trim(),
+      circuito,
+      vehiculo,
+      categoriaId: this.eCategoria(),
+    }).subscribe({
+      next: () => {
+        this.toast.success('Setup actualizado');
+        this.editingId.set(null);
+        this.reloadSetup(id);
       },
       error: (err) => this.toast.error(apiError(err)),
     });

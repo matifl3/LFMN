@@ -19,6 +19,7 @@ export interface Usuario {
   rol: Rol;
   fechaRegistro?: string;
   passwordEstablecida?: boolean;
+  habilitado?: boolean;
 }
 
 export interface UsuarioBasico {
@@ -63,6 +64,7 @@ export interface Carrera {
   id: number;
   nombre: string;
   fecha: string;
+  practicaFecha?: string;
   circuito: string;
   campeonatoId?: number;
   campeonatoNombre?: string;
@@ -76,6 +78,25 @@ export interface Carrera {
   archivoNombre?: string;
   linkPista?: string;
   linkAuto?: string;
+}
+
+export interface CarreraAcceso {
+  carreraId: number;
+  servidor?: string;
+  contrasenaServidor?: string;
+}
+
+export interface PosicionElo {
+  posicion: number;
+  deltaElo: number;
+}
+
+export interface EloEstimado {
+  posicionEsperada: number;
+  deltaEsperado: number;
+  deltaMejorCaso: number;
+  deltaPeorCaso: number;
+  detalle: PosicionElo[];
 }
 
 export interface Categoria {
@@ -165,6 +186,11 @@ export interface Vuelta {
   tipo?: string;
 }
 
+export interface VueltaAnalisis extends Vuelta {
+  deltaLiderMs?: number;
+  posicionEnVuelta?: number;
+}
+
 export interface Anuncio {
   id: number;
   titulo: string;
@@ -191,6 +217,7 @@ export interface Logro {
   tipoCondicion: string;
   valorCondicion: number;
   icono?: string;
+  recompensas?: Recompensa[];
 }
 
 export interface Recompensa {
@@ -281,9 +308,17 @@ export interface Voto {
 export interface Resolucion {
   id: number;
   incidenteId: number;
-  comisarioId?: number;
+  comisarioId: number;
   explicacion: string;
   fecha: string;
+}
+
+export interface DecisionComisario {
+  incidenteId: number;
+  decision?: string | null;
+  comentario?: string;
+  fecha: string;
+  tipo: string;
 }
 
 export interface Sancion {

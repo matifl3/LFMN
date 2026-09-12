@@ -42,16 +42,19 @@
           <select class="select" (change)="fCategoria.set(selectNum($event))">
             <option value="">—</option>
             @for (c of cats(); track c.id) {
-              <option [value]="c.id">{{ c.nombre }}</option>
+              <option [value]="c.id">{{ c.nombre }}{{ c.setupFijo ? ' (setup fijo)' : '' }}</option>
             }
           </select>
+          @if (fCategoriaFija()) {
+            <p class="hint">Esta categoría tiene un setup oficial. {{ esAdmin() ? 'Podés publicarlo como comité.' : 'Solo el comité puede publicar en esta categoría.' }}</p>
+          }
         </div>
       </div>
       <div class="field">
         <label>Descripción</label>
         <textarea class="textarea" placeholder="Comportamiento, condiciones de uso, tips…" (input)="fDescripcion.set(inputVal($event))"></textarea>
       </div>
-      <button type="button" class="btn btn-primary" (click)="publicar()">Publicar setup</button>
+      <button type="button" class="btn btn-primary" [disabled]="!puedePublicar()" [title]="!puedePublicar() ? 'Solo el comité puede publicar setups fijos' : ''" (click)="publicar()">Publicar setup</button>
     </div>
   }
 
@@ -92,6 +95,9 @@
           <div class="card setup-card" [class.bracket]="s.id === selectedId()" style="cursor: pointer; position: relative" (click)="select(s.id)">
             <div class="setup-card-cover">
               <span class="chip chip-category">{{ s.circuito }}</span>
+              @if (esSetupFijo(s)) {
+                <span class="chip chip-upcoming">Setup fijo</span>
+              }
             </div>
             <h4>{{ s.titulo }}</h4>
             <div class="flex-between">
@@ -128,19 +134,68 @@
         @if (s) {
           <div class="card-header">
             <div>
-              <span class="eyebrow">{{ s.vehiculo }}</span>
+              <div class="flex-between" style="align-items: baseline">
+                <span class="eyebrow">{{ s.vehiculo }}</span>
+                @if (esSetupFijo(s)) {
+                  <span class="chip chip-upcoming">Setup fijo</span>
+                }
+              </div>
               <h3 style="margin-top: var(--sp-2)">{{ s.titulo }}</h3>
               <span class="author-row" style="margin-top: var(--sp-2)">
                 <app-avatar [user]="{ nombrePiloto: s.autorNombre, fotoPerfil: s.autorFoto }" [size]="24" />
                 Subido por {{ s.autorNombre || ('Piloto #' + s.autorId) }} · {{ s.fechaPublicacion | fechaRelativa }}
               </span>
             </div>
-            @if (s.archivo) {
-              <a class="btn btn-primary" [href]="'/api/setups/' + s.id + '/descargar'">Descargar setup</a>
-            } @else {
-              <span class="chip chip-closed">Sin archivo</span>
-            }
+            <div class="flex-col" style="gap:var(--sp-2); align-items: flex-end">
+              @if (s.archivo) {
+                <a class="btn btn-primary" [href]="'/api/setups/' + s.id + '/descargar'">Descargar setup</a>
+              } @else {
+                <span class="chip chip-closed">Sin archivo</span>
+              }
+              @if (puedeEditar(s)) {
+                <button type="button" class="btn btn-ghost btn-sm" (click)="editarSetup(s)">Editar</button>
+              }
+            </div>
           </div>
+
+          @if (editingId() === s.id) {
+            <div class="card" style="margin-bottom: var(--sp-4)">
+              <div class="card-header">
+                <h4>Editar setup</h4>
+              </div>
+              <div class="grid grid-2" style="gap: var(--sp-3)">
+                <div class="field">
+                  <label>Título</label>
+                  <input class="input" [value]="eTitulo()" (input)="eTitulo.set(inputVal($event))" />
+                </div>
+                <div class="field">
+                  <label>Circuito</label>
+                  <input class="input" [value]="eCircuito()" (input)="eCircuito.set(inputVal($event))" />
+                </div>
+                <div class="field">
+                  <label>Vehículo</label>
+                  <input class="input" [value]="eVehiculo()" (input)="eVehiculo.set(inputVal($event))" />
+                </div>
+                <div class="field">
+                  <label>Categoría</label>
+                  <select class="select" [value]="eCategoria() ?? ''" (change)="eCategoria.set(selectNum($event))">
+                    <option value="">—</option>
+                    @for (c of cats(); track c.id) {
+                      <option [value]="c.id">{{ c.nombre }}</option>
+                    }
+                  </select>
+                </div>
+              </div>
+              <div class="field">
+                <label>Descripción</label>
+                <textarea class="textarea" [value]="eDescripcion()" (input)="eDescripcion.set(inputVal($event))"></textarea>
+              </div>
+              <div style="display:flex;gap:var(--sp-2)">
+                <button type="button" class="btn btn-primary" (click)="guardarEdit()">Guardar cambios</button>
+                <button type="button" class="btn btn-ghost" (click)="cancelarEdit()">Cancelar</button>
+              </div>
+            </div>
+          }
 
           <p class="text-secondary" style="font-size: var(--fs-sm); margin: var(--sp-4) 0 var(--sp-5)">{{ s.descripcion || 'Sin descripción.' }}</p>
 

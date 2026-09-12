@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 public record CarreraRequest(
         @NotBlank String nombre,
         @NotNull @FutureOrPresent LocalDateTime fecha,
+        LocalDateTime practicaFecha,
         @NotBlank String circuito,
         @NotNull Long campeonatoId,
         EstadoCarrera estado,

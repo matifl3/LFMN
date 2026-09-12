@@ -73,6 +73,11 @@ export class RacesListComponent implements OnInit {
     return fmtHora(c.fecha);
   }
 
+  racePracticaHora(c: Carrera): string {
+    if (!c.practicaFecha) return '';
+    return fmtFecha(c.practicaFecha) + ' ' + fmtHora(c.practicaFecha);
+  }
+
   cupoN(c: Carrera): number {
     return c.cuposInscritos || 0;
   }

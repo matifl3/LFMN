@@ -62,6 +62,19 @@ cambio    = round(32 × (0.9474 − 0.3599)) = round(18.8) = +19
 Ganar contra rivales más fuertes da +Elo; perder (o terminar atrás del
 promedio) lo resta.
 
+### Elo estimado previo a la carrera (RF-039)
+
+`CarreraService.eloEstimado(carreraId, usuarioId)` — `GET /api/carreras/{id}/elo-estimado`
+
+Calcula el **cambio estimado por posición** antes de correr, reusando la misma
+fórmula de `calcularCambio` con las inscripciones confirmadas de la carrera:
+
+- Elo propio y rivales con `null` → **1200** (default de estimación).
+- Devuelve una lista de `(posicion, eloEstimado)` con las variantes por
+  resultado: `resultado Libre` (esperado), `Finalizado`, `DNF` y
+  `Descalificado` (cambio con resultado 1.0, 0.5 y 0).
+- La consulta es **pública** (el usuario no necesita estar inscrito).
+
 ---
 
 ## 3. Safety Rating (SR)

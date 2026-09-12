@@ -1,5 +1,6 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { AuthService } from '../../../core/services/auth.service';
@@ -10,7 +11,10 @@ import { Chip } from '../../../shared/components/chip/chip';
 import { RankBadge } from '../../../shared/components/rank-badge/rank-badge';
 import { FmtFechaHoraPipe } from '../../../core/pipes/fmt-fecha.pipe';
 import { FmtLapPipe } from '../../../core/pipes/fmt-lap.pipe';
-import { Carrera, Inscripcion, ResultadoCarrera, SesionClasificacion, Vuelta } from '../../../core/models/models';
+import {
+  Carrera, CarreraAcceso, EloEstimado, Inscripcion, ResultadoCarrera,
+  SesionClasificacion, Vuelta, VueltaAnalisis,
+} from '../../../core/models/models';
 
 const ESTADOS_INSCRIPCION = ['PROGRAMADA', 'INSCRIPCIONES_ABIERTAS'] as const;
 
@@ -25,13 +29,18 @@ export class RaceDetailComponent implements OnInit {
   private readonly api = inject(ApiService);
   private readonly toast = inject(ToastService);
   private readonly route = inject(ActivatedRoute);
+  private readonly sanitizer = inject(DomSanitizer);
 
   readonly carrera = signal<Carrera | null>(null);
   readonly inscriptos = signal<Inscripcion[]>([]);
   readonly resultados = signal<ResultadoCarrera[]>([]);
   readonly clasificaciones = signal<SesionClasificacion[]>([]);
   readonly vueltas = signal<Vuelta[]>([]);
+  readonly analisis = signal<VueltaAnalisis[]>([]);
+  readonly acceso = signal<CarreraAcceso | null>(null);
+  readonly eloEstimado = signal<EloEstimado | null>(null);
   readonly cargando = signal(true);
+  readonly mostrarPassword = signal(false);
   readonly panel = signal<'info' | 'archivos' | 'inscriptos' | 'resultados' | 'clasificacion' | 'analisis'>('info');
   readonly inscribiendo = signal(false);
 
@@ -77,6 +86,8 @@ export class RaceDetailComponent implements OnInit {
     [...this.clasificaciones()].sort((a, b) => a.tiempo - b.tiempo)
   );
 
+  readonly accesoVisible = computed(() => !!this.acceso()?.contrasenaServidor || !!this.acceso()?.servidor);
+
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');
     if (!id) {
@@ -93,6 +104,15 @@ export class RaceDetailComponent implements OnInit {
       vueltas: user
         ? this.api.list<Vuelta>('/vueltas/carrera/' + id + '/usuario/' + user.id).pipe(catchError(() => of([])))
         : of([]),
+      analisis: user
+        ? this.api.list<VueltaAnalisis>('/vueltas/carrera/' + id + '/usuario/' + user.id + '/analisis').pipe(catchError(() => of([])))
+        : of([]),
+      acceso: user
+        ? this.api.get<CarreraAcceso>('/carreras/' + id + '/acceso-servidor').pipe(catchError(() => of(null)))
+        : of(null),
+      eloEstimado: user
+        ? this.api.get<EloEstimado>('/carreras/' + id + '/elo-estimado').pipe(catchError(() => of(null)))
+        : of(null),
     }).subscribe({
       next: (r) => {
         this.carrera.set(r.carrera);
@@ -100,6 +120,9 @@ export class RaceDetailComponent implements OnInit {
         this.resultados.set(r.resultados);
         this.clasificaciones.set(r.clasificaciones);
         this.vueltas.set(r.vueltas);
+        this.analisis.set(r.analisis);
+        this.acceso.set(r.acceso);
+        this.eloEstimado.set(r.eloEstimado);
         this.cargando.set(false);
       },
       error: () => this.cargando.set(false),
@@ -134,5 +157,52 @@ export class RaceDetailComponent implements OnInit {
       next: (l) => this.inscriptos.set(l),
       error: () => this.toast.error('No se pudo actualizar la lista de inscriptos.'),
     });
+  }
+
+  eloTxt(v: number | null | undefined): string {
+    if (v === null || v === undefined) return '—';
+    return (v > 0 ? '+' : '') + v;
+  }
+
+  eloColor(v: number | null | undefined): string {
+    if (v === null || v === undefined) return '';
+    return v >= 0 ? 'var(--status-positivo)' : 'var(--lbm-rojo-hi)';
+  }
+
+  posicionesChart(): SafeHtml {
+    const analisis = this.analisis();
+    if (analisis.length === 0) return this.sanitizer.bypassSecurityTrustHtml('');
+    return this.sanitizer.bypassSecurityTrustHtml(
+      this.chartSvg(analisis.map((a) => 1 / (a.posicionEnVuelta ?? 1)), 'var(--lbm-rojo)')
+    );
+  }
+
+  deltasChart(): SafeHtml {
+    const analisis = this.analisis();
+    if (analisis.length === 0) return this.sanitizer.bypassSecurityTrustHtml('');
+    const deltas = analisis.map((a) => (a.deltaLiderMs ?? 0) / 1000);
+    return this.sanitizer.bypassSecurityTrustHtml(
+      this.chartSvg(deltas, 'var(--lbm-rojo-hi)')
+    );
+  }
+
+  private chartSvg(values: number[], color: string): string {
+    const W = 720, H = 200, PAD = 24;
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    const rango = max - min || 1;
+    const step = (W - PAD * 2) / (values.length - 1);
+    const line = values.map((v, i) => {
+      const x = PAD + i * step;
+      const y = PAD + (H - PAD * 2) * (1 - (v - min) / rango);
+      return x.toFixed(2) + ',' + y.toFixed(2);
+    });
+    const area = line.join(' ') + ' ' + W + ',' + H + ' 0,' + H;
+    return (
+      '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" height="200" role="img">' +
+      '<polygon points="' + area + '" fill="' + color + '" opacity="0.15"/>' +
+      '<polyline points="' + line.join(' ') + '" fill="none" stroke="' + color + '" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>' +
+      '</svg>'
+    );
   }
 }

@@ -19,6 +19,8 @@ public interface SetupRepository extends JpaRepository<Setup, Long> {
 
     List<Setup> findByCategoria_Id(Long categoriaId);
 
+    boolean existsByCategoria_Id(Long categoriaId);
+
     Page<Setup> findByCircuitoContainingIgnoreCaseAndVehiculoContainingIgnoreCase(String circuito, String vehiculo, Pageable pageable);
 
     Page<Setup> findByCircuitoContainingIgnoreCase(String circuito, Pageable pageable);

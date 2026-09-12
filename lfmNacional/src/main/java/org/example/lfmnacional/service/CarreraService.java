@@ -1,14 +1,18 @@
 package org.example.lfmnacional.service;
 
 import lombok.RequiredArgsConstructor;
+import org.example.lfmnacional.dto.carrera.CarreraAccesoResponse;
 import org.example.lfmnacional.dto.carrera.CarreraRequest;
 import org.example.lfmnacional.dto.carrera.CarreraResponse;
+import org.example.lfmnacional.dto.carrera.EloEstimadoResponse;
+import org.example.lfmnacional.service.rating.EloCalculator;
 import org.example.lfmnacional.entity.Carrera;
 import org.example.lfmnacional.entity.Inscripcion;
 import org.example.lfmnacional.entity.Notificacion;
 import org.example.lfmnacional.enums.EstadoCarrera;
 import org.example.lfmnacional.enums.EstadoInscripcion;
 import org.example.lfmnacional.enums.TipoNotificacion;
+import org.example.lfmnacional.exception.BusinessException;
 import org.example.lfmnacional.exception.ResourceNotFoundException;
 import org.example.lfmnacional.repository.CarreraRepository;
 import org.example.lfmnacional.repository.InscripcionRepository;
@@ -39,6 +43,7 @@ public class CarreraService {
     private final ArchivoCarreraService archivoCarreraService;
     private final InscripcionRepository inscripcionRepository;
     private final NotificacionRepository notificacionRepository;
+    private final EloCalculator eloCalculator;
 
     public Carrera getEntity(Long id) {
         return carreraRepository.findById(id)
@@ -86,6 +91,7 @@ public class CarreraService {
         Carrera carrera = Carrera.builder()
                 .nombre(request.nombre())
                 .fecha(request.fecha())
+                .practicaFecha(request.practicaFecha())
                 .circuito(request.circuito())
                 .campeonato(campeonatoService.getEntity(request.campeonatoId()))
                 .estado(request.estado())
@@ -103,8 +109,10 @@ public class CarreraService {
     @CacheEvict(value = {"carreras_proximas", "carreras_pasadas"}, allEntries = true)
     public CarreraResponse update(Long id, CarreraRequest request) {
         Carrera carrera = getEntity(id);
+        LocalDateTime fechaAnterior = carrera.getFecha();
         carrera.setNombre(request.nombre());
         carrera.setFecha(request.fecha());
+        carrera.setPracticaFecha(request.practicaFecha());
         carrera.setCircuito(request.circuito());
         carrera.setCampeonato(campeonatoService.getEntity(request.campeonatoId()));
         carrera.setEstado(request.estado() != null ? request.estado() : carrera.getEstado());
@@ -116,7 +124,13 @@ public class CarreraService {
         }
         carrera.setLinkPista(request.linkPista());
         carrera.setLinkAuto(request.linkAuto());
-        return toResponse(carreraRepository.save(carrera), null);
+        CarreraResponse response = toResponse(carreraRepository.save(carrera), null);
+        if (fechaAnterior != null && request.fecha() != null
+                && request.fecha().isAfter(fechaAnterior)) {
+            notificarInscriptos(carrera, "La carrera \"" + carrera.getNombre()
+                    + "\" fue pospuesta. Nueva fecha: " + request.fecha() + ".");
+        }
+        return response;
     }
 
     @Transactional
@@ -138,7 +152,15 @@ public class CarreraService {
     public CarreraResponse changeEstado(Long id, EstadoCarrera estado) {
         Carrera carrera = getEntity(id);
         carrera.setEstado(estado);
-        return toResponse(carreraRepository.save(carrera), null);
+        CarreraResponse response = toResponse(carreraRepository.save(carrera), null);
+        if (estado == EstadoCarrera.CANCELADA) {
+            notificarInscriptos(carrera, "La carrera \"" + carrera.getNombre()
+                    + "\" fue cancelada. Cualquier inscripcion activa queda anulada.");
+        } else if (estado == EstadoCarrera.EN_CURSO) {
+            notificarInscriptos(carrera, "La carrera \"" + carrera.getNombre()
+                    + "\" esta en curso. Ingresa al servidor asignado.");
+        }
+        return response;
     }
 
     @Transactional
@@ -205,6 +227,23 @@ public class CarreraService {
         notificarCarrerasPorComenzar();
     }
 
+    private void notificarInscriptos(Carrera carrera, String mensaje) {
+        List<Inscripcion> inscripciones = inscripcionRepository.findByCarrera_Id(carrera.getId()).stream()
+                .filter(i -> i.getEstado() == EstadoInscripcion.INSCRIPTO
+                        || i.getEstado() == EstadoInscripcion.LISTA_ESPERA)
+                .toList();
+        String link = "/carreras/" + carrera.getId();
+        for (Inscripcion inscripcion : inscripciones) {
+            notificacionRepository.save(Notificacion.builder()
+                    .usuario(inscripcion.getUsuario())
+                    .tipo(TipoNotificacion.CARRERA_ESTADO)
+                    .mensaje(mensaje)
+                    .leida(false)
+                    .link(link)
+                    .build());
+        }
+    }
+
     private Map<Long, Long> countInscriptos() {
         return inscripcionRepository.countInscriptosPorCarreraRaw().stream()
                 .collect(Collectors.toMap(
@@ -213,12 +252,71 @@ public class CarreraService {
                 ));
     }
 
+    @Transactional(readOnly = true)
+    public CarreraAccesoResponse accesoServidor(Long carreraId, Long usuarioId) {
+        Carrera carrera = getEntity(carreraId);
+        if (usuarioId != null) {
+            boolean inscripto = inscripcionRepository.findByCarrera_IdAndUsuario_Id(carreraId, usuarioId)
+                    .map(i -> i.getEstado() == EstadoInscripcion.INSCRIPTO)
+                    .orElse(false);
+            if (!inscripto) {
+                throw new BusinessException("La contrasena del servidor solo es visible para pilotos inscriptos");
+            }
+        } else {
+            throw new BusinessException("Debes iniciar sesion para ver la contrasena del servidor");
+        }
+        return new CarreraAccesoResponse(carrera.getId(), carrera.getServidor(), carrera.getContrasenaServidor());
+    }
+
+    @Transactional(readOnly = true)
+    public EloEstimadoResponse eloEstimado(Long carreraId, Long usuarioId) {
+        if (usuarioId == null) {
+            throw new BusinessException("Debes iniciar sesion para ver el Elo estimado");
+        }
+        Carrera carrera = getEntity(carreraId);
+        List<Inscripcion> inscriptos = inscripcionRepository.findByCarrera_IdAndEstado(
+                carreraId, EstadoInscripcion.INSCRIPTO);
+        if (inscriptos.isEmpty()) {
+            throw new BusinessException("La carrera no tiene pilotos inscriptos");
+        }
+        Inscripcion propia = inscriptos.stream()
+                .filter(i -> i.getUsuario().getId().equals(usuarioId))
+                .findFirst()
+                .orElseThrow(() -> new BusinessException("Debes estar inscripto para ver el Elo estimado"));
+        Integer eloPropio = propia.getUsuario().getElo() != null ? propia.getUsuario().getElo() : 1200;
+        List<Integer> elosRivales = inscriptos.stream()
+                .map(i -> i.getUsuario().getElo())
+                .filter(e -> e != null)
+                .toList();
+        int total = inscriptos.size();
+        int posicionEsperada = 1 + (int) inscriptos.stream()
+                .filter(i -> !i.getUsuario().getId().equals(usuarioId))
+                .filter(i -> (i.getUsuario().getElo() != null ? i.getUsuario().getElo() : 1200) > eloPropio)
+                .count();
+        List<EloEstimadoResponse.PosicionElo> detalle = new java.util.ArrayList<>();
+        for (int pos = 1; pos <= total; pos++) {
+            detalle.add(new EloEstimadoResponse.PosicionElo(pos,
+                    eloCalculator.calcularCambio(eloPropio, pos, total, elosRivales)));
+        }
+        int deltaEsperado = detalle.stream()
+                .filter(p -> p.posicion() == posicionEsperada)
+                .map(EloEstimadoResponse.PosicionElo::deltaElo)
+                .findFirst().orElse(0);
+        return new EloEstimadoResponse(
+                posicionEsperada,
+                deltaEsperado,
+                detalle.get(0).deltaElo(),
+                detalle.get(detalle.size() - 1).deltaElo(),
+                detalle);
+    }
+
     private CarreraResponse toResponse(Carrera carrera, Map<Long, Long> counts) {
         Long inscritos = counts != null ? counts.getOrDefault(carrera.getId(), 0L) : null;
         return new CarreraResponse(
                 carrera.getId(),
                 carrera.getNombre(),
                 carrera.getFecha(),
+                carrera.getPracticaFecha(),
                 carrera.getCircuito(),
                 carrera.getCampeonato().getId(),
                 carrera.getCampeonato().getNombre(),

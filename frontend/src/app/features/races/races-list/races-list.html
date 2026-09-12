@@ -44,6 +44,9 @@
             <div class="race-meta">
               <strong>{{ r.nombre }}{{ r.categoriaNombre ? ' — ' + r.categoriaNombre : '' }}</strong>
               <span>{{ r.circuito }}{{ r.fecha ? ' · ' + raceHora(r) : '' }}</span>
+              @if (r.practicaFecha) {
+                <span class="chip chip-category" style="margin-top: var(--sp-2)">Práctica {{ racePracticaHora(r) }}</span>
+              }
             </div>
             <div>
               <span class="chip chip-category">{{ r.categoriaNombre || '—' }}</span>
