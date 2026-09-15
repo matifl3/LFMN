@@ -31,4 +31,16 @@ public interface ApelacionRepository extends JpaRepository<Apelacion, Long> {
     @Modifying
     @Query(value = "DELETE FROM apelacion WHERE sancion_id IN (SELECT id FROM sancion WHERE carrera_id = ?1)", nativeQuery = true)
     void deleteByCarreraId(Long carreraId);
+
+    @Modifying
+    @Query("delete from Apelacion a where a.usuario.id = ?1")
+    void deleteByUsuario_Id(Long usuarioId);
+
+    @Modifying
+    @Query("delete from Apelacion a where a.sancion.usuario.id = ?1")
+    void deleteBySancionUsuarioId(Long usuarioId);
+
+    @Modifying
+    @Query("delete from Apelacion a where a.sancion.resolucion.incidente.reportante.id = ?1")
+    void deleteBySancionResolucionIncidenteReportanteId(Long reportanteId);
 }

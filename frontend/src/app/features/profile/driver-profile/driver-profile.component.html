@@ -1,5 +1,10 @@
 <section class="container section">
-  <a routerLink="/carreras" class="btn btn-ghost btn-sm" style="margin-bottom: var(--sp-4)">← Volver</a>
+  <div class="flex-between" style="margin-bottom: var(--sp-4)">
+    <a routerLink="/carreras" class="btn btn-ghost btn-sm">← Volver</a>
+    @if (esMio()) {
+      <a routerLink="/mi-perfil" class="btn btn-primary btn-sm">Datos personales</a>
+    }
+  </div>
 
   @if (usuario(); as u) {
     <div class="card bracket profile-header">

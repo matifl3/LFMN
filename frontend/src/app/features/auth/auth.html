@@ -22,11 +22,14 @@
           </div>
           <div class="field">
             <label for="login-pass">Contraseña</label>
-            <input id="login-pass" class="input" type="password" formControlName="password" />
+            <app-password-input id="login-pass" autocomplete="current-password" formControlName="password" />
           </div>
           <button type="submit" class="btn btn-primary btn-lg btn-block" [class.is-loading]="cargando()">
             Ingresar
           </button>
+          <p class="auth-recovery-link">
+            <a routerLink="/recuperar">¿Olvidaste tu contraseña?</a>
+          </p>
         </form>
       }
 
@@ -43,7 +46,7 @@
           </div>
           <div class="field">
             <label for="reg-pass">Contraseña</label>
-            <input id="reg-pass" class="input" type="password" formControlName="password" />
+            <app-password-input id="reg-pass" autocomplete="new-password" formControlName="password" />
             <p class="hint">Mínimo 6 caracteres. Necesaria para ingresar por email.</p>
           </div>
           <button type="submit" class="btn btn-primary btn-lg btn-block" [class.is-loading]="cargando()">
@@ -58,11 +61,29 @@
       <div class="auth-banner" style="margin-top: var(--sp-5)">
         <div class="banner-icon">!</div>
         <div>
-          <strong style="font-family: var(--font-display); text-transform: uppercase; font-size: var(--fs-sm)">Completá tu perfil</strong>
-          <p class="text-secondary" style="font-size: var(--fs-xs); margin-top: var(--sp-1)">para terminar de crear tu cuenta.</p>
+          <strong style="font-family: var(--font-display); text-transform: uppercase; font-size: var(--fs-sm)">Tu Steam no está vinculado</strong>
+          <p class="text-secondary" style="font-size: var(--fs-xs); margin-top: var(--sp-1)">
+            Si ya tenés una cuenta, ingresá con tu email y contraseña para vincularla. Si sos nuevo, creá una cuenta.
+          </p>
         </div>
       </div>
-      <form [formGroup]="steamForm" (ngSubmit)="crearCuentaSteam()" style="margin-top: var(--sp-5)">
+      <form [formGroup]="steamLinkForm" (ngSubmit)="vincularCuentaExistente()" style="margin-top: var(--sp-5)">
+        <div class="field">
+          <label for="steam-link-email">Email de tu cuenta</label>
+          <input id="steam-link-email" class="input" type="email" placeholder="piloto@ejemplo.com" formControlName="email" />
+        </div>
+        <div class="field">
+          <label for="steam-link-pass">Contraseña</label>
+          <app-password-input id="steam-link-pass" autocomplete="current-password" formControlName="password" />
+        </div>
+        <button type="submit" class="btn btn-primary btn-lg btn-block" [class.is-loading]="cargando()">
+          Ingresar y vincular Steam
+        </button>
+      </form>
+
+      <div class="divider-or">o creá una cuenta nueva</div>
+
+      <form [formGroup]="steamForm" (ngSubmit)="crearCuentaSteam()">
         <input type="hidden" formControlName="guidSteam" />
         <div class="field">
           <label for="steam-nombre">Nombre de piloto</label>

@@ -34,7 +34,7 @@
       </a>
 
       @if (auth.autenticado()) {
-        <a routerLink="/mi-perfil" aria-label="Mi perfil">
+        <a [routerLink]="miPerfil()" aria-label="Mi perfil">
           <app-avatar [user]="auth.user()" [size]="38" />
         </a>
         <button type="button" class="btn btn-ghost btn-sm" style="font-size: var(--fs-2xs)" (click)="salir()">Salir</button>
@@ -64,7 +64,7 @@
       <div class="drawer-foot">
         @if (auth.autenticado()) {
           <span class="text-terciario">{{ auth.user()?.nombrePiloto || auth.user()?.email }}</span>
-          <a routerLink="/mi-perfil" (click)="menuAbierto.set(false)">Mi perfil</a>
+          <a [routerLink]="miPerfil()" (click)="menuAbierto.set(false)">Mi perfil</a>
           <a routerLink="/notificaciones" (click)="menuAbierto.set(false)">Notificaciones</a>
           <a style="cursor:pointer; color: var(--lbm-rojo-hi)" (click)="salir()">Salir</a>
         } @else {

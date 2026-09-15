@@ -1,15 +1,16 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { ApiService, apiError } from '../../core/services/api.service';
 import { ToastService } from '../../core/services/toast.service';
 import { Usuario } from '../../core/models/models';
+import { PasswordInput } from '../../shared/components/password-input/password-input';
 
 @Component({
   selector: 'app-auth',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, RouterLink, PasswordInput],
   styleUrl: './auth.scss',
   templateUrl: './auth.html',
 })
@@ -34,6 +35,11 @@ export class AuthComponent implements OnInit {
     guidSteam: ['', Validators.required],
     nombrePiloto: ['', Validators.required],
     email: ['', [Validators.required, Validators.email]],
+  });
+
+  readonly steamLinkForm = this.fb.nonNullable.group({
+    email: ['', [Validators.required, Validators.email]],
+    password: ['', Validators.required],
   });
 
   readonly registerForm = this.fb.nonNullable.group({
@@ -80,6 +86,7 @@ export class AuthComponent implements OnInit {
         this.cargando.set(false);
         this.auth.setSesion(data.token, data.usuario);
         this.toast.success(`¡Bienvenido, ${data.usuario.nombrePiloto || 'piloto'}!`);
+        this.avisarSteamVinculacion(data.usuario);
         this.redirigir();
       },
       error: (err) => {
@@ -133,6 +140,32 @@ export class AuthComponent implements OnInit {
     });
   }
 
+  vincularCuentaExistente(): void {
+    if (this.steamLinkForm.invalid) {
+      this.toast.error('Completá el email y la contraseña de tu cuenta.');
+      return;
+    }
+    this.cargando.set(true);
+    const v = this.steamLinkForm.getRawValue();
+    this.api.post<LoginResponseLFM>('/usuarios/vincular-steam-login', {
+      email: v.email.trim(),
+      password: v.password,
+      guidSteam: this.steamForm.getRawValue().guidSteam,
+    }).subscribe({
+      next: (data) => {
+        this.cargando.set(false);
+        this.auth.setSesion(data.token, data.usuario);
+        this.toast.success(`Steam vinculado a tu cuenta. ¡Bienvenido, ${data.usuario.nombrePiloto || 'piloto'}!`);
+        this.avisarSteamVinculacion(data.usuario);
+        this.redirigir();
+      },
+      error: (err) => {
+        this.cargando.set(false);
+        this.toast.error(apiError(err));
+      },
+    });
+  }
+
   registrar(): void {
     if (this.registerForm.invalid) {
       this.toast.error('Completá nombre de piloto, email y contraseña (mínimo 6 caracteres).');
@@ -149,6 +182,7 @@ export class AuthComponent implements OnInit {
         this.cargando.set(false);
         this.auth.setSesion(data.token, data.usuario);
         this.toast.success('Cuenta creada correctamente. ¡Bienvenido, ' + (data.usuario.nombrePiloto || 'piloto') + '!');
+        this.avisarSteamVinculacion(data.usuario);
         this.redirigir();
       },
       error: (err) => {
@@ -156,6 +190,16 @@ export class AuthComponent implements OnInit {
         this.toast.error(apiError(err));
       },
     });
+  }
+
+  private avisarSteamVinculacion(usuario: Usuario): void {
+    if (!usuario.guidSteam) {
+      this.toast.mostrar(
+        'No tenés Steam vinculado: los resultados de carrera no se sumarán a tu perfil. Vinculalo desde Mi perfil',
+        '',
+        6000
+      );
+    }
   }
 
   private procesarSteam(): void {

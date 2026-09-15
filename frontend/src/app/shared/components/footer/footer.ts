@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 
@@ -30,7 +30,7 @@ import { AuthService } from '../../../core/services/auth.service';
         </div>
         <div class="footer-col">
           <h4>Cuenta</h4>
-          <a [routerLink]="auth.autenticado() ? '/mi-perfil' : '/auth'">Mi perfil</a>
+          <a [routerLink]="miPerfil()">Mi perfil</a>
           <a routerLink="/notificaciones">Notificaciones</a>
           @if (auth.esModerador()) {
             <a routerLink="/admin">Panel admin</a>
@@ -49,4 +49,9 @@ import { AuthService } from '../../../core/services/auth.service';
 })
 export class Footer {
   readonly auth = inject(AuthService);
+
+  readonly miPerfil = computed(() => {
+    const id = this.auth.user()?.id;
+    return id ? ['/perfil', id] : '/auth';
+  });
 }

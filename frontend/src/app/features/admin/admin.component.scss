@@ -35,3 +35,10 @@
   font-size: var(--fs-xs);
   color: var(--text-terciario);
 }
+
+.json-editor {
+  min-height: 240px;
+  line-height: 1.5;
+  white-space: pre;
+  overflow-x: auto;
+}

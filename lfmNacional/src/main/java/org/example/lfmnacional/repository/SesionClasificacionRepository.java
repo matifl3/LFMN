@@ -2,6 +2,8 @@ package org.example.lfmnacional.repository;
 
 import org.example.lfmnacional.entity.SesionClasificacion;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 import java.util.Optional;
@@ -17,4 +19,8 @@ public interface SesionClasificacionRepository extends JpaRepository<SesionClasi
     boolean existsByCarrera_Id(Long carreraId);
 
     void deleteByCarrera_Id(Long carreraId);
+
+    @Modifying
+    @Query("delete from SesionClasificacion s where s.usuario.id = ?1")
+    void deleteByUsuario_Id(Long usuarioId);
 }

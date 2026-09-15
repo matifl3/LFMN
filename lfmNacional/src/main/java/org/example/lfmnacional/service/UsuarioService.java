@@ -8,10 +8,26 @@ import org.example.lfmnacional.entity.Usuario;
 import org.example.lfmnacional.enums.Rol;
 import org.example.lfmnacional.exception.BusinessException;
 import org.example.lfmnacional.exception.ResourceNotFoundException;
+import org.example.lfmnacional.repository.ApelacionRepository;
+import org.example.lfmnacional.repository.CampeonatoPosicionRepository;
 import org.example.lfmnacional.repository.EloSancionRepository;
+import org.example.lfmnacional.repository.IncidentePilotoRepository;
+import org.example.lfmnacional.repository.IncidenteRepository;
+import org.example.lfmnacional.repository.InscripcionRepository;
+import org.example.lfmnacional.repository.NotificacionRepository;
+import org.example.lfmnacional.repository.ResolucionIncidenteRepository;
 import org.example.lfmnacional.repository.ResultadoCarreraRepository;
 import org.example.lfmnacional.repository.SafetyRatingSancionRepository;
+import org.example.lfmnacional.repository.SancionRepository;
+import org.example.lfmnacional.repository.SesionClasificacionRepository;
+import org.example.lfmnacional.repository.SetupCalificacionRepository;
+import org.example.lfmnacional.repository.SetupComentarioRepository;
+import org.example.lfmnacional.repository.SetupRepository;
+import org.example.lfmnacional.repository.UsuarioLogroRepository;
+import org.example.lfmnacional.repository.UsuarioRecompensaRepository;
 import org.example.lfmnacional.repository.UsuarioRepository;
+import org.example.lfmnacional.repository.VotoComisarioRepository;
+import org.example.lfmnacional.repository.VueltaRepository;
 import org.example.lfmnacional.security.JwtUtil;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -32,6 +48,22 @@ public class UsuarioService {
     private final EloSancionRepository eloSancionRepository;
     private final SafetyRatingSancionRepository safetyRatingSancionRepository;
     private final ResultadoCarreraRepository resultadoCarreraRepository;
+    private final ApelacionRepository apelacionRepository;
+    private final CampeonatoPosicionRepository campeonatoPosicionRepository;
+    private final IncidentePilotoRepository incidentePilotoRepository;
+    private final IncidenteRepository incidenteRepository;
+    private final InscripcionRepository inscripcionRepository;
+    private final NotificacionRepository notificacionRepository;
+    private final ResolucionIncidenteRepository resolucionIncidenteRepository;
+    private final SancionRepository sancionRepository;
+    private final SesionClasificacionRepository sesionClasificacionRepository;
+    private final SetupCalificacionRepository setupCalificacionRepository;
+    private final SetupComentarioRepository setupComentarioRepository;
+    private final SetupRepository setupRepository;
+    private final UsuarioLogroRepository usuarioLogroRepository;
+    private final UsuarioRecompensaRepository usuarioRecompensaRepository;
+    private final VotoComisarioRepository votoComisarioRepository;
+    private final VueltaRepository vueltaRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
@@ -73,6 +105,23 @@ public class UsuarioService {
                 .build();
         usuario = usuarioRepository.save(usuario);
         return new LoginResponse(jwtUtil.generarToken(usuario), toResponse(usuario));
+    }
+
+    @Transactional
+    public LoginResponse vincularSteamConLogin(String email, String password, String guidSteam) {
+        Usuario usuario = usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException("No existe una cuenta con ese email"));
+        if (!usuario.isHabilitado()) {
+            throw new BusinessException("El usuario esta deshabilitado. Contacta a un administrador.");
+        }
+        if (!passwordEncoder.matches(password, usuario.getPassword())) {
+            throw new BusinessException("Email o contrasena invalidos");
+        }
+        if (usuarioRepository.existsByGuidSteam(guidSteam)) {
+            throw new BusinessException("Esa cuenta de Steam ya esta vinculada a otro usuario");
+        }
+        usuario.setGuidSteam(guidSteam);
+        return new LoginResponse(jwtUtil.generarToken(usuario), toResponse(usuarioRepository.save(usuario)));
     }
 
     public LoginResponse login(LoginRequest request) {
@@ -130,7 +179,6 @@ public class UsuarioService {
         }
         usuario.setEmail(request.email());
         usuario.setNombrePiloto(request.nombrePiloto());
-        usuario.setFotoPerfil(request.fotoPerfil());
         usuario.setGuidSteam(request.guidSteam());
         return toResponse(usuarioRepository.save(usuario));
     }
@@ -215,8 +263,39 @@ public class UsuarioService {
     @Transactional
     @CacheEvict(value = "usuarios", allEntries = true)
     public void delete(Long id) {
-        Usuario usuario = getEntity(id);
-        usuarioRepository.delete(usuario);
+        getEntity(id);
+        // Referencias directas hacia el usuario
+        votoComisarioRepository.deleteByComisario_Id(id);
+        resolucionIncidenteRepository.deleteByComisario_Id(id);
+        apelacionRepository.deleteByUsuario_Id(id);
+        incidentePilotoRepository.deleteByUsuario_Id(id);
+        setupComentarioRepository.deleteByUsuario_Id(id);
+        setupCalificacionRepository.deleteByUsuario_Id(id);
+        // Dependencias de los agregados del usuario (antes de borrarlos)
+        apelacionRepository.deleteBySancionUsuarioId(id);
+        apelacionRepository.deleteBySancionResolucionIncidenteReportanteId(id);
+        sancionRepository.deleteByResolucionIncidenteReportanteId(id);
+        votoComisarioRepository.deleteByIncidenteReportanteId(id);
+        resolucionIncidenteRepository.deleteByIncidenteReportanteId(id);
+        incidentePilotoRepository.deleteByIncidenteReportanteId(id);
+        setupComentarioRepository.deleteBySetupAutorId(id);
+        setupCalificacionRepository.deleteBySetupAutorId(id);
+        // Agregados del usuario
+        sancionRepository.deleteByUsuario_Id(id);
+        incidenteRepository.deleteByReportante_Id(id);
+        setupRepository.deleteByAutor_Id(id);
+        // Filas propias sin dependencias
+        inscripcionRepository.deleteByUsuario_Id(id);
+        notificacionRepository.deleteByUsuario_Id(id);
+        resultadoCarreraRepository.deleteByUsuario_Id(id);
+        vueltaRepository.deleteByUsuario_Id(id);
+        sesionClasificacionRepository.deleteByUsuario_Id(id);
+        campeonatoPosicionRepository.deleteByUsuario_Id(id);
+        eloSancionRepository.deleteByUsuario_Id(id);
+        safetyRatingSancionRepository.deleteByUsuario_Id(id);
+        usuarioLogroRepository.deleteByUsuario_Id(id);
+        usuarioRecompensaRepository.deleteByUsuario_Id(id);
+        usuarioRepository.deleteById(id);
     }
 
     public StatsResponse getStats(Long id) {

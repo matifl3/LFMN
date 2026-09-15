@@ -33,7 +33,6 @@ export class MyProfileComponent implements OnInit {
   readonly user = signal<Usuario | null>(this.auth.user());
   readonly nombre = signal('');
   readonly email = signal('');
-  readonly foto = signal('');
   readonly passwordActual = signal('');
   readonly passwordNueva = signal('');
   readonly passwordActualEdit = signal(false);
@@ -75,7 +74,6 @@ export class MyProfileComponent implements OnInit {
         this.auth.updateUser(u);
         this.nombre.set(u.nombrePiloto || '');
         this.email.set(u.email || '');
-        this.foto.set(u.fotoPerfil || '');
         this.passwordActualEdit.set(!!u.passwordEstablecida);
       },
       error: (err) => this.toast.error(apiError(err)),
@@ -113,7 +111,6 @@ export class MyProfileComponent implements OnInit {
     this.api.put<Usuario>(`/usuarios/${id}/perfil`, {
       email: this.email().trim(),
       nombrePiloto: this.nombre().trim(),
-      fotoPerfil: this.foto().trim() || null,
     }).subscribe({
       next: (u) => {
         this.cargando.set(false);

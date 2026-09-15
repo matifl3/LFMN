@@ -19,6 +19,7 @@
     <div class="tabs-pill" style="margin-bottom:var(--sp-5)">
       <button class="tab" [class.active]="tab()==='estadisticas'" (click)="setTab('estadisticas')">Estadísticas</button>
       <button class="tab" [class.active]="tab()==='carreras'" (click)="setTab('carreras')">Carreras</button>
+      <button class="tab" [class.active]="tab()==='sesiones'" (click)="setTab('sesiones')">Sesiones</button>
       <button class="tab" [class.active]="tab()==='campeonatos'" (click)="setTab('campeonatos')">Campeonatos</button>
       <button class="tab" [class.active]="tab()==='categorias'" (click)="setTab('categorias')">Categorías</button>
       <button class="tab" [class.active]="tab()==='pilotos'" (click)="setTab('pilotos')">Pilotos</button>
@@ -125,6 +126,46 @@
                 </tbody>
               </table>
             </div>
+          }
+
+          @if (tab()==='sesiones') {
+            <div class="field" style="max-width:380px">
+              <label>Carrera</label>
+              <select class="select" [ngModel]="sesionCarreraId()" (ngModelChange)="onSesionCarreraChange($event)">
+                <option value="">Seleccioná una carrera…</option>
+                @for (c of carreras(); track c.id) {
+                  <option [value]="c.id">{{ c.nombre }} · {{ ESTADO_LABEL[c.estado] || c.estado }}</option>
+                }
+              </select>
+            </div>
+            @if (sesionCarreraId()) {
+              @if (sesionesProcesadas().length > 0) {
+                <div class="table-wrap">
+                  <table class="table">
+                    <thead>
+                      <tr>
+                        <th>Archivo</th>
+                        <th>Tipo</th>
+                        <th>Procesada</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (s of sesionesProcesadas(); track s.id) {
+                        <tr>
+                          <td class="data">{{ s.nombreArchivo }}</td>
+                          <td><span class="chip {{ s.tipo === 'RACE' ? 'chip-upcoming' : s.tipo === 'QUALIFY' ? 'chip-category' : 'chip-closed' }}">{{ s.tipo }}</span></td>
+                          <td>{{ s.fechaProcesamiento | fmtFechaHora }}</td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+              } @else {
+                <div class="card"><p class="hint">Aún no hay sesiones procesadas para esta carrera.</p></div>
+              }
+            } @else {
+              <div class="card"><p class="hint">Elegí una carrera para ver sus sesiones importadas.</p></div>
+            }
           }
 
           @if (tab()==='campeonatos') {
@@ -462,10 +503,37 @@
                 <div class="field"><label>Valor *</label><input type="number" class="input" [ngModel]="lValorCondicion()" (ngModelChange)="lValorCondicion.set(toNumber($event, 1) ?? 1)" /></div>
               </div>
               <div class="field"><label>Icono (emoji)</label><input class="input" [ngModel]="lIcono()" (ngModelChange)="lIcono.set($event)" placeholder="🏆" /></div>
-              <div style="display:flex;gap:var(--sp-2)">
+<div style="display:flex;gap:var(--sp-2)">
                 <button class="btn btn-primary btn-block" (click)="crearOActualizarLogro()">{{ editingLogroId() ? 'Actualizar' : 'Crear' }}</button>
                 @if (editingLogroId()) {
                   <button class="btn btn-ghost" (click)="limpiarFormLogro()">Cancelar</button>
+                }
+              </div>
+            }
+
+            @if (tab()==='sesiones') {
+              <h4>Importar resultados</h4>
+              <div class="field"><label>Carrera *</label>
+                <select class="select" [ngModel]="sesionCarreraId()" (ngModelChange)="onSesionCarreraChange($event)">
+                  <option value="">Seleccioná una carrera…</option>
+                  @for (c of carreras(); track c.id) {
+                    <option [value]="c.id">{{ c.nombre }}</option>
+                  }
+                </select>
+              </div>
+              <div class="field">
+                <label>JSON de la sesión (QUALIFY / RACE / PRACTICE)</label>
+                <textarea class="textarea json-editor" [ngModel]="sesionImportJson()" (ngModelChange)="sesionImportJson.set($event)" placeholder='{"TrackName":"...","Type":"RACE","Result":[...]}'></textarea>
+              </div>
+              <input #sesionJsonFile type="file" accept=".json,application/json" style="display:none" (change)="onSesionJsonFile($event)" />
+              <div style="display:flex;gap:var(--sp-2)">
+                <button class="btn btn-ghost btn-block" (click)="sesionJsonFile.click()">Cargar .json</button>
+              </div>
+              <div class="hint" style="margin-top:var(--sp-2)">Podés pegar el JSON o cargarlo desde un archivo .json del servidor de Assetto.</div>
+              <div style="display:flex;gap:var(--sp-2);margin-top:var(--sp-3)">
+                <button class="btn btn-primary btn-block" [disabled]="sesionImportando() || !sesionCarreraId() || !sesionImportJson()" (click)="importarSesion()">{{ sesionImportando() ? 'Importando…' : 'Importar sesión' }}</button>
+                @if (sesionImportJson()) {
+                  <button class="btn btn-ghost" (click)="limpiarFormSesion()">Limpiar</button>
                 }
               </div>
             }

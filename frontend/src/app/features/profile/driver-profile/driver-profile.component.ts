@@ -6,6 +6,7 @@ import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { ApiService, apiError } from '../../../core/services/api.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { Avatar } from '../../../shared/components/avatar/avatar';
 import { RankBadge } from '../../../shared/components/rank-badge/rank-badge';
 import { EmptyState } from '../../../shared/components/empty-state/empty-state';
@@ -23,6 +24,7 @@ import { fmtFecha } from '../../../core/utils/formato';
 export class DriverProfileComponent implements OnInit {
   private readonly api = inject(ApiService);
   private readonly toast = inject(ToastService);
+  private readonly auth = inject(AuthService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly sanitizer = inject(DomSanitizer);
@@ -38,6 +40,7 @@ export class DriverProfileComponent implements OnInit {
 
   readonly eloCum = computed(() => this.cumulativo(this.historialElo(), this.usuario()?.elo ?? 0));
   readonly srCum = computed(() => this.cumulativo(this.historialSr(), this.usuario()?.safetyRating ?? 0));
+  readonly esMio = computed(() => this.usuario()?.id != null && this.usuario()?.id === this.auth.user()?.id);
 
   ngOnInit(): void {
     const id = Number(this.route.snapshot.paramMap.get('id'));
@@ -85,7 +88,6 @@ export class DriverProfileComponent implements OnInit {
   tagline(u: Usuario): string {
     const parts: string[] = [];
     if (u.email) parts.push(u.email);
-    if (u.guidSteam) parts.push('Steam: ' + u.guidSteam);
     if (u.fechaRegistro) parts.push('miembro desde ' + fmtFecha(u.fechaRegistro));
     return parts.join(' · ');
   }

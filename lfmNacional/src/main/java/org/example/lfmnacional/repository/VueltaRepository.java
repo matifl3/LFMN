@@ -2,6 +2,8 @@ package org.example.lfmnacional.repository;
 
 import org.example.lfmnacional.entity.VueltaCarrera;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
 
@@ -16,4 +18,8 @@ public interface VueltaRepository extends JpaRepository<VueltaCarrera, Long> {
     void deleteByCarrera_IdAndTipo(Long carreraId, String tipo);
 
     void deleteByCarrera_Id(Long carreraId);
+
+    @Modifying
+    @Query("delete from VueltaCarrera v where v.usuario.id = ?1")
+    void deleteByUsuario_Id(Long usuarioId);
 }

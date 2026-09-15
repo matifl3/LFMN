@@ -4,6 +4,7 @@ import org.example.lfmnacional.entity.ResultadoCarrera;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -15,6 +16,10 @@ public interface ResultadoCarreraRepository extends JpaRepository<ResultadoCarre
     boolean existsByCarrera_Id(Long carreraId);
 
     void deleteByCarrera_Id(Long carreraId);
+
+    @Modifying
+    @Query("delete from ResultadoCarrera r where r.usuario.id = ?1")
+    void deleteByUsuario_Id(Long usuarioId);
 
     List<ResultadoCarrera> findByCarrera_IdOrderByPosicionFinalAsc(Long carreraId);
 

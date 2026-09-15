@@ -12,7 +12,7 @@ export class ToastService {
   readonly items = signal<ToastItem[]>([]);
   private nextId = 1;
 
-  mostrar(mensaje: string, tipo: 'success' | 'error' | '' = '', duracion = 3400): void {
+  mostrar(mensaje: string, tipo: 'success' | 'error' | '' = '', duracion = 4000): void {
     const id = this.nextId++;
     const item: ToastItem = { id, mensaje, tipo, duracion };
     this.items.update((l) => [...l, item]);

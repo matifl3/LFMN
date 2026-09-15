@@ -53,7 +53,9 @@ public class RateLimitFilter extends OncePerRequestFilter {
         }
         return "/api/usuarios".equals(uri)
                 || "/api/usuarios/login".equals(uri)
-                || "/api/usuarios/registro-steam".equals(uri);
+                || "/api/usuarios/registro-steam".equals(uri)
+                || "/api/usuarios/vincular-steam-login".equals(uri)
+                || "/api/recuperar/solicitar".equals(uri);
     }
 
     private boolean excedeLimite(String ip) {

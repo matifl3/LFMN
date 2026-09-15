@@ -5,6 +5,7 @@ import { ApiService, apiError } from '../../core/services/api.service';
 import { ToastService } from '../../core/services/toast.service';
 import { AuthService } from '../../core/services/auth.service';
 import { EmptyState } from '../../shared/components/empty-state/empty-state';
+import { LockedState } from '../../shared/components/locked-state/locked-state';
 import { Logro, UsuarioLogro } from '../../core/models/models';
 
 type LogroEstado = Omit<UsuarioLogro, 'progreso' | 'obtenido'> & {
@@ -16,14 +17,14 @@ type LogroEstado = Omit<UsuarioLogro, 'progreso' | 'obtenido'> & {
 @Component({
   selector: 'app-achievements',
   standalone: true,
-  imports: [EmptyState],
+  imports: [EmptyState, LockedState],
   styleUrl: './achievements.component.scss',
   templateUrl: './achievements.component.html',
 })
 export class AchievementsComponent implements OnInit {
   private readonly api = inject(ApiService);
   private readonly toast = inject(ToastService);
-  private readonly auth = inject(AuthService);
+  readonly auth = inject(AuthService);
 
   readonly logros = signal<LogroEstado[]>([]);
   readonly cargando = signal(true);

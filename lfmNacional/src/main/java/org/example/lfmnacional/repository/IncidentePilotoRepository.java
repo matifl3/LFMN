@@ -16,4 +16,12 @@ public interface IncidentePilotoRepository extends JpaRepository<IncidentePiloto
     @Modifying
     @Query(value = "DELETE FROM incidente_piloto WHERE incidente_id IN (SELECT id FROM incidente WHERE carrera_id = ?1)", nativeQuery = true)
     void deleteByCarreraId(Long carreraId);
+
+    @Modifying
+    @Query("delete from IncidentePiloto ip where ip.usuario.id = ?1")
+    void deleteByUsuario_Id(Long usuarioId);
+
+    @Modifying
+    @Query("delete from IncidentePiloto ip where ip.incidente.reportante.id = ?1")
+    void deleteByIncidenteReportanteId(Long reportanteId);
 }

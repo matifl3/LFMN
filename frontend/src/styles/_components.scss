@@ -251,6 +251,7 @@
   font-size: var(--fs-xs);
   letter-spacing: 0.06em;
   text-transform: uppercase;
+  font-weight: 600;
   color: var(--texto-secundario);
 }
 .field .hint { font-size: var(--fs-2xs); color: var(--texto-terciario); }
@@ -446,43 +447,104 @@ input[type="range"] {
 @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
 // ---- Toast ---------------------------------------------------
+.ms-icon {
+  font-family: 'Material Symbols Rounded';
+  font-weight: normal;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+}
+
 #lfm-toast, .toast-root {
   position: fixed;
-  bottom: var(--sp-6);
-  left: 50%;
-  transform: translateX(-50%);
+  top: calc(var(--header-h) + var(--sp-4));
+  right: var(--sp-5);
+  left: auto;
+  bottom: auto;
+  transform: none;
   z-index: 200;
-  display: flex; flex-direction: column; gap: var(--sp-2); align-items: center;
+  display: flex; flex-direction: column; gap: var(--sp-2); align-items: flex-end;
 }
 .toast {
-  padding: 0.85rem 1.375rem;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  max-width: min(420px, 90vw);
+  padding: 0.85rem 1.125rem;
   border-radius: var(--r-sm);
   background: var(--bg-superficie);
   border: 1px solid var(--borde-brillo);
   color: var(--texto-principal);
   font-size: var(--fs-sm);
   box-shadow: var(--shadow-lift);
-  animation: toastIn 0.2s ease;
+  animation: toastIn 0.22s ease;
   position: relative;
   overflow: hidden;
 }
-.toast.error { border-color: var(--lbm-rojo); }
+.toast .ms-icon { color: var(--texto-secundario); }
+.toast.error { background: var(--lbm-rojo); border-color: var(--lbm-rojo-hover); color: #fff; }
+.toast.error .ms-icon { color: #fff; }
 .toast.success { border-color: var(--status-positivo); }
+.toast.success .ms-icon { color: var(--status-positivo-hi); }
 .toast .toast-bar { position: absolute; left: 0; bottom: 0; height: 3px; background: var(--lbm-rojo); animation: toastBar 3.4s linear forwards; }
+.toast.error .toast-bar { background: rgba(255,255,255,0.85); }
 .toast.success .toast-bar { background: var(--status-positivo); }
-@keyframes toastIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes toastIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
 @keyframes toastBar { from { width: 100%; } to { width: 0%; } }
 
 // ---- Empty state ---------------------------------------------------
 .empty-state {
-  display: flex; flex-direction: column; align-items: center; gap: var(--sp-3);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--sp-3);
   text-align: center;
-  padding: var(--sp-8) var(--sp-5);
-  color: var(--texto-terciario);
-  border: 1px dashed var(--borde-metal);
+  min-height: 240px;
+  padding: var(--sp-9) var(--sp-5);
+  color: var(--texto-secundario);
+  border: 1px dashed var(--borde-brillo);
   border-radius: var(--r-md);
+  background: var(--bg-inset);
   animation: fadeIn 0.5s var(--ease) both;
 }
+.empty-state .empty-state-icon {
+  font-size: 3.75rem;
+  color: var(--texto-secundario);
+  opacity: 0.5;
+  font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 48;
+}
+.empty-state .empty-state-title {
+  font-size: var(--fs-sm);
+  color: var(--texto-secundario);
+  margin-bottom: var(--sp-1);
+}
+.empty-state .empty-state-text { font-size: var(--fs-sm); color: var(--texto-terciario); max-width: 46ch; }
+.empty-state .ms-icon + * { margin-top: var(--sp-1); }
+
+// ---- Locked state (CTA sin sesión) -------------------------------------------
+.locked-state {
+  min-height: calc(100vh - var(--header-h));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-4);
+  text-align: center;
+  padding: var(--sp-8) var(--sp-5);
+}
+.locked-state .locked-icon {
+  font-size: 4.5rem;
+  color: var(--texto-secundario);
+  opacity: 0.55;
+  font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 48;
+}
+.locked-state .locked-title { margin-bottom: var(--sp-1); }
+.locked-state .locked-text { max-width: 46ch; margin-bottom: var(--sp-3); }
 
 // ---- Rating block (profile) -------------------------------------------
 .rating-block .rating-label { font-family: var(--font-display); font-size: var(--fs-2xs); letter-spacing: 0.1em; text-transform: uppercase; color: var(--texto-terciario); }

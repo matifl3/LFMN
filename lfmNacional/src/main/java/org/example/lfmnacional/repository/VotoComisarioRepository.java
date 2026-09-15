@@ -19,4 +19,12 @@ public interface VotoComisarioRepository extends JpaRepository<VotoComisario, Lo
     @Modifying
     @Query(value = "DELETE FROM voto_comisario WHERE incidente_id IN (SELECT id FROM incidente WHERE carrera_id = ?1)", nativeQuery = true)
     void deleteByCarreraId(Long carreraId);
+
+    @Modifying
+    @Query("delete from VotoComisario vc where vc.comisario.id = ?1")
+    void deleteByComisario_Id(Long comisarioId);
+
+    @Modifying
+    @Query("delete from VotoComisario vc where vc.incidente.reportante.id = ?1")
+    void deleteByIncidenteReportanteId(Long reportanteId);
 }

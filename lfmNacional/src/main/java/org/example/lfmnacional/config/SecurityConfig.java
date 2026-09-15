@@ -34,9 +34,11 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         // Auth endpoints (public)
-                        .requestMatchers("/api/usuarios/login", "/api/usuarios", "/api/usuarios/registro-steam").permitAll()
+                        .requestMatchers("/api/usuarios/login", "/api/usuarios", "/api/usuarios/registro-steam", "/api/usuarios/vincular-steam-login").permitAll()
                         // Steam OAuth flow (public)
                         .requestMatchers("/api/steam/**").permitAll()
+                        // Password recovery (public)
+                        .requestMatchers("/api/recuperar/**").permitAll()
                         // Public read-only endpoints
                         .requestMatchers(HttpMethod.GET, "/api/categorias/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/campeonatos/**").permitAll()

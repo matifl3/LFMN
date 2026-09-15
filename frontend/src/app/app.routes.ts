@@ -4,6 +4,7 @@ import { authGuard, adminGuard } from './core/guards/auth.guard';
 export const routes: Routes = [
   { path: '', pathMatch: 'full', loadComponent: () => import('./features/home/home.component').then((m) => m.HomeComponent) },
   { path: 'auth', loadComponent: () => import('./features/auth/auth.component').then((m) => m.AuthComponent) },
+  { path: 'recuperar', loadComponent: () => import('./features/auth/recovery.component').then((m) => m.RecoveryComponent) },
   { path: 'carreras', loadComponent: () => import('./features/races/races-list/races-list.component').then((m) => m.RacesListComponent) },
   { path: 'carreras/:id', loadComponent: () => import('./features/races/race-detail/race-detail.component').then((m) => m.RaceDetailComponent) },
   { path: 'campeonato', loadComponent: () => import('./features/championship/championship.component').then((m) => m.ChampionshipComponent) },

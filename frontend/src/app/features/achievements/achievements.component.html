@@ -9,7 +9,9 @@
     </div>
   </div>
 
-  @if (cargando()) {
+  @if (!auth.autenticado()) {
+    <app-locked-state />
+  } @else if (cargando()) {
     <div class="grid grid-4">
       @for (i of [1, 2, 3, 4]; track i) {
         <div class="card skeleton-card"><span class="skeleton" style="width: 100%"></span></div>

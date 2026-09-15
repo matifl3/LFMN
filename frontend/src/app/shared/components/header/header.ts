@@ -1,4 +1,4 @@
-import { Component, effect, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { ApiService, apiError } from '../../../core/services/api.service';
 import { AuthService } from '../../../core/services/auth.service';
@@ -36,11 +36,17 @@ export class Header {
   readonly navLinks = signal<NavLink[]>(BASE_LINKS);
   readonly noLeidas = signal(0);
   readonly menuAbierto = signal(false);
+  readonly miPerfil = computed(() => {
+    const id = this.auth.user()?.id;
+    return id ? ['/perfil', id] : ['/mi-perfil'];
+  });
 
   constructor() {
     effect(() => {
       if (this.auth.autenticado()) {
         const links = [...BASE_LINKS];
+        const id = this.auth.user()?.id;
+        if (id) links.push({ path: `/perfil/${id}`, label: 'Mi perfil' });
         if (this.auth.esModerador()) links.push({ path: '/admin', label: 'Admin' });
         this.navLinks.set(links);
         this.cargarNoLeidas();

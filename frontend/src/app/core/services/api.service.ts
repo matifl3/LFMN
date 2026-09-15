@@ -74,10 +74,26 @@ export class ApiService {
   }
 }
 
+const MENSAJES_HTTP: Record<number, string> = {
+  400: 'La solicitud es inválida. Revisá los datos ingresados.',
+  401: 'Tu sesión venció. Volvé a iniciar sesión.',
+  403: 'No tenés permisos para realizar esta acción.',
+  404: 'No se encontró el recurso solicitado.',
+  500: 'Ocurrió un error interno en el servidor.',
+  502: 'El servidor está temporalmente fuera de servicio. Volvé a intentarlo en unos minutos.',
+  503: 'El servidor está sobrecargado o en mantenimiento. Volvé a intentarlo en un momento.',
+  504: 'El servidor se demoró en responder. Volvé a intentarlo en unos minutos.',
+};
+
 export function apiError(err: unknown): string {
-  const e = err as { error?: { mensaje?: string; error?: string; message?: string }; status?: number };
+  const e = err as { error?: { mensaje?: string; error?: string; message?: string } | string; status?: number };
   const body = e?.error;
-  if (body) return body.mensaje || body.error || body.message || 'Error ' + (e.status ?? '');
-  if (e?.status) return 'Error ' + e.status;
+  if (body && typeof body === 'object') {
+    const msg = body.mensaje || body.error || body.message;
+    if (msg) return msg;
+  }
+  const status = e?.status;
+  if (status && MENSAJES_HTTP[status]) return MENSAJES_HTTP[status];
+  if (status) return 'Error ' + status;
   return 'No se pudo conectar con el servidor. ¿Está levantado el backend en :8080?';
 }

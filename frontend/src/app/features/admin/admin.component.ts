@@ -37,7 +37,15 @@ const RECOMPENSA_LABEL: Record<string, string> = {
   OTRA: 'Otra',
 };
 
-type Tab = 'estadisticas' | 'carreras' | 'campeonatos' | 'categorias' | 'pilotos' | 'anuncios' | 'logros';
+interface SesionProcesada {
+  id: number;
+  carreraId: number;
+  nombreArchivo: string;
+  tipo: string;
+  fechaProcesamiento: string;
+}
+
+type Tab = 'estadisticas' | 'carreras' | 'campeonatos' | 'categorias' | 'pilotos' | 'anuncios' | 'logros' | 'sesiones';
 
 @Component({
   selector: 'app-admin',
@@ -77,6 +85,11 @@ export class AdminComponent implements OnInit {
   readonly editingCategoriaId = signal<number | null>(null);
   readonly editingAnuncioId = signal<number | null>(null);
   readonly editingLogroId = signal<number | null>(null);
+
+  readonly sesionCarreraId = signal('');
+  readonly sesionImportJson = signal('');
+  readonly sesionImportando = signal(false);
+  readonly sesionesProcesadas = signal<SesionProcesada[]>([]);
 
   readonly cNombre = signal('');
   readonly cFecha = signal('');
@@ -618,5 +631,72 @@ export class AdminComponent implements OnInit {
       },
       error: (err) => this.toast.error(apiError(err)),
     });
+  }
+
+  onSesionCarreraChange(carreraId: string): void {
+    this.sesionCarreraId.set(carreraId);
+    this.sesionesProcesadas.set([]);
+    if (!carreraId) return;
+    this.api.list<SesionProcesada>('/sesiones-procesadas/carrera/' + carreraId).subscribe({
+      next: (list) => this.sesionesProcesadas.set(list),
+      error: () => this.sesionesProcesadas.set([]),
+    });
+  }
+
+  onSesionJsonFile(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => this.sesionImportJson.set(String(reader.result || ''));
+    reader.readAsText(file);
+    input.value = '';
+  }
+
+  importarSesion(): void {
+    const carreraId = this.sesionCarreraId();
+    if (!carreraId) {
+      this.toast.error('Seleccioná una carrera.');
+      return;
+    }
+    const texto = this.sesionImportJson().trim();
+    if (!texto) {
+      this.toast.error('Pegá o cargá el JSON de la sesión.');
+      return;
+    }
+    let sesion: unknown;
+    try {
+      sesion = JSON.parse(texto);
+    } catch {
+      this.toast.error('El JSON es inválido. Revisá el contenido pegado.');
+      return;
+    }
+    const tipo = (sesion as { Type?: string })?.Type;
+    if (!tipo) {
+      this.toast.error('El JSON no tiene el campo Type (QUALIFY / RACE / PRACTICE).');
+      return;
+    }
+    this.sesionImportando.set(true);
+    this.api.post<{ tipo?: string }>('/sesiones/importar?carreraId=' + carreraId, sesion).subscribe({
+      next: (res) => {
+        const tipoProcesado = res?.tipo || tipo;
+        this.sesionImportando.set(false);
+        this.toast.success(
+          tipoProcesado === 'PRACTICE'
+            ? 'Sesión PRACTICE procesada (no importa datos).'
+            : 'Sesión ' + tipoProcesado + ' importada.'
+        );
+        this.sesionImportJson.set('');
+        this.onSesionCarreraChange(carreraId);
+      },
+      error: (err) => {
+        this.sesionImportando.set(false);
+        this.toast.error(apiError(err));
+      },
+    });
+  }
+
+  limpiarFormSesion(): void {
+    this.sesionImportJson.set('');
   }
 }

@@ -32,6 +32,11 @@ public class UsuarioController {
         return ResponseEntity.status(HttpStatus.CREATED).body(usuarioService.registrarSteam(request));
     }
 
+    @PostMapping("/vincular-steam-login")
+    public LoginResponse vincularSteamConLogin(@Valid @RequestBody SteamVinculacionLoginRequest request) {
+        return usuarioService.vincularSteamConLogin(request.email(), request.password(), request.guidSteam());
+    }
+
     @PostMapping("/login")
     public LoginResponse login(@Valid @RequestBody LoginRequest request) {
         return usuarioService.login(request);
@@ -117,7 +122,10 @@ public class UsuarioController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
+    public ResponseEntity<Void> delete(@PathVariable Long id, @AuthenticationPrincipal Usuario actual) {
+        if (actual.getId().equals(id)) {
+            throw new BusinessException("No podes eliminar tu propia cuenta");
+        }
         usuarioService.delete(id);
         return ResponseEntity.noContent().build();
     }

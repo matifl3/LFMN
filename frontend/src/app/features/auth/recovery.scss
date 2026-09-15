@@ -1,0 +1,24 @@
+.auth-shell {}
+
+.auth-banner {
+  display: flex;
+  gap: var(--sp-3);
+  align-items: flex-start;
+  border: 1px dashed var(--borde-brillo);
+  border-radius: var(--r-sm);
+  padding: var(--sp-4);
+  color: var(--texto-secundario);
+
+  .banner-icon {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: rgba(57, 192, 112, 0.15);
+    color: #39c070;
+    font-weight: 800;
+    font-family: var(--font-display);
+  }
+}
