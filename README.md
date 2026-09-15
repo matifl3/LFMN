@@ -171,7 +171,7 @@ regenerar diffs con una migración `V3__*.sql` para cuando se haga el switch.
 
 > **Deploy actual (2025):** el frontend se sirve desde **Vercel**
 > (`lfmn.vercel.app`) conectado al repo en `frontend/`, y la API desde un
-> **web service Render** (`lfm-api.onrender.com`) que buildea el `Dockerfile`
+> **web service Render** (`lfmn.onrender.com`) que buildea el `Dockerfile`
 > de la raíz con el perfil `prod`. Ambos redeployaan automáticamente con cada
 > push a `main`. El flujo GitHub Actions + Caddy descrito abajo es de la etapa
 > anterior (servidor propio) y queda documentado sólo como referencia.
