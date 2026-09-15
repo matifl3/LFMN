@@ -9,13 +9,14 @@ import { RankBadge } from '../../shared/components/rank-badge/rank-badge';
 import { Categoria, Campeonato, Carrera, TablaPosicion, Anuncio, UsuarioBasico } from '../../core/models/models';
 import { fmtFecha, fmtHora } from '../../core/utils/formato';
 import { FechaRelativaPipe } from '../../core/pipes/fecha-relativa.pipe';
+import { AssetUrlPipe } from '../../core/pipes/asset-url.pipe';
 
 const CTA_ESTADOS = ['PROGRAMADA', 'INSCRIPCIONES_ABIERTAS', 'INSCRIPCIONES_CERRADAS', 'EN_CURSO'];
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [RouterLink, Modal, RankBadge, FechaRelativaPipe],
+  imports: [RouterLink, Modal, RankBadge, FechaRelativaPipe, AssetUrlPipe],
   styleUrl: './home.scss',
   templateUrl: './home.html',
 })

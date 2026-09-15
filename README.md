@@ -144,35 +144,37 @@ El script genera credenciales aleatorias, crea la BD MySQL y configura el servic
 | `CORS_ALLOWED_ORIGINS` | Dominios permitidos (separados por coma) |
 | `SESIONES_DIR` | Ruta a la carpeta de sesiones de Assetto Corsa |
 | `SPRING_PROFILES_ACTIVE` | Usar `prod` para config segura |
-| `JPA_DDL_AUTO` | `validate` en prod (default); no usar `update` con Flyway activo |
-| `FLYWAY_BASELINE` | `true` (default) para bastear una BD existente sin migrations aplicadas |
+| `JPA_DDL_AUTO` | Default `update` en prod (schema aplicado por Hibernate). `validate` solo si la BD ya existe |
+| `FLYWAY_BASELINE` | Reservado para cuando se active Flyway versionado (ver sección Migraciones) |
 
 ### Perfiles de Spring
 
 - **default** (desarrollo): `ddl-auto=update`, `show-sql=true`, datos de test,
   Flyway deshabilitado
-- **prod** (producción): `ddl-auto=validate`, `show-sql=false`, Flyway habilitado,
-  sin DataSeeder
+- **prod** (producción): `ddl-auto=update` (default), `show-sql=false`,
+  Flyway deshabilitado, sin DataSeeder
 
 ## Migraciones de base de datos (Flyway)
 
-En **producción** el schema se gestiona con **Flyway** a partir de los archivos
-`lfmNacional/src/main/resources/db/migration/V*.sql`:
+En producción el schema se gestiona por ahora con **Hibernate `ddl-auto=update`**
+(flyway deshabilitado) → primer arranque sobre BD vacía crea las 28 tablas solo.
 
-- `V1__init.sql` contiene el schema completo (28 tablas).
-- `spring.flyway.enabled=true` y `JPA_DDL_AUTO=validate` en el perfil `prod`.
-- `FLYWAY_BASELINE=true` (default) con `baseline-version=1`: si la BD ya existe
-  pero no tiene la tabla `flyway_schema_history` (schema creado por Hibernate
-  con `ddl-auto=update`), Flyway la "bastea" marcando V1 como ya aplicado y no
-  re-crea las tablas.
-- Si cambiás entidades JPA, generá una nueva migración `V2__*.sql` (y siguientes)
-  para mantener el schema consistente en prod. En desarrollo local podés
-  seguir usando `ddl-auto=update` sin migraciones.
-
-No se necesita configuración especial de primera subida: sobre una **BD nueva**
-Flyway aplica V1 y `validate` confirma el schema.
+Los archivos `lfmNacional/src/main/resources/db/migration/V*.sql` quedan
+reservados para el flujo **Flyway versionado** (follow-up): activar
+`spring.flyway.enabled=true` + `JPA_DDL_AUTO=validate` y reinicializar la BD
+para que Flyway aplique las migraciones desde cero (una BD creada con
+`update` no puede "bastearse" en V1 porque las migraciones V2+ reintentarán
+ALTERs ya aplicados). Si se editan entidades JPA mientras siga en `update`,
+regenerar diffs con una migración `V3__*.sql` para cuando se haga el switch.
 
 ## Deploy automatizado (GitHub Actions)
+
+> **Deploy actual (2025):** el frontend se sirve desde **Vercel**
+> (`lfmn.vercel.app`) conectado al repo en `frontend/`, y la API desde un
+> **web service Render** (`lfm-api.onrender.com`) que buildea el `Dockerfile`
+> de la raíz con el perfil `prod`. Ambos redeployaan automáticamente con cada
+> push a `main`. El flujo GitHub Actions + Caddy descrito abajo es de la etapa
+> anterior (servidor propio) y queda documentado sólo como referencia.
 
 El workflow `.github/workflows/deploy.yml` publica una versión y hace el
 redeploy controlado en el servidor: **build → test → subir JAR → parar →

@@ -135,7 +135,7 @@
       </div>
       @if (anuncio(); as an) {
         @if (an.urlImagen) {
-          <img [src]="an.urlImagen" alt="" style="border-radius: var(--r-sm); margin-bottom: var(--sp-4); max-height: 180px; object-fit: cover; width: 100%" referrerpolicy="no-referrer" />
+          <img [src]="an.urlImagen | assetUrl" alt="" style="border-radius: var(--r-sm); margin-bottom: var(--sp-4); max-height: 180px; object-fit: cover; width: 100%" referrerpolicy="no-referrer" />
         }
         <h4>{{ an.titulo }}</h4>
         <span class="mono text-terciario" style="font-size: var(--fs-2xs)">{{ an.fecha | fechaRelativa }}</span>
@@ -153,7 +153,7 @@
 <app-modal [abierto]="anuncioAbierto()" [titulo]="anuncio()?.titulo || 'Anuncio'" (cerrado)="anuncioAbierto.set(false)">
   @if (anuncio(); as an) {
     @if (an.urlImagen) {
-      <img [src]="an.urlImagen" alt="" style="border-radius: var(--r-sm); margin-bottom: var(--sp-4); max-width: 100%" referrerpolicy="no-referrer" />
+      <img [src]="an.urlImagen | assetUrl" alt="" style="border-radius: var(--r-sm); margin-bottom: var(--sp-4); max-width: 100%" referrerpolicy="no-referrer" />
     }
     <span class="mono text-terciario" style="font-size: var(--fs-2xs)">{{ an.fecha | fechaRelativa }}</span>
     <p class="text-secondary" style="margin-top: var(--sp-3)">{{ an.contenido || an.titulo }}</p>
