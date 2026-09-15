@@ -30,9 +30,9 @@ COPY --from=build /app/target/lfmNacional-0.0.1-SNAPSHOT.jar app.jar
 # Puerto
 EXPOSE 8080
 
-# Health check
+# Health check (usa $PORT: Render lo inyecta; en local cae a 8080)
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
-  CMD wget -q --spider http://localhost:8080/actuator/health || exit 1
+  CMD wget -q --spider "http://localhost:${PORT:-8080}/actuator/health" || exit 1
 
 # Ejecutar
 ENTRYPOINT ["java", "-jar", "app.jar", "--spring.profiles.active=prod"]
