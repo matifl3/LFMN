@@ -15,7 +15,6 @@ import org.example.lfmnacional.repository.CategoriaRepository;
 import org.example.lfmnacional.repository.LogroRepository;
 import org.example.lfmnacional.repository.UsuarioRepository;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.context.annotation.Profile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -23,7 +22,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Component
-@Profile("!prod")
 @RequiredArgsConstructor
 public class DataSeeder implements CommandLineRunner {
 
