@@ -36,11 +36,9 @@ export class CategoriesComponent implements OnInit {
   }
 
   countCat(c: Categoria): number {
+    if (c.eloMinimo == null || c.eloMaximo == null) return 0;
     return this.users().filter(
-      (u) =>
-        u.elo != null &&
-        (c.eloMinimo == null || u.elo! >= c.eloMinimo!) &&
-        (c.eloMaximo == null || u.elo! <= c.eloMaximo!)
+      (u) => u.elo != null && u.elo >= c.eloMinimo! && u.elo <= c.eloMaximo!
     ).length;
   }
 }
