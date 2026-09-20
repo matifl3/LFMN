@@ -102,7 +102,6 @@ export class AdminComponent implements OnInit {
   readonly cCupo = signal(32);
   readonly cServidor = signal('');
   readonly cLinkPista = signal('');
-  readonly cLinkAuto = signal('');
 
   readonly chNombre = signal('');
   readonly chTemporada = signal('');
@@ -208,7 +207,6 @@ export class AdminComponent implements OnInit {
       cupoMaximo: this.cCupo() || 32,
       servidor: this.cServidor()?.trim() || undefined,
       linkPista: this.cLinkPista()?.trim() || undefined,
-      linkAuto: this.cLinkAuto()?.trim() || undefined,
     };
     const editing = this.editingCarreraId();
     const req = editing ? this.api.put('/carreras/' + editing, body) : this.api.post('/carreras', body);
@@ -229,7 +227,6 @@ export class AdminComponent implements OnInit {
     this.cCupo.set(c.cupoMaximo || 32);
     this.cServidor.set(c.servidor || '');
     this.cLinkPista.set(c.linkPista || '');
-    this.cLinkAuto.set(c.linkAuto || '');
     if (c.fecha) {
       const d = new Date(c.fecha);
       this.cFecha.set(d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'));
@@ -267,7 +264,6 @@ export class AdminComponent implements OnInit {
     this.cCupo.set(32);
     this.cServidor.set('');
     this.cLinkPista.set('');
-    this.cLinkAuto.set('');
     this.campeonatosForm.set([]);
   }
 
