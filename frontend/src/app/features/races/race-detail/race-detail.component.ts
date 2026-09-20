@@ -11,9 +11,10 @@ import { Chip } from '../../../shared/components/chip/chip';
 import { RankBadge } from '../../../shared/components/rank-badge/rank-badge';
 import { FmtFechaHoraPipe } from '../../../core/pipes/fmt-fecha.pipe';
 import { FmtLapPipe } from '../../../core/pipes/fmt-lap.pipe';
+import { FmtDifPipe } from '../../../core/pipes/fmt-dif.pipe';
 import {
   Carrera, CarreraAcceso, EloEstimado, Inscripcion, ResultadoCarrera,
-  SesionClasificacion, Vuelta, VueltaAnalisis,
+  SesionClasificacion, Vuelta, VueltaAnalisis, VueltaResumen,
 } from '../../../core/models/models';
 
 const ESTADOS_INSCRIPCION = ['PROGRAMADA', 'INSCRIPCIONES_ABIERTAS'] as const;
@@ -21,7 +22,7 @@ const ESTADOS_INSCRIPCION = ['PROGRAMADA', 'INSCRIPCIONES_ABIERTAS'] as const;
 @Component({
   selector: 'app-race-detail',
   standalone: true,
-  imports: [RouterLink, Chip, Avatar, RankBadge, FmtFechaHoraPipe, FmtLapPipe],
+  imports: [RouterLink, Chip, Avatar, RankBadge, FmtFechaHoraPipe, FmtLapPipe, FmtDifPipe],
   templateUrl: './race-detail.html',
 })
 export class RaceDetailComponent implements OnInit {
@@ -37,6 +38,7 @@ export class RaceDetailComponent implements OnInit {
   readonly clasificaciones = signal<SesionClasificacion[]>([]);
   readonly vueltas = signal<Vuelta[]>([]);
   readonly analisis = signal<VueltaAnalisis[]>([]);
+  readonly resumen = signal<VueltaResumen | null>(null);
   readonly acceso = signal<CarreraAcceso | null>(null);
   readonly eloEstimado = signal<EloEstimado | null>(null);
   readonly cargando = signal(true);
@@ -107,6 +109,9 @@ export class RaceDetailComponent implements OnInit {
       analisis: user
         ? this.api.list<VueltaAnalisis>('/vueltas/carrera/' + id + '/usuario/' + user.id + '/analisis').pipe(catchError(() => of([])))
         : of([]),
+      resumen: user
+        ? this.api.get<VueltaResumen>('/vueltas/carrera/' + id + '/usuario/' + user.id + '/analisis/resumen').pipe(catchError(() => of(null)))
+        : of(null),
       acceso: user
         ? this.api.get<CarreraAcceso>('/carreras/' + id + '/acceso-servidor').pipe(catchError(() => of(null)))
         : of(null),
@@ -121,6 +126,7 @@ export class RaceDetailComponent implements OnInit {
         this.clasificaciones.set(r.clasificaciones);
         this.vueltas.set(r.vueltas);
         this.analisis.set(r.analisis);
+        this.resumen.set(r.resumen);
         this.acceso.set(r.acceso);
         this.eloEstimado.set(r.eloEstimado);
         this.cargando.set(false);
@@ -167,6 +173,29 @@ export class RaceDetailComponent implements OnInit {
   eloColor(v: number | null | undefined): string {
     if (v === null || v === undefined) return '';
     return v >= 0 ? 'var(--status-positivo)' : 'var(--lbm-rojo-hi)';
+  }
+
+  /** Diferencia de dos tiempos en ms; null si falta alguno */
+  difLap(a: number | null | undefined, b: number | null | undefined): number | null {
+    if (a === null || a === undefined || b === null || b === undefined) return null;
+    return a - b;
+  }
+
+  /** Porcentaje con total; '—' si no hay base */
+  pct(n: number | null | undefined, total: number | null | undefined): string {
+    if (n === null || n === undefined || total === null || total === undefined || total <= 0) return '—';
+    return Math.round((n / total) * 100) + '%';
+  }
+
+  /** "+3" si ganó posiciones, "−2" si las perdió */
+  posGanadasTxt(v: number | null | undefined): string {
+    if (v === null || v === undefined) return '—';
+    return v > 0 ? '+' + v : String(v);
+  }
+
+  posTxt(v: number | null | undefined): string {
+    if (v === null || v === undefined) return '—';
+    return 'P' + v;
   }
 
   posicionesChart(): SafeHtml {

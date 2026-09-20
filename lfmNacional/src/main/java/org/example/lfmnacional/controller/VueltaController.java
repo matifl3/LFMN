@@ -2,6 +2,7 @@ package org.example.lfmnacional.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.example.lfmnacional.dto.vuelta.VueltaAnalisisResponse;
+import org.example.lfmnacional.dto.vuelta.VueltaResumenResponse;
 import org.example.lfmnacional.dto.vuelta.VueltaResponse;
 import org.example.lfmnacional.service.VueltaService;
 import org.springframework.web.bind.annotation.*;
@@ -30,5 +31,11 @@ public class VueltaController {
     public List<VueltaAnalisisResponse> analisisPorUsuario(@PathVariable Long carreraId,
                                                            @PathVariable Long usuarioId) {
         return vueltaService.analisisCarrera(carreraId, usuarioId);
+    }
+
+    @GetMapping("/carrera/{carreraId}/usuario/{usuarioId}/analisis/resumen")
+    public VueltaResumenResponse resumenPorUsuario(@PathVariable Long carreraId,
+                                                   @PathVariable Long usuarioId) {
+        return vueltaService.resumenCarrera(carreraId, usuarioId);
     }
 }

@@ -191,6 +191,29 @@ export interface VueltaAnalisis extends Vuelta {
   posicionEnVuelta?: number;
 }
 
+export interface VueltaResumen {
+  mejorVueltaMs?: number;
+  numeroVueltaMejor?: number;
+  mejorS1?: number;
+  mejorS2?: number;
+  mejorS3?: number;
+  teoricaMs?: number;
+  potencialMs?: number;
+  mejorS1Parrilla?: number;
+  mejorS2Parrilla?: number;
+  mejorS3Parrilla?: number;
+  teoricaParrillaMs?: number;
+  vueltasTotales?: number;
+  mediaMs?: number;
+  desvioMs?: number;
+  dentroDe500ms?: number;
+  dentroDe1s?: number;
+  posicionGrilla?: number;
+  posicionFinal?: number;
+  posicionesGanadas?: number;
+  posicionPico?: number;
+}
+
 export interface Anuncio {
   id: number;
   titulo: string;

@@ -209,6 +209,50 @@
           }
         </p>
       } @else {
+        @if (resumen(); as r) {
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:var(--sp-4);margin-bottom:var(--sp-5)">
+            <div class="card" style="padding:var(--sp-4)">
+              <h4 style="margin-bottom:var(--sp-3)">Vuelta teórica</h4>
+              <p class="text-terciario" style="font-size:var(--fs-xs);margin-bottom:var(--sp-3)">Suma de tus mejores sectores vs mejor vuelta real</p>
+              <div style="display:grid;gap:var(--sp-2)">
+                <div style="display:flex;justify-content:space-between"><span class="text-secondary">Teórica</span><b class="mono">{{ r.teoricaMs | fmtLap }}</b></div>
+                <div style="display:flex;justify-content:space-between"><span class="text-secondary">Mejor real · V{{ r.numeroVueltaMejor }}</span><b class="mono">{{ r.mejorVueltaMs | fmtLap }}</b></div>
+                <div style="display:flex;justify-content:space-between"><span class="text-secondary">Potencial perdido</span><b class="mono" [style.color]="(r.potencialMs ?? 0) > 500 ? 'var(--lbm-rojo-hi)' : 'var(--status-positivo)'">{{ r.potencialMs | fmtLap }}</b></div>
+              </div>
+            </div>
+            <div class="card" style="padding:var(--sp-4)">
+              <h4 style="margin-bottom:var(--sp-3)">Sectores vs parrilla</h4>
+              <table class="table" style="margin-bottom:var(--sp-3)">
+                <thead><tr><th>Sector</th><th class="num">Vos</th><th class="num">Parrilla</th><th class="num">Dif.</th></tr></thead>
+                <tbody>
+                  <tr><td>S1</td><td class="num mono">{{ r.mejorS1 | fmtLap }}</td><td class="num mono">{{ r.mejorS1Parrilla | fmtLap }}</td><td class="num mono">{{ difLap(r.mejorS1, r.mejorS1Parrilla) | fmtDif }}</td></tr>
+                  <tr><td>S2</td><td class="num mono">{{ r.mejorS2 | fmtLap }}</td><td class="num mono">{{ r.mejorS2Parrilla | fmtLap }}</td><td class="num mono">{{ difLap(r.mejorS2, r.mejorS2Parrilla) | fmtDif }}</td></tr>
+                  <tr><td>S3</td><td class="num mono">{{ r.mejorS3 | fmtLap }}</td><td class="num mono">{{ r.mejorS3Parrilla | fmtLap }}</td><td class="num mono">{{ difLap(r.mejorS3, r.mejorS3Parrilla) | fmtDif }}</td></tr>
+                </tbody>
+              </table>
+              <p class="text-terciario" style="font-size:var(--fs-xs)">Vuelta teórica de parrilla: <b class="mono">{{ r.teoricaParrillaMs | fmtLap }}</b></p>
+            </div>
+            <div class="card" style="padding:var(--sp-4)">
+              <h4 style="margin-bottom:var(--sp-3)">Consistencia</h4>
+              <div style="display:grid;gap:var(--sp-2)">
+                <div style="display:flex;justify-content:space-between"><span class="text-secondary">Promedio</span><b class="mono">{{ r.mediaMs | fmtLap }}</b></div>
+                <div style="display:flex;justify-content:space-between"><span class="text-secondary">Desvío estándar</span><b class="mono">{{ r.desvioMs | fmtLap }}</b></div>
+                <div style="display:flex;justify-content:space-between"><span class="text-secondary">Vueltas completadas</span><b class="mono">{{ r.vueltasTotales }}</b></div>
+                <div style="display:flex;justify-content:space-between"><span class="text-secondary">Dentro de ±0.5s</span><b class="mono">{{ r.dentroDe500ms }} <span style="color:var(--text-terciario)">({{ pct(r.dentroDe500ms, r.vueltasTotales) }})</span></b></div>
+                <div style="display:flex;justify-content:space-between"><span class="text-secondary">Dentro de ±1s</span><b class="mono">{{ r.dentroDe1s }} <span style="color:var(--text-terciario)">({{ pct(r.dentroDe1s, r.vueltasTotales) }})</span></b></div>
+              </div>
+            </div>
+            <div class="card" style="padding:var(--sp-4)">
+              <h4 style="margin-bottom:var(--sp-3)">Posiciones</h4>
+              <div style="display:grid;gap:var(--sp-2)">
+                <div style="display:flex;justify-content:space-between"><span class="text-secondary">Grilla</span><b class="mono">{{ posTxt(r.posicionGrilla) }}</b></div>
+                <div style="display:flex;justify-content:space-between"><span class="text-secondary">Final</span><b class="mono">{{ posTxt(r.posicionFinal) }}</b></div>
+                <div style="display:flex;justify-content:space-between"><span class="text-secondary">Ganadas / perdidas</span><b class="mono" [style.color]="eloColor(r.posicionesGanadas)">{{ posGanadasTxt(r.posicionesGanadas) }}</b></div>
+                <div style="display:flex;justify-content:space-between"><span class="text-secondary">Mejor posición en carrera</span><b class="mono">{{ posTxt(r.posicionPico) }}</b></div>
+              </div>
+            </div>
+          </div>
+        }
         <div class="card" style="margin-bottom: var(--sp-5); padding: var(--sp-4)">
           <h4 style="margin-bottom: var(--sp-2)">Evolución de posición</h4>
           <div [innerHTML]="posicionesChart()"></div>
