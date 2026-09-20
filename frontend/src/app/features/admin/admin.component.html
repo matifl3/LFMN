@@ -414,7 +414,6 @@
               <div class="field"><label>Cupo máximo</label><input type="number" class="input" [ngModel]="cCupo()" (ngModelChange)="cCupo.set(toNumber($event, 32) ?? 32)" /></div>
               <div class="field"><label>Servidor</label><input class="input" [ngModel]="cServidor()" (ngModelChange)="cServidor.set($event)" /></div>
               <div class="field"><label>Link pista</label><input class="input" [ngModel]="cLinkPista()" (ngModelChange)="cLinkPista.set($event)" /></div>
-              <div class="field"><label>Link de inscripción</label><input class="input" [ngModel]="cLinkAuto()" (ngModelChange)="cLinkAuto.set($event)" /></div>
               <div style="display:flex;gap:var(--sp-2)">
                 <button class="btn btn-primary btn-block" (click)="crearOActualizarCarrera()">{{ editingCarreraId() ? 'Actualizar' : 'Crear' }}</button>
                 @if (editingCarreraId()) {
