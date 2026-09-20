@@ -99,8 +99,8 @@ export class RaceDetailComponent implements OnInit {
     forkJoin({
       carrera: this.api.get<Carrera>('/carreras/' + id).pipe(catchError(() => of(null))),
       inscriptos: this.api.list<Inscripcion>('/inscripciones/carrera/' + id).pipe(catchError(() => of([]))),
-      resultados: this.api.list<ResultadoCarrera>('/carreras/' + id + '/resultados').pipe(catchError(() => of([]))),
-      clasificaciones: this.api.list<SesionClasificacion>('/carreras/' + id + '/clasificacion').pipe(catchError(() => of([]))),
+      resultados: this.api.list<ResultadoCarrera>('/resultados/carrera/' + id).pipe(catchError(() => of([]))),
+      clasificaciones: this.api.list<SesionClasificacion>('/clasificaciones/carrera/' + id).pipe(catchError(() => of([]))),
       vueltas: user
         ? this.api.list<Vuelta>('/vueltas/carrera/' + id + '/usuario/' + user.id).pipe(catchError(() => of([])))
         : of([]),
