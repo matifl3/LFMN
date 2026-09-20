@@ -6,6 +6,7 @@ import { ToastService } from '../../core/services/toast.service';
 import { AuthService } from '../../core/services/auth.service';
 import { Avatar } from '../../shared/components/avatar/avatar';
 import { EmptyState } from '../../shared/components/empty-state/empty-state';
+import { LockedState } from '../../shared/components/locked-state/locked-state';
 import { StarRating } from '../../shared/components/star-rating/star-rating';
 import { FechaRelativaPipe } from '../../core/pipes/fecha-relativa.pipe';
 import { Categoria, Setup, SetupComentario } from '../../core/models/models';
@@ -13,7 +14,7 @@ import { Categoria, Setup, SetupComentario } from '../../core/models/models';
 @Component({
   selector: 'app-setups',
   standalone: true,
-  imports: [Avatar, EmptyState, StarRating, FechaRelativaPipe],
+  imports: [Avatar, EmptyState, LockedState, StarRating, FechaRelativaPipe],
   styleUrl: './setups.scss',
   templateUrl: './setups.html',
 })
@@ -98,6 +99,10 @@ export class SetupsComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    if (!this.auth.autenticado()) {
+      this.cargando.set(false);
+      return;
+    }
     forkJoin({
       setups: this.api.list<Setup>('/setups').pipe(catchError(() => of([]))),
       cats: this.api.list<Categoria>('/categorias').pipe(catchError(() => of([]))),

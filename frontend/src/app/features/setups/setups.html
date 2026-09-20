@@ -4,9 +4,14 @@
       <span class="eyebrow">Taller comunitario</span>
       <h2>Setups</h2>
     </div>
-    <button type="button" class="btn btn-primary" (click)="toggleUpload()">{{ uploadVisible() ? 'Cerrar' : 'Subir setup' }}</button>
+    @if (autenticado()) {
+      <button type="button" class="btn btn-primary" (click)="toggleUpload()">{{ uploadVisible() ? 'Cerrar' : 'Subir setup' }}</button>
+    }
   </div>
 
+  @if (!autenticado()) {
+    <app-locked-state />
+  } @else {
   @if (uploadVisible()) {
     <div class="card" style="margin-bottom: var(--sp-6)">
       <div class="card-header">
@@ -260,4 +265,5 @@
     </div>
 
   </div>
+  }
 </section>

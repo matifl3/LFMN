@@ -10,7 +10,7 @@ export const routes: Routes = [
   { path: 'campeonato', loadComponent: () => import('./features/championship/championship.component').then((m) => m.ChampionshipComponent) },
   { path: 'categorias', loadComponent: () => import('./features/categories/categories.component').then((m) => m.CategoriesComponent) },
   { path: 'setups', loadComponent: () => import('./features/setups/setups.component').then((m) => m.SetupsComponent) },
-  { path: 'perfil/:id', loadComponent: () => import('./features/profile/driver-profile/driver-profile.component').then((m) => m.DriverProfileComponent) },
+  { path: 'perfil/:id', canActivate: [authGuard], loadComponent: () => import('./features/profile/driver-profile/driver-profile.component').then((m) => m.DriverProfileComponent) },
   { path: 'mi-perfil', canActivate: [authGuard], loadComponent: () => import('./features/profile/my-profile/my-profile.component').then((m) => m.MyProfileComponent) },
   { path: 'notificaciones', canActivate: [authGuard], loadComponent: () => import('./features/notifications/notifications.component').then((m) => m.NotificationsComponent) },
   { path: 'logros', loadComponent: () => import('./features/achievements/achievements.component').then((m) => m.AchievementsComponent) },

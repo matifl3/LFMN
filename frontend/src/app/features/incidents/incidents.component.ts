@@ -18,6 +18,7 @@ import {
 } from '../../core/models/models';
 import { Chip } from '../../shared/components/chip/chip';
 import { EmptyState } from '../../shared/components/empty-state/empty-state';
+import { LockedState } from '../../shared/components/locked-state/locked-state';
 import { Modal } from '../../shared/components/modal/modal';
 import { FechaRelativaPipe } from '../../core/pipes/fecha-relativa.pipe';
 
@@ -33,7 +34,7 @@ const DECISION_LABEL: Record<string, string> = {
 @Component({
   selector: 'app-incidents',
   standalone: true,
-  imports: [FormsModule, Chip, EmptyState, Modal, FechaRelativaPipe],
+  imports: [FormsModule, Chip, EmptyState, LockedState, Modal, FechaRelativaPipe],
   styleUrl: './incidents.component.scss',
   templateUrl: './incidents.component.html',
 })
@@ -103,6 +104,10 @@ export class IncidentsComponent implements OnInit {
   readonly sancionesResolver = signal<Sancion[]>([]);
 
   ngOnInit(): void {
+    if (!this.auth.autenticado()) {
+      this.cargando.set(false);
+      return;
+    }
     this.cargar();
   }
 

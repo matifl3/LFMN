@@ -5,6 +5,9 @@
       <h2>Incidentes y sanciones</h2>
     </div>
   </div>
+  @if (!auth.autenticado()) {
+    <app-locked-state />
+  } @else {
   <div class="tabs" style="margin-bottom:var(--sp-5)">
     <button class="tab" [class.active]="vista()==='incidentes'" (click)="setVista('incidentes')">Incidentes <span class="count">{{ incidentesFiltrados().length }}</span></button>
     <button class="tab" [class.active]="vista()==='sanciones'" (click)="setVista('sanciones')">Sanciones <span class="count">{{ sanciones().length }}</span></button>
@@ -138,6 +141,7 @@
       </div>
     }
   </div>
+  }
 </section>
 
 <app-modal [abierto]="modalDetalle()" [titulo]="'Detalle del incidente #' + (detalleIncidente()?.id || '')" (cerrado)="modalDetalle.set(false)">
