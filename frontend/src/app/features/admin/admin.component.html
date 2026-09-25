@@ -1,9 +1,11 @@
 @if (!auth.esModerador()) {
   <section class="container-wide section">
-    <div class="card" style="max-width:520px;margin:var(--sp-9) auto">
+    <div class="card" style="max-width: 520px; margin: var(--sp-9) auto">
       <div class="empty-state">
         <p>Necesitás una sesión de administrador o comisario para acceder a este panel.</p>
-        <a routerLink="/auth" class="btn btn-primary" style="margin-top:var(--sp-4)">Iniciar sesión</a>
+        <a routerLink="/auth" class="btn btn-primary" style="margin-top: var(--sp-4)"
+          >Iniciar sesión</a
+        >
       </div>
     </div>
   </section>
@@ -16,24 +18,46 @@
       </div>
     </div>
 
-    <div class="tabs-pill" style="margin-bottom:var(--sp-5)">
-      <button class="tab" [class.active]="tab()==='estadisticas'" (click)="setTab('estadisticas')">Estadísticas</button>
-      <button class="tab" [class.active]="tab()==='carreras'" (click)="setTab('carreras')">Carreras</button>
-      <button class="tab" [class.active]="tab()==='sesiones'" (click)="setTab('sesiones')">Sesiones</button>
-      <button class="tab" [class.active]="tab()==='campeonatos'" (click)="setTab('campeonatos')">Campeonatos</button>
-      <button class="tab" [class.active]="tab()==='categorias'" (click)="setTab('categorias')">Categorías</button>
-      <button class="tab" [class.active]="tab()==='pilotos'" (click)="setTab('pilotos')">Pilotos</button>
-      <button class="tab" [class.active]="tab()==='logros'" (click)="setTab('logros')">Logros</button>
-      <button class="tab" [class.active]="tab()==='anuncios'" (click)="setTab('anuncios')">Anuncios</button>
+    <div class="tabs-pill" style="margin-bottom: var(--sp-5)">
+      <button
+        class="tab"
+        [class.active]="tab() === 'estadisticas'"
+        (click)="setTab('estadisticas')"
+      >
+        Estadísticas
+      </button>
+      <button class="tab" [class.active]="tab() === 'carreras'" (click)="setTab('carreras')">
+        Carreras
+      </button>
+      <button class="tab" [class.active]="tab() === 'sesiones'" (click)="setTab('sesiones')">
+        Sesiones
+      </button>
+      <button class="tab" [class.active]="tab() === 'campeonatos'" (click)="setTab('campeonatos')">
+        Campeonatos
+      </button>
+      <button class="tab" [class.active]="tab() === 'categorias'" (click)="setTab('categorias')">
+        Categorías
+      </button>
+      <button class="tab" [class.active]="tab() === 'pilotos'" (click)="setTab('pilotos')">
+        Pilotos
+      </button>
+      <button class="tab" [class.active]="tab() === 'logros'" (click)="setTab('logros')">
+        Logros
+      </button>
+      <button class="tab" [class.active]="tab() === 'anuncios'" (click)="setTab('anuncios')">
+        Anuncios
+      </button>
     </div>
 
     @if (cargando()) {
-      <div class="skeleton-card" style="padding:var(--sp-5)"><span class="skeleton" style="width:70%"></span><span class="skeleton" style="width:50%"></span></div>
+      <div class="skeleton-card" style="padding: var(--sp-5)">
+        <span class="skeleton" style="width: 70%"></span
+        ><span class="skeleton" style="width: 50%"></span>
+      </div>
     } @else {
       <div class="admin-layout">
         <div class="flex-col gap-3">
-
-          @if (tab()==='estadisticas') {
+          @if (tab() === 'estadisticas') {
             @if (stats(); as s) {
               <div class="stats-grid">
                 <div class="card stat-card">
@@ -48,8 +72,12 @@
                 </div>
                 <div class="card stat-card">
                   <span class="stat-label">Incidentes por resolver</span>
-                  <span class="stat-value">{{ s.incidentesPendientes + s.incidentesEnAnalisis }}</span>
-                  <span class="stat-sub">{{ s.incidentesResueltos }} resueltos de {{ s.totalIncidentes }}</span>
+                  <span class="stat-value">{{
+                    s.incidentesPendientes + s.incidentesEnAnalisis
+                  }}</span>
+                  <span class="stat-sub"
+                    >{{ s.incidentesResueltos }} resueltos de {{ s.totalIncidentes }}</span
+                  >
                 </div>
                 <div class="card stat-card">
                   <span class="stat-label">Sanciones aplicadas</span>
@@ -59,7 +87,11 @@
                 <div class="card stat-card">
                   <span class="stat-label">Inscripciones</span>
                   <span class="stat-value">{{ s.totalInscripciones }}</span>
-                  <span class="stat-sub">{{ s.carrerasInscripcionesAbiertas }} inscripciones abiertas · {{ s.carrerasInscripcionesCerradas }} cerradas · {{ s.carrerasEnCurso }} en curso</span>
+                  <span class="stat-sub"
+                    >{{ s.carrerasInscripcionesAbiertas }} inscripciones abiertas ·
+                    {{ s.carrerasInscripcionesCerradas }} cerradas · {{ s.carrerasEnCurso }} en
+                    curso</span
+                  >
                 </div>
                 <div class="card stat-card">
                   <span class="stat-label">Setups compartidos</span>
@@ -76,13 +108,15 @@
                 </div>
               </div>
             } @else {
-              <div class="card" style="max-width:520px">
-                <p class="text-secondary">Las estadísticas están reservadas para administradores.</p>
+              <div class="card" style="max-width: 520px">
+                <p class="text-secondary">
+                  Las estadísticas están reservadas para administradores.
+                </p>
               </div>
             }
           }
 
-          @if (tab()==='carreras') {
+          @if (tab() === 'carreras') {
             <div class="table-wrap">
               <table class="table">
                 <thead>
@@ -99,12 +133,19 @@
                   @for (c of carreras(); track c.id) {
                     <tr>
                       <td class="data">{{ c.nombre }}</td>
-                      <td><span class="chip chip-category">{{ c.categoriaNombre || '—' }}</span></td>
+                      <td>
+                        <span class="chip chip-category">{{ c.categoriaNombre || '—' }}</span>
+                      </td>
                       <td>{{ c.fecha | fmtFechaHora }}</td>
                       <td class="num">{{ c.cuposInscritos ?? 0 }} / {{ c.cupoMaximo ?? '—' }}</td>
                       <td>
                         @if (isAdmin()) {
-                          <select class="select" [ngModel]="c.estado" (ngModelChange)="cambiarEstadoCarrera(c.id, $event)" style="min-width:170px">
+                          <select
+                            class="select"
+                            [ngModel]="c.estado"
+                            (ngModelChange)="cambiarEstadoCarrera(c.id, $event)"
+                            style="min-width: 170px"
+                          >
                             @for (e of objectKeys(ESTADO_LABEL); track e) {
                               <option [value]="e">{{ ESTADO_LABEL[e] }}</option>
                             }
@@ -116,8 +157,20 @@
                       <td>
                         @if (isAdmin()) {
                           <div class="row-actions">
-                            <button class="btn btn-ghost btn-sm" (click)="editarCarrera(c)" aria-label="Editar">✎</button>
-                            <button class="btn btn-danger btn-sm" (click)="eliminarCarrera(c.id)" aria-label="Eliminar">✕</button>
+                            <button
+                              class="btn btn-ghost btn-sm"
+                              (click)="editarCarrera(c)"
+                              aria-label="Editar"
+                            >
+                              <span class="ms-icon" aria-hidden="true">edit</span>
+                            </button>
+                            <button
+                              class="btn btn-danger btn-sm"
+                              (click)="eliminarCarrera(c.id)"
+                              aria-label="Eliminar"
+                            >
+                              <span class="ms-icon" aria-hidden="true">delete</span>
+                            </button>
                           </div>
                         }
                       </td>
@@ -128,13 +181,19 @@
             </div>
           }
 
-          @if (tab()==='sesiones') {
-            <div class="field" style="max-width:380px">
+          @if (tab() === 'sesiones') {
+            <div class="field" style="max-width: 380px">
               <label>Carrera</label>
-              <select class="select" [ngModel]="sesionCarreraId()" (ngModelChange)="onSesionCarreraChange($event)">
+              <select
+                class="select"
+                [ngModel]="sesionCarreraId()"
+                (ngModelChange)="onSesionCarreraChange($event)"
+              >
                 <option value="">Seleccioná una carrera…</option>
                 @for (c of carreras(); track c.id) {
-                  <option [value]="c.id">{{ c.nombre }} · {{ ESTADO_LABEL[c.estado] || c.estado }}</option>
+                  <option [value]="c.id">
+                    {{ c.nombre }} · {{ ESTADO_LABEL[c.estado] || c.estado }}
+                  </option>
                 }
               </select>
             </div>
@@ -153,7 +212,18 @@
                       @for (s of sesionesProcesadas(); track s.id) {
                         <tr>
                           <td class="data">{{ s.nombreArchivo }}</td>
-                          <td><span class="chip {{ s.tipo === 'RACE' ? 'chip-upcoming' : s.tipo === 'QUALIFY' ? 'chip-category' : 'chip-closed' }}">{{ s.tipo }}</span></td>
+                          <td>
+                            <span
+                              class="chip {{
+                                s.tipo === 'RACE'
+                                  ? 'chip-upcoming'
+                                  : s.tipo === 'QUALIFY'
+                                    ? 'chip-category'
+                                    : 'chip-closed'
+                              }}"
+                              >{{ s.tipo }}</span
+                            >
+                          </td>
                           <td>{{ s.fechaProcesamiento | fmtFechaHora }}</td>
                         </tr>
                       }
@@ -161,14 +231,18 @@
                   </table>
                 </div>
               } @else {
-                <div class="card"><p class="hint">Aún no hay sesiones procesadas para esta carrera.</p></div>
+                <div class="card">
+                  <p class="hint">Aún no hay sesiones procesadas para esta carrera.</p>
+                </div>
               }
             } @else {
-              <div class="card"><p class="hint">Elegí una carrera para ver sus sesiones importadas.</p></div>
+              <div class="card">
+                <p class="hint">Elegí una carrera para ver sus sesiones importadas.</p>
+              </div>
             }
           }
 
-          @if (tab()==='campeonatos') {
+          @if (tab() === 'campeonatos') {
             <div class="table-wrap">
               <table class="table">
                 <thead>
@@ -186,17 +260,41 @@
                     <tr>
                       <td class="data">{{ c.nombre }}</td>
                       <td>{{ c.temporada || '—' }}</td>
-                      <td><span class="chip chip-category">{{ c.categoriaNombre || '—' }}</span></td>
+                      <td>
+                        <span class="chip chip-category">{{ c.categoriaNombre || '—' }}</span>
+                      </td>
                       <td>{{ c.sistemaPuntos || 'default' }}</td>
                       <td>{{ c.estado }}</td>
                       <td>
                         <div class="row-actions">
                           @if (isAdmin()) {
-                            <button class="btn btn-ghost btn-sm" (click)="toggleCerrarCampeonato(c)">{{ c.estado === 'CERRADO' ? 'Reabrir' : 'Cerrar' }}</button>
-                            <button class="btn btn-ghost btn-sm" (click)="editarCampeonato(c)" aria-label="Editar">✎</button>
-                            <button class="btn btn-danger btn-sm" (click)="eliminarCampeonato(c.id)" aria-label="Eliminar">✕</button>
+                            <button
+                              class="btn btn-ghost btn-sm"
+                              (click)="toggleCerrarCampeonato(c)"
+                            >
+                              {{ c.estado === 'CERRADO' ? 'Reabrir' : 'Cerrar' }}
+                            </button>
+                            <button
+                              class="btn btn-ghost btn-sm"
+                              (click)="editarCampeonato(c)"
+                              aria-label="Editar"
+                            >
+                              <span class="ms-icon" aria-hidden="true">edit</span>
+                            </button>
+                            <button
+                              class="btn btn-danger btn-sm"
+                              (click)="eliminarCampeonato(c.id)"
+                              aria-label="Eliminar"
+                            >
+                              <span class="ms-icon" aria-hidden="true">delete</span>
+                            </button>
                           } @else {
-                            <span class="chip {{ c.estado === 'CERRADO' ? 'chip-closed' : 'chip-upcoming' }}">{{ c.estado === 'CERRADO' ? 'Cerrado' : 'Activo' }}</span>
+                            <span
+                              class="chip {{
+                                c.estado === 'CERRADO' ? 'chip-closed' : 'chip-upcoming'
+                              }}"
+                              >{{ c.estado === 'CERRADO' ? 'Cerrado' : 'Activo' }}</span
+                            >
                           }
                         </div>
                       </td>
@@ -207,7 +305,7 @@
             </div>
           }
 
-          @if (tab()==='categorias') {
+          @if (tab() === 'categorias') {
             <div class="table-wrap">
               <table class="table">
                 <thead>
@@ -224,12 +322,27 @@
                     <tr>
                       <td class="data">{{ c.nombre }}</td>
                       <td>{{ c.descripcion || '—' }}</td>
-                      <td><span class="mono">{{ c.eloMinimo ?? '—' }}</span> — <span class="mono">{{ c.eloMaximo ?? '—' }}</span></td>
+                      <td>
+                        <span class="mono">{{ c.eloMinimo ?? '—' }}</span> —
+                        <span class="mono">{{ c.eloMaximo ?? '—' }}</span>
+                      </td>
                       <td>{{ c.setupAbierto ? 'Abierto' : c.setupFijo ? 'Fijo' : 'Libre' }}</td>
                       <td>
                         <div class="row-actions">
-                          <button class="btn btn-ghost btn-sm" (click)="editarCategoria(c)" aria-label="Editar">✎</button>
-                          <button class="btn btn-danger btn-sm" (click)="eliminarCategoria(c.id)" aria-label="Eliminar">✕</button>
+                          <button
+                            class="btn btn-ghost btn-sm"
+                            (click)="editarCategoria(c)"
+                            aria-label="Editar"
+                          >
+                            <span class="ms-icon" aria-hidden="true">edit</span>
+                          </button>
+                          <button
+                            class="btn btn-danger btn-sm"
+                            (click)="eliminarCategoria(c.id)"
+                            aria-label="Eliminar"
+                          >
+                            <span class="ms-icon" aria-hidden="true">delete</span>
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -239,7 +352,7 @@
             </div>
           }
 
-          @if (tab()==='pilotos') {
+          @if (tab() === 'pilotos') {
             <div class="table-wrap">
               <table class="table">
                 <thead>
@@ -256,16 +369,38 @@
                   @for (u of usuarios(); track u.id) {
                     <tr>
                       <td>
-                        <div class="flex-center" style="gap:var(--sp-2)">
+                        <div class="flex-center" style="gap: var(--sp-2)">
                           <app-avatar [user]="u" [size]="28" />
                           <span class="data">{{ u.nombrePiloto }}</span>
                         </div>
                       </td>
                       <td>{{ u.email }}</td>
-                      <td class="num"><input class="input" type="number" [value]="u.elo ?? ''" (change)="updateRating(u, 'elo', $event)" style="width:90px;text-align:right" /></td>
-                      <td class="num"><input class="input" type="number" step="0.01" [value]="u.safetyRating ?? ''" (change)="updateRating(u, 'safetyRating', $event)" style="width:90px;text-align:right" /></td>
+                      <td class="num">
+                        <input
+                          class="input"
+                          type="number"
+                          [value]="u.elo ?? ''"
+                          (change)="updateRating(u, 'elo', $event)"
+                          style="width: 90px; text-align: right"
+                        />
+                      </td>
+                      <td class="num">
+                        <input
+                          class="input"
+                          type="number"
+                          step="0.01"
+                          [value]="u.safetyRating ?? ''"
+                          (change)="updateRating(u, 'safetyRating', $event)"
+                          style="width: 90px; text-align: right"
+                        />
+                      </td>
                       <td>
-                        <select class="select" [ngModel]="u.rol" (ngModelChange)="updateRol(u, $event)" style="min-width:120px">
+                        <select
+                          class="select"
+                          [ngModel]="u.rol"
+                          (ngModelChange)="updateRol(u, $event)"
+                          style="min-width: 120px"
+                        >
                           <option value="USUARIO">Usuario</option>
                           <option value="COMISARIO">Comisario</option>
                           <option value="ADMIN">Admin</option>
@@ -274,8 +409,23 @@
                       <td>
                         <div class="row-actions">
                           @if (u.id !== auth.user()?.id) {
-                            <button class="btn btn-ghost btn-sm" (click)="toggleHabilitado(u)" [class.chip-resolved]="u.habilitado" aria-label="Habilitar/Deshabilitar">{{ u.habilitado ? '✓' : '✕' }}</button>
-                            <button class="btn btn-danger btn-sm" (click)="eliminarUsuario(u)" aria-label="Eliminar">✕</button>
+                            <button
+                              class="btn btn-ghost btn-sm"
+                              (click)="toggleHabilitado(u)"
+                              [class.chip-resolved]="u.habilitado"
+                              aria-label="Habilitar o deshabilitar usuario"
+                            >
+                              <span class="ms-icon" aria-hidden="true">{{
+                                u.habilitado ? 'check' : 'block'
+                              }}</span>
+                            </button>
+                            <button
+                              class="btn btn-danger btn-sm"
+                              (click)="eliminarUsuario(u)"
+                              aria-label="Eliminar"
+                            >
+                              <span class="ms-icon" aria-hidden="true">delete</span>
+                            </button>
                           }
                         </div>
                       </td>
@@ -286,234 +436,527 @@
             </div>
           }
 
-@if (tab()==='anuncios') {
-              <div class="table-wrap">
-                <table class="table">
-                  <thead>
+          @if (tab() === 'anuncios') {
+            <div class="table-wrap">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Fecha</th>
+                    <th>Título</th>
+                    <th>Contenido</th>
+                    <th>Imagen</th>
+                    <th>Destacado</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (a of anuncios(); track a.id) {
                     <tr>
-                      <th>Fecha</th>
-                      <th>Título</th>
-                      <th>Contenido</th>
-                      <th>Imagen</th>
-                      <th>Destacado</th>
-                      <th></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    @for (a of anuncios(); track a.id) {
-                      <tr>
-                        <td>{{ a.fecha | fmtFechaHora }}</td>
-                        <td class="data">{{ a.titulo }}</td>
-                        <td style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ a.contenido || '—' }}</td>
-                        <td>{{ a.urlImagen ? 'Sí' : 'No' }}</td>
-                        <td>
+                      <td>{{ a.fecha | fmtFechaHora }}</td>
+                      <td class="data">{{ a.titulo }}</td>
+                      <td
+                        style="
+                          max-width: 240px;
+                          overflow: hidden;
+                          text-overflow: ellipsis;
+                          white-space: nowrap;
+                        "
+                      >
+                        {{ a.contenido || '—' }}
+                      </td>
+                      <td>{{ a.urlImagen ? 'Sí' : 'No' }}</td>
+                      <td>
+                        @if (isAdmin()) {
+                          <button
+                            class="btn btn-ghost btn-sm"
+                            (click)="toggleDestacado(a)"
+                            [class.chip-pending]="a.destacado"
+                            aria-label="Alternar destacado"
+                          >
+                            <span class="ms-icon" aria-hidden="true">{{
+                              a.destacado ? 'star' : 'star_border'
+                            }}</span>
+                          </button>
+                        } @else {
+                          <span class="chip {{ a.destacado ? 'chip-upcoming' : 'chip-closed' }}">{{
+                            a.destacado ? 'Destacado' : 'Normal'
+                          }}</span>
+                        }
+                      </td>
+                      <td>
+                        <div class="row-actions">
                           @if (isAdmin()) {
-                            <button class="btn btn-ghost btn-sm" (click)="toggleDestacado(a)" [class.chip-resolved]="a.destacado" [style.color]="a.destacado ? 'var(--status-alerta)' : ''">{{ a.destacado ? '★' : '☆' }}</button>
-                          } @else {
-                            <span class="chip {{ a.destacado ? 'chip-upcoming' : 'chip-closed' }}">{{ a.destacado ? 'Destacado' : 'Normal' }}</span>
+                            <button
+                              class="btn btn-ghost btn-sm"
+                              (click)="editarAnuncio(a)"
+                              aria-label="Editar"
+                            >
+                              <span class="ms-icon" aria-hidden="true">edit</span>
+                            </button>
+                            <button
+                              class="btn btn-danger btn-sm"
+                              (click)="eliminarAnuncio(a.id)"
+                              aria-label="Eliminar"
+                            >
+                              <span class="ms-icon" aria-hidden="true">delete</span>
+                            </button>
                           }
-                        </td>
-                        <td>
-                          <div class="row-actions">
-                            @if (isAdmin()) {
-                              <button class="btn btn-ghost btn-sm" (click)="editarAnuncio(a)" aria-label="Editar">✎</button>
-                              <button class="btn btn-danger btn-sm" (click)="eliminarAnuncio(a.id)" aria-label="Eliminar">✕</button>
-                            }
-                          </div>
-                        </td>
-                      </tr>
-                    }
-                  </tbody>
-                </table>
-              </div>
-            }
-
-            @if (tab()==='logros') {
-              <div class="table-wrap">
-                <table class="table">
-                  <thead>
-                    <tr>
-                      <th>Logro</th>
-                      <th>Condición</th>
-                      <th>Recompensas</th>
-                      <th></th>
+                        </div>
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    @for (l of logros(); track l.id) {
-                      <tr>
-                        <td class="data">{{ l.icono ? l.icono + ' ' : '' }}{{ l.nombre }}</td>
-                        <td><span class="chip chip-category">{{ COND_LOGRO_LABEL[l.tipoCondicion] || l.tipoCondicion }}</span> <span class="mono">{{ l.valorCondicion }}</span></td>
-                        <td>
-                          <div class="flex-col gap-1">
-                            <div style="display:flex;flex-wrap:wrap;gap:var(--sp-1)">
-                              @for (r of l.recompensas ?? []; track r.id) {
-                                <span class="chip chip-upcoming">
-                                  {{ r.descripcion }} ({{ RECOMPENSA_LABEL[r.tipo] || r.tipo }})
-                                  @if (isAdmin()) {
-                                    <button class="btn btn-ghost btn-sm" style="padding:0 4px;margin-left:4px" (click)="quitarRecompensa(l.id, r.id)">×</button>
-                                  }
-                                </span>
-                              }
-                            </div>
-                            @if (isAdmin() && addRecompensaPara() === l.id) {
-                              <div style="display:flex;flex-wrap:wrap;gap:var(--sp-1);margin-top:var(--sp-1)">
-                                <input class="input" style="width:180px" [ngModel]="rDescripcion()" (ngModelChange)="rDescripcion.set($event)" placeholder="Descripción" />
-                                <select class="select" [ngModel]="rTipo()" (ngModelChange)="rTipo.set($event)" style="width:120px">
-                                  @for (t of objectKeys(RECOMPENSA_LABEL); track t) { <option [value]="t">{{ RECOMPENSA_LABEL[t] }}</option> }
-                                </select>
-                                <button class="btn btn-primary btn-sm" (click)="agregarRecompensa(l)">Añadir</button>
-                              </div>
-                            }
-                          </div>
-                        </td>
-                        <td>
-                          <div class="row-actions">
-                            @if (isAdmin()) {
-                              <button class="btn btn-ghost btn-sm" (click)="toggleAddRecompensa(l.id)" aria-label="Recompensa">＋</button>
-                              <button class="btn btn-ghost btn-sm" (click)="editarLogro(l)" aria-label="Editar">✎</button>
-                              <button class="btn btn-danger btn-sm" (click)="eliminarLogro(l.id)" aria-label="Eliminar">✕</button>
-                            }
-                          </div>
-                        </td>
-                      </tr>
-                    }
-                  </tbody>
-                </table>
-              </div>
-            }
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
 
+          @if (tab() === 'logros') {
+            <div class="table-wrap">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Logro</th>
+                    <th>Condición</th>
+                    <th>Recompensas</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (l of logros(); track l.id) {
+                    <tr>
+                      <td class="data">
+                        <span class="ms-icon" aria-hidden="true">{{
+                          l.icono || 'emoji_events'
+                        }}</span>
+                        {{ l.nombre }}
+                      </td>
+                      <td>
+                        <span class="chip chip-category">{{
+                          COND_LOGRO_LABEL[l.tipoCondicion] || l.tipoCondicion
+                        }}</span>
+                        <span class="mono">{{ l.valorCondicion }}</span>
+                      </td>
+                      <td>
+                        <div class="flex-col gap-1">
+                          <div style="display: flex; flex-wrap: wrap; gap: var(--sp-1)">
+                            @for (r of l.recompensas ?? []; track r.id) {
+                              <span class="chip chip-upcoming">
+                                {{ r.descripcion }} ({{ RECOMPENSA_LABEL[r.tipo] || r.tipo }})
+                                @if (isAdmin()) {
+                                  <button
+                                    class="btn btn-ghost btn-sm"
+                                    style="padding: 0 4px; margin-left: 4px"
+                                    (click)="quitarRecompensa(l.id, r.id)"
+                                    aria-label="Quitar recompensa"
+                                  >
+                                    <span class="ms-icon" aria-hidden="true">close</span>
+                                  </button>
+                                }
+                              </span>
+                            }
+                          </div>
+                          @if (isAdmin() && addRecompensaPara() === l.id) {
+                            <div
+                              style="
+                                display: flex;
+                                flex-wrap: wrap;
+                                gap: var(--sp-1);
+                                margin-top: var(--sp-1);
+                              "
+                            >
+                              <input
+                                class="input"
+                                style="width: 180px"
+                                [ngModel]="rDescripcion()"
+                                (ngModelChange)="rDescripcion.set($event)"
+                                placeholder="Descripción"
+                              />
+                              <select
+                                class="select"
+                                [ngModel]="rTipo()"
+                                (ngModelChange)="rTipo.set($event)"
+                                style="width: 120px"
+                              >
+                                @for (t of objectKeys(RECOMPENSA_LABEL); track t) {
+                                  <option [value]="t">{{ RECOMPENSA_LABEL[t] }}</option>
+                                }
+                              </select>
+                              <button class="btn btn-primary btn-sm" (click)="agregarRecompensa(l)">
+                                Añadir
+                              </button>
+                            </div>
+                          }
+                        </div>
+                      </td>
+                      <td>
+                        <div class="row-actions">
+                          @if (isAdmin()) {
+                            <button
+                              class="btn btn-ghost btn-sm"
+                              (click)="toggleAddRecompensa(l.id)"
+                              aria-label="Agregar recompensa"
+                            >
+                              <span class="ms-icon" aria-hidden="true">add</span>
+                            </button>
+                            <button
+                              class="btn btn-ghost btn-sm"
+                              (click)="editarLogro(l)"
+                              aria-label="Editar"
+                            >
+                              <span class="ms-icon" aria-hidden="true">edit</span>
+                            </button>
+                            <button
+                              class="btn btn-danger btn-sm"
+                              (click)="eliminarLogro(l.id)"
+                              aria-label="Eliminar"
+                            >
+                              <span class="ms-icon" aria-hidden="true">delete</span>
+                            </button>
+                          }
+                        </div>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
         </div>
 
-        @if (tab()!=='pilotos' && tab()!=='estadisticas') {
+        @if (tab() !== 'pilotos' && tab() !== 'estadisticas') {
           <div class="panel-aside">
-            @if (tab()==='carreras') {
+            @if (tab() === 'carreras') {
               <h4>{{ editingCarreraId() ? 'Editar carrera' : 'Crear carrera' }}</h4>
-              <div class="field"><label>Nombre *</label><input class="input" [ngModel]="cNombre()" (ngModelChange)="cNombre.set($event)" /></div>
-              <div class="field"><label>Categoría *</label>
-                <select class="select" [ngModel]="cCategoriaId()" (ngModelChange)="onCategoriaChange($event)">
+              <div class="field">
+                <label>Nombre *</label
+                ><input class="input" [ngModel]="cNombre()" (ngModelChange)="cNombre.set($event)" />
+              </div>
+              <div class="field">
+                <label>Categoría *</label>
+                <select
+                  class="select"
+                  [ngModel]="cCategoriaId()"
+                  (ngModelChange)="onCategoriaChange($event)"
+                >
                   <option value="">Seleccioná una categoría…</option>
-                  @for (cat of carrerasCats(); track cat.id) { <option [value]="cat.id">{{ cat.nombre }}</option> }
+                  @for (cat of carrerasCats(); track cat.id) {
+                    <option [value]="cat.id">{{ cat.nombre }}</option>
+                  }
                 </select>
               </div>
-              <div class="field"><label>Campeonato</label>
-                <select class="select" [ngModel]="cCampeonatoId()" (ngModelChange)="cCampeonatoId.set($event)">
+              <div class="field">
+                <label>Campeonato</label>
+                <select
+                  class="select"
+                  [ngModel]="cCampeonatoId()"
+                  (ngModelChange)="cCampeonatoId.set($event)"
+                >
                   <option value="">Ninguno</option>
-                  @for (ch of campeonatosForm(); track ch.id) { <option [value]="ch.id">{{ ch.nombre }}{{ ch.temporada ? ' (' + ch.temporada + ')' : '' }}</option> }
+                  @for (ch of campeonatosForm(); track ch.id) {
+                    <option [value]="ch.id">
+                      {{ ch.nombre }}{{ ch.temporada ? ' (' + ch.temporada + ')' : '' }}
+                    </option>
+                  }
                 </select>
               </div>
               <div class="input-group">
-                <div class="field"><label>Fecha</label><input type="date" class="input" [ngModel]="cFecha()" (ngModelChange)="cFecha.set($event)" /></div>
-                <div class="field"><label>Hora</label><input type="time" class="input" [ngModel]="cHora()" (ngModelChange)="cHora.set($event)" /></div>
+                <div class="field">
+                  <label>Fecha</label
+                  ><input
+                    type="date"
+                    class="input"
+                    [ngModel]="cFecha()"
+                    (ngModelChange)="cFecha.set($event)"
+                  />
+                </div>
+                <div class="field">
+                  <label>Hora</label
+                  ><input
+                    type="time"
+                    class="input"
+                    [ngModel]="cHora()"
+                    (ngModelChange)="cHora.set($event)"
+                  />
+                </div>
               </div>
               <div class="input-group">
-                <div class="field"><label>Sesión de práctica</label><input type="date" class="input" [ngModel]="cPracticaFecha()" (ngModelChange)="cPracticaFecha.set($event)" /></div>
-                <div class="field"><label>Hora práctica</label><input type="time" class="input" [ngModel]="cPracticaHora()" (ngModelChange)="cPracticaHora.set($event)" /></div>
+                <div class="field">
+                  <label>Sesión de práctica</label
+                  ><input
+                    type="date"
+                    class="input"
+                    [ngModel]="cPracticaFecha()"
+                    (ngModelChange)="cPracticaFecha.set($event)"
+                  />
+                </div>
+                <div class="field">
+                  <label>Hora práctica</label
+                  ><input
+                    type="time"
+                    class="input"
+                    [ngModel]="cPracticaHora()"
+                    (ngModelChange)="cPracticaHora.set($event)"
+                  />
+                </div>
               </div>
-              <div class="field"><label>Circuito</label><input class="input" [ngModel]="cCircuito()" (ngModelChange)="cCircuito.set($event)" /></div>
-              <div class="field"><label>Cupo máximo</label><input type="number" class="input" [ngModel]="cCupo()" (ngModelChange)="cCupo.set(toNumber($event, 32) ?? 32)" /></div>
-              <div class="field"><label>Servidor</label><input class="input" [ngModel]="cServidor()" (ngModelChange)="cServidor.set($event)" /></div>
-              <div class="field"><label>Link pista</label><input class="input" [ngModel]="cLinkPista()" (ngModelChange)="cLinkPista.set($event)" /></div>
-              <div style="display:flex;gap:var(--sp-2)">
-                <button class="btn btn-primary btn-block" (click)="crearOActualizarCarrera()">{{ editingCarreraId() ? 'Actualizar' : 'Crear' }}</button>
+              <div class="field">
+                <label>Circuito</label
+                ><input
+                  class="input"
+                  [ngModel]="cCircuito()"
+                  (ngModelChange)="cCircuito.set($event)"
+                />
+              </div>
+              <div class="field">
+                <label>Cupo máximo</label
+                ><input
+                  type="number"
+                  class="input"
+                  [ngModel]="cCupo()"
+                  (ngModelChange)="cCupo.set(toNumber($event, 32) ?? 32)"
+                />
+              </div>
+              <div class="field">
+                <label>Servidor</label
+                ><input
+                  class="input"
+                  [ngModel]="cServidor()"
+                  (ngModelChange)="cServidor.set($event)"
+                />
+              </div>
+              <div class="field">
+                <label>Link pista</label
+                ><input
+                  class="input"
+                  [ngModel]="cLinkPista()"
+                  (ngModelChange)="cLinkPista.set($event)"
+                />
+              </div>
+              <div style="display: flex; gap: var(--sp-2)">
+                <button class="btn btn-primary btn-block" (click)="crearOActualizarCarrera()">
+                  {{ editingCarreraId() ? 'Actualizar' : 'Crear' }}
+                </button>
                 @if (editingCarreraId()) {
                   <button class="btn btn-ghost" (click)="limpiarFormCarrera()">Cancelar</button>
                 }
               </div>
             }
 
-            @if (tab()==='campeonatos') {
+            @if (tab() === 'campeonatos') {
               <h4>{{ editingCampeonatoId() ? 'Editar campeonato' : 'Crear campeonato' }}</h4>
-              <div class="field"><label>Nombre *</label><input class="input" [ngModel]="chNombre()" (ngModelChange)="chNombre.set($event)" /></div>
-              <div class="field"><label>Temporada</label><input class="input" [ngModel]="chTemporada()" (ngModelChange)="chTemporada.set($event)" placeholder="2026" /></div>
-              <div class="field"><label>Categoría *</label>
-                <select class="select" [ngModel]="chCategoriaId()" (ngModelChange)="chCategoriaId.set($event)">
+              <div class="field">
+                <label>Nombre *</label
+                ><input
+                  class="input"
+                  [ngModel]="chNombre()"
+                  (ngModelChange)="chNombre.set($event)"
+                />
+              </div>
+              <div class="field">
+                <label>Temporada</label
+                ><input
+                  class="input"
+                  [ngModel]="chTemporada()"
+                  (ngModelChange)="chTemporada.set($event)"
+                  placeholder="2026"
+                />
+              </div>
+              <div class="field">
+                <label>Categoría *</label>
+                <select
+                  class="select"
+                  [ngModel]="chCategoriaId()"
+                  (ngModelChange)="chCategoriaId.set($event)"
+                >
                   <option value="">Seleccioná una categoría…</option>
-                  @for (cat of categorias(); track cat.id) { <option [value]="cat.id">{{ cat.nombre }}</option> }
+                  @for (cat of categorias(); track cat.id) {
+                    <option [value]="cat.id">{{ cat.nombre }}</option>
+                  }
                 </select>
               </div>
-              <div class="field"><label>Sistema de puntos</label>
-                <select class="select" [ngModel]="chSistemaPuntos()" (ngModelChange)="chSistemaPuntos.set($event)">
+              <div class="field">
+                <label>Sistema de puntos</label>
+                <select
+                  class="select"
+                  [ngModel]="chSistemaPuntos()"
+                  (ngModelChange)="chSistemaPuntos.set($event)"
+                >
                   <option value="default">Default</option>
                   <option value="F1">F1</option>
                   <option value="F1_SPRINT">F1 Sprint</option>
                 </select>
               </div>
-              <div style="display:flex;gap:var(--sp-2)">
-                <button class="btn btn-primary btn-block" (click)="crearOActualizarCampeonato()">{{ editingCampeonatoId() ? 'Actualizar' : 'Crear' }}</button>
+              <div style="display: flex; gap: var(--sp-2)">
+                <button class="btn btn-primary btn-block" (click)="crearOActualizarCampeonato()">
+                  {{ editingCampeonatoId() ? 'Actualizar' : 'Crear' }}
+                </button>
                 @if (editingCampeonatoId()) {
                   <button class="btn btn-ghost" (click)="limpiarFormCampeonato()">Cancelar</button>
                 }
               </div>
             }
 
-            @if (tab()==='categorias') {
+            @if (tab() === 'categorias') {
               <h4>{{ editingCategoriaId() ? 'Editar categoría' : 'Crear categoría' }}</h4>
-              <div class="field"><label>Nombre *</label><input class="input" [ngModel]="catNombre()" (ngModelChange)="catNombre.set($event)" /></div>
-              <div class="field"><label>Descripción</label><textarea class="textarea" [ngModel]="catDescripcion()" (ngModelChange)="catDescripcion.set($event)"></textarea></div>
-              <div class="input-group">
-                <div class="field"><label>Elo mínimo</label><input type="number" class="input" [ngModel]="catEloMinimo()" (ngModelChange)="catEloMinimo.set(toNumber($event, null))" /></div>
-                <div class="field"><label>Elo máximo</label><input type="number" class="input" [ngModel]="catEloMaximo()" (ngModelChange)="catEloMaximo.set(toNumber($event, null))" /></div>
+              <div class="field">
+                <label>Nombre *</label
+                ><input
+                  class="input"
+                  [ngModel]="catNombre()"
+                  (ngModelChange)="catNombre.set($event)"
+                />
               </div>
-              <div class="field"><label>Setup</label>
-                <select class="select" [ngModel]="catSetup()" (ngModelChange)="catSetup.set($event)">
+              <div class="field">
+                <label>Descripción</label
+                ><textarea
+                  class="textarea"
+                  [ngModel]="catDescripcion()"
+                  (ngModelChange)="catDescripcion.set($event)"
+                ></textarea>
+              </div>
+              <div class="input-group">
+                <div class="field">
+                  <label>Elo mínimo</label
+                  ><input
+                    type="number"
+                    class="input"
+                    [ngModel]="catEloMinimo()"
+                    (ngModelChange)="catEloMinimo.set(toNumber($event, null))"
+                  />
+                </div>
+                <div class="field">
+                  <label>Elo máximo</label
+                  ><input
+                    type="number"
+                    class="input"
+                    [ngModel]="catEloMaximo()"
+                    (ngModelChange)="catEloMaximo.set(toNumber($event, null))"
+                  />
+                </div>
+              </div>
+              <div class="field">
+                <label>Setup</label>
+                <select
+                  class="select"
+                  [ngModel]="catSetup()"
+                  (ngModelChange)="catSetup.set($event)"
+                >
                   <option value="ABIERTO">Abierto</option>
                   <option value="FIJO">Fijo</option>
                   <option value="LIBRE">Libre</option>
                 </select>
               </div>
-              <div style="display:flex;gap:var(--sp-2)">
-                <button class="btn btn-primary btn-block" (click)="crearOActualizarCategoria()">{{ editingCategoriaId() ? 'Actualizar' : 'Crear' }}</button>
+              <div style="display: flex; gap: var(--sp-2)">
+                <button class="btn btn-primary btn-block" (click)="crearOActualizarCategoria()">
+                  {{ editingCategoriaId() ? 'Actualizar' : 'Crear' }}
+                </button>
                 @if (editingCategoriaId()) {
                   <button class="btn btn-ghost" (click)="limpiarFormCategoria()">Cancelar</button>
                 }
               </div>
             }
 
-@if (tab()==='anuncios') {
+            @if (tab() === 'anuncios') {
               <h4>{{ editingAnuncioId() ? 'Editar anuncio' : 'Crear anuncio' }}</h4>
-              <div class="field"><label>Título *</label><input class="input" [ngModel]="aTitulo()" (ngModelChange)="aTitulo.set($event)" /></div>
-              <div class="field"><label>Contenido</label><textarea class="textarea" [ngModel]="aContenido()" (ngModelChange)="aContenido.set($event)"></textarea></div>
+              <div class="field">
+                <label>Título *</label
+                ><input class="input" [ngModel]="aTitulo()" (ngModelChange)="aTitulo.set($event)" />
+              </div>
+              <div class="field">
+                <label>Contenido</label
+                ><textarea
+                  class="textarea"
+                  [ngModel]="aContenido()"
+                  (ngModelChange)="aContenido.set($event)"
+                ></textarea>
+              </div>
               <div class="field">
                 <label>Imagen</label>
-                <input type="file" accept="image/*" class="input" (change)="onAnuncioFile($event)" />
+                <input
+                  type="file"
+                  accept="image/*"
+                  class="input"
+                  (change)="onAnuncioFile($event)"
+                />
                 @if (aImagenUrl()) {
                   <p class="hint">Imagen actual: {{ aImagenUrl() }}</p>
                 }
               </div>
-              <div style="display:flex;gap:var(--sp-2)">
-                <button class="btn btn-primary btn-block" (click)="crearAnuncio()">{{ editingAnuncioId() ? 'Actualizar' : 'Crear' }}</button>
+              <div style="display: flex; gap: var(--sp-2)">
+                <button class="btn btn-primary btn-block" (click)="crearAnuncio()">
+                  {{ editingAnuncioId() ? 'Actualizar' : 'Crear' }}
+                </button>
                 @if (editingAnuncioId()) {
                   <button class="btn btn-ghost" (click)="limpiarFormAnuncio()">Cancelar</button>
                 }
               </div>
             }
 
-            @if (tab()==='logros') {
+            @if (tab() === 'logros') {
               <h4>{{ editingLogroId() ? 'Editar logro' : 'Crear logro' }}</h4>
-              <div class="field"><label>Nombre *</label><input class="input" [ngModel]="lNombre()" (ngModelChange)="lNombre.set($event)" /></div>
-              <div class="field"><label>Descripción</label><textarea class="textarea" [ngModel]="lDescripcion()" (ngModelChange)="lDescripcion.set($event)"></textarea></div>
+              <div class="field">
+                <label>Nombre *</label
+                ><input class="input" [ngModel]="lNombre()" (ngModelChange)="lNombre.set($event)" />
+              </div>
+              <div class="field">
+                <label>Descripción</label
+                ><textarea
+                  class="textarea"
+                  [ngModel]="lDescripcion()"
+                  (ngModelChange)="lDescripcion.set($event)"
+                ></textarea>
+              </div>
               <div class="input-group">
-                <div class="field"><label>Condición</label>
-                  <select class="select" [ngModel]="lTipoCondicion()" (ngModelChange)="lTipoCondicion.set($event)">
-                    @for (t of objectKeys(COND_LOGRO_LABEL); track t) { <option [value]="t">{{ COND_LOGRO_LABEL[t] }}</option> }
+                <div class="field">
+                  <label>Condición</label>
+                  <select
+                    class="select"
+                    [ngModel]="lTipoCondicion()"
+                    (ngModelChange)="lTipoCondicion.set($event)"
+                  >
+                    @for (t of objectKeys(COND_LOGRO_LABEL); track t) {
+                      <option [value]="t">{{ COND_LOGRO_LABEL[t] }}</option>
+                    }
                   </select>
                 </div>
-                <div class="field"><label>Valor *</label><input type="number" class="input" [ngModel]="lValorCondicion()" (ngModelChange)="lValorCondicion.set(toNumber($event, 1) ?? 1)" /></div>
+                <div class="field">
+                  <label>Valor *</label
+                  ><input
+                    type="number"
+                    class="input"
+                    [ngModel]="lValorCondicion()"
+                    (ngModelChange)="lValorCondicion.set(toNumber($event, 1) ?? 1)"
+                  />
+                </div>
               </div>
-              <div class="field"><label>Icono (emoji)</label><input class="input" [ngModel]="lIcono()" (ngModelChange)="lIcono.set($event)" placeholder="🏆" /></div>
-<div style="display:flex;gap:var(--sp-2)">
-                <button class="btn btn-primary btn-block" (click)="crearOActualizarLogro()">{{ editingLogroId() ? 'Actualizar' : 'Crear' }}</button>
+              <div class="field">
+                <label>Icono (Material Symbols)</label
+                ><input
+                  class="input"
+                  [ngModel]="lIcono()"
+                  (ngModelChange)="lIcono.set($event)"
+                  placeholder="emoji_events"
+                />
+              </div>
+              <div style="display: flex; gap: var(--sp-2)">
+                <button class="btn btn-primary btn-block" (click)="crearOActualizarLogro()">
+                  {{ editingLogroId() ? 'Actualizar' : 'Crear' }}
+                </button>
                 @if (editingLogroId()) {
                   <button class="btn btn-ghost" (click)="limpiarFormLogro()">Cancelar</button>
                 }
               </div>
             }
 
-            @if (tab()==='sesiones') {
+            @if (tab() === 'sesiones') {
               <h4>Importar resultados</h4>
-              <div class="field"><label>Carrera *</label>
-                <select class="select" [ngModel]="sesionCarreraId()" (ngModelChange)="onSesionCarreraChange($event)">
+              <div class="field">
+                <label>Carrera *</label>
+                <select
+                  class="select"
+                  [ngModel]="sesionCarreraId()"
+                  (ngModelChange)="onSesionCarreraChange($event)"
+                >
                   <option value="">Seleccioná una carrera…</option>
                   @for (c of carreras(); track c.id) {
                     <option [value]="c.id">{{ c.nombre }}</option>
@@ -522,15 +965,36 @@
               </div>
               <div class="field">
                 <label>JSON de la sesión (QUALIFY / RACE / PRACTICE)</label>
-                <textarea class="textarea json-editor" [ngModel]="sesionImportJson()" (ngModelChange)="sesionImportJson.set($event)" placeholder='{"TrackName":"...","Type":"RACE","Result":[...]}'></textarea>
+                <textarea
+                  class="textarea json-editor"
+                  [ngModel]="sesionImportJson()"
+                  (ngModelChange)="sesionImportJson.set($event)"
+                  placeholder='{"TrackName":"...","Type":"RACE","Result":[...]}'
+                ></textarea>
               </div>
-              <input #sesionJsonFile type="file" accept=".json,application/json" style="display:none" (change)="onSesionJsonFile($event)" />
-              <div style="display:flex;gap:var(--sp-2)">
-                <button class="btn btn-ghost btn-block" (click)="sesionJsonFile.click()">Cargar .json</button>
+              <input
+                #sesionJsonFile
+                type="file"
+                accept=".json,application/json"
+                style="display: none"
+                (change)="onSesionJsonFile($event)"
+              />
+              <div style="display: flex; gap: var(--sp-2)">
+                <button class="btn btn-ghost btn-block" (click)="sesionJsonFile.click()">
+                  Cargar .json
+                </button>
               </div>
-              <div class="hint" style="margin-top:var(--sp-2)">Podés pegar el JSON o cargarlo desde un archivo .json del servidor de Assetto.</div>
-              <div style="display:flex;gap:var(--sp-2);margin-top:var(--sp-3)">
-                <button class="btn btn-primary btn-block" [disabled]="sesionImportando() || !sesionCarreraId() || !sesionImportJson()" (click)="importarSesion()">{{ sesionImportando() ? 'Importando…' : 'Importar sesión' }}</button>
+              <div class="hint" style="margin-top: var(--sp-2)">
+                Podés pegar el JSON o cargarlo desde un archivo .json del servidor de Assetto.
+              </div>
+              <div style="display: flex; gap: var(--sp-2); margin-top: var(--sp-3)">
+                <button
+                  class="btn btn-primary btn-block"
+                  [disabled]="sesionImportando() || !sesionCarreraId() || !sesionImportJson()"
+                  (click)="importarSesion()"
+                >
+                  {{ sesionImportando() ? 'Importando…' : 'Importar sesión' }}
+                </button>
                 @if (sesionImportJson()) {
                   <button class="btn btn-ghost" (click)="limpiarFormSesion()">Limpiar</button>
                 }

@@ -11,28 +11,60 @@
         <span class="glow-rojo">Hacete un nombre.</span>
       </h1>
       <p class="hero-lede">
-        La liga de sim racing más competitiva de Argentina. Carreras semanales, categorías por nivel de Elo y un sistema de Safety
-        Rating que premia el respeto en pista.
+        La liga de sim racing más competitiva de Argentina. Carreras semanales, categorías por nivel
+        de Elo y un sistema de Safety Rating que premia el respeto en pista.
       </p>
       <div class="hero-ctas">
         <div class="cta-dropdown">
-          <button type="button" class="btn btn-primary btn-lg" [class.is-loading]="cargando()" [disabled]="ctaItems().length === 0" (click)="alternarCta()">
-            Inscribirme a la próxima carrera ▾
+          <button
+            type="button"
+            class="btn btn-primary btn-lg"
+            [class.is-loading]="cargando()"
+            [disabled]="ctaItems().length === 0"
+            (click)="alternarCta()"
+          >
+            Inscribirme a la próxima carrera
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="m6 9 6 6 6-6"></path>
+            </svg>
           </button>
           @if (ctaAbierto()) {
             <div class="cta-dropdown-panel open">
               @if (ctaItems().length === 0) {
-                <div class="cta-dropdown-item"><span>No hay carreras próximas publicadas todavía.</span></div>
+                <div class="cta-dropdown-item">
+                  <span>No hay carreras próximas publicadas todavía.</span>
+                </div>
               } @else {
                 @for (c of ctaItems(); track c.id) {
-                  <a class="cta-dropdown-item" [routerLink]="['/carreras', c.id]" (click)="ctaAbierto.set(false)">
+                  <a
+                    class="cta-dropdown-item"
+                    [routerLink]="['/carreras', c.id]"
+                    (click)="ctaAbierto.set(false)"
+                  >
                     <div class="flex gap-3">
                       <div class="race-date">
                         <span class="day">{{ raceDay(c) }}</span>
                         <span class="mon">{{ raceMon(c) }}</span>
                       </div>
                       <div class="race-meta">
-                        <strong style="color: var(--texto-principal); font-family: var(--font-display); text-transform: uppercase; font-size: var(--fs-sm)">
+                        <strong
+                          style="
+                            color: var(--texto-principal);
+                            font-family: var(--font-display);
+                            text-transform: uppercase;
+                            font-size: var(--fs-sm);
+                          "
+                        >
                           {{ c.nombre }}{{ c.categoriaNombre ? ' — ' + c.categoriaNombre : '' }}
                         </strong>
                         <span>{{ c.circuito || '' }}{{ c.fecha ? ' · ' + raceHora(c) : '' }}</span>
@@ -49,15 +81,15 @@
       <div class="hero-stats">
         <div class="hero-stat">
           <div class="stat-value glow-rojo">{{ stats().pilotos.toLocaleString('es-AR') }}</div>
-          <span class="text-terciario" style="font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: 0.08em">Pilotos activos</span>
+          <span class="text-terciario hero-stat-label">Pilotos activos</span>
         </div>
         <div class="hero-stat">
           <div class="stat-value">{{ stats().carreras.toLocaleString('es-AR') }}</div>
-          <span class="text-terciario" style="font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: 0.08em">Carreras corridas</span>
+          <span class="text-terciario hero-stat-label">Carreras corridas</span>
         </div>
         <div class="hero-stat">
           <div class="stat-value">{{ stats().categorias.toLocaleString('es-AR') }}</div>
-          <span class="text-terciario" style="font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: 0.08em">Categorías activas</span>
+          <span class="text-terciario hero-stat-label">Categorías activas</span>
         </div>
       </div>
     </div>
@@ -89,7 +121,11 @@
       } @else {
         <div class="flex-col gap-3">
           @for (c of proximas().slice(0, 2); track c.id) {
-            <a [routerLink]="['/carreras', c.id]" class="card card-hover" style="padding: var(--sp-4)">
+            <a
+              [routerLink]="['/carreras', c.id]"
+              class="card card-hover"
+              style="padding: var(--sp-4)"
+            >
               <div class="flex gap-3">
                 <div class="race-date">
                   <span class="day">{{ raceDay(c) }}</span>
@@ -109,7 +145,9 @@
     <div class="card">
       <div class="card-header">
         <h3>{{ campeonato()?.nombre || 'Campeonato' }}</h3>
-        <a [routerLink]="['/campeonato']" class="btn btn-ghost btn-sm">{{ campeonato()?.temporada || 'Temp. 2026' }}</a>
+        <a [routerLink]="['/campeonato']" class="btn btn-ghost btn-sm">{{
+          campeonato()?.temporada || 'Temp. 2026'
+        }}</a>
       </div>
       @if (top3().length === 0) {
         <p class="text-terciario">Aún no hay posiciones registradas.</p>
@@ -119,7 +157,12 @@
             <div class="flex-between" style="gap: var(--sp-3)">
               <div class="flex-center gap-2">
                 <app-rank-badge [posicion]="t.posicion || $index + 1" />
-                <a [routerLink]="['/perfil', t.usuarioId]" class="detail-link" style="font-weight: 600">{{ t.nombrePiloto }}</a>
+                <a
+                  [routerLink]="['/perfil', t.usuarioId]"
+                  class="detail-link"
+                  style="font-weight: 600"
+                  >{{ t.nombrePiloto }}</a
+                >
               </div>
               <span class="mono glow-alerta" style="font-weight: 700">{{ t.puntos }} pts</span>
             </div>
@@ -135,14 +178,43 @@
       </div>
       @if (anuncio(); as an) {
         @if (an.urlImagen) {
-          <img [src]="an.urlImagen | assetUrl" alt="" style="border-radius: var(--r-sm); margin-bottom: var(--sp-4); max-height: 180px; object-fit: cover; width: 100%" referrerpolicy="no-referrer" />
+          <img
+            [src]="an.urlImagen | assetUrl"
+            alt=""
+            style="
+              border-radius: var(--r-sm);
+              margin-bottom: var(--sp-4);
+              max-height: 180px;
+              object-fit: cover;
+              width: 100%;
+            "
+            referrerpolicy="no-referrer"
+          />
         }
         <h4>{{ an.titulo }}</h4>
-        <span class="mono text-terciario" style="font-size: var(--fs-2xs)">{{ an.fecha | fechaRelativa }}</span>
-        <p class="text-secondary" style="margin-top: var(--sp-2); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden">
+        <span class="mono text-terciario" style="font-size: var(--fs-2xs)">{{
+          an.fecha | fechaRelativa
+        }}</span>
+        <p
+          class="text-secondary"
+          style="
+            margin-top: var(--sp-2);
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+          "
+        >
           {{ an.contenido || an.titulo }}
         </p>
-        <button type="button" class="btn btn-secondary btn-sm" style="margin-top: var(--sp-4)" (click)="anuncioAbierto.set(true)">Leer completo</button>
+        <button
+          type="button"
+          class="btn btn-secondary btn-sm"
+          style="margin-top: var(--sp-4)"
+          (click)="anuncioAbierto.set(true)"
+        >
+          Leer completo
+        </button>
       } @else {
         <p class="text-terciario">Todavía no hay anuncios.</p>
       }
@@ -150,12 +222,23 @@
   </div>
 </section>
 
-<app-modal [abierto]="anuncioAbierto()" [titulo]="anuncio()?.titulo || 'Anuncio'" (cerrado)="anuncioAbierto.set(false)">
+<app-modal
+  [abierto]="anuncioAbierto()"
+  [titulo]="anuncio()?.titulo || 'Anuncio'"
+  (cerrado)="anuncioAbierto.set(false)"
+>
   @if (anuncio(); as an) {
     @if (an.urlImagen) {
-      <img [src]="an.urlImagen | assetUrl" alt="" style="border-radius: var(--r-sm); margin-bottom: var(--sp-4); max-width: 100%" referrerpolicy="no-referrer" />
+      <img
+        [src]="an.urlImagen | assetUrl"
+        alt=""
+        style="border-radius: var(--r-sm); margin-bottom: var(--sp-4); max-width: 100%"
+        referrerpolicy="no-referrer"
+      />
     }
-    <span class="mono text-terciario" style="font-size: var(--fs-2xs)">{{ an.fecha | fechaRelativa }}</span>
+    <span class="mono text-terciario" style="font-size: var(--fs-2xs)">{{
+      an.fecha | fechaRelativa
+    }}</span>
     <p class="text-secondary" style="margin-top: var(--sp-3)">{{ an.contenido || an.titulo }}</p>
   }
 </app-modal>

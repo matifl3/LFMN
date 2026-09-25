@@ -22,11 +22,18 @@
   } @else {
     <div class="grid grid-4">
       @for (lg of logros(); track lg.logroId) {
-        <div class="card achievement-card" [class.unlocked]="lg.obtenido" [class.locked]="!lg.obtenido" [class.bracket]="lg.obtenido">
+        <div
+          class="card achievement-card"
+          [class.unlocked]="lg.obtenido"
+          [class.locked]="!lg.obtenido"
+          [class.bracket]="lg.obtenido"
+        >
           @if (lg.obtenido) {
             <span class="achievement-check">✓</span>
           }
-          <div class="achievement-icon">{{ lg.icono || '🏆' }}</div>
+          <div class="achievement-icon ms-icon" aria-hidden="true">
+            {{ lg.icono || 'emoji_events' }}
+          </div>
           <h4 style="font-size: var(--fs-sm)">{{ lg.nombre }}</h4>
           <p class="text-terciario" style="font-size: var(--fs-xs)">{{ lg.descripcion }}</p>
           @if (!lg.obtenido) {
@@ -34,9 +41,13 @@
               <div class="progress" style="width: 100%">
                 <div class="progress-bar" [style.width.%]="progresoPct(lg)"></div>
               </div>
-              <span class="text-terciario mono" style="font-size: var(--fs-2xs)">{{ lg.progreso }} / {{ lg.valorCondicion }}</span>
+              <span class="text-terciario mono" style="font-size: var(--fs-2xs)"
+                >{{ lg.progreso }} / {{ lg.valorCondicion }}</span
+              >
             } @else {
-              <span class="chip chip-pending" style="margin-top: var(--sp-2); padding: 0.2em 0.6em">Sin desbloquear</span>
+              <span class="chip chip-pending" style="margin-top: var(--sp-2); padding: 0.2em 0.6em"
+                >Sin desbloquear</span
+              >
             }
           }
         </div>

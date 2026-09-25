@@ -12,7 +12,9 @@
   height: 2px;
   background: var(--texto-secundario);
   border-radius: 2px;
-  transition: transform var(--dur-fast) var(--ease), opacity var(--dur-fast) var(--ease);
+  transition:
+    transform var(--dur-fast) var(--ease),
+    opacity var(--dur-fast) var(--ease);
 }
 .nav-toggle.open {
   .hamb span {
@@ -50,7 +52,7 @@
   flex-direction: column;
   gap: var(--sp-2);
   overflow-y: auto;
-  animation: drawerIn 0.2s var(--ease);
+  animation: drawerIn 0.22s var(--ease-out);
 
   .drawer-brand {
     display: flex;

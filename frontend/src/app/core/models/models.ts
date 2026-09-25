@@ -256,6 +256,7 @@ export interface UsuarioLogro {
   descripcion?: string;
   tipoCondicion: string;
   valorCondicion: number;
+  icono?: string;
   progreso: number;
   obtenido: boolean;
   fechaObtencion?: string;

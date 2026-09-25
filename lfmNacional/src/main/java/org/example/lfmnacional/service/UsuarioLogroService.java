@@ -44,6 +44,7 @@ public class UsuarioLogroService {
                 usuarioLogro.getLogro().getDescripcion(),
                 usuarioLogro.getLogro().getTipoCondicion(),
                 usuarioLogro.getLogro().getValorCondicion(),
+                usuarioLogro.getLogro().getIcono(),
                 usuarioLogro.getProgreso(),
                 usuarioLogro.getObtenido(),
                 usuarioLogro.getFechaObtencion());

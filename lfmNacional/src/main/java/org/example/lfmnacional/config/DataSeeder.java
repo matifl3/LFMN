@@ -20,6 +20,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
@@ -117,32 +118,33 @@ public class DataSeeder implements CommandLineRunner {
 
     private void seedLogros() {
         seedLogro("Primera carrera", "Completa tu primera carrera",
-                TipoCondicionLogro.CARRERAS, 1, "\uD83C\uDFC1",
+                TipoCondicionLogro.CARRERAS, 1, "flag",
                 "Primer logro de la liga");
         seedLogro("Piloto fiel", "Completa 10 carreras",
-                TipoCondicionLogro.CARRERAS, 10, "\uD83D\uDCC5",
+                TipoCondicionLogro.CARRERAS, 10, "event",
                 "Medalla de constancia por 10 carreras");
         seedLogro("Primera victoria", "Gana tu primera carrera",
-                TipoCondicionLogro.VICTORIAS, 1, "\uD83C\uDFC6",
+                TipoCondicionLogro.VICTORIAS, 1, "emoji_events",
                 "Trofeo de tu primera victoria");
         seedLogro("Podio x3", "Subite al podio en 3 carreras",
-                TipoCondicionLogro.PODIOS, 3, "\uD83E\uDD49",
+                TipoCondicionLogro.PODIOS, 3, "military_tech",
                 "Reconocimiento por 3 podios");
         seedLogro("Rey de la clasificacion", "Logra 5 poles",
-                TipoCondicionLogro.POLES, 5, "\u23F1\uFE0F",
+                TipoCondicionLogro.POLES, 5, "timer",
                 "Distincion por 5 poles");
         seedLogro("Vuelta rapida", "Registra tu primera vuelta rapida",
-                TipoCondicionLogro.VUELTAS_RAPIDAS, 1, "\u26A1",
+                TipoCondicionLogro.VUELTAS_RAPIDAS, 1, "bolt",
                 "Por marcar la vuelta mas rapida");
         seedLogro("Campeon en progreso", "Alcanza 1800 de Elo",
-                TipoCondicionLogro.ELO, 1800, "\uD83D\uDCC8",
+                TipoCondicionLogro.ELO, 1800, "trending_up",
                 "Por superar los 1800 puntos de Elo");
     }
 
     private void seedLogro(String nombre, String descripcion,
                            TipoCondicionLogro tipoCondicion, int valorCondicion,
                            String icono, String recompensaDescripcion) {
-        if (!logroRepository.existsByNombre(nombre)) {
+        Optional<Logro> existente = logroRepository.findByNombre(nombre);
+        if (existente.isEmpty()) {
             Logro logro = logroRepository.save(Logro.builder()
                     .nombre(nombre)
                     .descripcion(descripcion)
@@ -159,6 +161,10 @@ public class DataSeeder implements CommandLineRunner {
                 logro.getRecompensas().add(recompensa);
                 logroRepository.save(logro);
             }
+        } else if (!icono.equals(existente.get().getIcono())) {
+            Logro logro = existente.get();
+            logro.setIcono(icono);
+            logroRepository.save(logro);
         }
     }
 }

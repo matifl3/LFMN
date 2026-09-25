@@ -1,6 +1,21 @@
 <section class="container section">
   <div class="flex-between" style="margin-bottom: var(--sp-4)">
-    <a routerLink="/carreras" class="btn btn-ghost btn-sm">← Volver</a>
+    <a routerLink="/carreras" class="btn btn-ghost btn-sm">
+      <svg
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <path d="m15 18-6-6 6-6"></path>
+      </svg>
+      Volver
+    </a>
     @if (esMio()) {
       <a routerLink="/mi-perfil" class="btn btn-primary btn-sm">Datos personales</a>
     }
@@ -30,20 +45,56 @@
 
     @if (stats(); as s) {
       <div class="stat-grid">
-        <div class="stat-card"><div class="stat-label">Carreras</div><div class="stat-value mono">{{ s.carrerasDisputadas }}</div></div>
-        <div class="stat-card"><div class="stat-label">Victorias</div><div class="stat-value mono">{{ s.victorias }}</div></div>
-        <div class="stat-card"><div class="stat-label">Podios</div><div class="stat-value mono">{{ s.podios }}</div></div>
-        <div class="stat-card"><div class="stat-label">Poles</div><div class="stat-value mono">{{ s.poles }}</div></div>
-        <div class="stat-card"><div class="stat-label">Vueltas rápidas</div><div class="stat-value mono">{{ s.vueltasRapidas }}</div></div>
-        <div class="stat-card"><div class="stat-label">% Finalización</div><div class="stat-value mono">{{ s.porcentajeFinalizacion | number: '1.0-1' }}%</div></div>
+        <div class="stat-card">
+          <div class="stat-label">Carreras</div>
+          <div class="stat-value mono">{{ s.carrerasDisputadas }}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Victorias</div>
+          <div class="stat-value mono">{{ s.victorias }}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Podios</div>
+          <div class="stat-value mono">{{ s.podios }}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Poles</div>
+          <div class="stat-value mono">{{ s.poles }}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Vueltas rápidas</div>
+          <div class="stat-value mono">{{ s.vueltasRapidas }}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">% Finalización</div>
+          <div class="stat-value mono">{{ s.porcentajeFinalizacion | number: '1.0-1' }}%</div>
+        </div>
       </div>
     }
 
     <div class="tabs-pill" style="margin-bottom: var(--sp-6)">
-      <button type="button" class="tab" [class.active]="tab() === 'elo'" (click)="tab.set('elo')">Historial Elo</button>
-      <button type="button" class="tab" [class.active]="tab() === 'sr'" (click)="tab.set('sr')">Historial SR</button>
-      <button type="button" class="tab" [class.active]="tab() === 'resultados'" (click)="tab.set('resultados')">Resultados</button>
-      <button type="button" class="tab" [class.active]="tab() === 'logros'" (click)="tab.set('logros')">Logros</button>
+      <button type="button" class="tab" [class.active]="tab() === 'elo'" (click)="tab.set('elo')">
+        Historial Elo
+      </button>
+      <button type="button" class="tab" [class.active]="tab() === 'sr'" (click)="tab.set('sr')">
+        Historial SR
+      </button>
+      <button
+        type="button"
+        class="tab"
+        [class.active]="tab() === 'resultados'"
+        (click)="tab.set('resultados')"
+      >
+        Resultados
+      </button>
+      <button
+        type="button"
+        class="tab"
+        [class.active]="tab() === 'logros'"
+        (click)="tab.set('logros')"
+      >
+        Logros
+      </button>
     </div>
 
     @if (tab() === 'elo') {
@@ -63,7 +114,7 @@
         @if (srCum().length < 2) {
           <p class="text-terciario">No hay datos suficientes para graficar.</p>
         } @else {
-          <div [innerHTML]="chartSvg(srCum(), '#38bdf8')"></div>
+          <div [innerHTML]="chartSvg(srCum(), 'var(--status-positivo-hi)')"></div>
         }
       </div>
     }
@@ -95,7 +146,9 @@
                       <app-rank-badge [posicion]="r.posicionFinal ?? '—'" />
                     }
                   </td>
-                  <td class="num" [style.color]="ratColor(r.eloGanado)">{{ ratTxt(r.eloGanado) }}</td>
+                  <td class="num" [style.color]="ratColor(r.eloGanado)">
+                    {{ ratTxt(r.eloGanado) }}
+                  </td>
                   <td class="num" [style.color]="ratColor(r.srGanado)">{{ ratTxt(r.srGanado) }}</td>
                 </tr>
               }
@@ -112,12 +165,16 @@
         <div class="grid grid-3">
           @for (lg of logros(); track lg.logroId) {
             <div class="card achievement-card unlocked bracket">
-              <div class="achievement-icon">🏆</div>
+              <div class="achievement-icon ms-icon" aria-hidden="true">
+                {{ lg.icono || 'emoji_events' }}
+              </div>
               <span class="achievement-check">✓</span>
               <h4 style="font-size: var(--fs-sm)">{{ lg.nombre }}</h4>
               <p class="text-secondary" style="font-size: var(--fs-2xs)">{{ lg.descripcion }}</p>
               @if (lg.fechaObtencion) {
-                <span class="text-terciario mono" style="font-size: var(--fs-2xs)">{{ lg.fechaObtencion | fmtFecha }}</span>
+                <span class="text-terciario mono" style="font-size: var(--fs-2xs)">{{
+                  lg.fechaObtencion | fmtFecha
+                }}</span>
               }
             </div>
           }

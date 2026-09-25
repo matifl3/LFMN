@@ -247,6 +247,7 @@ public class LogroService {
                 logro.getDescripcion(),
                 logro.getTipoCondicion(),
                 logro.getValorCondicion(),
+                logro.getIcono(),
                 usuarioLogro.getProgreso(),
                 usuarioLogro.getObtenido(),
                 usuarioLogro.getFechaObtencion());

@@ -10,6 +10,7 @@ public record UsuarioLogroResponse(
         String descripcion,
         TipoCondicionLogro tipoCondicion,
         Integer valorCondicion,
+        String icono,
         Integer progreso,
         Boolean obtenido,
         LocalDateTime fechaObtencion
