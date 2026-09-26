@@ -5,6 +5,7 @@ public record EstadisticasResponse(
         long usuariosActivos,
         long usuariosAdmin,
         long usuariosComisario,
+        long usuariosAdminCampeonato,
         long totalCarreras,
         long carrerasProgramadas,
         long carrerasInscripcionesAbiertas,

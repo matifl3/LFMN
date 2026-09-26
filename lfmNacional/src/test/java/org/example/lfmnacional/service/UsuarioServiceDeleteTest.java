@@ -3,7 +3,9 @@ package org.example.lfmnacional.service;
 import org.example.lfmnacional.entity.Usuario;
 import org.example.lfmnacional.exception.ResourceNotFoundException;
 import org.example.lfmnacional.repository.ApelacionRepository;
+import org.example.lfmnacional.repository.CampeonatoMiembroRepository;
 import org.example.lfmnacional.repository.CampeonatoPosicionRepository;
+import org.example.lfmnacional.repository.CampeonatoRepository;
 import org.example.lfmnacional.repository.EloSancionRepository;
 import org.example.lfmnacional.repository.IncidentePilotoRepository;
 import org.example.lfmnacional.repository.IncidenteRepository;
@@ -54,6 +56,10 @@ class UsuarioServiceDeleteTest {
     private ApelacionRepository apelacionRepository;
     @Mock
     private CampeonatoPosicionRepository campeonatoPosicionRepository;
+    @Mock
+    private CampeonatoMiembroRepository campeonatoMiembroRepository;
+    @Mock
+    private CampeonatoRepository campeonatoRepository;
     @Mock
     private IncidentePilotoRepository incidentePilotoRepository;
     @Mock
@@ -119,11 +125,14 @@ class UsuarioServiceDeleteTest {
         verify(resultadoCarreraRepository).deleteByUsuario_Id(id);
         verify(vueltaRepository).deleteByUsuario_Id(id);
         verify(sesionClasificacionRepository).deleteByUsuario_Id(id);
+        verify(campeonatoMiembroRepository).deleteByUsuario_Id(id);
         verify(campeonatoPosicionRepository).deleteByUsuario_Id(id);
         verify(eloSancionRepository).deleteByUsuario_Id(id);
         verify(safetyRatingSancionRepository).deleteByUsuario_Id(id);
         verify(usuarioLogroRepository).deleteByUsuario_Id(id);
         verify(usuarioRecompensaRepository).deleteByUsuario_Id(id);
+        // Desvincular antes de borrar: la FK de campeonato.admin_id no puede quedar colgando.
+        verify(campeonatoRepository).desvincularAdmin(id);
         verify(usuarioRepository).deleteById(id);
         verify(usuarioRepository, never()).delete(any(Usuario.class));
     }

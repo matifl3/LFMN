@@ -41,7 +41,17 @@ public class SecurityConfig {
                         .requestMatchers("/api/recuperar/**").permitAll()
                         // Public read-only endpoints
                         .requestMatchers(HttpMethod.GET, "/api/categorias/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/campeonatos/**").permitAll()
+                        // El campeonato en si (nombre, temporada, categoria) es publico
+                        // tambien cuando es privado. Lo que exige membresia son su
+                        // carreras, su roster y su tabla de puntos, y por eso NO se
+                        // abre el /** como antes:/{id} arrastraba a /mios y /mis-membresias.
+                        .requestMatchers(HttpMethod.GET, "/api/campeonatos/mis-membresias").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/campeonatos/mios").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/campeonatos/{id}/tabla").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/campeonatos/{id}/miembros/**").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/campeonatos",
+                                "/api/campeonatos/categoria/**",
+                                "/api/campeonatos/{id}").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/carreras/proximas").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/carreras/pasadas").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/carreras").permitAll()

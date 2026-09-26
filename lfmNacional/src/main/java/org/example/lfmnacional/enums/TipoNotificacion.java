@@ -8,5 +8,6 @@ public enum TipoNotificacion {
     RECOMPENSA,
     ANUNCIO,
     INCIDENTE,
-    APELACION
+    APELACION,
+    CAMPEONATO
 }

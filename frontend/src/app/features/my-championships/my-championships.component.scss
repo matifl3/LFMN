@@ -1,0 +1,131 @@
+.mc-layout {
+  display: grid;
+  grid-template-columns: minmax(260px, 320px) 1fr;
+  gap: var(--sp-5);
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .mc-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.mc-side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+}
+
+.mc-side-card {
+  padding: var(--sp-4);
+}
+
+.mc-side-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--sp-3);
+
+  h3 {
+    margin: 0;
+    font-size: var(--fs-4);
+  }
+}
+
+.badge-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 var(--sp-2);
+  border-radius: 999px;
+  background: var(--surface-3, rgba(255, 255, 255, 0.08));
+  font-size: var(--fs-1);
+  font-variant-numeric: tabular-nums;
+}
+
+.mc-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.mc-list-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sp-1);
+  width: 100%;
+  padding: var(--sp-3);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
+  border-radius: var(--radius-sm, 10px);
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
+
+  &:hover {
+    border-color: var(--accent, #6ee7b7);
+  }
+
+  &.active {
+    border-color: var(--accent, #6ee7b7);
+    background: rgba(110, 231, 183, 0.08);
+  }
+}
+
+.mc-list-name {
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.mc-list-meta {
+  font-size: var(--fs-1);
+  color: var(--text-muted, rgba(255, 255, 255, 0.6));
+}
+
+.mc-detail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-4);
+  min-width: 0;
+}
+
+.mc-detail-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sp-4);
+  flex-wrap: wrap;
+}
+
+.inline-form {
+  display: flex;
+  gap: var(--sp-2);
+  margin: var(--sp-3) 0 var(--sp-4);
+  flex-wrap: wrap;
+
+  input {
+    flex: 1 1 220px;
+  }
+}
+
+.field-wide {
+  grid-column: 1 / -1;
+}
+
+.right {
+  text-align: right;
+}
+
+.nowrap {
+  white-space: nowrap;
+}

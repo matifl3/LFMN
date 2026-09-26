@@ -13,6 +13,8 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
 
     Optional<Usuario> findByGuidSteam(String guidSteam);
 
+    Optional<Usuario> findByNombrePiloto(String nombrePiloto);
+
     boolean existsByEmail(String email);
 
     boolean existsByGuidSteam(String guidSteam);

@@ -9,7 +9,9 @@ import org.example.lfmnacional.enums.Rol;
 import org.example.lfmnacional.exception.BusinessException;
 import org.example.lfmnacional.exception.ResourceNotFoundException;
 import org.example.lfmnacional.repository.ApelacionRepository;
+import org.example.lfmnacional.repository.CampeonatoMiembroRepository;
 import org.example.lfmnacional.repository.CampeonatoPosicionRepository;
+import org.example.lfmnacional.repository.CampeonatoRepository;
 import org.example.lfmnacional.repository.EloSancionRepository;
 import org.example.lfmnacional.repository.IncidentePilotoRepository;
 import org.example.lfmnacional.repository.IncidenteRepository;
@@ -45,6 +47,8 @@ public class UsuarioService {
     private static final int MIN_LENGTH_PASSWORD = 6;
 
     private final UsuarioRepository usuarioRepository;
+    private final CampeonatoMiembroRepository campeonatoMiembroRepository;
+    private final CampeonatoRepository campeonatoRepository;
     private final EloSancionRepository eloSancionRepository;
     private final SafetyRatingSancionRepository safetyRatingSancionRepository;
     private final ResultadoCarreraRepository resultadoCarreraRepository;
@@ -290,11 +294,15 @@ public class UsuarioService {
         resultadoCarreraRepository.deleteByUsuario_Id(id);
         vueltaRepository.deleteByUsuario_Id(id);
         sesionClasificacionRepository.deleteByUsuario_Id(id);
+        campeonatoMiembroRepository.deleteByUsuario_Id(id);
         campeonatoPosicionRepository.deleteByUsuario_Id(id);
         eloSancionRepository.deleteByUsuario_Id(id);
         safetyRatingSancionRepository.deleteByUsuario_Id(id);
         usuarioLogroRepository.deleteByUsuario_Id(id);
         usuarioRecompensaRepository.deleteByUsuario_Id(id);
+        // Si era dueno de campeonato privado lo deja sin dueno en vez de borrarle
+        // los campeonato: la FK de campeonato.admin_id no puede quedar colgando.
+        campeonatoRepository.desvincularAdmin(id);
         usuarioRepository.deleteById(id);
     }
 

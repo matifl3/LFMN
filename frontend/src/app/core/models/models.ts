@@ -6,7 +6,7 @@ export interface PageResponse<T> {
   totalPages: number;
 }
 
-export type Rol = 'USUARIO' | 'ADMIN' | 'COMISARIO';
+export type Rol = 'USUARIO' | 'ADMIN' | 'ADMIN_CAMPEONATO' | 'COMISARIO';
 
 export interface Usuario {
   id: number;
@@ -109,6 +109,8 @@ export interface Categoria {
   setupFijo?: boolean;
 }
 
+export type VisibilidadCampeonato = 'PUBLICO' | 'PRIVADO';
+
 export interface Campeonato {
   id: number;
   nombre: string;
@@ -117,6 +119,22 @@ export interface Campeonato {
   categoriaNombre?: string;
   estado: string;
   sistemaPuntos?: string;
+  visibilidad: VisibilidadCampeonato;
+  adminId?: number;
+  adminNombre?: string;
+  cantidadMiembros: number;
+  soyAdmin: boolean;
+  soyMiembro: boolean;
+}
+
+export interface MiembroCampeonato {
+  id: number;
+  usuarioId: number;
+  nombrePiloto: string;
+  fotoPerfil?: string;
+  elo: number;
+  safetyRating: number;
+  fechaAgregado: string;
 }
 
 export interface TablaPosicion {
@@ -390,6 +408,7 @@ export interface Estadisticas {
   totalUsuarios: number;
   usuariosActivos: number;
   usuariosAdmin: number;
+  usuariosAdminCampeonato: number;
   usuariosComisario: number;
   totalCarreras: number;
   carrerasProgramadas: number;

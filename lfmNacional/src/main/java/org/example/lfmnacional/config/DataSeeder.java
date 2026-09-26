@@ -100,6 +100,17 @@ public class DataSeeder implements CommandLineRunner {
                     .fechaRegistro(LocalDateTime.now())
                     .build());
         }
+        if (!usuarioRepository.existsByEmail("organizador@lfm.local")) {
+            usuarioRepository.save(Usuario.builder()
+                    .email("organizador@lfm.local")
+                    .password(passwordEncoder.encode("piloto123"))
+                    .nombrePiloto("Organizador LFM")
+                    .rol(Rol.ADMIN_CAMPEONATO)
+                    .elo(1500)
+                    .safetyRating(100)
+                    .fechaRegistro(LocalDateTime.now())
+                    .build());
+        }
     }
 
     private void seedCampeonatos() {

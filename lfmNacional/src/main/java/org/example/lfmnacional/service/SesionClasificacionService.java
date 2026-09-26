@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.lfmnacional.dto.clasificacion.SesionClasificacionRequest;
 import org.example.lfmnacional.dto.clasificacion.SesionClasificacionResponse;
 import org.example.lfmnacional.entity.SesionClasificacion;
+import org.example.lfmnacional.entity.Usuario;
 import org.example.lfmnacional.exception.ResourceNotFoundException;
 import org.example.lfmnacional.repository.SesionClasificacionRepository;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,7 @@ public class SesionClasificacionService {
     private final SesionClasificacionRepository sesionClasificacionRepository;
     private final CarreraService carreraService;
     private final UsuarioService usuarioService;
+    private final CampeonatoAccesoService accesoService;
 
     public SesionClasificacion getEntity(Long id) {
         return sesionClasificacionRepository.findById(id)
@@ -30,9 +32,20 @@ public class SesionClasificacionService {
         return toResponse(getEntity(id));
     }
 
+    /**
+     * ADMIN global y COMISARIO lo ven todo: para ellos el filtro se desactiva y se
+     * pasa {@code null} como espectador.
+     */
+    private Long espectadorSinFiltro(Usuario usuario) {
+        if (accesoService.esAdminGlobal(usuario) || accesoService.esComisario(usuario)) {
+            return null;
+        }
+        return usuario != null ? usuario.getId() : Long.valueOf(-1L);
+    }
+
     @Transactional(readOnly = true)
-    public List<SesionClasificacionResponse> listAll() {
-        return sesionClasificacionRepository.findAll().stream()
+    public List<SesionClasificacionResponse> listAll(Usuario usuario) {
+        return sesionClasificacionRepository.findVisiblesPara(espectadorSinFiltro(usuario)).stream()
                 .map(this::toResponse).toList();
     }
 
@@ -43,8 +56,9 @@ public class SesionClasificacionService {
     }
 
     @Transactional(readOnly = true)
-    public List<SesionClasificacionResponse> listarPorUsuario(Long usuarioId) {
-        return sesionClasificacionRepository.findByUsuario_IdOrderByTiempoAsc(usuarioId).stream()
+    public List<SesionClasificacionResponse> listarPorUsuario(Long usuarioId, Usuario usuario) {
+        return sesionClasificacionRepository
+                .findVisiblesPorUsuario(usuarioId, espectadorSinFiltro(usuario)).stream()
                 .map(this::toResponse).toList();
     }
 

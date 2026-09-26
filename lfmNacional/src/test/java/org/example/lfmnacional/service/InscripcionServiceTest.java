@@ -8,6 +8,7 @@ import org.example.lfmnacional.entity.Usuario;
 import org.example.lfmnacional.enums.EstadoCampeonato;
 import org.example.lfmnacional.enums.EstadoCarrera;
 import org.example.lfmnacional.enums.EstadoInscripcion;
+import org.example.lfmnacional.enums.VisibilidadCampeonato;
 import org.example.lfmnacional.exception.BusinessException;
 import org.example.lfmnacional.repository.InscripcionRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,6 +37,8 @@ class InscripcionServiceTest {
     private CarreraService carreraService;
     @Mock
     private UsuarioService usuarioService;
+    @Mock
+    private CampeonatoAccesoService accesoService;
 
     @InjectMocks
     private InscripcionService inscripcionService;
@@ -48,10 +51,14 @@ class InscripcionServiceTest {
     @BeforeEach
     void setUp() {
         categoria = Categoria.builder().id(1L).nombre("GT3").eloMinimo(1000).eloMaximo(2000).build();
-        campeonato = Campeonato.builder().id(1L).nombre("Champ").estado(EstadoCampeonato.ACTIVO).categoria(categoria).build();
+        campeonato = Campeonato.builder().id(1L).nombre("Champ").estado(EstadoCampeonato.ACTIVO)
+                .categoria(categoria).visibilidad(VisibilidadCampeonato.PUBLICO).build();
         carrera = Carrera.builder().id(1L).nombre("Race").campeonato(campeonato).estado(EstadoCarrera.PROGRAMADA)
                 .fecha(LocalDateTime.now().plusHours(2)).cupoMaximo(3).build();
         usuario = Usuario.builder().id(1L).nombrePiloto("Piloto1").elo(1500).safetyRating(100).build();
+        // Por defecto el usuario puede competir; los tests de campeonato privado lo pisan.
+        lenient().when(accesoService.puedeParticiparEnCarrera(any(), any())).thenReturn(true);
+        lenient().when(accesoService.veCarrera(any(), any())).thenReturn(true);
     }
 
     @Test
@@ -208,5 +215,41 @@ class InscripcionServiceTest {
         assertThatThrownBy(() -> inscripcionService.cancelar(1L, 1L))
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("ya estan cerradas");
+    }
+
+    @Test
+    void enCampeonatoPrivadoNoSeInscribeQuienNoEsMiembro() {
+        when(accesoService.puedeParticiparEnCarrera(usuario, carrera)).thenReturn(false);
+        when(carreraService.getEntity(1L)).thenReturn(carrera);
+        when(usuarioService.getEntity(1L)).thenReturn(usuario);
+
+        assertThatThrownBy(() -> inscripcionService.inscribirse(1L, 1L))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("campeonato privado");
+    }
+
+    @Test
+    void enCampeonatoPrivadoNoSeExigeElo() {
+        campeonato.setVisibilidad(VisibilidadCampeonato.PRIVADO);
+        usuario.setElo(500);
+        when(carreraService.getEntity(1L)).thenReturn(carrera);
+        when(usuarioService.getEntity(1L)).thenReturn(usuario);
+        when(inscripcionRepository.findByCarrera_IdAndUsuario_Id(1L, 1L)).thenReturn(Optional.empty());
+        when(inscripcionRepository.countByCarrera_IdAndEstado(1L, EstadoInscripcion.INSCRIPTO)).thenReturn(0L);
+        when(inscripcionRepository.save(any(Inscripcion.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        var response = inscripcionService.inscribirse(1L, 1L);
+
+        assertThat(response.estado()).isEqualTo(EstadoInscripcion.INSCRIPTO);
+    }
+
+    @Test
+    void elCountDelCalendarioOcultaLosInscriptosDeUnPrivado() {
+        when(accesoService.veCarrera(usuario, carrera)).thenReturn(false);
+        when(carreraService.getEntity(1L)).thenReturn(carrera);
+
+        assertThat(inscripcionService.countInscriptos(1L, usuario)).isZero();
+        verify(inscripcionRepository, never())
+                .countByCarrera_IdAndEstado(anyLong(), any(EstadoInscripcion.class));
     }
 }

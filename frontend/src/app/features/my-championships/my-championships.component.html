@@ -1,0 +1,482 @@
+<section class="container-wide section">
+  <div class="section-head">
+    <div>
+      <span class="eyebrow">Organizador</span>
+      <h2>Mis campeonatos</h2>
+      <p class="section-sub">
+        Tus campeonatos privados con lista de pilotos cerrada. Solo los pilotos que sumes pueden
+        competir y ver el contenido.
+      </p>
+    </div>
+    <a routerLink="/" class="btn btn-ghost">Volver al inicio</a>
+  </div>
+
+  @if (cargando()) {
+    <div class="skeleton-card" style="padding: var(--sp-5)">
+      <span class="skeleton" style="width: 70%"></span
+      ><span class="skeleton" style="width: 50%"></span>
+    </div>
+  } @else {
+    <div class="mc-layout">
+      <aside class="mc-side">
+        <div class="card mc-side-card">
+          <div class="mc-side-head">
+            <h3>Mis campeonatos</h3>
+            <span class="badge-count">{{ campeonatos().length }}</span>
+          </div>
+
+          @if (campeonatos().length === 0) {
+            <p class="muted small">Todavia no creaste ningun campeonato.</p>
+          } @else {
+            <ul class="mc-list">
+              @for (c of campeonatos(); track c.id) {
+                <li>
+                  <button
+                    type="button"
+                    class="mc-list-item"
+                    [class.active]="selectedId() === c.id"
+                    (click)="seleccionar(c.id)"
+                  >
+                    <span class="mc-list-name">{{ c.nombre }}</span>
+                    <span class="mc-list-meta">
+                      {{ c.categoriaNombre || 'Sin categoria' }} · {{ c.cantidadMiembros }} pilotos
+                    </span>
+                    <app-chip
+                      [estado]="c.estado"
+                      tipo="campeonato"
+                      [overrideLabel]="ESTADO_CAMPEONATO_LABEL[c.estado] || c.estado"
+                    />
+                  </button>
+                </li>
+              }
+            </ul>
+          }
+        </div>
+
+        <div class="card">
+          <h3 class="card-title">
+            {{ editandoCampeonatoId() ? 'Editar campeonato' : 'Nuevo campeonato' }}
+          </h3>
+          <form class="form-grid" (ngSubmit)="guardarCampeonato()">
+            <label class="field">
+              <span>Nombre</span>
+              <input
+                type="text"
+                name="chNombre"
+                [ngModel]="chNombre()"
+                (ngModelChange)="chNombre.set($event)"
+                maxlength="150"
+                required
+              />
+            </label>
+            <label class="field">
+              <span>Temporada</span>
+              <input
+                type="text"
+                name="chTemporada"
+                [ngModel]="chTemporada()"
+                (ngModelChange)="chTemporada.set($event)"
+                maxlength="50"
+                placeholder="2026"
+              />
+            </label>
+            <label class="field">
+              <span>Categoria</span>
+              <select
+                name="chCategoriaId"
+                [ngModel]="chCategoriaId()"
+                (ngModelChange)="chCategoriaId.set($event)"
+                required
+              >
+                <option value="">Elegi una</option>
+                @for (cat of categorias(); track cat.id) {
+                  <option [value]="cat.id">{{ cat.nombre }}</option>
+                }
+              </select>
+            </label>
+            <p class="muted small field-wide">
+              Los campeonatos creados desde aca son <strong>privados</strong>. Si queres uno
+              publico, lo crea el administrador global.
+            </p>
+            <div class="form-actions field-wide">
+              <button type="submit" class="btn btn-primary">
+                {{ editandoCampeonatoId() ? 'Guardar cambios' : 'Crear campeonato' }}
+              </button>
+              @if (editandoCampeonatoId()) {
+                <button type="button" class="btn btn-ghost" (click)="limpiarFormCampeonato()">
+                  Cancelar
+                </button>
+              }
+            </div>
+          </form>
+        </div>
+      </aside>
+
+      <div class="mc-detail">
+        @if (seleccionado(); as camp) {
+          <div class="card mc-detail-head">
+            <div>
+              <h3 class="card-title">{{ camp.nombre }}</h3>
+              <p class="muted small">
+                {{ camp.categoriaNombre }} · {{ camp.temporada || 'sin temporada' }} ·
+                {{ camp.cantidadMiembros }} pilotos
+              </p>
+            </div>
+            <div class="form-actions">
+              <button type="button" class="btn btn-ghost" (click)="editarCampeonato(camp)">
+                Editar
+              </button>
+              @if (camp.estado === 'ACTIVO') {
+                <button type="button" class="btn btn-ghost" (click)="cerrarCampeonato(camp)">
+                  Cerrar campeonato
+                </button>
+              }
+              <button type="button" class="btn btn-danger" (click)="eliminarCampeonato(camp)">
+                Eliminar
+              </button>
+            </div>
+          </div>
+
+          <div class="tabs-pill">
+            <button
+              type="button"
+              class="tab"
+              [class.active]="panel() === 'pilotos'"
+              (click)="setPanel('pilotos')"
+            >
+              Pilotos
+            </button>
+            <button
+              type="button"
+              class="tab"
+              [class.active]="panel() === 'carreras'"
+              (click)="setPanel('carreras')"
+            >
+              Carreras
+            </button>
+            <button
+              type="button"
+              class="tab"
+              [class.active]="panel() === 'tabla'"
+              (click)="setPanel('tabla')"
+            >
+              Tabla
+            </button>
+            <button
+              type="button"
+              class="tab"
+              [class.active]="panel() === 'importar'"
+              (click)="setPanel('importar')"
+            >
+              Importar sesion
+            </button>
+          </div>
+
+          @if (panel() === 'pilotos') {
+            <div class="card">
+              <h3 class="card-title">Pilotos del campeonato</h3>
+              <p class="muted small">
+                Solo estos pilotos pueden competir. El resto ve el calendario pero no los
+                resultados.
+              </p>
+
+              <form class="inline-form" (ngSubmit)="agregarMiembro()">
+                <input
+                  type="text"
+                  name="busquedaPiloto"
+                  [ngModel]="busquedaPiloto()"
+                  (ngModelChange)="busquedaPiloto.set($event)"
+                  placeholder="Nombre de piloto o email"
+                />
+                <button type="submit" class="btn btn-primary">Sumar piloto</button>
+              </form>
+
+              @if (miembros().length === 0) {
+                <div class="empty-state">
+                  <p>Todavia no sumaste pilotos. Sin miembros nadie puede competir.</p>
+                </div>
+              } @else {
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Piloto</th>
+                      <th>Elo</th>
+                      <th>Safety</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (m of miembros(); track m.usuarioId) {
+                      <tr>
+                        <td class="muted">{{ $index + 1 }}</td>
+                        <td>
+                          <div class="flex-row gap-2 align-center">
+                            <app-avatar
+                              [user]="{ fotoPerfil: m.fotoPerfil, nombrePiloto: m.nombrePiloto }"
+                              [size]="28"
+                            />
+                            <span>{{ m.nombrePiloto }}</span>
+                          </div>
+                        </td>
+                        <td>{{ m.elo }}</td>
+                        <td>{{ m.safetyRating }}</td>
+                        <td class="right">
+                          <button
+                            type="button"
+                            class="btn btn-ghost btn-sm"
+                            (click)="quitarMiembro(m)"
+                          >
+                            Quitar
+                          </button>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              }
+            </div>
+          }
+
+          @if (panel() === 'carreras') {
+            <div class="card">
+              <h3 class="card-title">
+                {{ editingCarreraId() ? 'Editar carrera' : 'Nueva carrera' }}
+              </h3>
+              <form class="form-grid" (ngSubmit)="guardarCarrera()">
+                <label class="field">
+                  <span>Nombre</span>
+                  <input
+                    type="text"
+                    name="cNombre"
+                    [ngModel]="cNombre()"
+                    (ngModelChange)="cNombre.set($event)"
+                    required
+                  />
+                </label>
+                <label class="field">
+                  <span>Circuito</span>
+                  <input
+                    type="text"
+                    name="cCircuito"
+                    [ngModel]="cCircuito()"
+                    (ngModelChange)="cCircuito.set($event)"
+                  />
+                </label>
+                <label class="field">
+                  <span>Fecha</span>
+                  <input
+                    type="date"
+                    name="cFecha"
+                    [ngModel]="cFecha()"
+                    (ngModelChange)="cFecha.set($event)"
+                  />
+                </label>
+                <label class="field">
+                  <span>Hora</span>
+                  <input
+                    type="time"
+                    name="cHora"
+                    [ngModel]="cHora()"
+                    (ngModelChange)="cHora.set($event)"
+                  />
+                </label>
+                <label class="field">
+                  <span>Cupo</span>
+                  <input
+                    type="number"
+                    name="cCupo"
+                    min="2"
+                    [ngModel]="cCupo()"
+                    (ngModelChange)="cCupo.set(+$event)"
+                  />
+                </label>
+                <label class="field">
+                  <span>Servidor</span>
+                  <input
+                    type="text"
+                    name="cServidor"
+                    [ngModel]="cServidor()"
+                    (ngModelChange)="cServidor.set($event)"
+                  />
+                </label>
+                <label class="field field-wide">
+                  <span>Link de pista</span>
+                  <input
+                    type="url"
+                    name="cLinkPista"
+                    [ngModel]="cLinkPista()"
+                    (ngModelChange)="cLinkPista.set($event)"
+                  />
+                </label>
+                <div class="form-actions field-wide">
+                  <button type="submit" class="btn btn-primary">
+                    {{ editingCarreraId() ? 'Guardar cambios' : 'Crear carrera' }}
+                  </button>
+                  @if (editingCarreraId()) {
+                    <button type="button" class="btn btn-ghost" (click)="limpiarFormCarrera()">
+                      Cancelar
+                    </button>
+                  }
+                </div>
+              </form>
+            </div>
+
+            <div class="card">
+              <h3 class="card-title">Calendario</h3>
+              @if (carreras().length === 0) {
+                <div class="empty-state"><p>Todavia no creaste carreras.</p></div>
+              } @else {
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>Fecha</th>
+                      <th>Carrera</th>
+                      <th>Estado</th>
+                      <th>Inscriptos</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (c of carreras(); track c.id) {
+                      <tr>
+                        <td class="muted nowrap">{{ c.fecha | slice: 0 : 10 }}</td>
+                        <td>
+                          <a [routerLink]="['/carreras', c.id]">{{ c.nombre }}</a>
+                          <div class="muted small">{{ c.circuito }}</div>
+                        </td>
+                        <td>
+                          <app-chip
+                            [estado]="c.estado"
+                            tipo="carrera"
+                            [overrideLabel]="ESTADO_CARRERA_LABEL[c.estado] || c.estado"
+                          />
+                        </td>
+                        <td>{{ c.cuposInscritos ?? 0 }} / {{ c.cupoMaximo ?? '∞' }}</td>
+                        <td class="right nowrap">
+                          <select
+                            [value]="c.estado"
+                            (change)="cambiarEstadoCarrera(c, $any($event.target).value)"
+                            aria-label="Cambiar estado"
+                          >
+                            @for (estado of estadosCarrera; track estado) {
+                              <option [value]="estado">
+                                {{ ESTADO_CARRERA_LABEL[estado] }}
+                              </option>
+                            }
+                          </select>
+                          <button
+                            type="button"
+                            class="btn btn-ghost btn-sm"
+                            (click)="editarCarrera(c)"
+                          >
+                            Editar
+                          </button>
+                          <button
+                            type="button"
+                            class="btn btn-danger btn-sm"
+                            (click)="eliminarCarrera(c)"
+                          >
+                            Eliminar
+                          </button>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              }
+            </div>
+          }
+
+          @if (panel() === 'tabla') {
+            <div class="card">
+              <h3 class="card-title">Tabla de posiciones</h3>
+              @if (tabla().length === 0) {
+                <div class="empty-state">
+                  <p>Todavia no hay puntos. Se calculan al importar resultados.</p>
+                </div>
+              } @else {
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>Pos</th>
+                      <th>Piloto</th>
+                      <th>Puntos</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (p of tabla(); track p.usuarioId) {
+                      <tr>
+                        <td>{{ p.posicion }}</td>
+                        <td>{{ p.nombrePiloto }}</td>
+                        <td class="right">
+                          <strong>{{ p.puntos }}</strong>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              }
+            </div>
+          }
+
+          @if (panel() === 'importar') {
+            <div class="card">
+              <h3 class="card-title">Importar sesion de Assetto Corsa</h3>
+              <p class="muted small">
+                Pega el JSON exportado por Content Manager. Las sesiones <code>RACE</code> y
+                <code>QUALIFY</code> importan resultados y actualizan Elo, Safety Rating y la tabla.
+              </p>
+
+              <label class="field">
+                <span>Carrera</span>
+                <select
+                  name="importCarreraId"
+                  [ngModel]="importCarreraId()"
+                  (ngModelChange)="importCarreraId.set($event)"
+                >
+                  <option value="">Elegi una</option>
+                  @for (c of carreras(); track c.id) {
+                    <option [value]="c.id">{{ c.nombre }}</option>
+                  }
+                </select>
+              </label>
+
+              <label class="field">
+                <span>JSON de la sesion</span>
+                <textarea
+                  name="importJson"
+                  rows="10"
+                  [ngModel]="importJson()"
+                  (ngModelChange)="importJson.set($event)"
+                  placeholder='{ "Type": "RACE", ... }'
+                ></textarea>
+              </label>
+
+              <div class="form-actions">
+                <label class="btn btn-ghost">
+                  Cargar archivo
+                  <input type="file" accept=".json" hidden (change)="onImportJsonFile($event)" />
+                </label>
+                <button
+                  type="button"
+                  class="btn btn-primary"
+                  [disabled]="importando()"
+                  (click)="importarSesion()"
+                >
+                  {{ importando() ? 'Importando' : 'Importar sesion' }}
+                </button>
+              </div>
+            </div>
+          }
+        } @else {
+          <div class="card">
+            <div class="empty-state">
+              <p>Elegi un campeonato de la lista o crea el primero.</p>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+</section>

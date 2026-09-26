@@ -26,7 +26,19 @@ export class ChampionshipComponent implements OnInit {
   readonly champInfo = computed(() => {
     const c = this.champs().find((x) => x.id === this.selectedId());
     if (!c) return '';
-    return (c.temporada || 'Temporada 2026') + ' · ' + (c.sistemaPuntos || '—') + ' · ' + (c.estado || '—');
+    return (
+      (c.temporada || 'Temporada 2026') +
+      ' · ' +
+      (c.sistemaPuntos || '—') +
+      ' · ' +
+      (c.estado || '—')
+    );
+  });
+
+  /** El campeonato y su calendario son publicos; la tabla no. */
+  readonly bloqueado = computed(() => {
+    const c = this.champs().find((x) => x.id === this.selectedId());
+    return !!c && c.visibilidad === 'PRIVADO' && !c.soyMiembro;
   });
 
   ngOnInit(): void {
@@ -55,12 +67,19 @@ export class ChampionshipComponent implements OnInit {
   private loadTabla(id: number): void {
     this.tablaLoading.set(true);
     this.tablaMsg.set(null);
+    const c = this.champs().find((x) => x.id === id);
+    if (c && c.visibilidad === 'PRIVADO' && !c.soyMiembro) {
+      this.tablaLoading.set(false);
+      this.tabla.set([]);
+      this.tablaMsg.set(null);
+      return;
+    }
     this.api.get<TablaPosicion[]>('/campeonatos/' + id + '/tabla').subscribe({
       next: (list) => {
         this.tablaLoading.set(false);
         if (!list || list.length === 0) {
           this.tabla.set([]);
-          this.tablaMsg.set('Aún no hay posiciones registradas.');
+          this.tablaMsg.set('Todavía no hay posiciones registradas.');
         } else {
           this.tabla.set(list);
         }

@@ -44,6 +44,7 @@ public class ResultadoCarreraService {
     private final LogroService logroService;
     private final EloCalculator eloCalculator;
     private final SrCalculator srCalculator;
+    private final CampeonatoAccesoService championshipAcceso;
 
     public ResultadoCarrera getEntity(Long id) {
         return resultadoCarreraRepository.findById(id)
@@ -61,9 +62,17 @@ public class ResultadoCarreraService {
                 .stream().map(this::toResponse).toList();
     }
 
+    /**
+     * ADMIN global y COMISARIO ven el historial completo; para el resto se excluyen
+     * los resultados de carreras privadas de las que no es miembro. Al filtrar en
+     * la query el {@code Page} sigue siendo correcto.
+     */
     @Transactional(readOnly = true)
-    public Page<ResultadoCarreraResponse> listarPorUsuario(Long usuarioId, Pageable pageable) {
-        return resultadoCarreraRepository.findByUsuario_Id(usuarioId, pageable)
+    public Page<ResultadoCarreraResponse> listarPorUsuario(Long usuarioId, Pageable pageable, Usuario usuario) {
+        Long espectador = championshipAcceso.esAdminGlobal(usuario) || championshipAcceso.esComisario(usuario)
+                ? null
+                : (usuario != null ? usuario.getId() : Long.valueOf(-1L));
+        return resultadoCarreraRepository.findVisiblesPorUsuario(usuarioId, espectador, pageable)
                 .map(this::toResponse);
     }
 

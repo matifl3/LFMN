@@ -43,6 +43,7 @@ public class EstadisticasService {
                 resultadoCarreraRepository.countUsuariosConResultados(),
                 usuarioRepository.countByRol(Rol.ADMIN),
                 usuarioRepository.countByRol(Rol.COMISARIO),
+                usuarioRepository.countByRol(Rol.ADMIN_CAMPEONATO),
                 carreraRepository.count(),
                 carreraRepository.countByEstado(EstadoCarrera.PROGRAMADA),
                 carreraRepository.countByEstado(EstadoCarrera.INSCRIPCIONES_ABIERTAS),

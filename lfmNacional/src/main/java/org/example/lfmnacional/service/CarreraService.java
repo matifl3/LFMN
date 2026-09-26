@@ -9,6 +9,7 @@ import org.example.lfmnacional.service.rating.EloCalculator;
 import org.example.lfmnacional.entity.Carrera;
 import org.example.lfmnacional.entity.Inscripcion;
 import org.example.lfmnacional.entity.Notificacion;
+import org.example.lfmnacional.entity.Usuario;
 import org.example.lfmnacional.enums.EstadoCarrera;
 import org.example.lfmnacional.enums.EstadoInscripcion;
 import org.example.lfmnacional.enums.TipoNotificacion;
@@ -17,8 +18,6 @@ import org.example.lfmnacional.exception.ResourceNotFoundException;
 import org.example.lfmnacional.repository.CarreraRepository;
 import org.example.lfmnacional.repository.InscripcionRepository;
 import org.example.lfmnacional.repository.NotificacionRepository;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,6 +39,7 @@ public class CarreraService {
 
     private final CarreraRepository carreraRepository;
     private final CampeonatoService campeonatoService;
+    private final CampeonatoAccesoService accesoService;
     private final ArchivoCarreraService archivoCarreraService;
     private final InscripcionRepository inscripcionRepository;
     private final NotificacionRepository notificacionRepository;
@@ -51,42 +51,47 @@ public class CarreraService {
     }
 
     @Transactional(readOnly = true)
-    public CarreraResponse getById(Long id) {
-        return toResponse(getEntity(id), null);
+    public CarreraResponse getById(Long id, Usuario visor) {
+        Carrera carrera = getEntity(id);
+        accesoService.exigirVeCarrera(visor, carrera);
+        return toResponse(carrera, null, false);
     }
 
     @Transactional(readOnly = true)
-    public Page<CarreraResponse> listAll(Pageable pageable) {
+    public Page<CarreraResponse> listAll(Pageable pageable, Usuario visor) {
         Page<Carrera> carreras = carreraRepository.findAll(pageable);
         Map<Long, Long> counts = countInscriptos();
-        return carreras.map(c -> toResponse(c, counts));
+        return carreras.map(c -> toResponse(c, counts, !accesoService.veCarrera(visor, c)));
     }
 
+    /**
+     * El calendario es publico, asi que estas dos no se cachean: la respuesta se
+     * poda segun quien pregunte y una cache compartida le serviria a un piloto
+     * los links y el servidor de un campeonato privado del que no es miembro.
+     */
     @Transactional(readOnly = true)
-    @Cacheable("carreras_proximas")
-    public List<CarreraResponse> proximas() {
+    public List<CarreraResponse> proximas(Usuario visor) {
         List<Carrera> carreras = carreraRepository.findByFechaAfterOrderByFechaAsc(LocalDateTime.now());
         Map<Long, Long> counts = countInscriptos();
-        return carreras.stream().map(c -> toResponse(c, counts)).toList();
+        return carreras.stream().map(c -> toResponse(c, counts, !accesoService.veCarrera(visor, c))).toList();
     }
 
     @Transactional(readOnly = true)
-    @Cacheable("carreras_pasadas")
-    public List<CarreraResponse> pasadas() {
+    public List<CarreraResponse> pasadas(Usuario visor) {
         List<Carrera> carreras = carreraRepository.findByFechaBeforeOrderByFechaDesc(LocalDateTime.now());
         Map<Long, Long> counts = countInscriptos();
-        return carreras.stream().map(c -> toResponse(c, counts)).toList();
+        return carreras.stream().map(c -> toResponse(c, counts, !accesoService.veCarrera(visor, c))).toList();
     }
 
     @Transactional(readOnly = true)
-    public List<CarreraResponse> porCampeonato(Long campeonatoId) {
+    public List<CarreraResponse> porCampeonato(Long campeonatoId, Usuario visor) {
+        boolean ocultar = !accesoService.veContenido(visor, campeonatoService.getEntity(campeonatoId));
         List<Carrera> carreras = carreraRepository.findByCampeonato_IdOrderByFechaDesc(campeonatoId);
         Map<Long, Long> counts = countInscriptos();
-        return carreras.stream().map(c -> toResponse(c, counts)).toList();
+        return carreras.stream().map(c -> toResponse(c, counts, ocultar)).toList();
     }
 
     @Transactional
-    @CacheEvict(value = {"carreras_proximas", "carreras_pasadas"}, allEntries = true)
     public CarreraResponse create(CarreraRequest request) {
         Carrera carrera = Carrera.builder()
                 .nombre(request.nombre())
@@ -102,11 +107,10 @@ public class CarreraService {
                 .linkPista(request.linkPista())
                 .linkAuto(request.linkAuto())
                 .build();
-        return toResponse(carreraRepository.save(carrera), null);
+        return toResponse(carreraRepository.save(carrera), null, false);
     }
 
     @Transactional
-    @CacheEvict(value = {"carreras_proximas", "carreras_pasadas"}, allEntries = true)
     public CarreraResponse update(Long id, CarreraRequest request) {
         Carrera carrera = getEntity(id);
         LocalDateTime fechaAnterior = carrera.getFecha();
@@ -124,7 +128,7 @@ public class CarreraService {
         }
         carrera.setLinkPista(request.linkPista());
         carrera.setLinkAuto(request.linkAuto());
-        CarreraResponse response = toResponse(carreraRepository.save(carrera), null);
+        CarreraResponse response = toResponse(carreraRepository.save(carrera), null, false);
         if (fechaAnterior != null && request.fecha() != null
                 && request.fecha().isAfter(fechaAnterior)) {
             notificarInscriptos(carrera, "La carrera \"" + carrera.getNombre()
@@ -137,22 +141,21 @@ public class CarreraService {
     public CarreraResponse vincularArchivo(Long id, Long archivoId) {
         Carrera carrera = getEntity(id);
         carrera.setArchivo(archivoCarreraService.getEntity(archivoId));
-        return toResponse(carreraRepository.save(carrera), null);
+        return toResponse(carreraRepository.save(carrera), null, false);
     }
 
     @Transactional
     public CarreraResponse desvincularArchivo(Long id) {
         Carrera carrera = getEntity(id);
         carrera.setArchivo(null);
-        return toResponse(carreraRepository.save(carrera), null);
+        return toResponse(carreraRepository.save(carrera), null, false);
     }
 
     @Transactional
-    @CacheEvict(value = {"carreras_proximas", "carreras_pasadas"}, allEntries = true)
     public CarreraResponse changeEstado(Long id, EstadoCarrera estado) {
         Carrera carrera = getEntity(id);
         carrera.setEstado(estado);
-        CarreraResponse response = toResponse(carreraRepository.save(carrera), null);
+        CarreraResponse response = toResponse(carreraRepository.save(carrera), null, false);
         if (estado == EstadoCarrera.CANCELADA) {
             notificarInscriptos(carrera, "La carrera \"" + carrera.getNombre()
                     + "\" fue cancelada. Cualquier inscripcion activa queda anulada.");
@@ -169,7 +172,6 @@ public class CarreraService {
     }
 
     @Transactional
-    @CacheEvict(value = {"carreras_proximas", "carreras_pasadas"}, allEntries = true)
     public void delete(Long id) {
         Carrera carrera = getEntity(id);
         carreraRepository.delete(carrera);
@@ -310,8 +312,14 @@ public class CarreraService {
                 detalle);
     }
 
-    private CarreraResponse toResponse(Carrera carrera, Map<Long, Long> counts) {
-        Long inscritos = counts != null ? counts.getOrDefault(carrera.getId(), 0L) : null;
+    /**
+     * Con {@code ocultar} se le podan los datos sensibles de las carreras de un
+     * campeonato privado a quien no es miembro: el calendario es publico, pero el
+     * servidor, los links, el archivo y la cantidad de inscriptos no.
+     */
+    private CarreraResponse toResponse(Carrera carrera, Map<Long, Long> counts, boolean ocultar) {
+        Long inscritos = ocultar ? null
+                : (counts != null ? counts.getOrDefault(carrera.getId(), 0L) : null);
         return new CarreraResponse(
                 carrera.getId(),
                 carrera.getNombre(),
@@ -325,10 +333,10 @@ public class CarreraService {
                 carrera.getEstado(),
                 carrera.getCupoMaximo(),
                 inscritos,
-                carrera.getServidor(),
-                carrera.getArchivo() != null ? carrera.getArchivo().getId() : null,
-                carrera.getArchivo() != null ? carrera.getArchivo().getNombre() : null,
-                carrera.getLinkPista(),
-                carrera.getLinkAuto());
+                ocultar ? null : carrera.getServidor(),
+                ocultar || carrera.getArchivo() == null ? null : carrera.getArchivo().getId(),
+                ocultar || carrera.getArchivo() == null ? null : carrera.getArchivo().getNombre(),
+                ocultar ? null : carrera.getLinkPista(),
+                ocultar ? null : carrera.getLinkAuto());
     }
 }

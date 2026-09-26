@@ -37,7 +37,10 @@ export class AuthService {
   }
 
   private persistir(): void {
-    localStorage.setItem(SESSION_KEY, JSON.stringify({ token: this.token(), usuario: this.user() }));
+    localStorage.setItem(
+      SESSION_KEY,
+      JSON.stringify({ token: this.token(), usuario: this.user() }),
+    );
   }
 
   setSesion(token: string, usuario: Usuario | null): void {
@@ -74,6 +77,10 @@ export class AuthService {
     return this.hasRole('ADMIN');
   }
 
+  esAdminCampeonato(): boolean {
+    return this.hasRole('ADMIN_CAMPEONATO');
+  }
+
   esComisario(): boolean {
     return this.hasRole('COMISARIO');
   }
@@ -81,6 +88,11 @@ export class AuthService {
   /** Acceso a moderación / panel: ADMIN o COMISARIO */
   esModerador(): boolean {
     return this.esAdmin() || this.esComisario();
+  }
+
+  /** Puede entrar al panel de organisation de sus propios campeonatos. */
+  esOrganizador(): boolean {
+    return this.esAdmin() || this.esAdminCampeonato();
   }
 
   /** Redirect post-login corrige el bug del `next` roto del front viejo. */

@@ -4,10 +4,11 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.lfmnacional.dto.inscripcion.InscripcionRequest;
 import org.example.lfmnacional.dto.inscripcion.InscripcionResponse;
+import org.example.lfmnacional.entity.Carrera;
 import org.example.lfmnacional.entity.Inscripcion;
 import org.example.lfmnacional.entity.Usuario;
-import org.example.lfmnacional.enums.Rol;
 import org.example.lfmnacional.exception.BusinessException;
+import org.example.lfmnacional.service.CampeonatoAccesoService;
 import org.example.lfmnacional.service.InscripcionService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +24,7 @@ import java.util.Map;
 public class InscripcionController {
 
     private final InscripcionService inscripcionService;
+    private final CampeonatoAccesoService accesoService;
 
     @PostMapping
     public ResponseEntity<InscripcionResponse> inscribirse(@AuthenticationPrincipal Usuario actual,
@@ -35,7 +37,8 @@ public class InscripcionController {
     public ResponseEntity<InscripcionResponse> baja(@PathVariable Long id,
                                                     @AuthenticationPrincipal Usuario actual) {
         Inscripcion inscripcion = inscripcionService.getEntity(id);
-        if (!actual.getRol().equals(Rol.ADMIN) && !inscripcion.getUsuario().getId().equals(actual.getId())) {
+        boolean esPropia = inscripcion.getUsuario().getId().equals(actual.getId());
+        if (!esPropia && !puedeAdministrarCarrera(actual, inscripcion.getCarrera())) {
             throw new BusinessException("No tenes permiso para cancelar la inscripcion de otro usuario");
         }
         return ResponseEntity.ok(inscripcionService.baja(id));
@@ -45,15 +48,25 @@ public class InscripcionController {
     public ResponseEntity<InscripcionResponse> cancelar(@PathVariable Long carreraId,
                                                         @PathVariable Long usuarioId,
                                                         @AuthenticationPrincipal Usuario actual) {
-        if (!actual.getRol().equals(Rol.ADMIN) && !actual.getId().equals(usuarioId)) {
+        boolean esPropia = actual.getId().equals(usuarioId);
+        if (!esPropia && !puedeAdministrarCarrera(actual, inscripcionService.carrera(carreraId))) {
             throw new BusinessException("No tenes permiso para cancelar la inscripcion de otro usuario");
         }
         return ResponseEntity.ok(inscripcionService.cancelar(carreraId, usuarioId));
     }
 
+    /** ADMIN global o el dueno del campeonato al que pertenece la carrera. */
+    private boolean puedeAdministrarCarrera(Usuario actual, Carrera carrera) {
+        if (accesoService.esAdminGlobal(actual)) {
+            return true;
+        }
+        return accesoService.administraCarrera(actual, carrera);
+    }
+
     @GetMapping("/carrera/{carreraId}")
-    public List<InscripcionResponse> listarPorCarrera(@PathVariable Long carreraId) {
-        return inscripcionService.listarPorCarrera(carreraId);
+    public List<InscripcionResponse> listarPorCarrera(@PathVariable Long carreraId,
+                                                     @AuthenticationPrincipal Usuario usuario) {
+        return inscripcionService.listarPorCarrera(carreraId, usuario);
     }
 
     @GetMapping("/usuario/{usuarioId}")
@@ -62,7 +75,8 @@ public class InscripcionController {
     }
 
     @GetMapping("/carrera/{carreraId}/count")
-    public Map<String, Long> countInscriptos(@PathVariable Long carreraId) {
-        return Map.of("inscriptos", inscripcionService.countInscriptos(carreraId));
+    public Map<String, Long> countInscriptos(@PathVariable Long carreraId,
+                                             @AuthenticationPrincipal Usuario usuario) {
+        return Map.of("inscriptos", inscripcionService.countInscriptos(carreraId, usuario));
     }
 }

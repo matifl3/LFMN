@@ -29,6 +29,34 @@ public interface ResultadoCarreraRepository extends JpaRepository<ResultadoCarre
 
     Page<ResultadoCarrera> findByUsuario_Id(Long usuarioId, Pageable pageable);
 
+    /**
+     * Historial paginado sin filtrar las carreras privadas que el espectador no puede
+     * ver. Con {@code spectatorId = null} (ADMIN global o COMISARIO) no filtra nada.
+     */
+    @Query(value = """
+            select r from ResultadoCarrera r
+            where r.usuario.id = :usuarioId
+              and (:spectatorId is null
+                   or r.carrera.campeonato.visibilidad <> org.example.lfmnacional.enums.VisibilidadCampeonato.PRIVADO
+                   or r.carrera.campeonato.admin.id = :spectatorId
+                   or exists (select m from CampeonatoMiembro m
+                              where m.campeonato = r.carrera.campeonato
+                                and m.usuario.id = :spectatorId))
+            """,
+            countQuery = """
+            select count(r) from ResultadoCarrera r
+            where r.usuario.id = :usuarioId
+              and (:spectatorId is null
+                   or r.carrera.campeonato.visibilidad <> org.example.lfmnacional.enums.VisibilidadCampeonato.PRIVADO
+                   or r.carrera.campeonato.admin.id = :spectatorId
+                   or exists (select m from CampeonatoMiembro m
+                              where m.campeonato = r.carrera.campeonato
+                                and m.usuario.id = :spectatorId))
+            """)
+    Page<ResultadoCarrera> findVisiblesPorUsuario(@Param("usuarioId") Long usuarioId,
+                                                  @Param("spectatorId") Long spectatorId,
+                                                  Pageable pageable);
+
     long countByUsuario_Id(Long usuarioId);
 
     long countByUsuario_IdAndFinalizoTrue(Long usuarioId);

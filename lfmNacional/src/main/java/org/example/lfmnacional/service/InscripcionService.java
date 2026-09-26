@@ -7,6 +7,7 @@ import org.example.lfmnacional.entity.Inscripcion;
 import org.example.lfmnacional.entity.Usuario;
 import org.example.lfmnacional.enums.EstadoCarrera;
 import org.example.lfmnacional.enums.EstadoInscripcion;
+import org.example.lfmnacional.enums.VisibilidadCampeonato;
 import org.example.lfmnacional.exception.BusinessException;
 import org.example.lfmnacional.exception.ResourceNotFoundException;
 import org.example.lfmnacional.mapper.EntityMapper;
@@ -28,10 +29,15 @@ public class InscripcionService {
     private final InscripcionRepository inscripcionRepository;
     private final CarreraService carreraService;
     private final UsuarioService usuarioService;
+    private final CampeonatoAccesoService accesoService;
 
     public Inscripcion getEntity(Long id) {
         return inscripcionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Inscripcion no encontrada con id " + id));
+    }
+
+    public Carrera carrera(Long carreraId) {
+        return carreraService.getEntity(carreraId);
     }
 
     @Transactional
@@ -39,6 +45,7 @@ public class InscripcionService {
         Carrera carrera = carreraService.getEntity(carreraId);
         Usuario usuario = usuarioService.getEntity(usuarioId);
         validarInscripcionesAbiertas(carrera);
+        validarPertenencia(carrera, usuario);
         validarRequisitosElo(carrera, usuario);
 
         Optional<Inscripcion> existente = inscripcionRepository.findByCarrera_IdAndUsuario_Id(carreraId, usuarioId);
@@ -90,7 +97,9 @@ public class InscripcionService {
     }
 
     @Transactional(readOnly = true)
-    public List<InscripcionResponse> listarPorCarrera(Long carreraId) {
+    public List<InscripcionResponse> listarPorCarrera(Long carreraId, Usuario usuario) {
+        Carrera carrera = carreraService.getEntity(carreraId);
+        accesoService.exigirVeCarrera(usuario, carrera);
         return inscripcionRepository.findByCarrera_Id(carreraId).stream().map(this::toResponse).toList();
     }
 
@@ -99,7 +108,16 @@ public class InscripcionService {
         return inscripcionRepository.findByUsuario_Id(usuarioId).stream().map(this::toResponse).toList();
     }
 
-    public long countInscriptos(Long carreraId) {
+    /**
+     * El calendario es publico, asi que el count no puede exigir membresia. A los
+     * que no son miembros de un campeonato privado se les reporta 0 para no
+     * delatar cuantos pilotos hay adentro.
+     */
+    public long countInscriptos(Long carreraId, Usuario usuario) {
+        Carrera carrera = carreraService.getEntity(carreraId);
+        if (!accesoService.veCarrera(usuario, carrera)) {
+            return 0L;
+        }
         return inscripcionRepository.countByCarrera_IdAndEstado(carreraId, EstadoInscripcion.INSCRIPTO);
     }
 
@@ -121,7 +139,24 @@ public class InscripcionService {
         }
     }
 
+    /**
+     * Un campeonato privado es de lista cerrada: solo se puede inscribir quien el
+     * administrador del campeonato sumo como miembro. El propio administrador
+     * compite siempre; un comisario puede ver pero no competir.
+     */
+    private void validarPertenencia(Carrera carrera, Usuario usuario) {
+        if (accesoService.puedeParticiparEnCarrera(usuario, carrera)) {
+            return;
+        }
+        throw new BusinessException("La carrera \"" + carrera.getNombre() + "\" es de un campeonato privado. "
+                + "Pedi al administrador del campeonato que te sume para poder inscribirte");
+    }
+
+    /** Sin filtro de Elo en los privados: manda la lista que armo el admin. */
     private void validarRequisitosElo(Carrera carrera, Usuario usuario) {
+        if (carrera.getCampeonato().getVisibilidad() == VisibilidadCampeonato.PRIVADO) {
+            return;
+        }
         Integer eloMinimo = carrera.getCampeonato().getCategoria().getEloMinimo();
         Integer eloMaximo = carrera.getCampeonato().getCategoria().getEloMaximo();
         if (eloMinimo != null && usuario.getElo() < eloMinimo) {

@@ -47,6 +47,8 @@ export class Header {
         const links = [...BASE_LINKS];
         const id = this.auth.user()?.id;
         if (id) links.push({ path: `/perfil/${id}`, label: 'Mi perfil' });
+        if (this.auth.esOrganizador())
+          links.push({ path: '/mis-campeonatos', label: 'Mis campeonatos' });
         if (this.auth.esModerador()) links.push({ path: '/admin', label: 'Admin' });
         this.navLinks.set(links);
         this.cargarNoLeidas();

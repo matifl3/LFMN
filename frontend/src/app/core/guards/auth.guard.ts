@@ -20,3 +20,15 @@ export const adminGuard: CanActivateFn = () => {
   if (auth.esModerador()) return true;
   return router.createUrlTree(['/']);
 };
+
+/** ADMIN global o ADMIN_CAMPEONATO: administran sus propios campeonatos privados. */
+export const organizadorGuard: CanActivateFn = () => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+  if (!auth.autenticado()) {
+    auth.guardarNext(router.url);
+    return router.createUrlTree(['/auth']);
+  }
+  if (auth.esOrganizador()) return true;
+  return router.createUrlTree(['/']);
+};
