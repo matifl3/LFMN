@@ -40,9 +40,12 @@ public class CampeonatoAccesoService {
         return usuario != null && usuario.getRol() == Rol.ADMIN_CAMPEONATO;
     }
 
-    /** Puede crear campeonato y, en el caso del ADMIN global, cualquiera. */
+    /**
+     * Crear un campeonato es potestad del ADMIN global: el ADMIN_CAMPEONATO no
+     * crea nada, administra el que le asignan.
+     */
     public boolean puedeCrearCampeonato(Usuario usuario) {
-        return esAdminGlobal(usuario) || esAdminCampeonato(usuario);
+        return esAdminGlobal(usuario);
     }
 
     // -------------------------------------------------------- relaciones

@@ -52,9 +52,6 @@
         <a [routerLink]="miPerfil()" aria-label="Mi perfil">
           <app-avatar [user]="auth.user()" [size]="38" />
         </a>
-        @if (auth.esOrganizador()) {
-          <a routerLink="/mis-campeonatos" class="btn btn-ghost btn-sm">Mis campeonatos</a>
-        }
         <button
           type="button"
           class="btn btn-ghost btn-sm"

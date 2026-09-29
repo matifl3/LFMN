@@ -59,8 +59,9 @@ public class CampeonatoController {
         return campeonatoService.getTabla(id);
     }
 
+    /** Solo el ADMIN global crea campeonatos. */
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN') or hasRole('ADMIN_CAMPEONATO')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<CampeonatoResponse> create(@Valid @RequestBody CampeonatoRequest request,
                                                     @AuthenticationPrincipal Usuario usuario) {
         return ResponseEntity.status(HttpStatus.CREATED).body(campeonatoService.create(request, usuario));

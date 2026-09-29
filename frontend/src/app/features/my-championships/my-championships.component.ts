@@ -3,7 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { SlicePipe } from '@angular/common';
 import { forkJoin, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { catchError, map } from 'rxjs/operators';
 import { ApiService, apiError } from '../../core/services/api.service';
 import { ToastService } from '../../core/services/toast.service';
 import { AuthService } from '../../core/services/auth.service';
@@ -13,6 +13,7 @@ import {
   Categoria,
   MiembroCampeonato,
   TablaPosicion,
+  Usuario,
 } from '../../core/models/models';
 import { Chip } from '../../shared/components/chip/chip';
 import { Avatar } from '../../shared/components/avatar/avatar';
@@ -55,11 +56,17 @@ export class MisCampeonatosComponent implements OnInit {
   readonly carreras = signal<Carrera[]>([]);
   readonly tabla = signal<TablaPosicion[]>([]);
 
-  // alta de campeonato
+  /** Cuentas a las que el ADMIN global puede asignar un campeonato. */
+  readonly organizadores = signal<Usuario[]>([]);
+  /** Crear un campeonato es potestad del ADMIN global, no del organizador. */
+  readonly esAdminGlobal = computed(() => this.auth.esAdmin());
+
+  // alta de campeonato (solo ADMIN global)
   readonly chNombre = signal('');
   readonly chTemporada = signal('');
   readonly chCategoriaId = signal('');
   readonly chSistemaPuntos = signal('default');
+  readonly chAdminId = signal('');
   readonly editandoCampeonatoId = signal<number | null>(null);
 
   // roster
@@ -98,10 +105,19 @@ export class MisCampeonatosComponent implements OnInit {
     forkJoin({
       mios: this.api.list<Campeonato>('/campeonatos/mios').pipe(catchError(() => of([]))),
       categorias: this.api.list<Categoria>('/categorias').pipe(catchError(() => of([]))),
+      // /usuarios es ADMIN-only, y solo lo necesita el ADMIN global para elegir
+      // a quien le asigna el campeonato.
+      organizadores: this.esAdminGlobal()
+        ? this.api.list<Usuario>('/usuarios').pipe(
+            catchError(() => of([] as Usuario[])),
+            map((usuarios) => usuarios.filter((u) => u.rol === 'ADMIN_CAMPEONATO')),
+          )
+        : of([] as Usuario[]),
     }).subscribe({
       next: (r) => {
         this.campeonatos.set(r.mios);
         this.categorias.set(r.categorias);
+        this.organizadores.set(r.organizadores);
         this.cargando.set(false);
         const primero = r.mios[0];
         if (primero && this.selectedId() === null) this.seleccionar(primero.id);
@@ -160,6 +176,7 @@ export class MisCampeonatosComponent implements OnInit {
       temporada: this.chTemporada().trim() || undefined,
       categoriaId,
       sistemaPuntos: this.chSistemaPuntos() || undefined,
+      adminId: this.chAdminId() ? Number(this.chAdminId()) : null,
     };
     const editando = this.editandoCampeonatoId();
     const req = editando
@@ -167,7 +184,7 @@ export class MisCampeonatosComponent implements OnInit {
       : this.api.post<Campeonato>('/campeonatos', body);
     req.subscribe({
       next: (creado) => {
-        this.toast.success(editando ? 'Campeonato actualizado.' : 'Campeonato privado creado.');
+        this.toast.success(editando ? 'Campeonato actualizado.' : 'Campeonato creado.');
         this.limpiarFormCampeonato();
         this.cargar();
         if (creado?.id) this.seleccionar(creado.id);
@@ -182,6 +199,7 @@ export class MisCampeonatosComponent implements OnInit {
     this.chTemporada.set(c.temporada || '');
     this.chCategoriaId.set(String(c.categoriaId));
     this.chSistemaPuntos.set(c.sistemaPuntos || 'default');
+    this.chAdminId.set(c.adminId ? String(c.adminId) : '');
   }
 
   limpiarFormCampeonato(): void {
@@ -190,6 +208,7 @@ export class MisCampeonatosComponent implements OnInit {
     this.chTemporada.set('');
     this.chCategoriaId.set('');
     this.chSistemaPuntos.set('default');
+    this.chAdminId.set('');
   }
 
   cerrarCampeonato(c: Campeonato): void {

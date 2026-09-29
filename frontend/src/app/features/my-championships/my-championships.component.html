@@ -53,63 +53,86 @@
           }
         </div>
 
-        <div class="card">
-          <h3 class="card-title">
-            {{ editandoCampeonatoId() ? 'Editar campeonato' : 'Nuevo campeonato' }}
-          </h3>
-          <form class="form-grid" (ngSubmit)="guardarCampeonato()">
-            <label class="field">
-              <span>Nombre</span>
-              <input
-                type="text"
-                name="chNombre"
-                [ngModel]="chNombre()"
-                (ngModelChange)="chNombre.set($event)"
-                maxlength="150"
-                required
-              />
-            </label>
-            <label class="field">
-              <span>Temporada</span>
-              <input
-                type="text"
-                name="chTemporada"
-                [ngModel]="chTemporada()"
-                (ngModelChange)="chTemporada.set($event)"
-                maxlength="50"
-                placeholder="2026"
-              />
-            </label>
-            <label class="field">
-              <span>Categoria</span>
-              <select
-                name="chCategoriaId"
-                [ngModel]="chCategoriaId()"
-                (ngModelChange)="chCategoriaId.set($event)"
-                required
-              >
-                <option value="">Elegi una</option>
-                @for (cat of categorias(); track cat.id) {
-                  <option [value]="cat.id">{{ cat.nombre }}</option>
-                }
-              </select>
-            </label>
-            <p class="muted small field-wide">
-              Los campeonatos creados desde aca son <strong>privados</strong>. Si queres uno
-              publico, lo crea el administrador global.
-            </p>
-            <div class="form-actions field-wide">
-              <button type="submit" class="btn btn-primary">
-                {{ editandoCampeonatoId() ? 'Guardar cambios' : 'Crear campeonato' }}
-              </button>
-              @if (editandoCampeonatoId()) {
-                <button type="button" class="btn btn-ghost" (click)="limpiarFormCampeonato()">
-                  Cancelar
+        @if (esAdminGlobal()) {
+          <div class="card">
+            <h3 class="card-title">
+              {{ editandoCampeonatoId() ? 'Editar campeonato' : 'Nuevo campeonato' }}
+            </h3>
+            <form class="form-grid" (ngSubmit)="guardarCampeonato()">
+              <label class="field">
+                <span>Nombre</span>
+                <input
+                  type="text"
+                  name="chNombre"
+                  [ngModel]="chNombre()"
+                  (ngModelChange)="chNombre.set($event)"
+                  maxlength="150"
+                  required
+                />
+              </label>
+              <label class="field">
+                <span>Temporada</span>
+                <input
+                  type="text"
+                  name="chTemporada"
+                  [ngModel]="chTemporada()"
+                  (ngModelChange)="chTemporada.set($event)"
+                  maxlength="50"
+                  placeholder="2026"
+                />
+              </label>
+              <label class="field">
+                <span>Categoria</span>
+                <select
+                  name="chCategoriaId"
+                  [ngModel]="chCategoriaId()"
+                  (ngModelChange)="chCategoriaId.set($event)"
+                  required
+                >
+                  <option value="">Elegi una</option>
+                  @for (cat of categorias(); track cat.id) {
+                    <option [value]="cat.id">{{ cat.nombre }}</option>
+                  }
+                </select>
+              </label>
+              <label class="field">
+                <span>Organizador (opcional)</span>
+                <select
+                  name="chAdminId"
+                  [ngModel]="chAdminId()"
+                  (ngModelChange)="chAdminId.set($event)"
+                >
+                  <option value="">Sin organizador</option>
+                  @for (u of organizadores(); track u.id) {
+                    <option [value]="u.id">{{ u.nombrePiloto || u.email }}</option>
+                  }
+                </select>
+              </label>
+              <p class="muted small field-wide">
+                El <strong>organizador</strong> es la cuenta con rol
+                <code>ADMIN_CAMPEONATO</code> que va a administrar el campeonato: arma el roster de
+                pilotos y crea las carreras. Sin organizador queda como campeonato publico de liga.
+              </p>
+              <div class="form-actions field-wide">
+                <button type="submit" class="btn btn-primary">
+                  {{ editandoCampeonatoId() ? 'Guardar cambios' : 'Crear campeonato' }}
                 </button>
-              }
-            </div>
-          </form>
-        </div>
+                @if (editandoCampeonatoId()) {
+                  <button type="button" class="btn btn-ghost" (click)="limpiarFormCampeonato()">
+                    Cancelar
+                  </button>
+                }
+              </div>
+            </form>
+          </div>
+        } @else {
+          <div class="card">
+            <p class="muted small">
+              Administras los campeonato que te asigna la organizacion de la liga: armás el roster
+              de pilotos y creás las carreras desde acá.
+            </p>
+          </div>
+        }
       </aside>
 
       <div class="mc-detail">
@@ -120,12 +143,17 @@
               <p class="muted small">
                 {{ camp.categoriaNombre }} · {{ camp.temporada || 'sin temporada' }} ·
                 {{ camp.cantidadMiembros }} pilotos
+                @if (camp.adminNombrePiloto) {
+                  · organizado por {{ camp.adminNombrePiloto }}
+                }
               </p>
             </div>
             <div class="form-actions">
-              <button type="button" class="btn btn-ghost" (click)="editarCampeonato(camp)">
-                Editar
-              </button>
+              @if (esAdminGlobal()) {
+                <button type="button" class="btn btn-ghost" (click)="editarCampeonato(camp)">
+                  Editar
+                </button>
+              }
               @if (camp.estado === 'ACTIVO') {
                 <button type="button" class="btn btn-ghost" (click)="cerrarCampeonato(camp)">
                   Cerrar campeonato

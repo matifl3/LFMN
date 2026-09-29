@@ -2,6 +2,7 @@ package org.example.lfmnacional.entity;
 
 import org.example.lfmnacional.enums.EstadoCampeonato;
 import org.example.lfmnacional.enums.VisibilidadCampeonato;
+import org.hibernate.annotations.ColumnDefault;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -41,7 +42,15 @@ public class Campeonato {
     @Column(name = "sistema_puntos", length = 100)
     private String sistemaPuntos; //descripcion de como es el sistema de puntos en ese campeonato
 
+    /**
+     * {@code @ColumnDefault} importa: sin el, Hibernate genera
+     * {@code add column visibilidad enum('PRIVADO','PUBLICO') not null} y MySQL le
+     * asigna el PRIMER literal a las filas que ya existian, dejando como privados
+     * a todos los championships historicos. Con el default en el schema
+     * quedan publicos, que es lo que corresponde a la liga.
+     */
     @Enumerated(EnumType.STRING)
+    @ColumnDefault("'PUBLICO'")
     @Column(nullable = false, length = 20)
     private VisibilidadCampeonato visibilidad;
 

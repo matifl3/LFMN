@@ -14,6 +14,7 @@ import org.example.lfmnacional.exception.BusinessException;
 import org.example.lfmnacional.repository.CampeonatoMiembroRepository;
 import org.example.lfmnacional.repository.CampeonatoPosicionRepository;
 import org.example.lfmnacional.repository.CampeonatoRepository;
+import org.example.lfmnacional.repository.UsuarioRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -45,6 +46,8 @@ class CampeonatoServiceTest {
     private CategoriaService categoriaService;
     @Mock
     private CampeonatoAccesoService accesoService;
+    @Mock
+    private UsuarioRepository usuarioRepository;
 
     @InjectMocks
     private CampeonatoService campeonatoService;
@@ -197,41 +200,86 @@ class CampeonatoServiceTest {
     }
 
     @Test
-    void adminCampeonatoCreaSiempreEnPrivato() {
+    void adminCampeonatoNoPuedeCrearCampeonatos() {
         Usuario dueno = Usuario.builder().id(7L).nombrePiloto("Dueno").rol(Rol.ADMIN_CAMPEONATO).build();
-        when(accesoService.puedeCrearCampeonato(dueno)).thenReturn(true);
-        when(accesoService.esAdminGlobal(dueno)).thenReturn(false);
-        when(categoriaService.getEntity(1L)).thenReturn(categoria);
-        when(campeonatoRepository.save(any(Campeonato.class)))
-                .thenAnswer(inv -> inv.getArgument(0));
+        when(accesoService.puedeCrearCampeonato(dueno)).thenReturn(false);
 
-        campeonatoService.create(
+        assertThatThrownBy(() -> campeonatoService.create(
                 new org.example.lfmnacional.dto.campeonato.CampeonatoRequest(
-                        "Copa Nocturna", "2026", 1L, null, null, VisibilidadCampeonato.PUBLICO),
-                dueno);
-
-        ArgumentCaptor<Campeonato> captor = ArgumentCaptor.forClass(Campeonato.class);
-        verify(campeonatoRepository).save(captor.capture());
-        assertThat(captor.getValue().getVisibilidad()).isEqualTo(VisibilidadCampeonato.PRIVADO);
-        assertThat(captor.getValue().getAdmin()).isSameAs(dueno);
+                        "Copa Nocturna", "2026", 1L, null, null, null, null),
+                dueno))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("administrador global");
+        verify(campeonatoRepository, never()).save(any());
     }
 
     @Test
     void adminGlobalPuedeElegirLaVisibilidad() {
         when(accesoService.puedeCrearCampeonato(admin)).thenReturn(true);
-        when(accesoService.esAdminGlobal(admin)).thenReturn(true);
         when(categoriaService.getEntity(1L)).thenReturn(categoria);
         when(campeonatoRepository.save(any(Campeonato.class)))
                 .thenAnswer(inv -> inv.getArgument(0));
 
         campeonatoService.create(
                 new org.example.lfmnacional.dto.campeonato.CampeonatoRequest(
-                        "Liga Abierta", "2026", 1L, null, null, VisibilidadCampeonato.PUBLICO),
+                        "Liga Abierta", "2026", 1L, null, null, null, VisibilidadCampeonato.PUBLICO),
                 admin);
 
         ArgumentCaptor<Campeonato> captor = ArgumentCaptor.forClass(Campeonato.class);
         verify(campeonatoRepository).save(captor.capture());
         assertThat(captor.getValue().getVisibilidad()).isEqualTo(VisibilidadCampeonato.PUBLICO);
         assertThat(captor.getValue().getAdmin()).isNull();
+    }
+
+    @Test
+    void adminGlobalAsignaElCampeonatoAUnAdminCampeonato() {
+        Usuario organizador = Usuario.builder().id(7L).nombrePiloto("Dueno").rol(Rol.ADMIN_CAMPEONATO).build();
+        when(accesoService.puedeCrearCampeonato(admin)).thenReturn(true);
+        when(categoriaService.getEntity(1L)).thenReturn(categoria);
+        when(usuarioRepository.findById(7L)).thenReturn(Optional.of(organizador));
+        when(campeonatoRepository.save(any(Campeonato.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+
+        campeonatoService.create(
+                new org.example.lfmnacional.dto.campeonato.CampeonatoRequest(
+                        "Liga Abierta", "2026", 1L, null, null, 7L, VisibilidadCampeonato.PUBLICO),
+                admin);
+
+        ArgumentCaptor<Campeonato> captor = ArgumentCaptor.forClass(Campeonato.class);
+        verify(campeonatoRepository).save(captor.capture());
+        assertThat(captor.getValue().getAdmin()).isSameAs(organizador);
+    }
+
+    @Test
+    void noSePuedeAsignarElCampeonatoAUnRolQueNoAdministra() {
+        when(accesoService.puedeCrearCampeonato(admin)).thenReturn(true);
+        when(categoriaService.getEntity(1L)).thenReturn(categoria);
+        when(usuarioRepository.findById(1L)).thenReturn(Optional.of(usuario1));
+
+        assertThatThrownBy(() -> campeonatoService.create(
+                new org.example.lfmnacional.dto.campeonato.CampeonatoRequest(
+                        "Liga Abierta", "2026", 1L, null, null, 1L, VisibilidadCampeonato.PUBLICO),
+                admin))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("ADMIN_CAMPEONATO");
+        verify(campeonatoRepository, never()).save(any());
+    }
+
+    @Test
+    void adminCampeonatoNoPuedeCambiarElDuenoDelCampeonato() {
+        Usuario dueno = Usuario.builder().id(7L).nombrePiloto("Dueno").rol(Rol.ADMIN_CAMPEONATO).build();
+        when(campeonatoRepository.findById(1L)).thenReturn(Optional.of(campeonato));
+        when(accesoService.esAdminGlobal(dueno)).thenReturn(false);
+        when(categoriaService.getEntity(1L)).thenReturn(categoria);
+        when(campeonatoRepository.save(any(Campeonato.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+
+        campeonatoService.update(1L,
+                new org.example.lfmnacional.dto.campeonato.CampeonatoRequest(
+                        "Test Championship", "2026", 1L, null, null, 1L, null),
+                dueno);
+
+        assertThat(campeonato.getAdmin()).isNull();
+        verify(usuarioRepository, never()).findById(anyLong());
     }
 }

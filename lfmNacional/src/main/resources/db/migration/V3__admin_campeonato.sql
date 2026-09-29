@@ -5,8 +5,8 @@
 -- que correr a mano aunque Hibernate ya haya creado las columnas.
 --
 -- 1) ENUMs: MySQL los define en el CREATE TABLE, no en la entidad.
--- 2) Los campeonatos que ya existian quedan publicos: asi siguen apareciendo en el
---    listado historico. Su admin_id queda NULL porque no hay dueno historico.
+-- 2) Los campeonatos que ya existian quedan publicos: asi siguen apareciendo en
+--    el listado historico. Su admin_id queda NULL porque no hay dueno historico.
 -- 3) La tabla de miembros es la lista cerrada; sin fila no se compite.
 
 -- ADMIN_CAMPEONATO como rol de usuario.
@@ -20,19 +20,26 @@ ALTER TABLE `notificacion`
   COLLATE utf8mb4_unicode_ci NOT NULL;
 
 -- Visibilidad y dueno del campeonato.
+-- El DEFAULT importa: Hibernate genera `add column visibilidad enum(...) not null`
+-- sin default cuando la entidad no lo declara, y MySQL le asigna a las filas
+-- viejas el PRIMER literal del enum ('PRIVADO'). Con el default quedan en
+-- 'PUBLICO', que es lo que corresponde a los campeonatos de la liga.
 ALTER TABLE `campeonato`
   ADD COLUMN `visibilidad` enum('PRIVADO','PUBLICO') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'PUBLICO',
   ADD COLUMN `admin_id` bigint DEFAULT NULL,
   ADD KEY `FK_campeonato_admin` (`admin_id`),
   ADD CONSTRAINT `FK_campeonato_admin` FOREIGN KEY (`admin_id`) REFERENCES `usuario` (`id`);
 
--- Los campeonato previos quedan publicos solos: la columna es NOT NULL DEFAULT
--- 'PUBLICO', asi que MySQL la puebla en las filas existentes. admin_id queda NULL
--- porque no hay dueno historico; solo el ADMIN global puede ponerlo despues.
+-- Red de seguridad: si la columna la creo Hibernate sin default, los
+-- campeonatos historicos quedaron como PRIVADO. admin_id NULL = sin dueno, o sea
+-- que no es el campeonato de un organizador, asi que se deja publico.
+UPDATE `campeonato` SET `visibilidad` = 'PUBLICO' WHERE `admin_id` IS NULL;
 
--- Lista de pilotos por campeonato.
+-- Lista de pilotos por campeonato. fecha_alta es NOT NULL en la entidad, asi
+-- que va en el CREATE y no como ALTER posterior.
 CREATE TABLE IF NOT EXISTS `campeonato_miembro` (
   `id` bigint NOT NULL AUTO_INCREMENT,
+  `fecha_alta` datetime(6) NOT NULL,
   `campeonato_id` bigint NOT NULL,
   `usuario_id` bigint NOT NULL,
   PRIMARY KEY (`id`),

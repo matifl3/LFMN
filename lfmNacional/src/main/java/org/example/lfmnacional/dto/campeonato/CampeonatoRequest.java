@@ -12,9 +12,13 @@ public record CampeonatoRequest(
         EstadoCampeonato estado,
         String sistemaPuntos,
         /**
-         * Solo lo puede setear el ADMIN global. Un ADMIN_CAMPEONATO siempre crea
-         * en privado: el servicio ignora lo que venga por acá.
+         * Solo lo puede setear el ADMIN global, y tiene que apuntar a una cuenta
+         * con rol ADMIN_CAMPEONATO. Es la unica via por la que un organizador
+         * llega a tener un campeonato: el ADMIN_CAMPEONATO no crea nada, administra
+         * lo que le asignan. Enviar {@code null} deja el campeonato sin dueno
+         * (publico de liga); enviar el id quita el dueno anterior.
          */
+        Long adminId,
         VisibilidadCampeonato visibilidad
 ) {
 }

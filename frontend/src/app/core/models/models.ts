@@ -121,7 +121,7 @@ export interface Campeonato {
   sistemaPuntos?: string;
   visibilidad: VisibilidadCampeonato;
   adminId?: number;
-  adminNombre?: string;
+  adminNombrePiloto?: string;
   cantidadMiembros: number;
   soyAdmin: boolean;
   soyMiembro: boolean;

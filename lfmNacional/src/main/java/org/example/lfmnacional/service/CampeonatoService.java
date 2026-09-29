@@ -10,12 +10,14 @@ import org.example.lfmnacional.entity.Carrera;
 import org.example.lfmnacional.entity.ResultadoCarrera;
 import org.example.lfmnacional.entity.Usuario;
 import org.example.lfmnacional.enums.EstadoCampeonato;
+import org.example.lfmnacional.enums.Rol;
 import org.example.lfmnacional.enums.VisibilidadCampeonato;
 import org.example.lfmnacional.exception.BusinessException;
 import org.example.lfmnacional.exception.ResourceNotFoundException;
 import org.example.lfmnacional.repository.CampeonatoMiembroRepository;
 import org.example.lfmnacional.repository.CampeonatoPosicionRepository;
 import org.example.lfmnacional.repository.CampeonatoRepository;
+import org.example.lfmnacional.repository.UsuarioRepository;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -36,6 +38,7 @@ public class CampeonatoService {
     private final CampeonatoMiembroRepository miembroRepository;
     private final CategoriaService categoriaService;
     private final CampeonatoAccesoService accesoService;
+    private final UsuarioRepository usuarioRepository;
 
     public Campeonato getEntity(Long id) {
         return campeonatoRepository.findById(id)
@@ -88,16 +91,20 @@ public class CampeonatoService {
                 .toList();
     }
 
+    /**
+     * Crear un campeonato es solo del ADMIN global. El ADMIN_CAMPEONATO no crea:
+     * el ADMIN global le asigna uno ya creado ({@code adminId}) y ahi empieza a
+     * trabajar.
+     */
     @Transactional
     @CacheEvict(value = "tabla_posiciones", allEntries = true)
     public CampeonatoResponse create(CampeonatoRequest request, Usuario usuario) {
         if (!accesoService.puedeCrearCampeonato(usuario)) {
-            throw new BusinessException("No tenes permisos para crear un campeonato");
+            throw new BusinessException("Solo el administrador global puede crear campeonatos");
         }
-        boolean adminGlobal = accesoService.esAdminGlobal(usuario);
-        VisibilidadCampeonato visibilidad = adminGlobal
-                ? (request.visibilidad() != null ? request.visibilidad() : VisibilidadCampeonato.PUBLICO)
-                : VisibilidadCampeonato.PRIVADO;
+        VisibilidadCampeonato visibilidad = request.visibilidad() != null
+                ? request.visibilidad()
+                : VisibilidadCampeonato.PUBLICO;
         Campeonato campeonato = Campeonato.builder()
                 .nombre(request.nombre())
                 .temporada(request.temporada())
@@ -105,7 +112,7 @@ public class CampeonatoService {
                 .estado(request.estado())
                 .sistemaPuntos(request.sistemaPuntos())
                 .visibilidad(visibilidad)
-                .admin(visibilidad == VisibilidadCampeonato.PUBLICO ? null : usuario)
+                .admin(resolverAdmin(request.adminId()))
                 .build();
         return toResponse(campeonatoRepository.save(campeonato), usuario, Set.of());
     }
@@ -116,9 +123,15 @@ public class CampeonatoService {
         Campeonato campeonato = getEntity(id);
         accesoService.exigirAdministra(usuario, campeonato);
         boolean adminGlobal = accesoService.esAdminGlobal(usuario);
-        if (request.visibilidad() != null && adminGlobal
+        if (adminGlobal && request.visibilidad() != null
                 && request.visibilidad() != campeonato.getVisibilidad()) {
             cambiarVisibilidad(campeonato, request.visibilidad(), usuario);
+        }
+        // El dueno solo lo mueve el ADMIN global: si lo pudiera cambiar el
+        // ADMIN_CAMPEONATO, se traspasaria el campeonato a otro o se quedaria sin
+        // dueno sin querer.
+        if (adminGlobal) {
+            campeonato.setAdmin(resolverAdmin(request.adminId()));
         }
         campeonato.setNombre(request.nombre());
         campeonato.setTemporada(request.temporada());
@@ -126,6 +139,24 @@ public class CampeonatoService {
         campeonato.setEstado(request.estado() != null ? request.estado() : campeonato.getEstado());
         campeonato.setSistemaPuntos(request.sistemaPuntos());
         return toResponse(campeonatoRepository.save(campeonato), usuario, Set.of());
+    }
+
+    /**
+     * Traduce el {@code adminId} del request a un ADMIN_CAMPEONATO. {@code null}
+     * deja el campeonato sin dueno. Rechaza cualquier otro rol a proposito: el
+     * dueno administra el campeonato, y un USUARIO o COMISARIO no puede.
+     */
+    private Usuario resolverAdmin(Long adminId) {
+        if (adminId == null) {
+            return null;
+        }
+        Usuario admin = usuarioRepository.findById(adminId)
+                .orElseThrow(() -> new ResourceNotFoundException("No existe el usuario " + adminId));
+        if (admin.getRol() != Rol.ADMIN_CAMPEONATO) {
+            throw new BusinessException("El campeonato solo se puede asignar a una cuenta con rol "
+                    + "ADMIN_CAMPEONATO. " + admin.getNombrePiloto() + " es " + admin.getRol());
+        }
+        return admin;
     }
 
     @Transactional
