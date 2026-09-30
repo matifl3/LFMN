@@ -266,6 +266,40 @@ class CampeonatoServiceTest {
     }
 
     @Test
+    void adminGlobalAsignaElDueñoAlEditarElCampeonato() {
+        Usuario organizador = Usuario.builder().id(7L).nombrePiloto("Dueno").rol(Rol.ADMIN_CAMPEONATO).build();
+        when(campeonatoRepository.findById(1L)).thenReturn(Optional.of(campeonato));
+        when(accesoService.esAdminGlobal(admin)).thenReturn(true);
+        when(categoriaService.getEntity(1L)).thenReturn(categoria);
+        when(usuarioRepository.findById(7L)).thenReturn(Optional.of(organizador));
+        when(campeonatoRepository.save(any(Campeonato.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+
+        campeonatoService.update(1L,
+                new org.example.lfmnacional.dto.campeonato.CampeonatoRequest(
+                        "Liga Abierta", "2026", 1L, null, null, 7L, null),
+                admin);
+
+        assertThat(campeonato.getAdmin()).isSameAs(organizador);
+    }
+
+    @Test
+    void adminGlobalCambiaElEstadoAlEditarElCampeonato() {
+        when(campeonatoRepository.findById(1L)).thenReturn(Optional.of(campeonato));
+        when(accesoService.esAdminGlobal(admin)).thenReturn(true);
+        when(categoriaService.getEntity(1L)).thenReturn(categoria);
+        when(campeonatoRepository.save(any(Campeonato.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+
+        campeonatoService.update(1L,
+                new org.example.lfmnacional.dto.campeonato.CampeonatoRequest(
+                        "Liga Abierta", "2026", 1L, EstadoCampeonato.CERRADO, null, null, null),
+                admin);
+
+        assertThat(campeonato.getEstado()).isEqualTo(EstadoCampeonato.CERRADO);
+    }
+
+    @Test
     void adminCampeonatoNoPuedeCambiarElDuenoDelCampeonato() {
         Usuario dueno = Usuario.builder().id(7L).nombrePiloto("Dueno").rol(Rol.ADMIN_CAMPEONATO).build();
         when(campeonatoRepository.findById(1L)).thenReturn(Optional.of(campeonato));

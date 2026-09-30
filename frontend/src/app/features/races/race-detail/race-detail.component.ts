@@ -26,6 +26,20 @@ import {
 
 const ESTADOS_INSCRIPCION = ['PROGRAMADA', 'INSCRIPCIONES_ABIERTAS'] as const;
 
+/**
+ * Devuelve una URL navegable o `null` si el valor no es un enlace. Acepta lo que
+ * suele pegar la gente: con o sin `http://`, o solo `host:puerto`, que es como
+ * se ve un server de Assetto Corsa.
+ */
+function normalizeUrl(valor: string | null | undefined): string | null {
+  const v = (valor ?? '').trim();
+  if (!v) return null;
+  if (/^https?:\/\//i.test(v)) return v;
+  // host:puerto o un dominio suelto. Excluye "Servidor 1" y frases sueltas.
+  if (/^[a-z0-9-]+(\.[a-z0-9-]+)+(:\d+)?(\/\S*)?$/i.test(v)) return 'http://' + v;
+  return null;
+}
+
 @Component({
   selector: 'app-race-detail',
   standalone: true,
@@ -109,6 +123,20 @@ export class RaceDetailComponent implements OnInit {
   readonly accesoVisible = computed(
     () => !!this.acceso()?.contrasenaServidor || !!this.acceso()?.servidor,
   );
+
+  /** El campo `servidor` se carga a mano, asi que puede venir una URL o un host. */
+  readonly servidorUrl = computed(() => normalizeUrl(this.carrera()?.servidor));
+
+  /** Etiqueta corta para el boton: el host, no la URL entera. */
+  readonly servidorLabel = computed(() => {
+    const url = this.servidorUrl();
+    if (!url) return null;
+    try {
+      return new URL(url).host;
+    } catch {
+      return url;
+    }
+  });
 
   ngOnInit(): void {
     const id = this.route.snapshot.paramMap.get('id');

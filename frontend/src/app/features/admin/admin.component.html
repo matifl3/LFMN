@@ -251,6 +251,8 @@
                     <th>Temporada</th>
                     <th>Categoría</th>
                     <th>Puntos</th>
+                    <th>Visibilidad</th>
+                    <th>Organizador</th>
                     <th>Estado</th>
                     <th></th>
                   </tr>
@@ -264,6 +266,24 @@
                         <span class="chip chip-category">{{ c.categoriaNombre || '—' }}</span>
                       </td>
                       <td>{{ c.sistemaPuntos || 'default' }}</td>
+                      <td>
+                        <span
+                          class="chip {{
+                            c.visibilidad === 'PRIVADO' ? 'chip-resolved' : 'chip-category'
+                          }}"
+                        >
+                          {{ c.visibilidad === 'PRIVADO' ? 'Privado' : 'Público' }}
+                        </span>
+                      </td>
+                      <td>
+                        @if (c.adminId) {
+                          <span class="chip chip-category">{{
+                            c.adminNombrePiloto || '#' + c.adminId
+                          }}</span>
+                        } @else {
+                          <span class="muted">—</span>
+                        }
+                      </td>
                       <td>{{ c.estado }}</td>
                       <td>
                         <div class="row-actions">
@@ -785,6 +805,43 @@
                   <option value="default">Default</option>
                   <option value="F1">F1</option>
                   <option value="F1_SPRINT">F1 Sprint</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Organizador</label>
+                <select
+                  class="select"
+                  [ngModel]="chAdminId()"
+                  (ngModelChange)="chAdminId.set($event)"
+                >
+                  <option value="">Sin organizador (campeonato de liga)</option>
+                  @for (u of organizadores(); track u.id) {
+                    <option [value]="u.id">{{ u.nombrePiloto || u.email }}</option>
+                  }
+                </select>
+              </div>
+              <div class="field">
+                <label>Visibilidad</label>
+                <select
+                  class="select"
+                  [ngModel]="chVisibilidad()"
+                  (ngModelChange)="chVisibilidad.set($event)"
+                >
+                  @for (v of VISIBILIDAD_CAMPEONATO; track v) {
+                    <option [value]="v">{{ v === 'PUBLICO' ? 'Público' : 'Privado' }}</option>
+                  }
+                </select>
+              </div>
+              <div class="field">
+                <label>Estado</label>
+                <select
+                  class="select"
+                  [ngModel]="chEstado()"
+                  (ngModelChange)="chEstado.set($event)"
+                >
+                  @for (e of ESTADO_CAMPEONATO; track e) {
+                    <option [value]="e">{{ e === 'ACTIVO' ? 'Activo' : 'Cerrado' }}</option>
+                  }
                 </select>
               </div>
               <div style="display: flex; gap: var(--sp-2)">
