@@ -39,6 +39,8 @@ class InscripcionServiceTest {
     private UsuarioService usuarioService;
     @Mock
     private CampeonatoAccesoService accesoService;
+    @Mock
+    private org.example.lfmnacional.service.inscripcion.InscripcionValidacion validacion;
 
     @InjectMocks
     private InscripcionService inscripcionService;
@@ -129,6 +131,8 @@ class InscripcionServiceTest {
     @Test
     void carreraNoProgramadaRechaza() {
         carrera.setEstado(EstadoCarrera.EN_CURSO);
+        doThrow(new BusinessException("La carrera no tiene inscripciones abiertas"))
+                .when(validacion).validar(carrera, usuario);
         when(carreraService.getEntity(1L)).thenReturn(carrera);
         when(usuarioService.getEntity(1L)).thenReturn(usuario);
 
@@ -140,6 +144,8 @@ class InscripcionServiceTest {
     @Test
     void carreraCercaEnTiempoRechaza() {
         carrera.setFecha(LocalDateTime.now().plusMinutes(3));
+        doThrow(new BusinessException("Las inscripciones ya estan cerradas para esta carrera"))
+                .when(validacion).validar(carrera, usuario);
         when(carreraService.getEntity(1L)).thenReturn(carrera);
         when(usuarioService.getEntity(1L)).thenReturn(usuario);
 
@@ -151,6 +157,8 @@ class InscripcionServiceTest {
     @Test
     void eloFueraDeRangoRechaza() {
         usuario.setElo(500);
+        doThrow(new BusinessException("El Elo del usuario (500) es menor al minimo de la categoria (1000)"))
+                .when(validacion).validar(carrera, usuario);
         when(carreraService.getEntity(1L)).thenReturn(carrera);
         when(usuarioService.getEntity(1L)).thenReturn(usuario);
 
@@ -162,6 +170,8 @@ class InscripcionServiceTest {
     @Test
     void eloMayorAlMaximoRechaza() {
         usuario.setElo(2500);
+        doThrow(new BusinessException("El Elo del usuario (2500) supera el maximo de la categoria (2000)"))
+                .when(validacion).validar(carrera, usuario);
         when(carreraService.getEntity(1L)).thenReturn(carrera);
         when(usuarioService.getEntity(1L)).thenReturn(usuario);
 
@@ -219,7 +229,9 @@ class InscripcionServiceTest {
 
     @Test
     void enCampeonatoPrivadoNoSeInscribeQuienNoEsMiembro() {
-        when(accesoService.puedeParticiparEnCarrera(usuario, carrera)).thenReturn(false);
+        doThrow(new BusinessException("La carrera \"Race\" es de un campeonato privado. "
+                + "Pedi al administrador del campeonato que te sume para poder inscribirte"))
+                .when(validacion).validar(carrera, usuario);
         when(carreraService.getEntity(1L)).thenReturn(carrera);
         when(usuarioService.getEntity(1L)).thenReturn(usuario);
 

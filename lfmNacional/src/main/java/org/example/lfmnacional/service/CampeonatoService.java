@@ -18,6 +18,8 @@ import org.example.lfmnacional.repository.CampeonatoMiembroRepository;
 import org.example.lfmnacional.repository.CampeonatoPosicionRepository;
 import org.example.lfmnacional.repository.CampeonatoRepository;
 import org.example.lfmnacional.repository.UsuarioRepository;
+import org.example.lfmnacional.service.puntos.SistemaPuntos;
+import org.example.lfmnacional.service.puntos.SistemaPuntosFactory;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -30,15 +32,13 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class CampeonatoService {
 
-    private static final List<Integer> PUNTOS_POR_POSICION =
-            List.of(25, 18, 15, 12, 10, 8, 6, 4, 2, 1);
-
     private final CampeonatoRepository campeonatoRepository;
     private final CampeonatoPosicionRepository campeonatoPosicionRepository;
     private final CampeonatoMiembroRepository miembroRepository;
     private final CategoriaService categoriaService;
     private final CampeonatoAccesoService accesoService;
     private final UsuarioRepository usuarioRepository;
+    private final SistemaPuntosFactory sistemaPuntosFactory;
 
     public Campeonato getEntity(Long id) {
         return campeonatoRepository.findById(id)
@@ -205,11 +205,12 @@ public class CampeonatoService {
             return;
         }
         List<CampeonatoPosicion> aGuardar = new java.util.ArrayList<>();
+        SistemaPuntos sistema = sistemaPuntosFactory.de(campeonato.getSistemaPuntos());
         for (ResultadoCarrera resultado : resultados) {
             if (resultado.getPosicionFinal() == null) {
                 continue;
             }
-            int puntos = puntosPorPosicion(resultado.getPosicionFinal());
+            int puntos = sistema.puntosPara(resultado.getPosicionFinal());
             CampeonatoPosicion posicion = campeonatoPosicionRepository
                     .findByCampeonato_IdAndUsuario_Id(campeonato.getId(), resultado.getUsuario().getId())
                     .orElseGet(() -> {
@@ -248,13 +249,6 @@ public class CampeonatoService {
             posicion.setPosicion(rank++);
         }
         campeonatoPosicionRepository.saveAll(ordenadas);
-    }
-
-    private int puntosPorPosicion(int posicion) {
-        if (posicion < 1 || posicion > PUNTOS_POR_POSICION.size()) {
-            return 0;
-        }
-        return PUNTOS_POR_POSICION.get(posicion - 1);
     }
 
     private TablaPosicionResponse toTablaPosicion(CampeonatoPosicion posicion) {

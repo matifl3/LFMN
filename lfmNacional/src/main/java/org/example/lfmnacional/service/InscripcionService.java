@@ -5,13 +5,13 @@ import org.example.lfmnacional.dto.inscripcion.InscripcionResponse;
 import org.example.lfmnacional.entity.Carrera;
 import org.example.lfmnacional.entity.Inscripcion;
 import org.example.lfmnacional.entity.Usuario;
-import org.example.lfmnacional.enums.EstadoCarrera;
 import org.example.lfmnacional.enums.EstadoInscripcion;
-import org.example.lfmnacional.enums.VisibilidadCampeonato;
 import org.example.lfmnacional.exception.BusinessException;
 import org.example.lfmnacional.exception.ResourceNotFoundException;
 import org.example.lfmnacional.mapper.EntityMapper;
 import org.example.lfmnacional.repository.InscripcionRepository;
+import org.example.lfmnacional.service.inscripcion.InscripcionValidacion;
+import org.example.lfmnacional.service.inscripcion.InscripcionesAbiertasValidador;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,12 +24,13 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class InscripcionService {
 
-    private static final int MINUTOS_CIERRE_PREVIO = 5;
+    private static final int MINUTOS_CIERRE_PREVIO = InscripcionesAbiertasValidador.MINUTOS_CIERRE_PREVIO;
 
     private final InscripcionRepository inscripcionRepository;
     private final CarreraService carreraService;
     private final UsuarioService usuarioService;
     private final CampeonatoAccesoService accesoService;
+    private final InscripcionValidacion validacion;
 
     public Inscripcion getEntity(Long id) {
         return inscripcionRepository.findById(id)
@@ -44,9 +45,7 @@ public class InscripcionService {
     public InscripcionResponse inscribirse(Long carreraId, Long usuarioId) {
         Carrera carrera = carreraService.getEntity(carreraId);
         Usuario usuario = usuarioService.getEntity(usuarioId);
-        validarInscripcionesAbiertas(carrera);
-        validarPertenencia(carrera, usuario);
-        validarRequisitosElo(carrera, usuario);
+        validacion.validar(carrera, usuario);
 
         Optional<Inscripcion> existente = inscripcionRepository.findByCarrera_IdAndUsuario_Id(carreraId, usuarioId);
         if (existente.isPresent() && existente.get().getEstado() != EstadoInscripcion.CANCELADA) {
@@ -127,46 +126,6 @@ public class InscripcionService {
         }
         long inscriptos = inscripcionRepository.countByCarrera_IdAndEstado(carrera.getId(), EstadoInscripcion.INSCRIPTO);
         return inscriptos < carrera.getCupoMaximo();
-    }
-
-    private void validarInscripcionesAbiertas(Carrera carrera) {
-        if (carrera.getEstado() != EstadoCarrera.PROGRAMADA
-                && carrera.getEstado() != EstadoCarrera.INSCRIPCIONES_ABIERTAS) {
-            throw new BusinessException("La carrera no tiene inscripciones abiertas");
-        }
-        if (!carrera.getFecha().isAfter(LocalDateTime.now().plusMinutes(MINUTOS_CIERRE_PREVIO))) {
-            throw new BusinessException("Las inscripciones ya estan cerradas para esta carrera");
-        }
-    }
-
-    /**
-     * Un campeonato privado es de lista cerrada: solo se puede inscribir quien el
-     * administrador del campeonato sumo como miembro. El propio administrador
-     * compite siempre; un comisario puede ver pero no competir.
-     */
-    private void validarPertenencia(Carrera carrera, Usuario usuario) {
-        if (accesoService.puedeParticiparEnCarrera(usuario, carrera)) {
-            return;
-        }
-        throw new BusinessException("La carrera \"" + carrera.getNombre() + "\" es de un campeonato privado. "
-                + "Pedi al administrador del campeonato que te sume para poder inscribirte");
-    }
-
-    /** Sin filtro de Elo en los privados: manda la lista que armo el admin. */
-    private void validarRequisitosElo(Carrera carrera, Usuario usuario) {
-        if (carrera.getCampeonato().getVisibilidad() == VisibilidadCampeonato.PRIVADO) {
-            return;
-        }
-        Integer eloMinimo = carrera.getCampeonato().getCategoria().getEloMinimo();
-        Integer eloMaximo = carrera.getCampeonato().getCategoria().getEloMaximo();
-        if (eloMinimo != null && usuario.getElo() < eloMinimo) {
-            throw new BusinessException("El Elo del usuario (" + usuario.getElo()
-                    + ") es menor al minimo de la categoria (" + eloMinimo + ")");
-        }
-        if (eloMaximo != null && usuario.getElo() > eloMaximo) {
-            throw new BusinessException("El Elo del usuario (" + usuario.getElo()
-                    + ") supera el maximo de la categoria (" + eloMaximo + ")");
-        }
     }
 
     private void promoverListaDeEspera(Long carreraId) {

@@ -48,6 +48,8 @@ class CampeonatoServiceTest {
     private CampeonatoAccesoService accesoService;
     @Mock
     private UsuarioRepository usuarioRepository;
+    @Mock
+    private org.example.lfmnacional.service.puntos.SistemaPuntosFactory sistemaPuntosFactory;
 
     @InjectMocks
     private CampeonatoService campeonatoService;
@@ -71,6 +73,8 @@ class CampeonatoServiceTest {
         usuario2 = Usuario.builder().id(2L).nombrePiloto("Piloto2").elo(1400).safetyRating(90).build();
         admin = Usuario.builder().id(9L).nombrePiloto("Admin").rol(Rol.ADMIN).build();
         carrera = Carrera.builder().id(1L).nombre("Race 1").campeonato(campeonato).estado(EstadoCarrera.FINALIZADA).build();
+        lenient().when(sistemaPuntosFactory.de(any()))
+                .thenReturn(new org.example.lfmnacional.service.puntos.SistemaPuntosF1());
     }
 
     @Test
@@ -176,6 +180,24 @@ class CampeonatoServiceTest {
         campeonatoService.actualizarPuntos(carrera, List.of(resultado));
 
         verify(campeonatoPosicionRepository, atLeast(2)).saveAll(any());
+    }
+
+    @Test
+    void usaLaEstrategiaDePuntosDelSistemaDelCampeonato() {
+        campeonato.setSistemaPuntos("TOP 10");
+        when(sistemaPuntosFactory.de("TOP 10"))
+                .thenReturn(new org.example.lfmnacional.service.puntos.SistemaPuntosTop10());
+        ResultadoCarrera resultado = ResultadoCarrera.builder().usuario(usuario1).posicionFinal(1).carrera(carrera).build();
+        when(campeonatoPosicionRepository.findByCampeonato_IdAndUsuario_Id(1L, 1L)).thenReturn(Optional.empty());
+        when(campeonatoPosicionRepository.countByCampeonato_Id(1L)).thenReturn(0L);
+        when(campeonatoPosicionRepository.findByCampeonato_IdOrderByPuntosDesc(1L)).thenReturn(List.of());
+
+        campeonatoService.actualizarPuntos(carrera, List.of(resultado));
+
+        verify(campeonatoPosicionRepository, atLeastOnce()).saveAll(argThat(iterable -> {
+            List<CampeonatoPosicion> items = iterableToList(iterable);
+            return !items.isEmpty() && items.get(0).getPuntos() == 10;
+        }));
     }
 
     @Test

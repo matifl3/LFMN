@@ -1,29 +1,25 @@
 package org.example.lfmnacional.service;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.example.lfmnacional.dto.sesion.SesionServerData;
 import org.example.lfmnacional.entity.Carrera;
 import org.example.lfmnacional.entity.SesionProcesada;
 import org.example.lfmnacional.exception.BusinessException;
 import org.example.lfmnacional.repository.SesionProcesadaRepository;
+import org.example.lfmnacional.service.sesion.ImportadorSesion;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-@Slf4j
+import java.time.LocalDateTime;
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class SesionServidorService {
 
-    private static final String SESION_QUALIFY = "QUALIFY";
-    private static final String SESION_RACE = "RACE";
-
     private final CarreraService carreraService;
     private final CarreraResolverService carreraResolverService;
-    private final ClasificacionImportService clasificacionImportService;
-    private final ResultadoImportService resultadoImportService;
-    private final VueltaImportService vueltaImportService;
-    private final IncidenteAutoGenService incidenteAutoGenService;
+    private final List<ImportadorSesion> importadores;
     private final SesionProcesadaRepository sesionProcesadaRepository;
 
     @Transactional
@@ -37,25 +33,11 @@ public class SesionServidorService {
             throw new BusinessException("El JSON de sesion es invalido");
         }
         String tipo = sesion.type() != null ? sesion.type().toUpperCase() : "";
-        switch (tipo) {
-            case SESION_QUALIFY -> clasificacionImportService.importarClasificacion(carrera, sesion);
-            case SESION_RACE -> {
-                resultadoImportService.importarResultados(carrera, sesion);
-                try {
-                    vueltaImportService.importarVueltas(carrera, sesion, tipo);
-                } catch (Exception e) {
-                    log.warn("Error al importar vueltas para carrera {}: {}", carrera.getNombre(), e.getMessage());
-                }
-                try {
-                    incidenteAutoGenService.autogenerarIncidentes(carrera, sesion);
-                } catch (Exception e) {
-                    log.warn("Error al autogenerar incidentes para carrera {}: {}", carrera.getNombre(), e.getMessage());
-                }
-            }
-            case "PRACTICE" -> log.info("Sesion PRACTICE ignorada (no importa datos)");
-            default -> throw new BusinessException("Tipo de sesion no soportado: " + sesion.type());
-        }
-        return tipo;
+        ImportadorSesion importador = importadores.stream()
+                .filter(i -> i.tipo().equals(tipo))
+                .findFirst()
+                .orElseThrow(() -> new BusinessException("Tipo de sesion no soportado: " + sesion.type()));
+        return importador.importar(carrera, sesion);
     }
 
     @Transactional
@@ -75,7 +57,7 @@ public class SesionServidorService {
         return sesionProcesadaRepository.existsByNombreArchivo(nombreArchivo);
     }
 
-    public Carrera resolverCarrera(SesionServerData sesion, java.time.LocalDateTime momentoSesion) {
+    public Carrera resolverCarrera(SesionServerData sesion, LocalDateTime momentoSesion) {
         return carreraResolverService.resolverCarrera(sesion, momentoSesion);
     }
 }
