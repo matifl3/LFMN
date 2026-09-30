@@ -9,11 +9,11 @@
     <app-locked-state />
   } @else {
   <div class="tabs" style="margin-bottom:var(--sp-5)">
-    <button class="tab" [class.active]="vista()==='incidentes'" (click)="setVista('incidentes')">Incidentes <span class="count">{{ incidentesFiltrados().length }}</span></button>
-    <button class="tab" [class.active]="vista()==='sanciones'" (click)="setVista('sanciones')">Sanciones <span class="count">{{ sanciones().length }}</span></button>
-    <button class="tab" [class.active]="vista()==='apelaciones'" (click)="setVista('apelaciones')">Apelaciones <span class="count">{{ apelaciones().length }}</span></button>
+    <button type="button" class="tab" [class.active]="vista()==='incidentes'" [attr.aria-pressed]="vista()==='incidentes'" (click)="setVista('incidentes')">Incidentes <span class="count">{{ incidentesFiltrados().length }}</span></button>
+    <button type="button" class="tab" [class.active]="vista()==='sanciones'" [attr.aria-pressed]="vista()==='sanciones'" (click)="setVista('sanciones')">Sanciones <span class="count">{{ sanciones().length }}</span></button>
+    <button type="button" class="tab" [class.active]="vista()==='apelaciones'" [attr.aria-pressed]="vista()==='apelaciones'" (click)="setVista('apelaciones')">Apelaciones <span class="count">{{ apelaciones().length }}</span></button>
     @if (auth.esModerador()) {
-      <button class="tab" [class.active]="vista()==='decisiones'" (click)="setVista('decisiones')">Mis decisiones <span class="count">{{ decisiones().length }}</span></button>
+      <button type="button" class="tab" [class.active]="vista()==='decisiones'" [attr.aria-pressed]="vista()==='decisiones'" (click)="setVista('decisiones')">Mis decisiones <span class="count">{{ decisiones().length }}</span></button>
     }
   </div>
 
@@ -25,15 +25,15 @@
 
       @if (vista()==='incidentes') {
         <div class="tabs" style="margin-bottom:var(--sp-3)">
-          <button class="tab" [class.active]="filtroEstado()==='TODOS'" (click)="filtroEstado.set('TODOS')">Todos</button>
-          <button class="tab" [class.active]="filtroEstado()==='PENDIENTES'" (click)="filtroEstado.set('PENDIENTES')">Pendientes</button>
-          <button class="tab" [class.active]="filtroEstado()==='RESUELTOS'" (click)="filtroEstado.set('RESUELTOS')">Resueltos</button>
+          <button type="button" class="tab" [class.active]="filtroEstado()==='TODOS'" [attr.aria-pressed]="filtroEstado()==='TODOS'" (click)="filtroEstado.set('TODOS')">Todos</button>
+          <button type="button" class="tab" [class.active]="filtroEstado()==='PENDIENTES'" [attr.aria-pressed]="filtroEstado()==='PENDIENTES'" (click)="filtroEstado.set('PENDIENTES')">Pendientes</button>
+          <button type="button" class="tab" [class.active]="filtroEstado()==='RESUELTOS'" [attr.aria-pressed]="filtroEstado()==='RESUELTOS'" (click)="filtroEstado.set('RESUELTOS')">Resueltos</button>
         </div>
         @if (incidentesFiltrados().length === 0) {
           <app-empty-state texto="No hay incidentes reportados." />
         } @else {
           @for (inc of incidentesFiltrados(); track inc.id) {
-            <div class="race-row incidente-row" style="cursor:pointer" (click)="abrirDetalle(inc.id)">
+            <div class="race-row incidente-row" style="cursor:pointer" role="button" tabindex="0" [attr.aria-label]="'Ver detalle del incidente: ' + (inc.descripcion || 'Sin descripción')" (click)="abrirDetalle(inc.id)" (keydown.enter)="abrirDetalle(inc.id)" (keydown.space)="$event.preventDefault(); abrirDetalle(inc.id)">
               <div>
                 @if (inc.estado) { <app-chip [estado]="inc.estado" tipo="incidente" /> }
               </div>
@@ -218,7 +218,7 @@
             @for (sr of sancionesResolver(); track $index) {
               <div class="flex-between chip chip-sanctioned" style="justify-content:flex-start;gap:var(--sp-2)">
                 <span>{{ sr.tipo }}</span><span>{{ sr.motivo }}</span>
-                <button class="btn btn-ghost btn-sm" style="margin-left:auto" (click)="quitarSancionResolver($index)">×</button>
+                <button class="btn btn-ghost btn-sm" style="margin-left:auto" aria-label="Quitar sanción de la resolución" (click)="quitarSancionResolver($index)">×</button>
               </div>
             }
           </div>

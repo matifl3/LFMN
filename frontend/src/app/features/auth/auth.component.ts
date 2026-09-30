@@ -1,5 +1,5 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { ApiService, apiError } from '../../core/services/api.service';
@@ -60,6 +60,33 @@ export class AuthComponent implements OnInit {
     this.tab.set(t);
   }
 
+  errores(form: FormGroup, campo: string): string[] {
+    const c = form.controls[campo];
+    if (!c || c.valid || (!c.touched && !c.dirty) || c.disabled) return [];
+    const out: string[] = [];
+    if (c.errors?.['required']) {
+      const msgs: Record<string, string> = {
+        email: 'Ingresá tu email.',
+        password: 'Ingresá tu contraseña.',
+        nombrePiloto: 'Ingresá tu nombre de piloto.',
+      };
+      out.push(msgs[campo] ?? 'Este campo es obligatorio.');
+    }
+    if (c.errors?.['email']) out.push('El email no es válido.');
+    if (c.errors?.['minlength'])
+      out.push(`Mínimo ${c.errors['minlength'].requiredLength} caracteres.`);
+    return out;
+  }
+
+  invalido(form: FormGroup, campo: string): boolean {
+    const c = form.controls[campo];
+    return !!c && c.invalid && (c.touched || c.dirty);
+  }
+
+  marcarTocados(form: FormGroup): void {
+    Object.values(form.controls).forEach((c) => c.markAsTouched({ onlySelf: true }));
+  }
+
   private nextValor(): string {
     const n = this.route.snapshot.queryParamMap.get('next') || '';
     if (n.startsWith('/') && !n.startsWith('//') && !/^https?:\/\//i.test(n) && !n.toLowerCase().startsWith('javascript:')) {
@@ -76,6 +103,7 @@ export class AuthComponent implements OnInit {
 
   login(): void {
     if (this.loginForm.invalid) {
+      this.marcarTocados(this.loginForm);
       this.toast.error('Completá tu email y contraseña.');
       return;
     }
@@ -117,6 +145,7 @@ export class AuthComponent implements OnInit {
 
   crearCuentaSteam(): void {
     if (this.steamForm.invalid) {
+      this.marcarTocados(this.steamForm);
       this.toast.error('Completá tu nombre de piloto y email.');
       return;
     }
@@ -142,6 +171,7 @@ export class AuthComponent implements OnInit {
 
   vincularCuentaExistente(): void {
     if (this.steamLinkForm.invalid) {
+      this.marcarTocados(this.steamLinkForm);
       this.toast.error('Completá el email y la contraseña de tu cuenta.');
       return;
     }
@@ -168,6 +198,7 @@ export class AuthComponent implements OnInit {
 
   registrar(): void {
     if (this.registerForm.invalid) {
+      this.marcarTocados(this.registerForm);
       this.toast.error('Completá nombre de piloto, email y contraseña (mínimo 6 caracteres).');
       return;
     }

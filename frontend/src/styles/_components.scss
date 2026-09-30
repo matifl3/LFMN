@@ -517,6 +517,16 @@
   color: var(--lbm-rojo-hi);
   font-family: var(--font-mono);
 }
+.error-summary {
+  margin-bottom: var(--sp-4);
+  padding: var(--sp-3) var(--sp-4);
+  border: 1px solid var(--lbm-rojo-dim);
+  border-left: 3px solid var(--lbm-rojo);
+  border-radius: var(--r-sm);
+  background: rgba(198, 26, 26, 0.08);
+  color: var(--texto-secundario);
+  font-size: var(--fs-sm);
+}
 
 .input,
 .select,

@@ -8,22 +8,47 @@
     </p>
 
     @if (!modoSteamSetup()) {
-      <div class="tabs-pill" style="margin-top: var(--sp-5); width: 100%">
-        <button type="button" class="tab" [class.active]="tab() === 'login'" (click)="setTab('login')">Iniciar sesión</button>
-        <button type="button" class="tab" [class.active]="tab() === 'register'" (click)="setTab('register')">Crear cuenta</button>
+      <div class="tabs-pill" style="margin-top: var(--sp-5); width: 100%" role="group">
+        <button type="button" class="tab" [class.active]="tab() === 'login'" [attr.aria-pressed]="tab() === 'login'" (click)="setTab('login')">Iniciar sesión</button>
+        <button type="button" class="tab" [class.active]="tab() === 'register'" [attr.aria-pressed]="tab() === 'register'" (click)="setTab('register')">Crear cuenta</button>
       </div>
 
       <!-- Login -->
       @if (tab() === 'login') {
-        <form [formGroup]="loginForm" (ngSubmit)="login()" style="margin-top: var(--sp-5)">
-          <div class="field">
+        <form [formGroup]="loginForm" (ngSubmit)="login()" style="margin-top: var(--sp-5)" novalidate>
+          <div class="field" [class.invalid]="invalido(loginForm, 'email')">
             <label for="login-email">Email</label>
-            <input id="login-email" class="input" type="email" placeholder="piloto@ejemplo.com" formControlName="email" />
+            <input
+              id="login-email"
+              class="input"
+              type="email"
+              placeholder="piloto@ejemplo.com"
+              formControlName="email"
+              [attr.aria-invalid]="invalido(loginForm, 'email') || null"
+              [attr.aria-describedby]="invalido(loginForm, 'email') ? 'login-email-err' : null"
+            />
+            @for (e of errores(loginForm, 'email'); track e) {
+              <span id="login-email-err" class="error-msg">{{ e }}</span>
+            }
           </div>
-          <div class="field">
+          <div class="field" [class.invalid]="invalido(loginForm, 'password')">
             <label for="login-pass">Contraseña</label>
-            <app-password-input id="login-pass" autocomplete="current-password" formControlName="password" />
+            <app-password-input
+              id="login-pass"
+              autocomplete="current-password"
+              formControlName="password"
+              [invalido]="invalido(loginForm, 'password')"
+              [ariaDescribedBy]="invalido(loginForm, 'password') ? 'login-pass-err' : null"
+            />
+            @for (e of errores(loginForm, 'password'); track e) {
+              <span id="login-pass-err" class="error-msg">{{ e }}</span>
+            }
           </div>
+          @if (loginForm.touched && loginForm.invalid) {
+            <div class="error-summary" role="alert">
+              Revisá los campos marcados para continuar.
+            </div>
+          }
           <button type="submit" class="btn btn-primary btn-lg btn-block" [class.is-loading]="cargando()">
             Ingresar
           </button>
@@ -35,20 +60,55 @@
 
       <!-- Registro email + contraseña -->
       @if (tab() === 'register') {
-        <form [formGroup]="registerForm" (ngSubmit)="registrar()" style="margin-top: var(--sp-5)">
-          <div class="field">
+        <form [formGroup]="registerForm" (ngSubmit)="registrar()" style="margin-top: var(--sp-5)" novalidate>
+          <div class="field" [class.invalid]="invalido(registerForm, 'nombrePiloto')">
             <label for="reg-nombre">Nombre de piloto</label>
-            <input id="reg-nombre" class="input" placeholder="Ej. Franco Gómez Reta" formControlName="nombrePiloto" />
+            <input
+              id="reg-nombre"
+              class="input"
+              placeholder="Ej. Franco Gómez Reta"
+              formControlName="nombrePiloto"
+              [attr.aria-invalid]="invalido(registerForm, 'nombrePiloto') || null"
+              [attr.aria-describedby]="invalido(registerForm, 'nombrePiloto') ? 'reg-nombre-err' : null"
+            />
+            @for (e of errores(registerForm, 'nombrePiloto'); track e) {
+              <span id="reg-nombre-err" class="error-msg">{{ e }}</span>
+            }
           </div>
-          <div class="field">
+          <div class="field" [class.invalid]="invalido(registerForm, 'email')">
             <label for="reg-email">Email</label>
-            <input id="reg-email" class="input" type="email" placeholder="piloto@ejemplo.com" formControlName="email" />
+            <input
+              id="reg-email"
+              class="input"
+              type="email"
+              placeholder="piloto@ejemplo.com"
+              formControlName="email"
+              [attr.aria-invalid]="invalido(registerForm, 'email') || null"
+              [attr.aria-describedby]="invalido(registerForm, 'email') ? 'reg-email-err' : null"
+            />
+            @for (e of errores(registerForm, 'email'); track e) {
+              <span id="reg-email-err" class="error-msg">{{ e }}</span>
+            }
           </div>
-          <div class="field">
+          <div class="field" [class.invalid]="invalido(registerForm, 'password')">
             <label for="reg-pass">Contraseña</label>
-            <app-password-input id="reg-pass" autocomplete="new-password" formControlName="password" />
+            <app-password-input
+              id="reg-pass"
+              autocomplete="new-password"
+              formControlName="password"
+              [invalido]="invalido(registerForm, 'password')"
+              [ariaDescribedBy]="invalido(registerForm, 'password') ? 'reg-pass-err' : null"
+            />
             <p class="hint">Mínimo 6 caracteres. Necesaria para ingresar por email.</p>
+            @for (e of errores(registerForm, 'password'); track e) {
+              <span id="reg-pass-err" class="error-msg">{{ e }}</span>
+            }
           </div>
+          @if (registerForm.touched && registerForm.invalid) {
+            <div class="error-summary" role="alert">
+              Revisá los campos marcados para continuar.
+            </div>
+          }
           <button type="submit" class="btn btn-primary btn-lg btn-block" [class.is-loading]="cargando()">
             Crear cuenta
           </button>
@@ -67,15 +127,38 @@
           </p>
         </div>
       </div>
-      <form [formGroup]="steamLinkForm" (ngSubmit)="vincularCuentaExistente()" style="margin-top: var(--sp-5)">
-        <div class="field">
+      <form [formGroup]="steamLinkForm" (ngSubmit)="vincularCuentaExistente()" style="margin-top: var(--sp-5)" novalidate>
+        <div class="field" [class.invalid]="invalido(steamLinkForm, 'email')">
           <label for="steam-link-email">Email de tu cuenta</label>
-          <input id="steam-link-email" class="input" type="email" placeholder="piloto@ejemplo.com" formControlName="email" />
+          <input
+            id="steam-link-email"
+            class="input"
+            type="email"
+            placeholder="piloto@ejemplo.com"
+            formControlName="email"
+            [attr.aria-invalid]="invalido(steamLinkForm, 'email') || null"
+            [attr.aria-describedby]="invalido(steamLinkForm, 'email') ? 'steam-link-email-err' : null"
+          />
+          @for (e of errores(steamLinkForm, 'email'); track e) {
+            <span id="steam-link-email-err" class="error-msg">{{ e }}</span>
+          }
         </div>
-        <div class="field">
+        <div class="field" [class.invalid]="invalido(steamLinkForm, 'password')">
           <label for="steam-link-pass">Contraseña</label>
-          <app-password-input id="steam-link-pass" autocomplete="current-password" formControlName="password" />
+          <app-password-input
+            id="steam-link-pass"
+            autocomplete="current-password"
+            formControlName="password"
+            [invalido]="invalido(steamLinkForm, 'password')"
+            [ariaDescribedBy]="invalido(steamLinkForm, 'password') ? 'steam-link-pass-err' : null"
+          />
+          @for (e of errores(steamLinkForm, 'password'); track e) {
+            <span id="steam-link-pass-err" class="error-msg">{{ e }}</span>
+          }
         </div>
+        @if (steamLinkForm.touched && steamLinkForm.invalid) {
+          <div class="error-summary" role="alert">Revisá los campos marcados para continuar.</div>
+        }
         <button type="submit" class="btn btn-primary btn-lg btn-block" [class.is-loading]="cargando()">
           Ingresar y vincular Steam
         </button>
@@ -83,16 +166,39 @@
 
       <div class="divider-or">o creá una cuenta nueva</div>
 
-      <form [formGroup]="steamForm" (ngSubmit)="crearCuentaSteam()">
+      <form [formGroup]="steamForm" (ngSubmit)="crearCuentaSteam()" novalidate>
         <input type="hidden" formControlName="guidSteam" />
-        <div class="field">
+        <div class="field" [class.invalid]="invalido(steamForm, 'nombrePiloto')">
           <label for="steam-nombre">Nombre de piloto</label>
-          <input id="steam-nombre" class="input" placeholder="Ej. Franco Gómez Reta" formControlName="nombrePiloto" />
+          <input
+            id="steam-nombre"
+            class="input"
+            placeholder="Ej. Franco Gómez Reta"
+            formControlName="nombrePiloto"
+            [attr.aria-invalid]="invalido(steamForm, 'nombrePiloto') || null"
+            [attr.aria-describedby]="invalido(steamForm, 'nombrePiloto') ? 'steam-nombre-err' : null"
+          />
+          @for (e of errores(steamForm, 'nombrePiloto'); track e) {
+            <span id="steam-nombre-err" class="error-msg">{{ e }}</span>
+          }
         </div>
-        <div class="field">
+        <div class="field" [class.invalid]="invalido(steamForm, 'email')">
           <label for="steam-email">Email</label>
-          <input id="steam-email" class="input" type="email" formControlName="email" />
+          <input
+            id="steam-email"
+            class="input"
+            type="email"
+            formControlName="email"
+            [attr.aria-invalid]="invalido(steamForm, 'email') || null"
+            [attr.aria-describedby]="invalido(steamForm, 'email') ? 'steam-email-err' : null"
+          />
+          @for (e of errores(steamForm, 'email'); track e) {
+            <span id="steam-email-err" class="error-msg">{{ e }}</span>
+          }
         </div>
+        @if (steamForm.touched && steamForm.invalid) {
+          <div class="error-summary" role="alert">Revisá los campos marcados para continuar.</div>
+        }
         <button type="submit" class="btn btn-primary btn-lg btn-block" [class.is-loading]="cargando()">Crear cuenta</button>
       </form>
     }

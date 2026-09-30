@@ -21,6 +21,9 @@
             class="btn btn-primary btn-lg"
             [class.is-loading]="cargando()"
             [disabled]="ctaItems().length === 0"
+            [attr.aria-expanded]="ctaAbierto()"
+            aria-haspopup="menu"
+            aria-controls="cta-panel"
             (click)="alternarCta()"
           >
             Inscribirme a la próxima carrera
@@ -39,7 +42,7 @@
             </svg>
           </button>
           @if (ctaAbierto()) {
-            <div class="cta-dropdown-panel open">
+            <div id="cta-panel" class="cta-dropdown-panel open" role="menu">
               @if (ctaItems().length === 0) {
                 <div class="cta-dropdown-item">
                   <span>No hay carreras próximas publicadas todavía.</span>

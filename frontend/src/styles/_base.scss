@@ -12,6 +12,7 @@ html {
   background: var(--bg-principal);
   color-scheme: dark;
   scroll-behavior: smooth;
+  scroll-padding-top: calc(var(--header-h) + var(--sp-5));
 }
 
 body {
@@ -65,6 +66,20 @@ table {
 
 :root {
   caret-color: var(--lbm-rojo-hi);
+}
+
+// ---- Accesibilidad: contenido solo para lectores de pantalla
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }
 
 a {

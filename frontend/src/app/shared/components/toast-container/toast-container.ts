@@ -7,7 +7,10 @@ import { ToastService } from '../../../core/services/toast.service';
   template: `
     <div class="toast-root" aria-live="polite">
       @for (t of toast.items(); track t.id) {
-        <div class="toast {{ t.tipo }}" role="status">
+        <div
+          class="toast {{ t.tipo }}"
+          [attr.role]="t.tipo === 'error' ? 'alert' : 'status'"
+        >
           @if (t.tipo === 'error') {
             <span class="ms-icon" aria-hidden="true">error</span>
           } @else if (t.tipo === 'success') {

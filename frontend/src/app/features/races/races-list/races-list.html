@@ -12,11 +12,23 @@
     </select>
   </div>
 
-  <div class="tabs-pill" style="margin-bottom: var(--sp-5)">
-    <button class="tab" [class.active]="view() === 'proximas'" (click)="setView('proximas')">
+  <div class="tabs-pill" style="margin-bottom: var(--sp-5)" role="group">
+    <button
+      type="button"
+      class="tab"
+      [class.active]="view() === 'proximas'"
+      [attr.aria-pressed]="view() === 'proximas'"
+      (click)="setView('proximas')"
+    >
       Próximas <span class="count">{{ proximasFiltradas().length }}</span>
     </button>
-    <button class="tab" [class.active]="view() === 'pasadas'" (click)="setView('pasadas')">
+    <button
+      type="button"
+      class="tab"
+      [class.active]="view() === 'pasadas'"
+      [attr.aria-pressed]="view() === 'pasadas'"
+      (click)="setView('pasadas')"
+    >
       Pasadas <span class="count">{{ pasadasFiltradas().length }}</span>
     </button>
   </div>

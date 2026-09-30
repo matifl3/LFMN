@@ -23,7 +23,9 @@
         type="button"
         class="nav-toggle"
         [class.open]="menuAbierto()"
-        aria-label="Abrir menú"
+        [attr.aria-expanded]="menuAbierto()"
+        aria-controls="menu-nav-drawer"
+        [attr.aria-label]="menuAbierto() ? 'Cerrar menú' : 'Abrir menú'"
         (click)="alternarMenu()"
       >
         <span class="hamb"><span></span></span>
@@ -68,7 +70,14 @@
 
   @if (menuAbierto()) {
     <div class="nav-overlay" (click)="menuAbierto.set(false)"></div>
-    <aside class="nav-drawer" [attr.aria-hidden]="!menuAbierto()">
+    <aside
+      id="menu-nav-drawer"
+      class="nav-drawer"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Menú principal"
+      [attr.aria-hidden]="!menuAbierto()"
+    >
       <div class="drawer-brand">
         <img src="logo.png" alt="" class="brand-logo" />
         <span class="brand-name">LBM Nacional<small>Late Brake Motorsport</small></span>
@@ -91,7 +100,14 @@
           @if (auth.esOrganizador()) {
             <a routerLink="/mis-campeonatos" (click)="menuAbierto.set(false)">Mis campeonatos</a>
           }
-          <a style="cursor: pointer; color: var(--lbm-rojo-hi)" (click)="salir()">Salir</a>
+          <button
+            type="button"
+            class="btn btn-ghost btn-sm"
+            style="color: var(--lbm-rojo-hi)"
+            (click)="salir()"
+          >
+            Salir
+          </button>
         } @else {
           <a
             routerLink="/auth"

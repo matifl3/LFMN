@@ -63,35 +63,59 @@
       </div>
     </div>
 
-    <div class="tabs-pill" style="margin-bottom: var(--sp-6)">
-      <button class="tab" [class.active]="panel() === 'info'" (click)="panel.set('info')">
+    <div class="tabs-pill" style="margin-bottom: var(--sp-6)" role="group">
+      <button
+        type="button"
+        class="tab"
+        [class.active]="panel() === 'info'"
+        [attr.aria-pressed]="panel() === 'info'"
+        (click)="panel.set('info')"
+      >
         Información
       </button>
-      <button class="tab" [class.active]="panel() === 'archivos'" (click)="panel.set('archivos')">
+      <button
+        type="button"
+        class="tab"
+        [class.active]="panel() === 'archivos'"
+        [attr.aria-pressed]="panel() === 'archivos'"
+        (click)="panel.set('archivos')"
+      >
         Archivos
       </button>
       <button
+        type="button"
         class="tab"
         [class.active]="panel() === 'inscriptos'"
+        [attr.aria-pressed]="panel() === 'inscriptos'"
         (click)="panel.set('inscriptos')"
       >
         Inscriptos <span class="count">{{ inscriptos().length }}</span>
       </button>
       <button
+        type="button"
         class="tab"
         [class.active]="panel() === 'resultados'"
+        [attr.aria-pressed]="panel() === 'resultados'"
         (click)="panel.set('resultados')"
       >
         Resultados
       </button>
       <button
+        type="button"
         class="tab"
         [class.active]="panel() === 'clasificacion'"
+        [attr.aria-pressed]="panel() === 'clasificacion'"
         (click)="panel.set('clasificacion')"
       >
         Clasificación
       </button>
-      <button class="tab" [class.active]="panel() === 'analisis'" (click)="panel.set('analisis')">
+      <button
+        type="button"
+        class="tab"
+        [class.active]="panel() === 'analisis'"
+        [attr.aria-pressed]="panel() === 'analisis'"
+        (click)="panel.set('analisis')"
+      >
         Análisis
       </button>
     </div>
@@ -298,12 +322,12 @@
           <table class="table">
             <thead>
               <tr>
-                <th>Pos</th>
-                <th>Piloto</th>
-                <th class="num">Tiempo</th>
-                <th class="num">Mejor vuelta</th>
-                <th class="num">Pole</th>
-                <th class="num">Elo</th>
+                <th scope="col">Pos</th>
+                <th scope="col">Piloto</th>
+                <th scope="col" class="num">Tiempo</th>
+                <th scope="col" class="num">Mejor vuelta</th>
+                <th scope="col" class="num">Pole</th>
+                <th scope="col" class="num">Elo</th>
               </tr>
             </thead>
             <tbody>
@@ -349,11 +373,11 @@
           <table class="table">
             <thead>
               <tr>
-                <th>Pos</th>
-                <th>Piloto</th>
-                <th class="num">Vuelta</th>
-                <th class="num">Dif.</th>
-                <th class="num">Auto</th>
+                <th scope="col">Pos</th>
+                <th scope="col">Piloto</th>
+                <th scope="col" class="num">Vuelta</th>
+                <th scope="col" class="num">Dif.</th>
+                <th scope="col" class="num">Auto</th>
               </tr>
             </thead>
             <tbody>
@@ -478,7 +502,7 @@
                   <span class="text-secondary">Dentro de ±0.5s</span
                   ><b class="mono"
                     >{{ r.dentroDe500ms }}
-                    <span style="color: var(--text-terciario)"
+                    <span style="color: var(--texto-terciario)"
                       >({{ pct(r.dentroDe500ms, r.vueltasTotales) }})</span
                     ></b
                   >
@@ -487,7 +511,7 @@
                   <span class="text-secondary">Dentro de ±1s</span
                   ><b class="mono"
                     >{{ r.dentroDe1s }}
-                    <span style="color: var(--text-terciario)"
+                    <span style="color: var(--texto-terciario)"
                       >({{ pct(r.dentroDe1s, r.vueltasTotales) }})</span
                     ></b
                   >

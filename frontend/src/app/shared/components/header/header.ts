@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, signal } from '@angular/core';
+import { Component, HostListener, computed, effect, inject, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { ApiService, apiError } from '../../../core/services/api.service';
 import { AuthService } from '../../../core/services/auth.service';
@@ -70,6 +70,11 @@ export class Header {
 
   alternarMenu(): void {
     this.menuAbierto.update((v) => !v);
+  }
+
+  @HostListener('document:keydown', ['$event'])
+  onKey(e: KeyboardEvent): void {
+    if (e.key === 'Escape' && this.menuAbierto()) this.menuAbierto.set(false);
   }
 
   salir(): void {

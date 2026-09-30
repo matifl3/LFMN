@@ -21,6 +21,8 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
         [placeholder]="placeholder()"
         [attr.autocomplete]="autocomplete()"
         [attr.aria-label]="ariaLabel() ?? id() ?? undefined"
+        [attr.aria-describedby]="ariaDescribedBy() ?? undefined"
+        [attr.aria-invalid]="(invalido() === true) || null"
         [value]="valor() ?? ''"
         (input)="onInput($event)"
         (blur)="blur()"
@@ -52,6 +54,8 @@ export class PasswordInput implements ControlValueAccessor {
   readonly placeholder = input('');
   readonly autocomplete = input('current-password');
   readonly ariaLabel = input<string | null>(null);
+  readonly ariaDescribedBy = input<string | null>(null);
+  readonly invalido = input<boolean | null>(null);
 
   readonly oculto = signal(true);
   readonly valor = signal<string | null>(null);
