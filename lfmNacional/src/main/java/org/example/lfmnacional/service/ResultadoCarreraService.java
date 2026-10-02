@@ -19,6 +19,7 @@ import org.example.lfmnacional.repository.SafetyRatingSancionRepository;
 import org.example.lfmnacional.repository.UsuarioRepository;
 import org.example.lfmnacional.service.rating.EloCalculator;
 import org.example.lfmnacional.service.rating.SrCalculator;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -76,7 +77,14 @@ public class ResultadoCarreraService {
                 .map(this::toResponse);
     }
 
+    /**
+     * Evicta la cache "usuarios" porque el recalculo de abajo escribe
+     * elo y safetyRating de cada piloto, y esa cache es lo que alimenta el
+     * listado publico de pilotos. Sin esto, importar los resultados de una
+     * carrera dejaba el ranking viejo hasta el proximo delete de usuario.
+     */
     @Transactional
+    @CacheEvict(value = "usuarios", allEntries = true)
     public List<ResultadoCarreraResponse> cargarResultados(CargarResultadosRequest request) {
         Carrera carrera = carreraService.getEntity(request.carreraId());
         validarCarga(carrera);

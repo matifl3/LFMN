@@ -10,6 +10,7 @@ import org.example.lfmnacional.exception.BusinessException;
 import org.example.lfmnacional.exception.ResourceNotFoundException;
 import org.example.lfmnacional.mapper.EntityMapper;
 import org.example.lfmnacional.repository.*;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -64,6 +65,7 @@ public class SancionService {
     }
 
     @Transactional
+    @CacheEvict(value = "usuarios", allEntries = true)
     public SancionResponse create(SancionRequest request) {
         Sancion sancion = buildSancion(request);
         sancion = sancionRepository.save(sancion);
@@ -73,6 +75,7 @@ public class SancionService {
     }
 
     @Transactional
+    @CacheEvict(value = "usuarios", allEntries = true)
     public SancionResponse update(Long id, SancionRequest request) {
         Sancion sancion = getEntity(id);
         Usuario nuevoUsuario = usuarioService.getEntity(request.usuarioId());
@@ -105,6 +108,7 @@ public class SancionService {
     }
 
     @Transactional
+    @CacheEvict(value = "usuarios", allEntries = true)
     public void delete(Long id) {
         Sancion sancion = getEntity(id);
         if (apelacionRepository.existsBySancion_Id(id)) {
@@ -152,6 +156,18 @@ public class SancionService {
         }
     }
 
+    /**
+     * Revertir es escribir elo/safetyRating al reves, asi que tambien tiene que
+     * evictar "usuarios".
+     *
+     * Ojo con el self-invocation: update() y delete() la llaman con
+     * this.revertirEfectos(...) desde dentro de su propio cuerpo, y eso no pasa
+     * por el proxy, asi que el evict de esta anotacion NO se dispara en esos dos
+     * caminos. Por eso update() y delete() llevan su propio evict.
+     * Esta anotacion cubre el unico llamador externo: ApelacionService, cuando
+     * aprueba una apelacion.
+     */
+    @CacheEvict(value = "usuarios", allEntries = true)
     public void revertirEfectos(Sancion sancion) {
         if (!Boolean.TRUE.equals(sancion.getEfectosAplicados())) {
             return;

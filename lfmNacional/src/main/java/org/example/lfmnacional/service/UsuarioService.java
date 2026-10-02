@@ -166,6 +166,7 @@ public class UsuarioService {
     }
 
     @Transactional
+    @CacheEvict(value = "usuarios", allEntries = true)
     public UsuarioResponse updatePerfil(Long id, UsuarioRequest request) {
         Usuario usuario = getEntity(id);
         if (!usuario.getEmail().equals(request.email()) && usuarioRepository.existsByEmail(request.email())) {
@@ -237,6 +238,7 @@ public class UsuarioService {
     }
 
     @Transactional
+    @CacheEvict(value = "usuarios", allEntries = true)
     public UsuarioResponse updateRating(Long id, RatingRequest request) {
         Usuario usuario = getEntity(id);
         if (request.elo() != null) {
