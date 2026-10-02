@@ -271,7 +271,7 @@ return switch (condicion) {
 `TipoCondicionLogro` tiene exactamente 7 constantes y hay 7 brazos → **agregar una constante
 al enum rompe la compilación**. Eso es correcto: el compilador te obliga a decidir.
 
-**b) `SancionService.java:143-152` y `:159-166`** — 4 casos cada uno, **con `default -> {}`
+**b) `SancionService.java:147-156` y `:175-184`** — 4 casos cada uno, **con `default -> {}`
 no-op**, y son un par espejado (`aplicarEfectos` / `revertirEfectos`).
 
 > **Riesgo verificado**: `TipoSancion` tiene 7 constantes (`PUESTOS, SEGUNDOS,
@@ -302,7 +302,9 @@ Comportamiento intercambiable pasado en el punto de uso, sin subclase nombrada.
 
 **GoF puro**, aplicado por el contenedor de Spring, no escrito a mano.
 
-12 `@Cacheable` y 23 `@CacheEvict` distribuidos en 7 servicios:
+13 `@Cacheable` y 27 `@CacheEvict` en `service/`: 7 servicios cachean y 2 más solo evacuan una
+caché ajena. Los conteos son de anotaciones reales, no incluyen menciones dentro de javadoc
+(`CampeonatoService.java:186` nombra `@Cacheable` en un comentario, no es una anotación):
 
 | Servicio | Cachés | Evict en |
 |---|---|---|
@@ -312,7 +314,9 @@ Comportamiento intercambiable pasado en el punto de uso, sin subclase nombrada.
 | `CategoriaService` | `categorias`, `categorias_elo` (`:28`, `:33`, `:38`) | `:46`, `:64`, `:78` |
 | `LogroService` | `logros` (`:53`, `:59`) | `:65`, `:81`, `:96` |
 | `RecompensaService` | `recompensas` (`:35`, `:41`) | `:53`, `:64`, `:73` |
-| `UsuarioService` | `usuarios` (`:160`) | **solo `:268`** |
+| `UsuarioService` | `usuarios` (`:161`) | `:169`, `:241`, `:270` |
+| `ResultadoCarreraService` | — (no cachea) | `:87`, sobre `usuarios` |
+| `SancionService` | — (no cachea) | `:68`, `:78`, `:111`, `:170`, sobre `usuarios` |
 
 **La prueba documental más fuerte de que el Proxy importa** está en
 `CampeonatoService.java:185-190`, cuyo comentario explica que el gate de membresía *no puede*
@@ -320,14 +324,43 @@ vivir dentro del método porque *"con `@Cacheable` el cache se consulta antes de
 cuerpo"*. El autor está razonando explícitamente sobre la interposición del proxy. El mismo
 razonamiento aparece en `CarreraService.java:67-71` y `:110-112`.
 
-> **Bug verificado — caché de usuarios sin evictar**: `UsuarioService.listAllBasico()`
-> cachea en `usuarios` (`:160-161`), y el único `@CacheEvict` del servicio está en `delete`
-> (`:268`). Los métodos que mutan exactamente los datos cacheados — `updatePerfil` (`:169`),
-> `cambiarRol` (`:223`), `updateHabilitado` (`:230`), `updateRating` (`:240`, escribe elo y
-> safety rating) — **no evictan**. Un usuario que actualiza su perfil sigue mostrando los
-> datos viejos en el listado público hasta que se borre.
+> **Bug corregido (`7034242c`) — la caché `usuarios` quedaba sin evictar**:
+> `UsuarioService.listAllBasico()` cachea en `usuarios` (`:161-162`) un `UsuarioBasicoResponse`
+> con exactamente 5 campos: `id`, `nombrePiloto`, `fotoPerfil`, `elo`, `safetyRating`. El único
+> `@CacheEvict` que había sobre esa clave estaba en `delete` (`:270`), así que cualquier
+> escritura de esos 5 campos dejaba el listado público de pilotos con datos viejos.
 >
-> Los otros 6 servicios sí están protegidos: cada método de escritura tiene su evict.
+> El alcance real era **más ancho** que los 4 métodos de `UsuarioService` sospechados al
+> principio, y **más chico** en un punto. `cambiarRol` (`:224`, escribe solo `rol`) y
+> `updateHabilitado` (`:231`, escribe `habilitado` y `tokenVersion`) no tocan ningún campo
+> cacheado, así que no necesitan evict. Los que sí escribían datos cacheados eran 5 entradas
+> públicas de 3 clases:
+>
+> | Método | Qué ensucia la caché |
+> |---|---|
+> | `UsuarioService.updatePerfil` (`:170`) | `nombrePiloto` |
+> | `UsuarioService.updateRating` (`:242`) | `elo`, `safetyRating` |
+> | `ResultadoCarreraService.cargarResultados` (`:88`) | elo y safety rating de **todos** los pilotos de la carrera, vía `recalcularEloYSafetyRating` (`:116`) |
+> | `SancionService.create` (`:69`) / `update` (`:79`) / `delete` (`:112`) | elo y safety rating, al aplicar o revertir efectos |
+> | `SancionService.revertirEfectos` (`:171`) | ídem, desde el único llamador externo (`ApelacionService`) |
+>
+> Los de `ResultadoCarreraService` y `SancionService` eran los que más dolían:
+> `cargarResultados` es la operación más frecuente del sistema y dejaba el ranking público
+> entero desactualizado.
+>
+> **Trampa del proxy, documentada en el código**: `aplicarEfectos` (`:145`) y
+> `revertirEfectos` (`:171`) son el par aplicar/revertir, pero solo el método público puede
+> llevar `@CacheEvict` — los privados no pasan por el proxy de Spring. Y `update()`/`delete()`
+> llaman a `this.revertirEfectos(...)` desde su propio cuerpo, que es self-invocation y
+> tampoco pasa por el proxy: por eso `update` y `delete` llevan su propio evict, y el de
+> `revertirEfectos` únicamente cubre el llamador externo.
+>
+> `LogroService` no está afectado: su caché `logros` guarda las definiciones, no el progreso
+> por usuario, y `listarLogrosUsuario()` no está cacheado.
+>
+> **Nota sobre esta tabla**: los conteos anteriores (12 y 23) y el alcance de los "4
+> mutadores" estaban mal aun antes del fix, por contraste con el código. Verificado contra
+> las anotaciones reales con `Select-String` sobre `service/`, no estimado a ojo.
 
 **Advertencia estructural**: por ser proxies, `this.metodo()` dentro de la misma clase **no**
 pasa por el proxy, así que `@Cacheable`/`@Transactional` se ignoran en llamada interna. Revisé
@@ -345,7 +378,7 @@ Construir la entidad por defecto en el sitio en vez de trabajar con `null` u
 | `LogroService.java:139-140` | `getOrDefault(logro.getId(), UsuarioLogro.builder().progreso(0)...)` |
 | `LogroService.java:156-162` | ídem, con `.logro().usuario()` |
 | `ClasificacionImportService.java:52-57` | `orElseGet(() -> SesionClasificacion.builder()...)` |
-| `ResultadoCarreraService.java:91-96` | `orElseGet(() -> ResultadoCarrera.builder()...)` |
+| `ResultadoCarreraService.java:101-104` | `orElseGet(() -> ResultadoCarrera.builder()...)` |
 | `SetupCalificacionService.java:44-49` | `orElseGet(() -> SetupCalificacion.builder()...)` |
 | `IncidenteService.java:174-179` | `orElseGet(() -> VotoComisario.builder()...)` |
 | `CampeonatoService.java:214-224` | `orElseGet(() -> CampeonatoPosicion.builder().puntos(0).posicion(count+1))` |
@@ -353,7 +386,7 @@ Construir la entidad por defecto en el sitio en vez de trabajar con `null` u
 **Por qué no es Null Object de GoF**: Null Object exige *una subclase que representa la
 ausencia y absorbe las operaciones sin efecto*. Acá la instancia por defecto es **una entidad
 real del mismo tipo que se persiste después** (`LogroService:170`,
-`ResultadoCarreraService:106`, `CampeonatoService:228`). El nombre correcto es
+`ResultadoCarreraService:116`, `CampeonatoService:228`). El nombre correcto es
 **Get-or-Create / upsert**. Que aparezca en 7 lugares lo vuelve un patrón deliberado del
 proyecto, no un accidente.
 
@@ -410,7 +443,8 @@ Cada servicio tiene un `private XxxResponse toResponse(...)` que cumple dos func
 **y** desacoplar el grafo JPA lazy del JSON. Esto último es obligatorio, no decorativo —
 serializar una entidad con `@ManyToOne(LAZY)` fuera de sesión lanza `LazyInitializationException`.
 
-Ejemplos: `LogroService.java:224-254` (3 overloads), `UsuarioService.java:355-368`,
+Ejemplos: `LogroService.java:224-254` (3 mappers distintos: `toResponse`, `toRecompensaResponse`,
+`toUsuarioLogroResponse`), `UsuarioService.java:357-370`,
 `VueltaService.java:41-55`, `SetupService.java:201-216`, `EstadisticasService.java:40-66`.
 
 Dos casos que no pueden ser método local usan el helper estático compartido
@@ -424,19 +458,19 @@ Transaction Script que orquesta muchos repositorios.
 
 | Servicio | Colaboradores | Rol |
 |---|---|---|
-| `ResultadoCarreraService.java:80-114` | 11 (`:37-47`) | **el orquestador más denso**: valida → guarda de idempotencia (`:83-86`) → upsert N resultados (`:88-105`) → `recalcularEloYSafetyRating` (`:108`) → `actualizarPuntos` (`:109`) → `evaluarLogros` por piloto (`:110-112`). Todo en **una sola `@Transactional`** (`:79`) |
+| `ResultadoCarreraService.java:88-122` | 11 (`:37-47`) | **el orquestador más denso**: valida → guarda de idempotencia (`:91-94`) → upsert N resultados (`:96-113`) → `recalcularEloYSafetyRating` (`:116`) → `actualizarPuntos` (`:117`) → `evaluarLogros` por piloto (`:119`). Todo en **una sola `@Transactional`** (`:86`) |
 | `UsuarioService.java:267-307` | 23 (`:49-72`) | borrado en cascada de **4 fases** con el orden documentado en comentarios: referencias directas (`:272-277`), dependencias de agregados (`:279-286`), agregados (`:288-290`), filas propias (`:292-302`), más `desvincularAdmin` (`:305`) para no dejar la FK colgando |
 | `EstadisticasService.java:27-37`, `:40-66` | 11 repos | façade read-only que agrega **23 contadores** en un DTO |
-| `SancionService.java:28-37` | 10 | `create` en 3 fases: `buildSancion` → `aplicarEfectos` → `notificar` (`:67-73`) |
+| `SancionService.java:28-37` | 10 | `create` en 3 fases: `buildSancion` → `aplicarEfectos` → `notificar` (`:69-75`) |
 
-`ResultadoCarreraService.java:123-126` toma un **snapshot** de elos en `Map<Long,Integer>`
+`ResultadoCarreraService.java:131-134` toma un **snapshot** de elos en `Map<Long,Integer>`
 antes de recalcular, para que el cálculo no lea valores ya modificados en el mismo lote.
 
 ### 7.10 Compensating action / undo — **Analogía a Saga**
 
-`SancionService.aplicarEfectos` (`:141-153`) tiene su espejo exacto `revertirEfectos`
+`SancionService.aplicarEfectos` (`:145-157`) tiene su espejo exacto `revertirEfectos`
 (`:155-169`), con guarda de idempotencia por el flag `efectosAplicados` (`:156-158`) y fila de
-auditoría negativa con prefijo "Reversion de sancion" (`:228-229`, `:241-242`).
+auditoría negativa con prefijo "Reversion de sancion" (`:244-245`, `:257-258`).
 
 El par de métodos privados es simétrico: `aplicarCambioElo` (`:171-181`) /
 `revertirCambioElo` (`:221-232`), y así los tres pares restantes.
@@ -520,7 +554,7 @@ No son patrones, pero son convenciones consistentes en todo el código:
 
 - **Timestamps de negocio inyectados, no leídos dentro del dominio**: `LocalDateTime.now()`
   explícito en `IncidenteService:85`, `:182`, `ClasificacionImportService:58`,
-  `SancionService:137`.
+  `SancionService:141`.
 - **Índices anti-N+1**: `Map` como lookup en `CarreraService:249-255` (reutilizado en 4
   métodos públicos), `ClasificacionImportService:67-77`, `VueltaService:63-71` (doble índice
   con `computeIfAbsent`), `IncidenteService:100-101`, `LogroService:133-136` y `:149-152`.
@@ -563,7 +597,7 @@ Los **6 sitios internos** que generan notificaciones escriben el repositorio
 |---|---|
 | `LogroService.java:206-213` | `notificarLogro` |
 | `LogroService.java:215-222` | `notificarRecompensa` |
-| `SancionService.java:290-298` | sanción aplicada |
+| `SancionService.java:306-313` | sanción aplicada |
 | `ApelacionService.java:93-106` | apelación resuelta |
 | `CampeonatoMiembroService.java:96-105` | piloto agregado |
 | `CarreraService.java:214-222`, `:239-245` | cambios de estado de carrera |
@@ -594,10 +628,10 @@ tipo de notificación obliga a editar 6 lugares, y es fácil que uno se quede at
 
 | # | Hallazgo | Ubicación | Impacto |
 |---|---|---|---|
-| 1 | **Caché de usuarios sin evictar en 4 mutadores** | `UsuarioService.java:160` vs `:268` | Perfil, rol, habilitado, elo y safety rating se muestran viejos en el listado público |
+| 1 | **Caché de usuarios sin evictar — CORREGIDO en `7034242c`** | `UsuarioService.java:161` vs `:169`, `:241`, `:270`; `ResultadoCarreraService.java:87`; `SancionService.java:68`, `:78`, `:111`, `:170` | Era peor de lo reportado: no eran 4 métodos de `UsuarioService` sino 5 entradas en 3 clases, y `cargarResultados` dejaba el ranking entero viejo. Ver [sección 7.3](#73-proxy-dinámico--cacheable--transactional) |
 | 2 | **Constante `MINUTOS_CIERRE_PREVIO` duplicada** | `InscripcionesAbiertasValidador:16` vs `CarreraService:37` | El cierre automático puede desincronizarse de la validación |
 | 3 | **Estado mutable en singleton escrito concurrentemente** | `ValidadorInscripcion.java:8-12`, reconstruido en `InscripcionValidacion:17` | Hoy idempotente; hoy es seguro por suerte, no por diseño |
-| 4 | **`switch` con `default` no-op oculta casos** | `SancionService.java:150`, `:164` | Un `TipoSancion` nuevo se aplicaría sin efecto y sin warning |
+| 4 | **`switch` con `default` no-op oculta casos** | `SancionService.java:154`, `:180` | Un `TipoSancion` nuevo se aplicaría sin efecto y sin warning |
 | 5 | **Fan-out de notificaciones duplicado en 6 sitios** | ver [sección 8](#la-ausencia-con-más-consecuencias-no-hay-observer-y-el-fan-out-de-notificaciones-está-duplicado) | Agregar un tipo de notificación exige editar 6 lugares |
 | 6 | **Hook `validar` sin ninguna implementación** | `ImportadorSesion.java:24-25` | Promete un punto de extensión que no existe |
 | 7 | **Estado en memoria no escala a múltiples réplicas** | `SteamService:62`, `RateLimitFilter:24` | Restricción de escala en Render |
@@ -623,4 +657,25 @@ el orden real de validación y ese orden es semántico.
 | `docs/flujos.md` | Flujos funcionales |
 | `docs/formulas-rating.md` | Fórmulas de Elo y Safety Rating |
 | `docs/analisis-mejoras.md` | Análisis previo de mejoras |
+
+### Advertencia sobre los números de línea
+
+Este documento cita líneas concretas, y **esas referencias se pudren**. Cada cambio de código
+las corre y nadie las actualiza salvo que se esté editando la sección justo ahí.
+
+Evidencia medida, no supuesto:
+
+- Al corregir la sección 7.3 (commit `7034242c`) hubo que recalcular 14 referencias de
+  `SancionService`, `ResultadoCarreraService` y `UsuarioService`. Todas quedaron verificadas
+  una por una contra el archivo.
+- Antes incluso de ese commit ya había drift: este documento decía
+  `UsuarioService.java:355-368` para `toResponse` (real `:357-370`), y
+  `analisis-mejoras.md:89` dice `:230-246` para los mismos dos mappers de historial. Los tres
+  números no coinciden entre sí ni con el código.
+- Los conteos de la sección 7.3 (12 `@Cacheable`, 23 `@CacheEvict`) estaban mal **aun sin
+  haber tocado una línea de caché**: los reales son 13 y 27.
+
+Las afirmaciones cualitativas de cada patrón siguen siendo válidas. Lo que no es confiable sin
+reverificar es la posición exacta de una línea. Para citar líneas, tomarlas del código en el
+momento, no de acá.
 | `docs/plan-produccion.md` | Plan de producción (histórico) |
