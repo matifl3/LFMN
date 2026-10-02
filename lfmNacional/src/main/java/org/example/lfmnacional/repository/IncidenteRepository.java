@@ -22,6 +22,8 @@ public interface IncidenteRepository extends JpaRepository<Incidente, Long> {
 
     long countByEstado(EstadoIncidente estado);
 
+    boolean existsByClaveOrigen(String claveOrigen);
+
     void deleteByCarrera_Id(Long carreraId);
 
     @Modifying

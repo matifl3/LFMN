@@ -23,16 +23,38 @@ public class SesionServidorController {
     private final CarreraService carreraService;
     private final CampeonatoAccesoService accesoService;
 
+    /**
+     * Importa el JSON de una sesion de Assetto Corsa.
+     *
+     * Idempotente por contenido: reenviar el mismo JSON devuelve 409 sin
+     * reprocesar. Eso permite al cliente reintentar ante errores de red sin
+     * riesgo de duplicar resultados ni incidentes.
+     *
+     * @param nombreArchivo opcional, solo para trazabilidad en el historial.
+     */
     @PostMapping("/importar")
     @PreAuthorize("hasRole('ADMIN') or hasRole('COMISARIO') or hasRole('ADMIN_CAMPEONATO')")
     public ResponseEntity<Map<String, Object>> importar(@RequestParam Long carreraId,
                                                         @RequestBody SesionServerData sesion,
+                                                        @RequestParam(required = false) String nombreArchivo,
                                                         @AuthenticationPrincipal Usuario usuario) {
         if (!accesoService.esComisario(usuario)) {
             accesoService.exigirAdministraCarrera(usuario, carreraService.getEntity(carreraId));
         }
-        String tipo = sesionServidorService.importarSesion(carreraId, sesion);
+        SesionServidorService.ResultadoImportacion resultado =
+                sesionServidorService.importarConIdempotencia(carreraId, sesion, nombreArchivo);
+
+        if (resultado.yaProcesada()) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(Map.of(
+                            "carreraId", carreraId,
+                            "tipo", resultado.tipo(),
+                            "estado", "YA_PROCESADA"));
+        }
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(Map.of("carreraId", carreraId, "tipo", tipo, "estado", "PROCESADA"));
+                .body(Map.of(
+                        "carreraId", carreraId,
+                        "tipo", resultado.tipo(),
+                        "estado", "PROCESADA"));
     }
 }

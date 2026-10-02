@@ -11,7 +11,10 @@ import java.util.List;
 
 @Entity
 @Table(name = "incidente",
-        indexes = @Index(name = "idx_incidente_estado_carrera", columnList = "estado, carrera_id"))
+        indexes = {
+                @Index(name = "idx_incidente_estado_carrera", columnList = "estado, carrera_id"),
+                @Index(name = "idx_incidente_clave_origen", columnList = "clave_origen")
+        })
 @Getter
 @Setter
 @NoArgsConstructor
@@ -38,6 +41,12 @@ public class Incidente {
 
     @Column(name = "video_url", length = 500)
     private String videoUrl;
+
+    // Hash del evento del JSON de sesion que origino el incidente. Solo para
+    // incidentes autogenerados; null en los reportados a mano. Evita que un
+    // reintento de ingesta genere el mismo incidente dos veces.
+    @Column(name = "clave_origen", length = 40)
+    private String claveOrigen;
 
     @Column(nullable = false)
     private LocalDateTime fecha;

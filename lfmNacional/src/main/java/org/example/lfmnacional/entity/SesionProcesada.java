@@ -6,7 +6,8 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "sesion_procesada")
+@Table(name = "sesion_procesada",
+        uniqueConstraints = @UniqueConstraint(columnNames = "clave"))
 @Getter
 @Setter
 @NoArgsConstructor
@@ -22,7 +23,15 @@ public class SesionProcesada {
     @JoinColumn(name = "carrera_id", nullable = false)
     private Carrera carrera;
 
-    @Column(name = "nombre_archivo", nullable = false, unique = true)
+    // Identidad del JSON calculada sobre su contenido (carrera + track + tipo +
+    // cantidad de autos/resultados/vueltas/eventos). Es la clave de idempotencia
+    // real: el nombre de archivo puede cambiar entre reintentos del cliente.
+    @Column(name = "clave", nullable = false, unique = true, length = 40)
+    private String clave;
+
+    // Trazabilidad del archivo original. Null cuando la ingesta es por HTTP
+    // (POST /api/sesiones/importar), donde el cliente no envia nombre.
+    @Column(name = "nombre_archivo")
     private String nombreArchivo;
 
     @Column(nullable = false)
