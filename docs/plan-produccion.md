@@ -1,5 +1,11 @@
 # Plan de salida a producción — LFM Nacional
 
+> ⚠️ **Documento histórico.** Escribe cuando el proyecto tenía un folder watcher
+> de sesiones. Ese watcher fue eliminado: la ingesta de sesiones AC ahora es
+> **carga manual** por `POST /api/sesiones/importar`, y la app ya no depende de
+> disco persistente. Las referencias al watcher y a `SESIONES_DIR` que siguen
+> abajo quedaron desactualizadas.
+
 > Objetivo: operar la plataforma para una liga real de forma segura y con
 > integridad de datos.
 > Alcance: lanzamiento seguro (Fases 1-4). **No** incluye features nuevas.

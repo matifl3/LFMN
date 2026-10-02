@@ -54,11 +54,13 @@ class IdempotenciaSesionServiceTest {
     }
 
     @Test
-    void nombreDeArchivoDistintoMismaClave() {
+    void elNombreDelArchivoNoAfectaLaClave() {
         SesionServerData a = sesion("RACE", 3, 3, 5, 4);
         SesionServerData b = sesion("RACE", 3, 3, 5, 4);
 
-        // Es el caso que rompe el watcher: el mismo JSON subido con otro nombre.
+        // El watcher deduplicaba por nombre de archivo, asi que el mismo JSON
+        // subido con otro nombre se procesaba dos veces. La clave va por
+        // contenido justamente para no depender del nombre.
         assertThat(service.claveSesion(CARRERA, a)).isEqualTo(service.claveSesion(CARRERA, b));
     }
 
@@ -149,16 +151,5 @@ class IdempotenciaSesionServiceTest {
         EventoSesionData evento = new EventoSesionData("CAR_COLLISION", 3, new DriverSesionData("Piloto", null, null, "guid0", null), 5, null, null, null, null);
 
         assertThat(service.claveIncidente(CARRERA, evento, "guid0")).hasSize(40);
-    }
-
-    @Test
-    void claveDesdeNombreEsEstable() {
-        assertThat(service.claveDesdeNombre("2026_8_7_16_31_RACE.json"))
-                .isEqualTo(service.claveDesdeNombre("2026_8_7_16_31_RACE.json"));
-    }
-
-    @Test
-    void claveDesdeNombreDifierePorNombre() {
-        assertThat(service.claveDesdeNombre("a.json")).isNotEqualTo(service.claveDesdeNombre("b.json"));
     }
 }

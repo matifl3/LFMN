@@ -19,10 +19,10 @@ recompensas.
 - **Carreras e inscripciones**: próximas y pasadas, cupo máximo, lista de espera
   con promoción automática, cierre de inscripciones 5 min antes del inicio y
   servidor asignado con contraseña para inscriptos.
-- **Resultados e ingestión de sesiones**: importa automáticamente los JSON que
-  exporta el servidor de Assetto Corsa (`QUALIFY` / `RACE`) mediante un watcher
-  de carpeta, generando clasificación, resultados y autogenerando incidentes por
-  colisión.
+- **Resultados e ingestión de sesiones**: importa los JSON que exporta el servidor
+  de Assetto Corsa (`QUALIFY` / `RACE`) por carga manual, generando clasificación,
+  resultados y autogenerando incidentes por colisión. La importación es
+  idempotente por contenido: reenviar el mismo JSON devuelve `409` sin duplicar.
 - **Rating**: recálculo automático de **Elo** y **Safety Rating (SR)** al cargar
   resultados, con historial de cambios.
 - **Campeonatos**: tabla de posiciones con puntos estilo F1 (25-18-15-12-10-8-6-4-2-1).
@@ -55,7 +55,7 @@ recompensas.
 | Seguridad | Spring Security, JWT (jjwt 0.12.6), OAuth Steam, bcrypt |
 | Persistencia | Spring Data JPA, MySQL (mysql-connector-j) |
 | Frontend | Angular 22 (SPA en `frontend/`) |
-| Extra | Folder watcher de sesiones de Assetto Corsa |
+| Extra | Ingesta idempotente de sesiones de Assetto Corsa por HTTP |
 
 ## Arquitectura y flujos
 
@@ -142,7 +142,6 @@ El script genera credenciales aleatorias, crea la BD MySQL y configura el servic
 | `JWT_SECRETO` | Clave para firmar tokens JWT (generar con `openssl rand -base64 64`) |
 | `FRONTEND_URL` | URL pública de la app (ej: `https://tudominio.com`) |
 | `CORS_ALLOWED_ORIGINS` | Dominios permitidos (separados por coma) |
-| `SESIONES_DIR` | Ruta a la carpeta de sesiones de Assetto Corsa |
 | `SPRING_PROFILES_ACTIVE` | Usar `prod` para config segura |
 | `JPA_DDL_AUTO` | Default `update` en prod (schema aplicado por Hibernate). `validate` solo si la BD ya existe |
 | `FLYWAY_BASELINE` | Reservado para cuando se active Flyway versionado (ver sección Migraciones) |

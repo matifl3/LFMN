@@ -8,8 +8,6 @@ import java.util.Optional;
 
 public interface SesionProcesadaRepository extends JpaRepository<SesionProcesada, Long> {
 
-    boolean existsByNombreArchivo(String nombreArchivo);
-
     boolean existsByClave(String clave);
 
     Optional<SesionProcesada> findByClave(String clave);

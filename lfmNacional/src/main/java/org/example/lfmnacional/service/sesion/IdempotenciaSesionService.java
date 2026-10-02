@@ -12,8 +12,9 @@ import java.util.HexFormat;
 /**
  * Calcula claves de idempotencia a partir del contenido del JSON de sesion.
  *
- * Reemplaza la deduplicacion por nombre de archivo del SesionFolderWatcher, que
- * era fragil: el mismo JSON subido con otro nombre se procesaba dos veces.
+ * Reemplaza la deduplicacion por nombre de archivo del SesionFolderWatcher
+ * (eliminado): el mismo JSON subido con otro nombre debe colapsar a la misma
+ * clave.
  */
 @Service
 public class IdempotenciaSesionService {
@@ -53,15 +54,6 @@ public class IdempotenciaSesionService {
                 .append(impacto(evento)).append('|')
                 .append(posicion(evento.worldPosition()));
         return sha256(sb.toString());
-    }
-
-    /**
-     * Clave derivada del nombre de archivo. Solo para la ingesta por carpeta,
-     * donde no se tiene el JSON parsed al momento de registrar. La ingesta por
-     * HTTP usa {@link #claveSesion}, que es mas fuerte.
-     */
-    public String claveDesdeNombre(String nombreArchivo) {
-        return sha256("archivo|" + valor(nombreArchivo));
     }
 
     private String impacto(EventoSesionData evento) {

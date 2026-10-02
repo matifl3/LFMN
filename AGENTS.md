@@ -34,7 +34,7 @@ npx prettier --write src   # formateo: singleQuote, printWidth 100, parser angul
 - Backend: `controller/ → service/ → repository/`, DTOs son **records** (`dto/.../XxxResponse`) mapeados en `mapper/EntityMapper.java`. Los nombres de campos camelCase llegan 1:1 al JSON y se reflejan en `frontend/src/app/core/models/models.ts`. **Si tocás un DTO, actualizá la interface TS correspondiente.**
 - Frontend: rutas lazy (`loadComponent`) en `app.routes.ts`; cada feature es un directorio en `src/app/features/<feature>/` con `*.component.ts|.html|.scss`. API centralizada en `ApiService` (agrega JWT y `normalizeList` tolera paginación `{content}` o array plano).
 - Caché Spring (`@Cacheable`, ej. `CategoriaService.listAll`) puede servir datos viejos tras cambios en BD hasta evictar; tenelo en cuenta si el cambio "no aparece".
-- Ingestión de sesiones AC: folder watcher configurado con `sesiones.input-dir` (default `./sesiones`), consume JSON `QUALIFY`/`RACE`, autogenera resultados, Elo/SR e incidentes.
+- Ingestión de sesiones AC: **carga manual** vía `POST /api/sesiones/importar?carreraId=N` (roles ADMIN/COMISARIO/ADMIN_CAMPEONATO). No hay folder watcher: la app no depende de disco local (en Render es efímero). Idempotente por contenido (`sesion_procesada.clave`, SHA-256); reenviar el mismo JSON devuelve `409`. Los incidentes autogenerados deduplican por `incidente.clave_origen`, así que un reintento no duplica colisiones.
 
 ## Gotchas operativos
 
