@@ -15,6 +15,11 @@ public class SistemaPuntosF1 implements SistemaPuntos {
     }
 
     @Override
+    public String nombre() {
+        return "F1";
+    }
+
+    @Override
     public int puntosPara(int posicion) {
         if (posicion < 1 || posicion > PUNTOS.size()) {
             return 0;

@@ -69,6 +69,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/clasificaciones/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/setups").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/setups/{id}").permitAll()
+                        // Catalogo de sistemas de puntos: lo consume el selector
+                        // al crear/editar campeonato. Es metadato de configuracion,
+                        // no dato de usuario, asi que va publico como /api/setups.
+                        .requestMatchers(HttpMethod.GET, "/api/sistemas-puntos").permitAll()
                         // Static frontend files (public)
                         .requestMatchers("/*.html").permitAll()
                         .requestMatchers("/**/*.html").permitAll()

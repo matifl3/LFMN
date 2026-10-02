@@ -15,6 +15,11 @@ public class SistemaPuntosTop10 implements SistemaPuntos {
     }
 
     @Override
+    public String nombre() {
+        return "Top 10";
+    }
+
+    @Override
     public int puntosPara(int posicion) {
         if (posicion < 1 || posicion > PUNTOS.size()) {
             return 0;

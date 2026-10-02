@@ -14,6 +14,7 @@ import {
   Estadisticas,
   Usuario,
   Logro,
+  SistemaPuntosCatalogo,
 } from '../../core/models/models';
 import { Chip } from '../../shared/components/chip/chip';
 import { Avatar } from '../../shared/components/avatar/avatar';
@@ -126,12 +127,17 @@ export class AdminComponent implements OnInit {
   readonly chNombre = signal('');
   readonly chTemporada = signal('');
   readonly chCategoriaId = signal('');
-  readonly chSistemaPuntos = signal('default');
+  readonly chSistemaPuntos = signal('');
   readonly chAdminId = signal('');
   readonly chEstado = signal('ACTIVO');
   readonly chVisibilidad = signal<'PRIVADO' | 'PUBLICO'>('PUBLICO');
   readonly ESTADO_CAMPEONATO = ['ACTIVO', 'CERRADO'] as const;
   readonly VISIBILIDAD_CAMPEONATO = ['PRIVADO', 'PUBLICO'] as const;
+
+  // Catalogo que devuelve GET /api/sistemas-puntos. Vacio si la llamada falla,
+  // y el select se queda en la unica opcion valida (la que marca porDefecto).
+  readonly sistemasPuntos = signal<SistemaPuntosCatalogo[]>([]);
+  readonly sistemasPuntosDisponibles = computed(() => this.sistemasPuntos());
 
   readonly catNombre = signal('');
   readonly catDescripcion = signal('');
@@ -155,6 +161,28 @@ export class AdminComponent implements OnInit {
 
   ngOnInit(): void {
     this.cargar();
+    this.cargarSistemasPuntos();
+  }
+
+  private claveSistemaPuntosDefault(): string {
+    return this.sistemasPuntos().find((s) => s.porDefecto)?.clave ?? '';
+  }
+
+  private cargarSistemasPuntos(): void {
+    this.api
+      .list<SistemaPuntosCatalogo>('/sistemas-puntos')
+      .pipe(catchError(() => of([] as SistemaPuntosCatalogo[])))
+      .subscribe((lista) => {
+        this.sistemasPuntos.set(lista);
+        // Si el formulario tiene un valor que no existe en el catalogo
+        // (clave vieja de otra liga, o '' inicial), lo caemos al default para
+        // que el select no quede en blanco.
+        const actual = this.chSistemaPuntos();
+        const sigueValida = lista.some((s) => s.clave === actual);
+        if (!sigueValida) {
+          this.chSistemaPuntos.set(this.claveSistemaPuntosDefault());
+        }
+      });
   }
 
   private cargar(): void {
@@ -373,7 +401,7 @@ export class AdminComponent implements OnInit {
     this.chNombre.set(c.nombre);
     this.chTemporada.set(c.temporada || '');
     this.chCategoriaId.set(String(c.categoriaId));
-    this.chSistemaPuntos.set(c.sistemaPuntos || 'default');
+    this.chSistemaPuntos.set(c.sistemaPuntos || this.claveSistemaPuntosDefault());
     this.chAdminId.set(c.adminId ? String(c.adminId) : '');
     this.chEstado.set(c.estado);
     this.chVisibilidad.set(c.visibilidad);
@@ -384,7 +412,7 @@ export class AdminComponent implements OnInit {
     this.chNombre.set('');
     this.chTemporada.set('');
     this.chCategoriaId.set('');
-    this.chSistemaPuntos.set('default');
+    this.chSistemaPuntos.set(this.claveSistemaPuntosDefault());
     this.chAdminId.set('');
     this.chEstado.set('ACTIVO');
     this.chVisibilidad.set('PUBLICO');

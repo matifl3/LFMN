@@ -111,6 +111,18 @@ export interface Categoria {
 
 export type VisibilidadCampeonato = 'PUBLICO' | 'PRIVADO';
 
+/**
+ * Esquema de puntaje disponible, servido por GET /api/sistemas-puntos.
+ * `clave` es el valor a persistir en Campeonato.sistemaPuntos y `nombre` el
+ * texto a mostrar. No hardcodear la lista en el cliente: el backend la deriva
+ * de los beans SistemaPuntos registrados.
+ */
+export interface SistemaPuntosCatalogo {
+  clave: string;
+  nombre: string;
+  porDefecto: boolean;
+}
+
 export interface Campeonato {
   id: number;
   nombre: string;

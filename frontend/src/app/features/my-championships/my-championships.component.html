@@ -96,6 +96,20 @@
                 </select>
               </label>
               <label class="field">
+                <span>Sistema de puntos</span>
+                <select
+                  name="chSistemaPuntos"
+                  [ngModel]="chSistemaPuntos()"
+                  (ngModelChange)="chSistemaPuntos.set($event)"
+                >
+                  @for (s of sistemasPuntosDisponibles(); track s.clave) {
+                    <option [value]="s.clave">
+                      {{ s.nombre }}{{ s.porDefecto ? ' (default)' : '' }}
+                    </option>
+                  }
+                </select>
+              </label>
+              <label class="field">
                 <span>Organizador (opcional)</span>
                 <select
                   name="chAdminId"

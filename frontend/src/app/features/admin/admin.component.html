@@ -802,9 +802,11 @@
                   [ngModel]="chSistemaPuntos()"
                   (ngModelChange)="chSistemaPuntos.set($event)"
                 >
-                  <option value="default">Default</option>
-                  <option value="F1">F1</option>
-                  <option value="F1_SPRINT">F1 Sprint</option>
+                  @for (s of sistemasPuntosDisponibles(); track s.clave) {
+                    <option [value]="s.clave">
+                      {{ s.nombre }}{{ s.porDefecto ? ' (default)' : '' }}
+                    </option>
+                  }
                 </select>
               </div>
               <div class="field">

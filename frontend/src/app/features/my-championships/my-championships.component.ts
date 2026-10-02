@@ -14,6 +14,7 @@ import {
   MiembroCampeonato,
   TablaPosicion,
   Usuario,
+  SistemaPuntosCatalogo,
 } from '../../core/models/models';
 import { Chip } from '../../shared/components/chip/chip';
 import { Avatar } from '../../shared/components/avatar/avatar';
@@ -65,9 +66,14 @@ export class MisCampeonatosComponent implements OnInit {
   readonly chNombre = signal('');
   readonly chTemporada = signal('');
   readonly chCategoriaId = signal('');
-  readonly chSistemaPuntos = signal('default');
+  readonly chSistemaPuntos = signal('');
   readonly chAdminId = signal('');
   readonly editandoCampeonatoId = signal<number | null>(null);
+
+  // Catalogo de GET /api/sistemas-puntos. Alimenta el select del formulario de
+  // alta/edicion, que es donde el organizador elige como se puntua la liga.
+  readonly sistemasPuntos = signal<SistemaPuntosCatalogo[]>([]);
+  readonly sistemasPuntosDisponibles = computed(() => this.sistemasPuntos());
 
   // roster
   readonly busquedaPiloto = signal('');
@@ -98,6 +104,24 @@ export class MisCampeonatosComponent implements OnInit {
 
   ngOnInit(): void {
     this.cargar();
+    this.cargarSistemasPuntos();
+  }
+
+  private claveSistemaPuntosDefault(): string {
+    return this.sistemasPuntos().find((s) => s.porDefecto)?.clave ?? '';
+  }
+
+  private cargarSistemasPuntos(): void {
+    this.api
+      .list<SistemaPuntosCatalogo>('/sistemas-puntos')
+      .pipe(catchError(() => of([] as SistemaPuntosCatalogo[])))
+      .subscribe((lista) => {
+        this.sistemasPuntos.set(lista);
+        const actual = this.chSistemaPuntos();
+        if (!lista.some((s) => s.clave === actual)) {
+          this.chSistemaPuntos.set(this.claveSistemaPuntosDefault());
+        }
+      });
   }
 
   private cargar(): void {
@@ -198,7 +222,7 @@ export class MisCampeonatosComponent implements OnInit {
     this.chNombre.set(c.nombre);
     this.chTemporada.set(c.temporada || '');
     this.chCategoriaId.set(String(c.categoriaId));
-    this.chSistemaPuntos.set(c.sistemaPuntos || 'default');
+    this.chSistemaPuntos.set(c.sistemaPuntos || this.claveSistemaPuntosDefault());
     this.chAdminId.set(c.adminId ? String(c.adminId) : '');
   }
 
@@ -207,7 +231,7 @@ export class MisCampeonatosComponent implements OnInit {
     this.chNombre.set('');
     this.chTemporada.set('');
     this.chCategoriaId.set('');
-    this.chSistemaPuntos.set('default');
+    this.chSistemaPuntos.set(this.claveSistemaPuntosDefault());
     this.chAdminId.set('');
   }
 
