@@ -65,6 +65,9 @@ ingestión de sesiones de Assetto Corsa.
 
 Detalles técnicos:
 
+- **[docs/arquitectura-y-patrones.md](docs/arquitectura-y-patrones.md)** — cómo se
+  construyó la app: arquitectura, patrones con su porqué, y las reglas a seguir
+  para no repetir los bugs ya encontrados.
 - **[docs/flujos.md](docs/flujos.md)** — diagramas de flujos y modelo de 27 tablas.
 - **[docs/formulas-rating.md](docs/formulas-rating.md)** — fórmulas de Elo, SR,
   puntos de campeonato y quórum de comisarios.
