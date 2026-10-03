@@ -53,12 +53,15 @@ public class ResultadoCarreraService {
     }
 
     @Transactional(readOnly = true)
-    public ResultadoCarreraResponse getById(Long id) {
-        return toResponse(getEntity(id));
+    public ResultadoCarreraResponse getById(Long id, Usuario visor) {
+        ResultadoCarrera resultado = getEntity(id);
+        championshipAcceso.exigirVeCarrera(visor, resultado.getCarrera());
+        return toResponse(resultado);
     }
 
     @Transactional(readOnly = true)
-    public List<ResultadoCarreraResponse> listarPorCarrera(Long carreraId) {
+    public List<ResultadoCarreraResponse> listarPorCarrera(Long carreraId, Usuario visor) {
+        championshipAcceso.exigirVeCarrera(visor, carreraService.getEntity(carreraId));
         return resultadoCarreraRepository.findByCarrera_IdOrderByPosicionFinalAsc(carreraId)
                 .stream().map(this::toResponse).toList();
     }

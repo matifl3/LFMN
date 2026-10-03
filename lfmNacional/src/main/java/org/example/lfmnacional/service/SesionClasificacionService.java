@@ -28,8 +28,10 @@ public class SesionClasificacionService {
     }
 
     @Transactional(readOnly = true)
-    public SesionClasificacionResponse getById(Long id) {
-        return toResponse(getEntity(id));
+    public SesionClasificacionResponse getById(Long id, Usuario visor) {
+        SesionClasificacion entidad = getEntity(id);
+        accesoService.exigirVeCarrera(visor, entidad.getCarrera());
+        return toResponse(entidad);
     }
 
     /**
@@ -50,7 +52,8 @@ public class SesionClasificacionService {
     }
 
     @Transactional(readOnly = true)
-    public List<SesionClasificacionResponse> listarPorCarrera(Long carreraId) {
+    public List<SesionClasificacionResponse> listarPorCarrera(Long carreraId, Usuario visor) {
+        accesoService.exigirVeCarrera(visor, carreraService.getEntity(carreraId));
         return sesionClasificacionRepository.findByCarrera_IdOrderByTiempoAsc(carreraId).stream()
                 .map(this::toResponse).toList();
     }
