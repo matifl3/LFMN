@@ -23,6 +23,8 @@ public interface InscripcionRepository extends JpaRepository<Inscripcion, Long> 
 
     boolean existsByCarrera_Id(Long carreraId);
 
+    boolean existsByCarrera_IdAndUsuario_Id(Long carreraId, Long usuarioId);
+
     void deleteByCarrera_Id(Long carreraId);
 
     @Modifying
