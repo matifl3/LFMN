@@ -41,6 +41,6 @@ npx prettier --write src   # formateo: singleQuote, printWidth 100, parser angul
 - **DataSeeder corre en cada arranque, también en prod** (`config/DataSeeder.java`, sin `@Profile`). Es idempotente. Crea `admin@lfm.local / admin123` y pilotos de prueba `piloto1/piloto2@lfm.local / piloto123`, todas las categorías, logros y campeonatos. El README dice "sin DataSeeder en prod" — **está desactualizado**.
 - Backend local: `spring.datasource.password=${DB_PASSWORD}` **no tiene default** → falla sin esa variable. Usa usuario `root` por default en `localhost:3306/lfm`.
 - Schema: dev y prod usan `ddl-auto=update` (Flyway deshabilitado). Los `V1__`/`V2__` de `db/migration` quedan reservados para un switch futuro; por ahora editar entidades JPA aplica solo.
-- **Push a `main` redeployea en producción**: frontend en Vercel (`lfmn.vercel.app`) y API en Render (`lfmn.onrender.com`, API url real: `https://lfmn.onrender.com`). `.github/workflows/deploy.yml` es legacy (servidor propio, manual).
+- **Push a `main` redeployea en producción**: frontend en Vercel (`lfmn.vercel.app`) y API en Render (`lfmn.onrender.com`, API url real: `https://lfmn.onrender.com`). El único workflow es `.github/workflows/ci.yml` (solo CI).
 - Prod no arranca sin `JWT_SECRETO`; el healthcheck de mail está deshabilitado (`management.health.mail.enabled=false`) hasta configurar SMTP.
 - Nunca comitear `.env`, secretos ni la password de BD.
