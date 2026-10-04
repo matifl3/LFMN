@@ -1,51 +1,323 @@
-# Patrones de diseño del sistema
+# Patrones de diseño: GRASP y GoF
 
-Inventario de los patrones implementados en `lfmNacional/` (backend Spring Boot 4.1.0) y
-`frontend/` (Angular 22), con referencia `archivo:línea` para cada afirmación.
+Inventario **exclusivo de los dos catálogos pedidos**: los 9 patrones de **GRASP**
+(*Applying Patterns and Principles in Object-Oriented Design*, Evans) y los patrones de
+**GoF** (*Design Patterns*, Gamma-Helm-Johnson-Vissots). Todo lo que no pertenece a alguno de
+esos dos catálogos queda fuera por decisión de alcance.
 
-**Cómo leer este documento.** Cada patrón está clasificado en una de tres categorías:
-
-| Marca | Significado |
-|---|---|
-| **GoF** | Implementación fiel de *Design Patterns* (Gamma, Helm, Johnson, Vissots) |
-| **Nombreugar** | Patrón descrito en la literatura de diseño (Fowler, Evans, Fowler & Evans), sin forma canónica única |
-| **Analogía** | Se parece a un patrón pero **no lo es**; se aclara por qué |
-
-La sección [8. Ausencias verificadas](#8-ausencias-verificadas) documenta lo que se buscó
-y **no** existe. Es tan informativa como la lista de lo que sí existe.
-
-Todas las líneas corresponden al commit `81728258` más los cambios de `sistemas-puntos`
-del mismo trabajo.
+**Convención de referencias.** Cada afirmación cita `Archivo.java` más el **nombre del
+método**, no números de línea. Las líneas se pudren con cada refactor y nadie las actualiza;
+los nombres de método sobreviven. Los conteos de anotaciones sí están medidos hoy y se
+declaran como tales.
 
 ---
 
 ## 1. Resumen
 
-| # | Patrón | Ubicación | Tipo |
+### GRASP
+
+| # | Patrón | Dónde vive | Veredicto |
 |---|---|---|---|
-| 1 | Strategy + Simple Factory | `service/puntos/` | **GoF** |
-| 2 | Chain of Responsibility | `service/inscripcion/` | **GoF** (variante) |
-| 3 | Template Method | `service/sesion/Importador*` | **GoF** (con hook muerto) |
-| 4 | Idempotencia por hash | `service/sesion/IdempotenciaSesionService` | Nombreugar |
-| 5 | Registry por clave (2.º sitio) | `service/SesionServidorService` | Nombreugar |
-| 6 | Dispatch por `switch` sobre enum | `LogroService`, `SancionService` | Analogía |
-| 7 | Strategy con lambdas | `config/SecurityConfig` | **GoF** |
-| 8 | Proxy dinámico | `@Cacheable` / `@Transactional` | **GoF** |
-| 9 | Get-or-Create | 7 servicios | Analogía (a Null Object) |
-| 10 | Null Object de colección vacía | `service/VueltaService` | **GoF** |
-| 11 | Registry con TTL en memoria | `SteamService`, `RateLimitFilter` | Nombreugar |
-| 12 | Command object | `ResultadoImportService`, `IncidenteService` | Analogía |
-| 13 | Mapper / Assembler | todos los servicios | Nombreugar |
-| 14 | Service Layer | 4 servicios densos | Analogía (a Facade) |
-| 15 | Compensating action / undo | `SancionService`, `ApelacionService` | Analogía (a Saga) |
-| 16 | Rate limit + lockout | `security/RateLimitFilter` | Nombreugar |
-| 17 | Fail-soft por paso | `service/sesion/ImportadorRace` | Nombreugar |
+| 1 | **Creator** | `SistemaPuntosFactory.de()` | Correcto: descubre y crea la estrategia |
+| 2 | **Information Expert** | `SistemaPuntos.puntosPara()`, `EntityMapper`, `CampeonatoAccesoService` | Parcial: los expertos son los servicios, no las entidades |
+| 3 | **Controller** | 31 clases `@RestController` + cadena de filtros de Spring Security | Correcto, asistido por framework |
+| 4 | **High Cohesion** | `CampeonatoAccesoService`, `EntityMapper`, `VueltaService` | Correcto |
+| 5 | **Low Coupling** | interfaces `SistemaPuntos`/`Repository`, DTOs `record`, `ApiService.normalizeList` | Correcto |
+| 6 | **Polymorphism** | 2 `implements SistemaPuntos`, 3 `extends ValidadorInscripcion`, 2 `extends ImportadorSesion` | Correcto y sin excepciones |
+| 7 | **Pure Accumulator** | `VueltaService.analisisCarrera()`, `VueltaImportService.importar()` | Correcto: evita recomputar y N+1 |
+| 8 | **Pure Function** | `SistemaPuntosFactory.normalizar()`, `EntityMapper.*`, `VueltaService.minSector()` | Correcto |
+| 9 | **Protected Variations** | factory de puntos, cadena de validadores, proxies de Spring | **Parcial**: se rompe con las notificaciones |
+
+### GoF
+
+| Familia | Patrón | Dónde vive | Nota |
+|---|---|---|---|
+| Creacional | **Simple Factory** | `SistemaPuntosFactory` | GoF canónico |
+| Creacional | **Singleton** | 37 `@Service` | Intención cumplida, mecanismo distinto (contenedor) |
+| Conductual | **Strategy** | `SistemaPuntosF1`, `SistemaPuntosTop10` | El único con clases; el resto del proyecto usa lambdas |
+| Conductual | **Chain of Responsibility** | `ValidadorInscripcion` + 3 eslabones | Variante sin cortocircuito |
+| Conductual | **Template Method** | `ImportadorSesion` + 2 subclases | GoF puro |
+| Estructural | **Proxy** | `@Cacheable`, `@CacheEvict`, `@Transactional` | 14 / 27 / 168 ocurrencias |
+| Estructural | **Null Object** | `VueltaService.analisisCarrera()` (`Map.of()`, `List.of()`) | Aplicable a colecciones |
+
+**Lo que se eliminó de la versión anterior de este documento** por no ser GRASP ni GoF:
+idempotencia por hash, registry por clave, registry con TTL, dispatch por `switch` sobre
+enum, get-or-create, command object, mapper/assembler, service layer, compensating action,
+rate limit, fail-soft por paso, singleton "a la GoF" con clase privada, y las reglas
+transversales. Varios eran buenos hallazgos, pero describen convenciones del proyecto, no
+patrones de estos dos catálogos.
 
 ---
 
-## 2. Strategy + Simple Factory — `service/puntos/`
+## 2. GRASP
 
-**GoF puro. Es el único Strategy del backend implementado con clases.**
+GRASP no son clases sino **responsabilidades que hay que ubicar**. Los nueve se verifican
+uno por uno abajo, con los que no se cumplen marcados como tales.
+
+### 2.1 Creator
+
+> *Ubica la creación de una clase A en la clase B que usa A, mantiene datos de A o usa A de
+> forma cercana.*
+
+**`SistemaPuntosFactory.de(clave)`** es el Creator canónico del proyecto. Recibe
+`List<SistemaPuntos>` por inyección del contenedor, normaliza la clave y devuelve la
+instancia que corresponde:
+
+```java
+private final List<SistemaPuntos> estrategias;
+
+public SistemaPuntos de(String clave) {
+    String normalizada = normalizar(clave);
+    for (SistemaPuntos estrategia : estrategias) {
+        if (normalizar(estrategia.clave()).equals(normalizada)) {
+            return estrategia;
+        }
+    }
+    return porDefecto();
+}
+```
+
+Cumple las cuatro condiciones del patrón: usa el producto de forma cercana, no guarda datos
+de él, y **la instanciación no ocurre en el cliente**. `CampeonatoService` llama
+`factory.de(campeonato.getSistemaPuntos())` y nunca menciona `SistemaPuntosF1`.
+
+Tres decisiones que hacen que el Creator sea robusto:
+
+- **Normalización de clave** (`normalizar()`): `trim()` + `toLowerCase(Locale.ROOT)`, con
+  `null` → `""`. Por eso `"top 10"`, `"TOP 10"` y `"  Top 10 "` resuelven al mismo bean. Es
+  además una Pure Function (§2.8).
+- **Fail-safe, no null** (`de()`): clave desconocida, `null` o vacía caen en `porDefecto()`.
+  Importa porque los datos ya guardados pueden traer claves viejas.
+- **Fail-fast de configuración** (`porDefecto()`): `orElseThrow(IllegalStateException)`. Si
+  alguien borra `SistemaPuntosF1`, la app **falla al arrancar** en vez de romper el cálculo
+  de puntos a mitad de temporada.
+
+Agregar un esquema de puntaje es crear un `@Component implements SistemaPuntos`. No hay que
+tocar el factory ni el frontend, que consume `disponibles()`.
+
+### 2.2 Information Expert
+
+> *Pone el comportamiento en la clase que tiene los datos necesarios para calcularlo.*
+
+Los tres expertos legítimos del proyecto:
+
+**`SistemaPuntos.puntosPara(int posicion)`** — el tabla vive en la implementación y la
+consulta también. Ningún servicio tiene los números hardcodeados; agregar un esquema nuevo no
+obliga a tocar a quien calcula los puntos del campeonato.
+
+**`EntityMapper.resolveUsuarioBasico()` / `resolveCarreraInfo()`** — el mapeo de entidades
+anidadas está en el expert, no esparcido por todo el proyecto. Además resuelve el `null`, que es
+justamente el caso que rompe los mappers locales. `LogroService` demuestra por qué importa:
+tiene 3 mappers distintos (`toResponse`, `toRecompensaResponse`, `toUsuarioLogroResponse`)
+porque cada vista del grafo JPA exige un mapeo distinto.
+
+**`CampeonatoAccesoService`** — 17 métodos públicos, todos respondiendo la misma pregunta
+*qué puede hacer este usuario sobre este campeonato*. Concentrar la decisión tiene su propio
+Javadoc: *"Unico lugar donde se decide que puede ver y que puede tocar cada usuario sobre un
+campeonato. No se puede resolver con `@PreAuthorize` porque 'es dueno de este campeonato'
+depende del recurso, no del token."*
+
+**Cumplimiento parcial, y conviene decirlo.** Las entidades JPA del proyecto son **anémicas**:
+no tienen comportamiento de dominio, solo campos, getters y setters de Lombok, más el
+callback de persistencia `Carrera.prePersist()`. El expert de datos está en los servicios,
+no en las entidades. Es el compromiso conocido de JPA + capas, no una buena aplicación de
+Information Expert.
+
+### 2.3 Controller
+
+> *Una clase que recibe eventos del sistema externo y coordina el trabajo.*
+
+En este backend lo aporta el framework: **31 clases anotadas `@RestController`**. Cada una
+recibe el evento HTTP, traduce a tipos del dominio y coordina, delegando el trabajo real. La
+regla del proyecto es que el controller **nunca toca un repository** — su trabajo es
+traducir y delegar.
+
+Ejemplo del ciclo completo de un Controller GRASP:
+
+```
+ResultadoCarreraController.listarPorCarrera()   # evento externo (HTTP GET)
+  └─► ResultadoCarreraService.listarPorCarrera(carreraId, visor)
+        └─► CampeonatoAccesoService.exigirVeCarrera(visor, carrera)   # decisión
+              └─► ResultadoCarreraRepository.find...                # datos
+```
+
+El punto donde se ve por qué importa: el **check de autorización tiene que vivir dentro de la
+transacción**, o se produce `LazyInitializationException`. Ese fue el bug corregido en
+`0ce1eb9`, que movió los checks desde el controller a los servicios. Un Controller que
+coordina sin contexto transaccional se rompe solo.
+
+El segundo Controller del proyecto es la cadena de filtros de Spring Security
+(`SecurityConfig`): recibe cada request, decide, y `continue` o corta.
+
+### 2.4 High Cohesion
+
+> *Agrupa lo que cambia junto.*
+
+Cada servicio tiene **una sola razón para cambiar**:
+
+| Clase | Responsabilidad única |
+|---|---|
+| `CampeonatoAccesoService` | Decidir acceso a un campeonato |
+| `EntityMapper` | Resolver entidades anidadas en DTOs planos |
+| `VueltaService` | Lectura y análisis de telemetría de vueltas |
+| `SistemaPuntosFactory` | Resolver la estrategia de puntaje |
+
+`CampeonatoAccesoService` es el ejemplo canónico: 17 métodos, 3 repositorios, y **cero
+métodos que muten datos**. Todo lo que hace es decidir. Por eso agregar una regla de
+visibilidad (por ejemplo, "el admin ve su campeonato aun si es privado") es un cambio
+contenido en un archivo.
+
+**Advertencia de cohesión en curso.** `VueltaService` concentró con el tiempo el listado, el
+análisis por vuelta y el resumen estadístico. Hoy las tres siguen siendo sobre vueltas, pero
+el resumen ya cruza con clasificación y resultados. Si sigue creciendo, ahí aparece una fuga
+de cohesión.
+
+### 2.5 Low Coupling
+
+> *Reduce el acoplamiento entre clases.*
+
+Cuatro mecanismos, en orden de fuerza:
+
+**Depender de interfaces.** `SistemaPuntos` es lo que se inyecta en `CampeonatoService`; los
+repositories son interfaces Spring Data; `IdempotenciaSesionService` no se referencia desde
+el controller. Se puede cambiar la implementación sin tocar al cliente.
+
+**Records DTO como frontera.** Las entidades JPA nunca escapan de la capa de servicio. El
+controller y el JSON solo ven `record`s inmutables. Esto no es solo encapsulamiento:
+serializar una entidad con `@ManyToOne(LAZY)` fuera de sesión lanza
+`LazyInitializationException`, así que el DTO es la defensa.
+
+**Inyección por constructor con campos `final`.** Lombok `@RequiredArgsConstructor` en los
+37 servicios. Cero estado mutable, cero setters, y el grafo de dependencias queda explícito
+en la firma.
+
+**Absorber diferencias de forma en el borde.** En el frontend, `ApiService.normalizeList()`
+tolera que un endpoint devuelva un array plano y otro una página `{content}`. El
+componente que llama no necesita saber cuál era cuál.
+
+### 2.6 Polymorphism
+
+> *Permite que una variable referencia objetos de subclases con el mismo uso y que el
+> software se comporte correctamente.*
+
+Los tres puntos de GoF del proyecto, y ningún `switch` ni `instanceof` que los reemplace:
+
+| Jerarquía | Cantidad | Dispatch |
+|---|---|---|
+| `implements SistemaPuntos` | **2** | por interfaz |
+| `extends ValidadorInscripcion` | **3** | por clase abstracta |
+| `extends ImportadorSesion` | **2** | por clase abstracta |
+
+Medido hoy: la búsqueda de `implements` en todo `service/` da **2 resultados, ambos de
+puntos**. Y `instanceof` da **0 ocurrencias** en todo `src/main/java`. El polimorfismo está
+donde corresponde y en ningún otro lado.
+
+En el frontend el polimorfismo llega por inyección de dependencias: los componentes
+obtienen `ApiService` con `inject(ApiService)` (`race-detail.component.ts:51`) y dependen del
+token, no de una implementación concreta. Cambiar la capa HTTP no obliga a tocar ningún
+componente.
+
+### 2.7 Pure Accumulator
+
+> *Acumula resultados en un contenedor o variable a medida que procesa cada elemento de un
+> origen, en vez de guardar resultados intermedios.*
+
+Dos sitios, y en los dos el acumulador reemplaza trabajo repetido.
+
+**`VueltaService.analisisCarrera()` — el caso que lo justifica.** Para medir el atraso contra
+el líder hay que conocer la suma acumulada de vueltas de **todos** los pilotos, no solo la del
+piloto analizado. En vez de recalcular esa suma en cada vuelta y en cada piloto:
+
+```java
+Map<Long, Map<Integer, Long>> cumulative = new HashMap<>();
+for (VueltaCarrera v : raceLaps) {
+    Long uid = v.getUsuario().getId();
+    int lap = v.getNumeroVuelta();
+    long cumPrev = cumulative.getOrDefault(uid, Map.of()).getOrDefault(lap - 1, 0L);
+    cumulative.computeIfAbsent(uid, k -> new HashMap<>()).put(lap, cumPrev + v.getTiempoMs());
+}
+```
+
+El loop ya viene ordenado por `Usuario_Id` y `NumeroVuelta`, así que el acumulado avanza
+correcto con una sola pasada. Después el mapa se **consulta** para calcular `minCum` y la
+posición por vuelta, sin volver a sumar nada. Sin el acumulador, cada una de las N vueltas
+recalcularía los tiempos acumulados de los M pilotos: O(N·M).
+
+**`VueltaImportService.importar()` — numerar sin consultar el máximo.** En vez de buscar el
+número de vuelta más alto y sumarle uno (que exige una query por cada piloto), el contador
+vive en memoria durante la importación:
+
+```java
+int numero = numeros.merge(lap.driverGuid(), 1, Integer::sum);
+```
+
+Cero queries, y además no depende del estado previo de la base: si la vuelta 1 y la 2 llegan
+en cualquier orden, el merge las numera igual.
+
+### 2.8 Pure Function
+
+> *Una función que no produce efectos secundarios: la misma entrada da siempre la misma
+> salida y no altera el estado global.*
+
+**`SistemaPuntosFactory.normalizar(clave)`** es la más limpia del proyecto: `trim()` +
+`toLowerCase(Locale.ROOT)`, `null` → `""`. No toca nada, y como efecto práctico hace que
+`"top 10"`, `"TOP 10"` y `"  Top 10 "` resuelvan al mismo bean. Como es pura, es trivial de
+probar: los tests del factory la ejercitan sin levantar Spring.
+
+**Los helpers de `EntityMapper`** (`resolveCategoriaNombre`, `resolveCarreraInfo`,
+`resolveUsuarioBasico`) son funciones puras estáticas, con el `null` resuelto como
+requirement. Se reusan en 5 servicios en lugar de reescribir el null-check.
+
+**`VueltaService.minSector(vueltas, sector)`** es un selector puro: recibe la lista y el número
+de sector, devuelve el mínimo o `null`, sin efectos.
+
+La ventaja práctica: las funciones puras son las que se pueden testear en aislamiento. El
+factory de puntos se instancia en los tests con
+`List.of(new SistemaPuntosF1(), new SistemaPuntosTop10())`, sin contenedor.
+
+### 2.9 Protected Variations
+
+> *Identifica los puntos donde se anticipa un cambio y encapsúlalo para que el cambio no
+> afecte a los demás.*
+
+Cuatro variaciones están protegidas de verdad:
+
+| Cambio anticipado | Qué lo aísla |
+|---|---|
+| Nuevo sistema de puntaje | `SistemaPuntosFactory` + autodescubrimiento por contenedor |
+| Nueva regla de inscripción | La cadena `ValidadorInscripcion` con `@Order` |
+| Cambiar la persistencia | Interfaces `Repository` |
+| Concerns transversales (caché, transacciones) | Proxies de Spring |
+
+El test de fuego es concreto: agregar un esquema de puntos es **un `@Component` nuevo**, y
+agregar una regla de inscripción es **un validador nuevo con su `@Order`**. En ninguno de los
+dos casos se edita el cliente del patrón.
+
+**Donde se rompe: el fan-out de notificaciones.** Los sitios internos que generan
+notificaciones **no usan el servicio de notificaciones**; escriben el repositorio
+directamente. Medido hoy: **7 llamadas a `notificacionRepository.save` fuera de
+`NotificacionService`**, repartidas en 5 servicios:
+
+| Servicio | Llamadas |
+|---|---|
+| `LogroService` | 2 (`notificarLogro`, `notificarRecompensa`) |
+| `CarreraService` | 2 (cambios de estado de carrera) |
+| `SancionService` | 1 (sanción aplicada) |
+| `ApelacionService` | 1 (apelación resuelta) |
+| `CampeonatoMiembroService` | 1 (piloto agregado) |
+
+No se puede reutilizar `NotificacionService.create(...)` internamente porque su firma toma el
+DTO de API, no una entidad de dominio. El coste: agregar un tipo de notificación obliga a
+**editar 7 lugares**, y es fácil que uno se quede atrás. Aquí la variación no está protegida,
+porque el criterio de bug lo define el requerimiento, no el patrón.
+
+---
+
+## 3. GoF
+
+### 3.1 Simple Factory — creacional
+
+GoF canónico en `service/puntos/`. Es la fábrica de objeto único central del proyecto:
 
 ```
 SistemaPuntos (interfaz)
@@ -55,627 +327,230 @@ SistemaPuntos (interfaz)
 
 | Pieza | Ubicación |
 |---|---|
-| Contrato | `service/puntos/SistemaPuntos.java:3` — `clave()`, `nombre()`, `puntosPara(int)` |
-| Impl. F1 | `service/puntos/SistemaPuntosF1.java:7-8`, tabla en `:10` |
-| Impl. Top 10 | `service/puntos/SistemaPuntosTop10.java:7-8`, tabla en `:10` |
-| Factory | `service/puntos/SistemaPuntosFactory.java:26` recibe `List<SistemaPuntos>` por inyección |
-| Catálogo | `service/puntos/SistemaPuntosCatalogo.java:11` — record DTO |
-| Endpoint | `controller/SistemaPuntosController.java:24-27` — `GET /api/sistemas-puntos` |
+| Contrato | `SistemaPuntos.java` — `clave()`, `nombre()`, `puntosPara(int)` |
+| Implementaciones | `SistemaPuntosF1.java`, `SistemaPuntosTop10.java` |
+| Fábrica | `SistemaPuntosFactory.de(String)` |
+| Catálogo para la UI | `SistemaPuntosFactory.disponibles()` → `SistemaPuntosCatalogo` record |
+| Endpoint | `SistemaPuntosController` — `GET /api/sistemas-puntos` |
 
-### Características que lo hacen correcto
+**GoF estricto**: el factory decide qué clase concreta crear a partir de un parámetro, y no
+expone la instanciación al cliente. La diferencia con el resto del proyecto es que acá la
+fábrica recibe `List<SistemaPuntos>` por inyección en vez de hacer `new`: es el mismo patrón,
+resuelto con el contenedor en lugar de un `switch`.
 
-**Descubrimiento automático por contenedor** (`SistemaPuntosFactory.java:26`). La factory
-recibe la lista de beans por inyección; no hay `switch` ni `Map` estático. Agregar un
-esquema nuevo es crear un `@Component implements SistemaPuntos` y nada más.
+Existe un **segundo dispatch por clave** en `SesionServidorService.importar()`, que busca el
+`ImportadorSesion` cuyo `tipo()` coincide con el del JSON. Misma forma, política opuesta y
+correcta: el factory de puntos **cae al default** ante clave desconocida, mientras que el
+importador **lanza `BusinessException`** al operador, porque un tipo de sesión no soportado
+debe ser visible.
 
-**Normalización de clave** (`SistemaPuntosFactory.java:66-71`): `trim()` +
-`toLowerCase(Locale.ROOT)`. Por eso `"top 10"`, `"TOP 10"` y `"  Top 10 "` resuelven al
-mismo bean.
+Los tests documentan el patrón: `de(null)`, `de("")` y `de("F1_SPRINT")` caen al default; si
+desaparece la estrategia default, el test falla; y `SistemaPuntosFactoryTest` congela las
+claves canónicas que el frontend persiste.
 
-**Fail-safe, no null** (`SistemaPuntosFactory.java:35`): clave desconocida, `null` o vacía
-caen en `porDefecto()` en vez de devolver `null`. Esto importa porque los datos ya
-guardados pueden traer claves viejas.
+### 3.2 Singleton — creacional
 
-**Fail-fast de configuración** (`SistemaPuntosFactory.java:62-63`): `orElseThrow(
-IllegalStateException)`. Si alguien borra `SistemaPuntosF1`, la app falla al arrancar en
-vez de romper silenciosamente el cálculo de puntos a mitad de temporada.
+**La intención del patrón se cumple; el mecanismo es otro.** Los 37 servicios son
+singletons del contenedor de Spring por defecto de `@Service` +
+`@RequiredArgsConstructor` + campos `private final`.
 
-**Strategy Total** (`SistemaPuntosF1.java:24-27`, `SistemaPuntosTop10.java:19-23`): ambas
-implementaciones devuelven `0` fuera de rango en vez de lanzar excepción. El cliente nunca
-necesita guarda de rango.
+Medido hoy: **0 ocurrencias de `getInstance()`** en `src/main/java`. Es decir, no hay ni una
+sola implementación del patrón clásico a la GoF.
 
-**El cliente no depende del producto concreto** (`CampeonatoService.java:41, 208, 213`):
-inyecta el factory, llama `de(clave)` y usa `puntosPara(...)`. Nunca menciona
-`SistemaPuntosF1`. Esa es la Hint del patrón.
+Es correcto que sea así: el patrón clásico con constructor privado existe para controlar la
+instanciación desde el propio código. Con inyección de dependencias, el contenedor ya garantiza
+la unicidad, y además da ciclo de vida, proxies y testabilidad con mocks. Instanciar a mano un
+servicio con 10 collaborators sería una regresión.
 
-### Tests que documentan el patrón
+Dos clases utilitarias usan constructor privado
+(`EntityMapper`, `FileUtil`). **No son Singleton**: son Utility Class, que no tienen instancia
+alguna. `FileUtil.obtenerExtension` se reusa en 3 servicios.
 
-- `SistemaPuntosFactoryTest.java:29-36` — `de(null)`, `de("")`, `de("F1_SPRINT")` caen al default
-- `SistemaPuntosFactoryTest.java:60-68` — falla al arrancar si desaparece la estrategia default
-- `SistemaPuntosFactoryTest.java:48-58` — congela las claves canónicas que persiste el frontend
-- El factory es testeable sin Spring: se instancia con `List.of(new SistemaPuntosF1(), new SistemaPuntosTop10())` (`:12-13`)
+### 3.3 Strategy — conductual
 
----
+> *Define una familia de algoritmos encapsulados e intercambiables. El cliente recibe el
+> algoritmo como parámetro y no depende de la clase concreta.*
 
-## 3. Chain of Responsibility — `service/inscripcion/`
-
-**GoF puro en estructura, con una variante importante:** la cadena no se puede cortocircuitar
-y el "fail" es una excepción.
-
-| Eslabón | Archivo | `@Order` | Regla |
-|---|---|---|---|
-| 1 | `InscripcionesAbiertasValidador.java:14` | `@Order(1)` | Estado `PROGRAMADA`/`INSCRIPCIONES_ABIERTAS` + ventana de cierre de 5 min (`:16`, `:24`) |
-| 2 | `PertenenciaValidador.java:14` | `@Order(2)` | `accesoService.puedeParticiparEnCarrera(...)` — campeonato privado |
-| 3 | `RequisitosEloValidador.java:12` | `@Order(3)` | Elo dentro del rango de la categoría; **skip si el campeonato es `PRIVADO`** (`:16-18`) |
-
-### El esqueleto
-
-`ValidadorInscripcion.java:6` define el patrón:
+GoF puro en `service/puntos/`, con la tabla de puntos detrás de una interfaz:
 
 ```java
-public final void validar(Carrera carrera, Usuario usuario) {   // :14
-    validarPropio(carrera, usuario);
-    if (siguiente != null) {
-        siguiente.validar(carrera, usuario);
-    }
+public interface SistemaPuntos {
+    String clave();
+    String nombre();
+    int puntosPara(int posicion);
 }
-protected abstract void validarPropio(Carrera carrera, Usuario usuario);  // :21
 ```
 
-Cada subclase implementa solo `validarPropio`. El `final` en `validar` es lo que garantiza
+Es el **único Strategy del backend implementado con clases** (los `implements` en todo
+`service/` dan 2 resultados, ambos de puntos). El cliente inyecta el factory, llama `de(clave)`
+y usa `puntosPara(...)`; nunca menciona `SistemaPuntosF1`. Esa es la Hint del patrón.
+
+**Strategy Total**: ambas implementaciones devuelven `0` fuera de rango en vez de lanzar
+excepción, así que el cliente no necesita guarda de rango.
+
+**Variante**: en `SecurityConfig`, el par `authenticationEntryPoint` y `accessDeniedHandler`
+son Strategy con lambdas — comportamiento intercambiable pasado en el punto de uso, sin
+subclase nombrada. Cuenta como Strategy aunque no sea una clase.
+
+### 3.4 Chain of Responsibility — conductual
+
+Variante de pipeline en `service/inscripcion/`:
+
+| Eslabón | Clase | `@Order` | Regla |
+|---|---|---|---|
+| 1 | `InscripcionesAbiertasValidador` | 1 | Estado `PROGRAMADA`/`INSCRIPCIONES_ABIERTAS` + ventana de cierre de 5 min |
+| 2 | `PertenenciaValidador` | 2 | `accesoService.puedeParticiparEnCarrera(...)` |
+| 3 | `RequisitosEloValidador` | 3 | Elo en el rango de la categoría; **skip** si el campeonato es `PRIVADO` |
+
+El esqueleto:
+
+```java
+public abstract class ValidadorInscripcion {
+    private ValidadorInscripcion siguiente;
+
+    public final void validar(Carrera carrera, Usuario usuario) {
+        validarPropio(carrera, usuario);
+        if (siguiente != null) {
+            siguiente.validar(carrera, usuario);
+        }
+    }
+
+    protected abstract void validarPropio(Carrera carrera, Usuario usuario);
+}
+```
+
+Cada subclase implementa solo `validarPropio`. El `final` en `validar()` es lo que garantiza
 que nadie rompa el avance de la cadena.
 
-### Variante respecto del GoF canónico
+**Variante respecto del GoF canónico**: el CoF clásico suele propagar el control de salida para
+cortocircuitar. Acá **no hay cortocircuito**: los tres eslabones se ejecutan siempre, en orden,
+y el rechazo es `throw new BusinessException(...)`. Es un pipeline de validación con fail-fast
+por excepción.
 
-El CoF clásico suele propagar el control de salida para cortocircuitar. Aquí **no hay
-cortocircuito**: los tres eslabones se ejecutan siempre, en orden, y el rechazo es
-`throw new BusinessException(...)`. Es un **pipeline de validación con fail-fast por
-excepción**, no una cadena que pueda interrumpirse.
+**El orden es semántico.** Los `@Order` no son decorativos: definen **qué error ve el piloto
+primero**. Hoy un piloto sin Elo suficiente en un campeonato privado recibe el mensaje de
+pertenencia (eslabón 2) y nunca llega al de Elo (eslabón 3). `InscripcionValidacionTest` lo
+verifica con `verifyNoInteractions(accesoService)`, probando que el eslabón 1 frena **antes**
+de llegar al 2.
 
-### El ensamblador re-construye en cada request
+> **Riesgo verificado — estado compartido escrito concurrentemente.** `InscripcionValidacion`
+> reconstruye la cadena en cada request (`encadenar()`), escribiendo el campo mutable
+> `siguiente` desde beans singleton. Hoy es idempotente: siempre reconstruye la misma cadena
+> por el mismo `@Order`. Pero es estado compartido escrito concurrentemente sin sincronizar. El
+> campo podría ser `volatile`, o la cadena construirse una sola vez.
 
-`InscripcionValidacion.java:23-36` (`encadenar()`) arma la cadena con doble puntero
-`cabeza`/`anterior` **cada vez que se valida una inscripción** (`:17`). No hay caché del
-encadenado.
+### 3.5 Template Method — conductual
 
-> **Riesgo verificado**: eso escribe el campo mutable `siguiente` (`ValidadorInscripcion.java:8-12`)
-> de beans singleton desde un camino con concurrencia de requests. Hoy es idempotente —
-> siempre reconstruye la misma cadena por el mismo orden `@Order` — pero es estado compartido
-> escrito concurrentemente sin sincronización. El campo podría ser `volatile` o la cadena
-> construirse una sola vez.
-
-### El orden importa semánticamente
-
-Los `@Order` no son decorativos: hay tres eslabones y el orden define **qué error ve el
-piloto primero**. Con el orden actual, un piloto sin Elo suficiente en un campeonato privado
-recibe el mensaje de pertenencia (eslabón 2) y nunca llega al de Elo (eslabón 3), porque
-`RequisitosEloValidador:16-18` retorna temprano para `PRIVADO`. Es intencional y correcto.
-
-### Tests
-
-`InscripcionValidacionTest.java:91-99` usa `verifyNoInteractions(accesoService)` para probar
-que el eslabón 1 frena **antes** de llegar al 2 — es decir, que el `@Order` se respeta.
-
----
-
-## 4. Template Method — `service/sesion/ImportadorSesion`
-
-**GoF puro.**
+GoF puro en `service/sesion/`:
 
 ```
-ImportadorSesion (abstract)          ImportadorRace     ImportadorQualify
-├── final importar()      :18        └── super("RACE")      :19-26
-│     ├── validar()       :19  ← hook opcional (cuerpo vacío, :24-25)
-│     ├── procesar()      :20  ← abstract :27
+ImportadorSesion (abstract)          ImportadorRace      ImportadorQualify
+├── final importar()                       └── super("RACE")
+│     ├── validar()    ← hook (cuerpo vacío)
+│     ├── procesar()   ← abstract
 │     └── return tipo
-├── final tipo()          :14
-└── validar()             :24  hook
+└── validar()        ← hook
 ```
 
-El dato de la subclase (`"RACE"` / `"QUALIFY"`) se empuja por constructor (`:10-12`).
-`ImportadorRace.java:28-41` y `ImportadorQualify.java:18-21` implementan `procesar`.
+El dato que distingue a cada subclase (`"RACE"` / `"QUALIFY"`) se empuja por constructor;
+`ImportadorRace` y `ImportadorQualify` implementan solo `procesar()`. El esqueleto está en la
+base, el algoritmo no se duplica.
 
-### Hook declarado sin uso
+> **Punto de extensión muerto**: `ImportadorSesion.validar()` **no lo overridea ninguna clase
+> de producción**. El único resultado de `protected void validar(` en todo `src/main/java` es
+> la declaración misma; solo lo ejercitan los tests. El paso `validar` del `importar()` no hace
+> nada en el flujo real. No es bug —el default vacío lo hace inofensivo— pero es un gancho que
+> promete una capacidad que no existe.
 
-> **Verificado**: `ImportadorSesion.validar()` (`:24-25`) **no lo overridea ninguna clase de
-> producción**. El único resultado de `protected void validar(` en todo `src/main/java` es la
-> declaración misma. Solo `ImportadorSesionTest.java:34-43` y `:46-55` lo ejercitan.
->
-> El paso `validar` de `:19` no hace nada en el flujo real. No es un bug (el default vacío
-> lo hace inofensivo), pero es un punto de extensión que promete una capacidad que no existe.
+### 3.6 Proxy — estructural
 
----
+El patrón más presente del proyecto y el único aplicado en masa por framework: **14
+`@Cacheable`, 27 `@CacheEvict` y 168 `@Transactional`** en `service/`.
 
-## 5. Idempotencia por hash SHA-256 — `service/sesion/IdempotenciaSesionService`
+El Spring AOP genera un proxy alrededor del bean. La interposición **es** el patrón, y no es
+decorativa:
 
-**Nombreugar** (robustez / idempotencia; sin forma canónica en la literatura de patrones).
+- La caché se consulta **antes** de ejecutar el cuerpo del método. Por eso el gate de
+  membresía no puede vivir dentro del método cacheado: si viviera, un usuario sin permiso
+  leería el resultado cacheado de otro. La razón está escrita en el propio código, en
+  el comentario de `CampeonatoService.listarTablaPosiciones` y en `CarreraService`.
+- Por la misma razón los checks de autorización se movieron **dentro** de los servicios
+  transaccionales (commit `0ce1eb9`): fuera del proxy no hay transacción, y sin transacción el
+  grafo JPA lazy revienta.
 
-| Pieza | Ubicación |
-|---|---|
-| Longitud de clave | `:22` `LONGITUD_CLAVE = 40`, aplicada en `:82` |
-| Clave de sesión | `:28-41` — canonicaliza carrera + pista + config + tipo + duración + nº vueltas + **tamaños** de `cars`/`result`/`laps`/`events` |
-| Clave de incidente | `:47-57` — granularidad por evento concreto |
-| SHA-256 | `:78-86` `MessageDigest` + `HexFormat`, `NoSuchAlgorithmException → IllegalStateException` (`:83-85`) |
+**Consecuencia estructural**: `this.metodo()` dentro de la misma clase **no** pasa por el proxy,
+así que `@Cacheable` y `@Transactional` se ignoran en llamada interna. Verificado hoy: la
+búsqueda de `this.\w+\(` en `service/` da **1 resultado**, y es una línea de comentario en el
+Javadoc de `SancionService` que explica precisamente el problema. No hay auto-invocación real.
 
-### Detalle de diseño: canonicalizar por tamaño, no por contenido
+> **Bug ya corregido (`7034242`) — la caché `usuarios` quedaba sin evacuar**. La causa era
+> Proxy puro: un `@CacheEvict` cubría solo `delete`, mientras `updatePerfil`, `updateRating`,
+> `ResultadoCarreraService.cargarResultados` y `SancionService` escribían campos cacheados sin
+> evacuar. El alcance real era más ancho de lo sospechado: `cargarResultados` —la operación más
+> frecuente del sistema— dejaba el ranking público entero desactualizado.
 
-`:30-39` usa los **tamaños de colección** (`cars.size()`, `result.size()`, `laps.size()`,
-`events.size()`), no el contenido. Es barato de calcular y estable ante reordenamientos.
-El costo: dos sesiones con distinta distribución pero igual cantidad de eventos y las mismas
-métricas pueden colisionar en la clave. Para el caso de uso (mismo JSON reenviado) es
-correcto.
+### 3.7 Null Object — estructural
 
-### Normalización semántica del ruido numérico
+> *Provee un objeto sustituto con valores por defecto en lugar de `null`, para que el cliente
+> pueda llamar sin comprobar la ausencia.*
 
-`:59-65` (`impacto()`) redondea el `impactSpeed` con `Math.round` para que `40.4` y `40.0`
-— el mismo choque con ruido de punto flotante — colapsen a la misma clave, mientras `40` y
-`41` siguen siendo incidentes distintos. El comentario `:61-63` documenta la intención.
-
-### Los dos consumidores
-
-- `service/SesionServidorService.java:50-55` — calcula la clave, busca `findByClave(clave)`;
-  si existe devuelve `ResultadoImportacion(..., yaProcesada=true)` sin reprocesar. El 409
-  que ve el cliente viene de la constraint `UNIQUE` en BD si corre concurrente.
-- `service/IncidenteAutoGenService.java:48-52` — `claveIncidente(...)` + `existsByClaveOrigen(...)`.
-
-`IncidenteAutoGenService.java:46-47` documenta explícitamente la intención de retry
-("reintentos de ingesta no deben duplicar incidentes"), aunque **el retry no exista todavía**
-(ver [sección 8](#8-ausencias-verificadas)).
-
----
-
-## 6. Registry por clave — el segundo sitio de dispatch
-
-`service/SesionServidorService.java:30, 62-72`
+GoF aplicado a colecciones, en `VueltaService.analisisCarrera()` y `resumenCarrera()`:
 
 ```java
-private final List<ImportadorSesion> importadores;   // :30
-...
-String tipo = sesion.type().toUpperCase();            // :66
-ImportadorSesion importador = importadores.stream()
-        .filter(i -> i.tipo().equals(tipo))
-        .findFirst()
-        .orElseThrow(() -> new BusinessException(...)); // :67-70
+cumulative.getOrDefault(uid, Map.of()).getOrDefault(lap, 0L)
+porVuelta.getOrDefault(lap, List.of())
 ```
 
-**Misma forma que `SistemaPuntosFactory`**, con dos diferencias:
+`Map.of()` y `List.of()` son **inmutables y vacíos**. Absorber sobre ellos llamadas de
+lectura es seguro: `get` devuelve `null`, no hay `NullPointerException`. Es Null Object de
+verdad, con la salvedad de que el objeto nulo es de la biblioteca (`ImmutableCollections`) en
+vez de una clase propia del proyecto — el mismo criterio que usa Java para
+`Collections.emptyList()`.
 
-| | `SistemaPuntosFactory` | `SesionServidorService` |
-|---|---|---|
-| Política ante clave desconocida | `orElseThrow` → fallback al default (`SistemaPuntosFactory.java:35`) | `orElseThrow` → error al cliente (`SesionServidorService.java:69`) |
-| Tipo del producto | Interfaz | Clase abstracta |
-| Expone catálogo | Sí (`disponibles()`, `:44-52`) | No |
-
-El fallback de uno y el error del otro es **intencional y correcto**: un sistema de puntaje
-desconocido no debe romper un campeonato ya en curso, pero un tipo de sesión no soportado
-debe avisar al operador.
+El beneficio concreto se ve en el anidamiento: `getOrDefault(uid, Map.of()).getOrDefault(lap,
+0L)` evita el doble `if (mapa != null)` que haría falta sin él. En el mismo método,
+`Long.MAX_VALUE` se usa como centinela para "sin dato", que es el otro extremo del mismo
+problema: reemplazar la ausencia por un valor que no estalla al comparar.
 
 ---
 
-## 7. Patrones estructurales
+## 4. Ausencias verificadas
 
-### 7.1 Dispatch por `switch` sobre enum — **Analogía, no GoF**
-
-Tres switches en `service/`, con dos políticas de exhaustividad **distintas**:
-
-**a) `LogroService.java:180-188`** — switch expression con 7 brazos, **sin `default`**:
-
-```java
-return switch (condicion) {
-    case VICTORIAS -> resultadoCarreraRepository.countByUsuario_IdAndPosicionFinal(usuarioId, 1);
-    case PODIOS -> ...countByUsuario_IdAndPosicionFinalLessThanEqual(usuarioId, 3);
-    case CARRERAS, POLES, VUELTAS_RAPIDAS, CARRERAS_COMPLETADAS, ELO -> ...
-};
-```
-
-`TipoCondicionLogro` tiene exactamente 7 constantes y hay 7 brazos → **agregar una constante
-al enum rompe la compilación**. Eso es correcto: el compilador te obliga a decidir.
-
-**b) `SancionService.java:147-156` y `:175-184`** — 4 casos cada uno, **con `default -> {}`
-no-op**, y son un par espejado (`aplicarEfectos` / `revertirEfectos`).
-
-> **Riesgo verificado**: `TipoSancion` tiene 7 constantes (`PUESTOS, SEGUNDOS,
-> DRIVE_THROUGH, STOP_AND_GO, DESCALIFICACION, ELO, SAFETY_RATING`) pero solo 4 tienen
-> efecto numérico. `DRIVE_THROUGH`, `STOP_AND_GO` y `DESCALIFICACION` caen al `default`
-> vacío. Hoy es correcto —esas sanciones no modifican un número— pero el `default` silencioso
-> significa que un `TipoSancion` nuevo se aplicaría sin efecto y sin warning.
->
-> La asimetría con `LogroService` es el punto: uno deja que el compilador fuerce la decisión,
-> el otro la esconde.
-
-**Por qué no es Visitor**: `TipoCondicionLogro` no tiene comportamiento (solo constantes,
-sin campos ni métodos) y el dispatch es simple, no doble. Es la variante "poor man's
-Strategy": una tabla de estrategias escrita como `switch` en vez de clases.
-
-### 7.2 Strategy con lambdas — `config/SecurityConfig.java:88, 94`
-
-**GoF puro**, con las interfaces prestadas por Spring Security:
-
-```java
-.authenticationEntryPoint((request, response, ex) -> { /* 401 + JSON */ })   // :88-93
-.accessDeniedHandler((request, response, ex) -> { /* 403 + JSON */ })       // :94-99
-```
-
-Comportamiento intercambiable pasado en el punto de uso, sin subclase nombrada.
-
-### 7.3 Proxy dinámico — `@Cacheable` / `@Transactional`
-
-**GoF puro**, aplicado por el contenedor de Spring, no escrito a mano.
-
-13 `@Cacheable` y 27 `@CacheEvict` en `service/`: 7 servicios cachean y 2 más solo evacuan una
-caché ajena. Los conteos son de anotaciones reales, no incluyen menciones dentro de javadoc
-(`CampeonatoService.java:186` nombra `@Cacheable` en un comentario, no es una anotación):
-
-| Servicio | Cachés | Evict en |
-|---|---|---|
-| `AnuncioService` | `anuncios`, `anuncio_ultimo` (`:30`, `:35`) | `:44`, `:55`, `:61` |
-| `ArchivoCarreraService` | `archivos_carrera` (`:42`, `:48`) | `:54`, `:77` |
-| `CampeonatoService` | `tabla_posiciones` (`:192`) | `:100`, `:121`, `:163`, `:172`, `:201` |
-| `CategoriaService` | `categorias`, `categorias_elo` (`:28`, `:33`, `:38`) | `:46`, `:64`, `:78` |
-| `LogroService` | `logros` (`:53`, `:59`) | `:65`, `:81`, `:96` |
-| `RecompensaService` | `recompensas` (`:35`, `:41`) | `:53`, `:64`, `:73` |
-| `UsuarioService` | `usuarios` (`:161`) | `:169`, `:241`, `:270` |
-| `ResultadoCarreraService` | — (no cachea) | `:87`, sobre `usuarios` |
-| `SancionService` | — (no cachea) | `:68`, `:78`, `:111`, `:170`, sobre `usuarios` |
-
-**La prueba documental más fuerte de que el Proxy importa** está en
-`CampeonatoService.java:185-190`, cuyo comentario explica que el gate de membresía *no puede*
-vivir dentro del método porque *"con `@Cacheable` el cache se consulta antes de ejecutar el
-cuerpo"*. El autor está razonando explícitamente sobre la interposición del proxy. El mismo
-razonamiento aparece en `CarreraService.java:67-71` y `:110-112`.
-
-> **Bug corregido (`7034242c`) — la caché `usuarios` quedaba sin evictar**:
-> `UsuarioService.listAllBasico()` cachea en `usuarios` (`:161-162`) un `UsuarioBasicoResponse`
-> con exactamente 5 campos: `id`, `nombrePiloto`, `fotoPerfil`, `elo`, `safetyRating`. El único
-> `@CacheEvict` que había sobre esa clave estaba en `delete` (`:270`), así que cualquier
-> escritura de esos 5 campos dejaba el listado público de pilotos con datos viejos.
->
-> El alcance real era **más ancho** que los 4 métodos de `UsuarioService` sospechados al
-> principio, y **más chico** en un punto. `cambiarRol` (`:224`, escribe solo `rol`) y
-> `updateHabilitado` (`:231`, escribe `habilitado` y `tokenVersion`) no tocan ningún campo
-> cacheado, así que no necesitan evict. Los que sí escribían datos cacheados eran 5 entradas
-> públicas de 3 clases:
->
-> | Método | Qué ensucia la caché |
-> |---|---|
-> | `UsuarioService.updatePerfil` (`:170`) | `nombrePiloto` |
-> | `UsuarioService.updateRating` (`:242`) | `elo`, `safetyRating` |
-> | `ResultadoCarreraService.cargarResultados` (`:88`) | elo y safety rating de **todos** los pilotos de la carrera, vía `recalcularEloYSafetyRating` (`:116`) |
-> | `SancionService.create` (`:69`) / `update` (`:79`) / `delete` (`:112`) | elo y safety rating, al aplicar o revertir efectos |
-> | `SancionService.revertirEfectos` (`:171`) | ídem, desde el único llamador externo (`ApelacionService`) |
->
-> Los de `ResultadoCarreraService` y `SancionService` eran los que más dolían:
-> `cargarResultados` es la operación más frecuente del sistema y dejaba el ranking público
-> entero desactualizado.
->
-> **Trampa del proxy, documentada en el código**: `aplicarEfectos` (`:145`) y
-> `revertirEfectos` (`:171`) son el par aplicar/revertir, pero solo el método público puede
-> llevar `@CacheEvict` — los privados no pasan por el proxy de Spring. Y `update()`/`delete()`
-> llaman a `this.revertirEfectos(...)` desde su propio cuerpo, que es self-invocation y
-> tampoco pasa por el proxy: por eso `update` y `delete` llevan su propio evict, y el de
-> `revertirEfectos` únicamente cubre el llamador externo.
->
-> `LogroService` no está afectado: su caché `logros` guarda las definiciones, no el progreso
-> por usuario, y `listarLogrosUsuario()` no está cacheado.
->
-> **Nota sobre esta tabla**: los conteos anteriores (12 y 23) y el alcance de los "4
-> mutadores" estaban mal aun antes del fix, por contraste con el código. Verificado contra
-> las anotaciones reales con `Select-String` sobre `service/`, no estimado a ojo.
-
-**Advertencia estructural**: por ser proxies, `this.metodo()` dentro de la misma clase **no**
-pasa por el proxy, así que `@Cacheable`/`@Transactional` se ignoran en llamada interna. Revisé
-los candidatos cross-bean (`SetupCalificacionService:52`, `RecompensaService:56`,
-`ApelacionService:63,82`, `IncidenteService:157`) y todos son llamadas a **otros** beans, así
-que no encontré un self-invocation que rompa. No es bug: es advertencia.
-
-### 7.4 Get-or-Create — 7 sitios · **Analogía a Null Object**
-
-Construir la entidad por defecto en el sitio en vez de trabajar con `null` u
-`Optional.empty()`:
-
-| Ubicación | Patrón |
-|---|---|
-| `LogroService.java:139-140` | `getOrDefault(logro.getId(), UsuarioLogro.builder().progreso(0)...)` |
-| `LogroService.java:156-162` | ídem, con `.logro().usuario()` |
-| `ClasificacionImportService.java:52-57` | `orElseGet(() -> SesionClasificacion.builder()...)` |
-| `ResultadoCarreraService.java:101-104` | `orElseGet(() -> ResultadoCarrera.builder()...)` |
-| `SetupCalificacionService.java:44-49` | `orElseGet(() -> SetupCalificacion.builder()...)` |
-| `IncidenteService.java:174-179` | `orElseGet(() -> VotoComisario.builder()...)` |
-| `CampeonatoService.java:214-224` | `orElseGet(() -> CampeonatoPosicion.builder().puntos(0).posicion(count+1))` |
-
-**Por qué no es Null Object de GoF**: Null Object exige *una subclase que representa la
-ausencia y absorbe las operaciones sin efecto*. Acá la instancia por defecto es **una entidad
-real del mismo tipo que se persiste después** (`LogroService:170`,
-`ResultadoCarreraService:116`, `CampeonatoService:228`). El nombre correcto es
-**Get-or-Create / upsert**. Que aparezca en 7 lugares lo vuelve un patrón deliberado del
-proyecto, no un accidente.
-
-### 7.5 Null Object de colección vacía — `service/VueltaService.java` · **GoF legítimo**
-
-`:69`, `:79-82`, `:85`, `:87` usan `getOrDefault(uid, Map.of())` y `getOrDefault(lap,
-List.of())` en vez de `null`. `Map.of()` / `List.of()` son **inmutables y vacíos**: absorber
-llamadas de lectura sobre ellos es seguro. Es Null Object de verdad, aplicado a colecciones.
-`:82`, `:88` usan `Long.MAX_VALUE` como valor centinela.
-
-### 7.6 Registry con TTL en memoria
-
-**`service/SteamService.java`** — códigos de un solo uso para vincular Steam:
-
-| Pieza | Ubicación |
-|---|---|
-| Registro | `:62` `private final Map<String, CodigoAuth> codigosAuth = new ConcurrentHashMap<>()` |
-| Record de valor + expiración | `:36-37` `record CodigoAuth(Long usuarioId, long expiraEn)` |
-| Alta | `:154-156` limpia expirados, luego `put` con `UUID.randomUUID()` |
-| Consumo one-shot | `:165` `codigosAuth.remove(codigo)` → get-and-delete **atómico** |
-| Evicción perezosa | `:178-181` `entrySet().removeIf(...)` |
-
-El `remove` en `:165` hace que el código no pueda reutilizarse aunque sea entre hilos: es
-correcto para un token de un solo uso.
-
-**`security/RateLimitFilter.java:24`** — mismo patrón para contadores anti-brute-force.
-
-> **Riesgo verificado — estado en memoria con múltiples réplicas**: `SteamService:62` y
-> `RateLimitFilter:24` son `ConcurrentHashMap` **en memoria de proceso**. En Render, si el
-> servicio escala a más de una instancia, un código de Steam emitido en la instancia A no se
-> puede completar en la B, y el rate limit se multiplica por el número de instancias. Ambos
-> deberían usar Redis (que **no** está en `pom.xml`). Hoy el servicio es de una sola instancia
-> y funciona; es una restricción de escala, no un bug actual.
-
-> `RateLimitFilter` además nunca hace eviction de IPs que dejaron de intentar: los contadores
-> quedan en el mapa de forma no acotada (`:63` solo inserta).
-
-### 7.7 Command object — **Analogía**
-
-Los DTO `record` cumplen el rol de *Command* (encapsular una petición y pasarla a un
-receptor):
-
-- `ResultadoImportService.java:57-106` arma `List<ResultadoCarreraRequest>` y lo entrega
-  como un solo comando a `resultadoCarreraService.cargarResultados(...)` (`:106`)
-- `IncidenteService.java:145-158` reconstruye un `SancionRequest` por cada sanción de una
-  resolución (`:147-156`) y emite **N comandos** derivados de un request (`:157`)
-
-**Por qué analogía**: son DTOs de API (`dto/**`) reutilizados internamente como comandos,
-sin `execute()` ni receiver ni `undo()` propios.
-
-### 7.8 Mapper / Assembler — **Nombreugar**
-
-Cada servicio tiene un `private XxxResponse toResponse(...)` que cumple dos funciones: mapear
-**y** desacoplar el grafo JPA lazy del JSON. Esto último es obligatorio, no decorativo —
-serializar una entidad con `@ManyToOne(LAZY)` fuera de sesión lanza `LazyInitializationException`.
-
-Ejemplos: `LogroService.java:224-254` (3 mappers distintos: `toResponse`, `toRecompensaResponse`,
-`toUsuarioLogroResponse`), `UsuarioService.java:357-370`,
-`VueltaService.java:41-55`, `SetupService.java:201-216`, `EstadisticasService.java:40-66`.
-
-Dos casos que no pueden ser método local usan el helper estático compartido
-`mapper/EntityMapper.java:20-26` (`resolveCarreraInfo`) y `:28-34` (`resolveUsuarioBasico`),
-que además resuelven el caso `null`.
-
-### 7.9 Service Layer — **Analogía a Facade**
-
-No es Facade de GoF (que colapsa un subsistema tras una interfaz única): es Service Layer /
-Transaction Script que orquesta muchos repositorios.
-
-| Servicio | Colaboradores | Rol |
-|---|---|---|
-| `ResultadoCarreraService.java:88-122` | 11 (`:37-47`) | **el orquestador más denso**: valida → guarda de idempotencia (`:91-94`) → upsert N resultados (`:96-113`) → `recalcularEloYSafetyRating` (`:116`) → `actualizarPuntos` (`:117`) → `evaluarLogros` por piloto (`:119`). Todo en **una sola `@Transactional`** (`:86`) |
-| `UsuarioService.java:267-307` | 23 (`:49-72`) | borrado en cascada de **4 fases** con el orden documentado en comentarios: referencias directas (`:272-277`), dependencias de agregados (`:279-286`), agregados (`:288-290`), filas propias (`:292-302`), más `desvincularAdmin` (`:305`) para no dejar la FK colgando |
-| `EstadisticasService.java:27-37`, `:40-66` | 11 repos | façade read-only que agrega **23 contadores** en un DTO |
-| `SancionService.java:28-37` | 10 | `create` en 3 fases: `buildSancion` → `aplicarEfectos` → `notificar` (`:69-75`) |
-
-`ResultadoCarreraService.java:131-134` toma un **snapshot** de elos en `Map<Long,Integer>`
-antes de recalcular, para que el cálculo no lea valores ya modificados en el mismo lote.
-
-### 7.10 Compensating action / undo — **Analogía a Saga**
-
-`SancionService.aplicarEfectos` (`:145-157`) tiene su espejo exacto `revertirEfectos`
-(`:155-169`), con guarda de idempotencia por el flag `efectosAplicados` (`:156-158`) y fila de
-auditoría negativa con prefijo "Reversion de sancion" (`:244-245`, `:257-258`).
-
-El par de métodos privados es simétrico: `aplicarCambioElo` (`:171-181`) /
-`revertirCambioElo` (`:221-232`), y así los tres pares restantes.
-
-`ApelacionService.java:81-83` cierra el flujo de compensación de 3 saltos: **sanción →
-apelación aprobada → undo de efectos**.
-
-`update` (`:87-89`, `:101-103`) y `delete` (`:117`) revierten **antes** de mutar y reaplican
-después, solo si `afectaEfectos` (`:81-86`).
-
-**Por qué no es Saga**: todo ocurre dentro de una única `@Transactional` JPA, así que hay
-rollback transaccional. La compensación existe para **efectos ya materializados en filas de
-negocio** (elo aplicado en la tabla de usuarios, posiciones modificadas en resultados), que
-el rollback de la transacción de la fila de sanción no deshace.
-
-### 7.11 Rate limit + lockout — `security/RateLimitFilter.java`
-
-**Nombreugar (resiliencia). NO es un circuit breaker.**
-
-| Pieza | Ubicación |
-|---|---|
-| Constantes | `:20-22` `MAX_INTENTOS=5`, `VENTANA_MILIS=60_000`, `LOCKOUT_MILIS=300_000` |
-| Registro en memoria | `:24` `Map<String, IntentoCuenta> intentosPorIp` |
-| Instancia vacía por defecto | `:26-31` `record IntentoCuenta(...)` con factory method `vacia()` en `:28-30` (otro Get-or-Create) |
-| Ventana deslizante | `:68-70` purga marcas viejas antes de contar |
-| Corte + lockout | `:71-75` resetea la ventana y calcula `bloqueadoHasta = ahora + LOCKOUT` |
-| Serialización | `:64` `synchronized (cuenta)` — el record es mutable |
-| **Guarded Call** | `:43` `return` **sin** llamar `filterChain.doFilter` → cortocircuita la cadena |
-| IP real | `:81-87` detrás de `X-Forwarded-For` |
-| Registro en la cadena | `SecurityConfig.java:100-101` (`addFilterBefore`) |
-
-**Por qué no es circuit breaker**: no hay máquina de estados closed/open/half-open, ni
-detector de fallos, ni fallback. Cuenta intentos por IP, no fallas de una dependencia.
-
-### 7.12 Fail-soft por paso — `service/sesion/ImportadorRace.java:31-40`
-
-Dos `try/catch` que **tragan la excepción** y solo loguean `warn` (vueltas en `:31-35`,
-incidentes en `:36-40`), mientras el paso crítico `resultadoImportService.importarResultados`
-(`:30`) queda sin proteger.
-
-Es "best-effort por paso": si los incidentes fallan, la importación de resultados sigue.
-
-**Por qué NO es retry**: no hay segunda ejecución, ni backoff, ni contador de intentos. El
-mecanismo de idempotencia de la [sección 5](#5-idempotencia-por-hash-sha-256--servicesesionidempotenciasesionservice)
-deja la puerta abierta para agregarlo, pero hoy no existe.
-
-### 7.13 Dependencia ausente con fallback — `service/RecuperarPasswordService.java`
-
-`:35` `ObjectProvider<JavaMailSender>`, `:57-61` rama de degradación: si falta SMTP, loguea
-y sigue (imprime el link en el log) en vez de romper.
-
-**No es Null Object de GoF** — no hay objeto nulo que absorba llamadas. Es *Optional
-Dependency* con rama explícita. El contraste es instructivo: el mismo servicio **sí** lanza
-`BusinessException` si el usuario no existe (`:87-88`), así que la ausencia de SMTP y la
-ausencia de usuario tienen tratamientos opuestos, a propósito.
-
-### 7.14 Singleton
-
-Los ~40 servicios son singletons **del contenedor** por defecto de Spring (`@Service` +
-`@RequiredArgsConstructor` + campos `private final`). Cero `getInstance()`, cero holder classes,
-cero singletons "a la GoF" — el patrón clásico no se usa.
-
-Dos clases utilitarias con constructor privado (anti-instanciación, Utility Class):
-`mapper/EntityMapper.java:6-8` y `util/FileUtil.java:3-6`. `FileUtil.obtenerExtension` se
-reusa en 3 servicios (`ImagenService:38`, `SetupService:146`, `ArchivoCarreraService:59`).
-
-### 7.15 Reglas transversales
-
-No son patrones, pero son convenciones consistentes en todo el código:
-
-- **Guardas fail-closed**: `getEntity(...)` con `orElseThrow(ResourceNotFoundException)` en
-  25+ servicios. Excepción tipada en vez de `Optional` vacío. El único `Optional` que vuelve
-  al controller es `CarreraService.java:261-263` con `orElse(false)`.
-- **Constantes de política en un solo lugar**: `InscripcionesAbiertasValidador.java:16` es la
-  fuente, re-exportada por `InscripcionService.java:27`.
-
-  > **Duplicación verificada**: `CarreraService.java:37` re-declara
-  > `private static final int MINUTOS_CIERRE_PREVIO = 5;` **como literal**, y lo usa en su
-  > `@Scheduled` de cierre (`:182`). Si cambia en el validador, el cierre automático se
-  > desincroniza de la validación. Tres referencias, dos fuentes de verdad.
-
-- **Timestamps de negocio inyectados, no leídos dentro del dominio**: `LocalDateTime.now()`
-  explícito en `IncidenteService:85`, `:182`, `ClasificacionImportService:58`,
-  `SancionService:141`.
-- **Índices anti-N+1**: `Map` como lookup en `CarreraService:249-255` (reutilizado en 4
-  métodos públicos), `ClasificacionImportService:67-77`, `VueltaService:63-71` (doble índice
-  con `computeIfAbsent`), `IncidenteService:100-101`, `LogroService:133-136` y `:149-152`.
-- **Vuelta numerada en un paso**: `VueltaImportService:43`
-  `numeros.merge(guid, 1, Integer::sum)`.
-
----
-
-## 8. Ausencias verificadas
-
-Se buscó cada patrón en `src/main/java` y en `pom.xml`. **Todos estos dan cero resultados:**
+Se buscó cada patrón de GRASP y GoF en `src/main/java`. **Todos estos dan cero resultados**:
 
 | Patrón | Resultado |
 |---|---|
-| **Retry** (`spring-retry`, `@Retryable`, `RetryTemplate`) | no existe |
-| **Circuit Breaker** / Bulkhead / TimeLimiter (resilience4j) | no existe |
-| **Observer / eventos** (`ApplicationEventPublisher`, `@EventListener`, `ApplicationListener`) | no existe |
-| **Iterator / Iterable** propios | no existe — toda iteración es `for`/`stream` |
-| **Decorator** propio (una clase que envuelve a otra del proyecto) | no existe |
-| **Adapter** propio | no existe — el rol lo juega Spring (`PasswordEncoder` ← `BCryptPasswordEncoder` en `AppConfig:11-14`) |
-| **Null Object** real (subclase nula que absorbe operaciones) | no existe — hay instancias-por-defecto ([7.4](#74-get-or-create--7-sitios--analogía-a-null-object)) y centinelas, pero ninguna clase Null Object |
-| **Dispatch por `instanceof`** | **0 ocurrencias** en todo `src/main/java` |
-| **Composite** | no existe — la cadena de inscripción es lineal, no un árbol |
+| **Adapter** propio (una clase que envuelve a otra del proyecto) | no existe — el rol lo juega Spring (`PasswordEncoder` ← `BCryptPasswordEncoder`) |
 | **Bridge / Mediator / Memento / Interpreter** | no existen |
-| **State** (máquina de estados explícita) | no existe — los estados son enums **datos** (`EstadoCarrera`, `EstadoIncidente`, `EstadoCampeonato`, `EstadoApelacion`, `EstadoInscripcion`, verificados: todos sin comportamiento) y las transiciones son `if`/asignaciones |
-| **Visitor** | no existe — ni de objetos ni de enum ([7.1](#71-dispatch-por-switch-sobre-enum--analogía-no-gof) es `switch`) |
-| **Strategy con clases** fuera de `service/puntos/` | no existe — `implements` en todo `service/` da **2 resultados**, ambos de `puntos` |
-| **Command** con receiver/undo propio | no existe — solo DTOs ([7.7](#77-command-object--analogía)) |
-| **MapStruct** | no existe — el mapeo es a mano |
+| **Composite** | no existe — la cadena de inscripción es lineal, no un árbol |
+| **Decorator** propio | no existe |
+| **Factory Method** | no existe como método que decide la subclase — la decisión está en la Simple Factory |
+| **Iterator** propio | no existe — toda iteración es `for`/`stream` |
+| **Observer** / eventos (`ApplicationEventPublisher`, `@EventListener`) | **no existe**, y es la ausencia con más consecuencias: ver §2.9 |
+| **State** (máquina de estados explícita) | no existe — los estados son enums **datos** (`EstadoCarrera`, `EstadoIncidente`, `EstadoCampeonato`, `EstadoApelacion`, `EstadoInscripcion`: constantes sin comportamiento) y las transiciones son `if` y asignaciones |
+| **Visitor** | no existe — ni de objetos ni de enum; el dispatch por `switch` de `LogroService` y `SancionService` es la variante "poor man's Strategy", no un Visitor |
+| **Flyweight** | no existe |
+| **Singleton a la GoF** (`getInstance()`) | no existe — 0 ocurrencias |
+| **Singleton Null Object propio** | no existe el patrón completo — hay Null Object de colección (§3.7) y get-or-create |
+| **MapStruct** u otro mapper declarativo | no existe — el mapeo es a mano |
 
-### La ausencia con más consecuencias: no hay Observer, y el fan-out de notificaciones está duplicado
+Las dos ausencias que pesan:
 
-`NotificacionService` **solo lo usan los controllers** — las 10 llamadas están en
-`NotificacionController.java:29, 35, 39, 44, 49, 54, 60, 64, 69, 76, 80`.
+**No hay Observer.** `NotificacionService` solo lo usan los controllers; los 7 sitios internos
+escriben el repositorio directamente (§2.9). El idioma natural sería Observer con
+`ApplicationEventPublisher`, o un notificador interno con firma de dominio. Ninguno existe.
 
-Los **6 sitios internos** que generan notificaciones escriben el repositorio
-**directamente**, duplicando el `builder()`:
-
-| Ubicación | Contexto |
-|---|---|
-| `LogroService.java:206-213` | `notificarLogro` |
-| `LogroService.java:215-222` | `notificarRecompensa` |
-| `SancionService.java:306-313` | sanción aplicada |
-| `ApelacionService.java:93-106` | apelación resuelta |
-| `CampeonatoMiembroService.java:96-105` | piloto agregado |
-| `CarreraService.java:214-222`, `:239-245` | cambios de estado de carrera |
-
-No se puede reutilizar `NotificacionService.create(...)` internamente porque su firma toma el
-DTO de API (`NotificacionService.java:49` `create(NotificacionRequest)`), no una entidad de
-dominio.
-
-**El idioma natural aquí sería Observer con `ApplicationEventPublisher`, o un `Notificador`
-interno con firma de dominio. No existe ninguno de los dos.** El coste real: agregar un
-tipo de notificación obliga a editar 6 lugares, y es fácil que uno se quede atrás.
+**No hay State.** Los 5 enums de estado son cajas de constantes, no objetos. La máquina de
+estados de un campeonato o de un incidente está implícita en `if`s repartidos entre servicios.
+Consecuencia práctica: ninguna transición puede listarse ni validarse en un solo lugar.
 
 ---
 
-## 9. Resumen de hallazgos
-
-### Verificados y funcionales
-
-1. Strategy + Factory de `service/puntos/` es el patrón mejor construido del proyecto:
-   auto-descubrimiento, normalización, fail-safe, fail-fast de config, catálogo expuesto, y
-   tests que congelan las claves.
-2. La Chain of Responsibility de inscripción tiene 3 eslabones con orden semánticamente
-   correcto y un test que verifica que el orden se respeta.
-3. La idempotencia por hash SHA-256 con normalización de ruido flotante está bien resuelta
-   para el caso de uso real (reenvío del mismo JSON).
-
-### Verificados y problemáticos
-
-| # | Hallazgo | Ubicación | Impacto |
-|---|---|---|---|
-| 1 | **Caché de usuarios sin evictar — CORREGIDO en `7034242c`** | `UsuarioService.java:161` vs `:169`, `:241`, `:270`; `ResultadoCarreraService.java:87`; `SancionService.java:68`, `:78`, `:111`, `:170` | Era peor de lo reportado: no eran 4 métodos de `UsuarioService` sino 5 entradas en 3 clases, y `cargarResultados` dejaba el ranking entero viejo. Ver [sección 7.3](#73-proxy-dinámico--cacheable--transactional) |
-| 2 | **Constante `MINUTOS_CIERRE_PREVIO` duplicada** | `InscripcionesAbiertasValidador:16` vs `CarreraService:37` | El cierre automático puede desincronizarse de la validación |
-| 3 | **Estado mutable en singleton escrito concurrentemente** | `ValidadorInscripcion.java:8-12`, reconstruido en `InscripcionValidacion:17` | Hoy idempotente; hoy es seguro por suerte, no por diseño |
-| 4 | **`switch` con `default` no-op oculta casos** | `SancionService.java:154`, `:180` | Un `TipoSancion` nuevo se aplicaría sin efecto y sin warning |
-| 5 | **Fan-out de notificaciones duplicado en 6 sitios** | ver [sección 8](#la-ausencia-con-más-consecuencias-no-hay-observer-y-el-fan-out-de-notificaciones-está-duplicado) | Agregar un tipo de notificación exige editar 6 lugares |
-| 6 | **Hook `validar` sin ninguna implementación** | `ImportadorSesion.java:24-25` | Promete un punto de extensión que no existe |
-| 7 | **Estado en memoria no escala a múltiples réplicas** | `SteamService:62`, `RateLimitFilter:24` | Restricción de escala en Render |
-| 8 | **`RateLimitFilter` sin eviction** | `RateLimitFilter.java:63` | El mapa de IPs crece de forma no acotada |
-| 9 | **9 colecciones `@OneToMany` sin uso en `Carrera`** | `Carrera.java:64-93` | `cascade = REMOVE` sobre 9 tablas sin control; −36 LOC si se quitan |
-
-### Corrección al análisis previo
-
-Este documento **corrige un error del análisis anterior**. Al recorrer `service/inscripcion/`
-con un glob `*Inscrip*.java` se concluyo que la cadena tenía **un solo** validador
-(`InscripcionesAbiertasValidador`) y que el `@Order` era decorativo. **Era falso**: la
-búsqueda por `extends ValidadorInscripcion` revela 3 implementaciones
-(`InscripcionesAbiertasValidador`, `PertenenciaValidador`, `RequisitosEloValidador`). Los
-dos últimos no matchean el glob porque no llevan "Inscrip" en el nombre. El `@Order` define
-el orden real de validación y ese orden es semántico.
-
----
-
-## 10. Referencias
+## 5. Referencias
 
 | Documento | Contenido |
 |---|---|
-| `docs/flujos.md` | Flujos funcionales |
-| `docs/formulas-rating.md` | Fórmulas de Elo y Safety Rating |
+| `docs/arquitectura-y-patrones.md` | Arquitectura, capas, reglas de trabajo y deuda técnica |
+| `docs/flujos.md` | Flujos funcionales y modelo de datos |
+| `docs/formulas-rating.md` | Fórmulas de Elo, Safety Rating y puntos |
 | `docs/analisis-mejoras.md` | Análisis previo de mejoras |
-
-### Advertencia sobre los números de línea
-
-Este documento cita líneas concretas, y **esas referencias se pudren**. Cada cambio de código
-las corre y nadie las actualiza salvo que se esté editando la sección justo ahí.
-
-Evidencia medida, no supuesto:
-
-- Al corregir la sección 7.3 (commit `7034242c`) hubo que recalcular 14 referencias de
-  `SancionService`, `ResultadoCarreraService` y `UsuarioService`. Todas quedaron verificadas
-  una por una contra el archivo.
-- Antes incluso de ese commit ya había drift: este documento decía
-  `UsuarioService.java:355-368` para `toResponse` (real `:357-370`), y
-  `analisis-mejoras.md:89` dice `:230-246` para los mismos dos mappers de historial. Los tres
-  números no coinciden entre sí ni con el código.
-- Los conteos de la sección 7.3 (12 `@Cacheable`, 23 `@CacheEvict`) estaban mal **aun sin
-  haber tocado una línea de caché**: los reales son 13 y 27.
-
-Las afirmaciones cualitativas de cada patrón siguen siendo válidas. Lo que no es confiable sin
-reverificar es la posición exacta de una línea. Para citar líneas, tomarlas del código en el
-momento, no de acá.
-| `docs/plan-produccion.md` | Plan de producción (histórico) |
