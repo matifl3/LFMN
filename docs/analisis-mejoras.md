@@ -225,7 +225,6 @@ Proyecto de plataforma web para liga de sim racing (Assetto Corsa) con Spring Bo
 - [x] CORS configurable
 - [x] DataSeeder excluido en perfil prod
 - [x] Dockerfile multi-stage
-- [x] setup-oracle-cloud.sh
 - [x] .env.example
 - [x] .gitignore actualizado
 - [x] README actualizado
@@ -235,7 +234,6 @@ Proyecto de plataforma web para liga de sim racing (Assetto Corsa) con Spring Bo
 - [ ] Elegir nombre para la plataforma
 - [ ] Actualizar titulo en HTML y README
 - [ ] Agregar logo
-- [ ] Crear cuenta Oracle Cloud Free Tier
 - [ ] Deployar y probar en produccion
 - [ ] Configurar dominio (opcional)
 - [ ] Google AdSense (opcional)

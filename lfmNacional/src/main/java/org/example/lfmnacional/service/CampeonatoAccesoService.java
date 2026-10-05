@@ -9,6 +9,8 @@ import org.example.lfmnacional.enums.VisibilidadCampeonato;
 import org.example.lfmnacional.exception.BusinessException;
 import org.example.lfmnacional.exception.ResourceNotFoundException;
 import org.example.lfmnacional.repository.CampeonatoMiembroRepository;
+import org.example.lfmnacional.repository.InscripcionRepository;
+import org.example.lfmnacional.repository.ResultadoCarreraRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +27,8 @@ import java.util.stream.Collectors;
 public class CampeonatoAccesoService {
 
     private final CampeonatoMiembroRepository miembroRepository;
+    private final InscripcionRepository inscripcionRepository;
+    private final ResultadoCarreraRepository resultadoCarreraRepository;
 
     // ---------------------------------------------------------------- roles
 
@@ -121,7 +125,28 @@ public class CampeonatoAccesoService {
     }
 
     public boolean veCarrera(Usuario usuario, Carrera carrera) {
-        return carrera != null && veContenido(usuario, carrera.getCampeonato());
+        if (carrera == null) {
+            return false;
+        }
+        if (veContenido(usuario, carrera.getCampeonato())) {
+            return true;
+        }
+        return participoEnCarrera(usuario, carrera);
+    }
+
+    /**
+     * Haber corrido o haberse inscripto habilita a ver esa carrera puntual aunque el
+     * campeonato sea privado y el piloto no figure en el roster de miembros: si
+     * corrio, el resultado es suyo y ocultarselo deja al piloto sin su propia
+     * carrera. Deliberadamente NO habilita {@link #veContenido}: el resto del
+     * campeonato (roster, tabla de puntos, telemetria ajena) sigue reservado.
+     */
+    public boolean participoEnCarrera(Usuario usuario, Carrera carrera) {
+        if (usuario == null || usuario.getId() == null || carrera == null || carrera.getId() == null) {
+            return false;
+        }
+        return inscripcionRepository.existsByCarrera_IdAndUsuario_Id(carrera.getId(), usuario.getId())
+                || resultadoCarreraRepository.existsByCarrera_IdAndUsuario_Id(carrera.getId(), usuario.getId());
     }
 
     /**

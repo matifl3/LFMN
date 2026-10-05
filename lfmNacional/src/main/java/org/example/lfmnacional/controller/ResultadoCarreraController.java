@@ -45,8 +45,7 @@ public class ResultadoCarreraController {
     @GetMapping("/carrera/{carreraId}")
     public List<ResultadoCarreraResponse> listarPorCarrera(@PathVariable Long carreraId,
                                                            @AuthenticationPrincipal Usuario usuario) {
-        accesoService.exigirVeCarrera(usuario, carreraService.getEntity(carreraId));
-        return resultadoCarreraService.listarPorCarrera(carreraId);
+        return resultadoCarreraService.listarPorCarrera(carreraId, usuario);
     }
 
     @GetMapping("/usuario/{usuarioId}")
@@ -63,10 +62,7 @@ public class ResultadoCarreraController {
 
     @GetMapping("/{id}")
     public ResultadoCarreraResponse getById(@PathVariable Long id, @AuthenticationPrincipal Usuario usuario) {
-        ResultadoCarrera resultado = resultadoCarreraService.getEntity(id);
-        Carrera carrera = resultado.getCarrera();
-        accesoService.exigirVeCarrera(usuario, carrera);
-        return resultadoCarreraService.getById(id);
+        return resultadoCarreraService.getById(id, usuario);
     }
 
     /** El ADMIN global, un comisario o el dueno del campeonato de esa carrera. */

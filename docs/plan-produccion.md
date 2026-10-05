@@ -36,15 +36,14 @@ Antes de tocar código hay que decidir dónde correr la app. Lo importante es el
 
 | Opción | Costo | Ventaja | Desventaja |
 |---|---|---|---|
-| **Oracle Cloud Free Tier (ARM 4 OCPU / 24GB)** | $0 | Ya existe `setup-oracle-cloud.sh`, gratis, MySQL local | Setup y mantenimiento manuales |
-| **VPS genérico (Hetzner / DigitalOcean / Vultr)** | ~5-6 USD/mes | Simple, control total, backups fáciles | Requiere pago |
-| **PaaS (Render / Railway / Fly.io)** | 0-7 USD/mes | Deploy con un comando, HTTPS automático | MySQL/archivos más difíciles (disco efímero), menos control |
+| **PaaS (Render + Vercel)** | 0 USD | Deploy con un push, HTTPS automático, cero mantenimiento | MySQL y archivos en disco efímero, sin control del servidor |
+| **VPS genérico (Hetzner / DigitalOcean / Vultr)** | ~5-6 USD/mes | Simple, control total, disco persistente, backups fáciles | Requiere pago y mantenimiento |
 
-> **Recomendación**: **Oracle Cloud Free Tier** (ya tenés el script y es gratis)
-> o **un VPS Hetzner** (~EUR 4/mes). Ambos dan MySQL + disco persistente, que este
-> proyecto necesita. Evitar PaaS puro por el disco efímero y el watcher de sesiones.
+> **Estado actual**: frontend en **Vercel** (`lfmn.vercel.app`) y API en un web
+> service **Render** (`lfmn.onrender.com`) que buildea el `Dockerfile` con perfil
+> `prod`. Ambos redeployean con cada push a `main`.
 
-El plan es agnóstico de infraestructura salvo donde se indique (deploy/HTTPS).
+El plan es agnóstico de infraestructura salvo donde se indique.
 
 ---
 
@@ -86,13 +85,13 @@ Sin esta fase no se publica.
 
 ---
 
-## Fase 4 — CI/CD y HTTPS
+## Fase 4 — CI y deploy
 
 | # | Tarea | Archivo(s) | Detalle |
 |---|---|---|---|
-| 4.1 | ✅ CI GitHub Actions | `.github/workflows/ci.yml` (nuevo) | **HECHO**: `./mvnw clean verify` (69 tests) en cada push/PR a `main`, con JDK 17 Temurin y cache Maven. Verificado localmente: BUILD SUCCESS + JAR. |
-| 4.2 | ✅ Deploy automatizado | `.github/workflows/deploy.yml` + `scripts/deploy.sh` | **HECHO**: workflow `Deploy` (manual) build → test → SCP del JAR → `deploy.sh` en el server: parar → backup → instalar JAR → arrancar → healthcheck `/actuator/health`. Complementa `setup-oracle-cloud.sh` (JAR + systemd, sin Docker). |
-| 4.3 | ✅ HTTPS + proxy | `scripts/Caddyfile` + `scripts/setup-https.sh` + `application-prod.properties` | **HECHO**: Caddy como reverse proxy TLS frente a la app en `:8080` (que ya sirve frontend + `/api`). `setup-https.sh` instala Caddy y genera la config en dos modos: sin dominio (HTTP `:80` funcional) y con `DOMAIN` (Let's Encrypt automático, bloquea `/actuator/*` salvo health). `server.forward-headers-strategy=framework` para redirects https. **Pendiente solo operativo**: dominio + security list 80/443 (cerrar 8080). |
+| 4.1 | ✅ CI GitHub Actions | `.github/workflows/ci.yml` | **HECHO**: `./mvnw clean verify` (69 tests) en cada push/PR a `main`, con JDK 17 Temurin y cache Maven. Verificado localmente: BUILD SUCCESS + JAR. |
+| 4.2 | ✅ Deploy automático | Vercel (frontend) + Render (API) | **HECHO**: cada push a `main` redeploya el frontend (Vercel, dir `frontend/`) y la API (Render, `Dockerfile` raíz, perfil `prod`). Las variables (`DB_*`, `JWT_SECRETO`, `FRONTEND_URL`) se configuran en el dashboard de cada proveedor. |
+| 4.3 | ✅ HTTPS | Gestionado por los proveedores | **HECHO**: Vercel emite TLS para el frontend y Render para la API; no hace falta proxy propio. `application-prod.properties` no requiere `forward-headers-strategy` porque no hay proxy delante. |
 
 ---
 
@@ -103,7 +102,6 @@ Sin esta fase no se publica.
 2. Fase 2  (Flyway + backups)           -> antes de cargar datos reales
 3. Fase 4.1 (CI)                        -> barato, protege lo ya hecho
 4. Fase 3  (Actuator + logging + errores + rate-limit)
-5. Fase 4.2 + 4.3 (deploy + HTTPS)      -> último, depende de infra definida
 ```
 
 ## Fuera de alcance (fase 2 de mercado, no bloquea el lanzamiento)

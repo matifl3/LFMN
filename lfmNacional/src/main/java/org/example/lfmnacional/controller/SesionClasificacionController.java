@@ -32,16 +32,13 @@ public class SesionClasificacionController {
 
     @GetMapping("/{id}")
     public SesionClasificacionResponse getById(@PathVariable Long id, @AuthenticationPrincipal Usuario usuario) {
-        var entidad = sesionClasificacionService.getEntity(id);
-        accesoService.exigirVeCarrera(usuario, entidad.getCarrera());
-        return sesionClasificacionService.getById(id);
+        return sesionClasificacionService.getById(id, usuario);
     }
 
     @GetMapping("/carrera/{carreraId}")
     public List<SesionClasificacionResponse> listarPorCarrera(@PathVariable Long carreraId,
                                                               @AuthenticationPrincipal Usuario usuario) {
-        accesoService.exigirVeCarrera(usuario, carreraService.getEntity(carreraId));
-        return sesionClasificacionService.listarPorCarrera(carreraId);
+        return sesionClasificacionService.listarPorCarrera(carreraId, usuario);
     }
 
     @GetMapping("/usuario/{usuarioId}")

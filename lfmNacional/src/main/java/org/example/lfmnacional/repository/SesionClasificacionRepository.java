@@ -31,6 +31,7 @@ public interface SesionClasificacionRepository extends JpaRepository<SesionClasi
             select s from SesionClasificacion s
             where s.usuario.id = :usuarioId
               and (:spectatorId is null
+                   or s.usuario.id = :spectatorId
                    or s.carrera.campeonato.visibilidad <> org.example.lfmnacional.enums.VisibilidadCampeonato.PRIVADO
                    or s.carrera.campeonato.admin.id = :spectatorId
                    or exists (select m from CampeonatoMiembro m

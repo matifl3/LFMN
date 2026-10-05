@@ -6,6 +6,7 @@ import org.example.lfmnacional.dto.vuelta.VueltaResumenResponse;
 import org.example.lfmnacional.dto.vuelta.VueltaResponse;
 import org.example.lfmnacional.entity.ResultadoCarrera;
 import org.example.lfmnacional.entity.SesionClasificacion;
+import org.example.lfmnacional.entity.Usuario;
 import org.example.lfmnacional.entity.VueltaCarrera;
 import org.example.lfmnacional.repository.ResultadoCarreraRepository;
 import org.example.lfmnacional.repository.SesionClasificacionRepository;
@@ -25,15 +26,19 @@ public class VueltaService {
     private final VueltaRepository vueltaRepository;
     private final SesionClasificacionRepository sesionClasificacionRepository;
     private final ResultadoCarreraRepository resultadoCarreraRepository;
+    private final CarreraService carreraService;
+    private final CampeonatoAccesoService accesoService;
 
     @Transactional(readOnly = true)
-    public List<VueltaResponse> listarPorCarrera(Long carreraId) {
+    public List<VueltaResponse> listarPorCarrera(Long carreraId, Usuario visor) {
+        accesoService.exigirVeCarrera(visor, carreraService.getEntity(carreraId));
         return vueltaRepository.findByCarrera_IdOrderByUsuario_IdAscNumeroVueltaAsc(carreraId)
                 .stream().map(this::toResponse).toList();
     }
 
     @Transactional(readOnly = true)
-    public List<VueltaResponse> listarPorUsuarioEnCarrera(Long carreraId, Long usuarioId) {
+    public List<VueltaResponse> listarPorUsuarioEnCarrera(Long carreraId, Long usuarioId, Usuario visor) {
+        accesoService.exigirVeCarrera(visor, carreraService.getEntity(carreraId));
         return vueltaRepository.findByCarrera_IdAndUsuario_IdOrderByNumeroVueltaAsc(carreraId, usuarioId)
                 .stream().map(this::toResponse).toList();
     }
@@ -55,7 +60,8 @@ public class VueltaService {
     }
 
     @Transactional(readOnly = true)
-    public List<VueltaAnalisisResponse> analisisCarrera(Long carreraId, Long usuarioId) {
+    public List<VueltaAnalisisResponse> analisisCarrera(Long carreraId, Long usuarioId, Usuario visor) {
+        accesoService.exigirVeCarrera(visor, carreraService.getEntity(carreraId));
         List<VueltaCarrera> todas = vueltaRepository.findByCarrera_IdOrderByUsuario_IdAscNumeroVueltaAsc(carreraId);
         List<VueltaCarrera> raceLaps = todas.stream()
                 .filter(v -> TIPO_RACE.equals(v.getTipo()))
@@ -99,7 +105,8 @@ public class VueltaService {
     }
 
     @Transactional(readOnly = true)
-    public VueltaResumenResponse resumenCarrera(Long carreraId, Long usuarioId) {
+    public VueltaResumenResponse resumenCarrera(Long carreraId, Long usuarioId, Usuario visor) {
+        accesoService.exigirVeCarrera(visor, carreraService.getEntity(carreraId));
         List<VueltaCarrera> todas = vueltaRepository.findByCarrera_IdOrderByUsuario_IdAscNumeroVueltaAsc(carreraId);
         List<VueltaCarrera> raceLaps = todas.stream()
                 .filter(v -> TIPO_RACE.equals(v.getTipo()))
@@ -175,7 +182,7 @@ public class VueltaService {
         Integer posicionesGanadas = (posicionGrilla != null && posicionFinal != null)
                 ? posicionGrilla - posicionFinal : null;
 
-        Integer posicionPico = analisisCarrera(carreraId, usuarioId).stream()
+        Integer posicionPico = analisisCarrera(carreraId, usuarioId, visor).stream()
                 .map(VueltaAnalisisResponse::posicionEnVuelta)
                 .filter(Objects::nonNull)
                 .min(Integer::compareTo)

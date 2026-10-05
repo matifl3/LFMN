@@ -3,18 +3,15 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { SlicePipe } from '@angular/common';
 import { forkJoin, of } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { catchError } from 'rxjs/operators';
 import { ApiService, apiError } from '../../core/services/api.service';
 import { ToastService } from '../../core/services/toast.service';
 import { AuthService } from '../../core/services/auth.service';
 import {
   Campeonato,
   Carrera,
-  Categoria,
   MiembroCampeonato,
   TablaPosicion,
-  Usuario,
-  SistemaPuntosCatalogo,
 } from '../../core/models/models';
 import { Chip } from '../../shared/components/chip/chip';
 import { Avatar } from '../../shared/components/avatar/avatar';
@@ -52,28 +49,12 @@ export class MisCampeonatosComponent implements OnInit {
   readonly selectedId = signal<number | null>(null);
   readonly panel = signal<Panel>('pilotos');
 
-  readonly categorias = signal<Categoria[]>([]);
   readonly miembros = signal<MiembroCampeonato[]>([]);
   readonly carreras = signal<Carrera[]>([]);
   readonly tabla = signal<TablaPosicion[]>([]);
 
-  /** Cuentas a las que el ADMIN global puede asignar un campeonato. */
-  readonly organizadores = signal<Usuario[]>([]);
-  /** Crear un campeonato es potestad del ADMIN global, no del organizador. */
+  /** El alta/edicion de campeonato vive en el panel de admin, no aca. */
   readonly esAdminGlobal = computed(() => this.auth.esAdmin());
-
-  // alta de campeonato (solo ADMIN global)
-  readonly chNombre = signal('');
-  readonly chTemporada = signal('');
-  readonly chCategoriaId = signal('');
-  readonly chSistemaPuntos = signal('');
-  readonly chAdminId = signal('');
-  readonly editandoCampeonatoId = signal<number | null>(null);
-
-  // Catalogo de GET /api/sistemas-puntos. Alimenta el select del formulario de
-  // alta/edicion, que es donde el organizador elige como se puntua la liga.
-  readonly sistemasPuntos = signal<SistemaPuntosCatalogo[]>([]);
-  readonly sistemasPuntosDisponibles = computed(() => this.sistemasPuntos());
 
   // roster
   readonly busquedaPiloto = signal('');
@@ -104,44 +85,15 @@ export class MisCampeonatosComponent implements OnInit {
 
   ngOnInit(): void {
     this.cargar();
-    this.cargarSistemasPuntos();
-  }
-
-  private claveSistemaPuntosDefault(): string {
-    return this.sistemasPuntos().find((s) => s.porDefecto)?.clave ?? '';
-  }
-
-  private cargarSistemasPuntos(): void {
-    this.api
-      .list<SistemaPuntosCatalogo>('/sistemas-puntos')
-      .pipe(catchError(() => of([] as SistemaPuntosCatalogo[])))
-      .subscribe((lista) => {
-        this.sistemasPuntos.set(lista);
-        const actual = this.chSistemaPuntos();
-        if (!lista.some((s) => s.clave === actual)) {
-          this.chSistemaPuntos.set(this.claveSistemaPuntosDefault());
-        }
-      });
   }
 
   private cargar(): void {
     this.cargando.set(true);
     forkJoin({
       mios: this.api.list<Campeonato>('/campeonatos/mios').pipe(catchError(() => of([]))),
-      categorias: this.api.list<Categoria>('/categorias').pipe(catchError(() => of([]))),
-      // /usuarios es ADMIN-only, y solo lo necesita el ADMIN global para elegir
-      // a quien le asigna el campeonato.
-      organizadores: this.esAdminGlobal()
-        ? this.api.list<Usuario>('/usuarios').pipe(
-            catchError(() => of([] as Usuario[])),
-            map((usuarios) => usuarios.filter((u) => u.rol === 'ADMIN_CAMPEONATO')),
-          )
-        : of([] as Usuario[]),
     }).subscribe({
       next: (r) => {
         this.campeonatos.set(r.mios);
-        this.categorias.set(r.categorias);
-        this.organizadores.set(r.organizadores);
         this.cargando.set(false);
         const primero = r.mios[0];
         if (primero && this.selectedId() === null) this.seleccionar(primero.id);
@@ -184,55 +136,6 @@ export class MisCampeonatosComponent implements OnInit {
 
   setPanel(p: Panel): void {
     this.panel.set(p);
-  }
-
-  // ------------------------------------------------------------ campeonato
-
-  guardarCampeonato(): void {
-    const nombre = this.chNombre().trim();
-    const categoriaId = Number(this.chCategoriaId());
-    if (!nombre || !categoriaId) {
-      this.toast.error('Nombre y categoría son obligatorios.');
-      return;
-    }
-    const body: Record<string, unknown> = {
-      nombre,
-      temporada: this.chTemporada().trim() || undefined,
-      categoriaId,
-      sistemaPuntos: this.chSistemaPuntos() || undefined,
-      adminId: this.chAdminId() ? Number(this.chAdminId()) : null,
-    };
-    const editando = this.editandoCampeonatoId();
-    const req = editando
-      ? this.api.put<Campeonato>(`/campeonatos/${editando}`, body)
-      : this.api.post<Campeonato>('/campeonatos', body);
-    req.subscribe({
-      next: (creado) => {
-        this.toast.success(editando ? 'Campeonato actualizado.' : 'Campeonato creado.');
-        this.limpiarFormCampeonato();
-        this.cargar();
-        if (creado?.id) this.seleccionar(creado.id);
-      },
-      error: (err) => this.toast.error(apiError(err)),
-    });
-  }
-
-  editarCampeonato(c: Campeonato): void {
-    this.editandoCampeonatoId.set(c.id);
-    this.chNombre.set(c.nombre);
-    this.chTemporada.set(c.temporada || '');
-    this.chCategoriaId.set(String(c.categoriaId));
-    this.chSistemaPuntos.set(c.sistemaPuntos || this.claveSistemaPuntosDefault());
-    this.chAdminId.set(c.adminId ? String(c.adminId) : '');
-  }
-
-  limpiarFormCampeonato(): void {
-    this.editandoCampeonatoId.set(null);
-    this.chNombre.set('');
-    this.chTemporada.set('');
-    this.chCategoriaId.set('');
-    this.chSistemaPuntos.set(this.claveSistemaPuntosDefault());
-    this.chAdminId.set('');
   }
 
   cerrarCampeonato(c: Campeonato): void {

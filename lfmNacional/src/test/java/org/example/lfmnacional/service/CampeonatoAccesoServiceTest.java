@@ -10,6 +10,8 @@ import org.example.lfmnacional.enums.Rol;
 import org.example.lfmnacional.enums.VisibilidadCampeonato;
 import org.example.lfmnacional.exception.BusinessException;
 import org.example.lfmnacional.repository.CampeonatoMiembroRepository;
+import org.example.lfmnacional.repository.InscripcionRepository;
+import org.example.lfmnacional.repository.ResultadoCarreraRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,7 +23,9 @@ import java.util.List;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -31,6 +35,12 @@ class CampeonatoAccesoServiceTest {
 
     @Mock
     private CampeonatoMiembroRepository miembroRepository;
+
+    @Mock
+    private InscripcionRepository inscripcionRepository;
+
+    @Mock
+    private ResultadoCarreraRepository resultadoCarreraRepository;
 
     @InjectMocks
     private CampeonatoAccesoService acceso;
@@ -153,5 +163,45 @@ class CampeonatoAccesoServiceTest {
         assertThatThrownBy(() -> acceso.exigirVeCarrera(piloto, carrera))
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("no sos miembro");
+    }
+
+    @Test
+    void elQueCorrioLaCarreraPrivadaLaVeAunqueNoSeaMiembro() {
+        Carrera carrera = Carrera.builder().id(30L).nombre("Privada 1")
+                .campeonato(privado).estado(EstadoCarrera.FINALIZADA).build();
+        when(miembroRepository.existsByCampeonato_IdAndUsuario_Id(11L, piloto.getId())).thenReturn(false);
+        when(resultadoCarreraRepository.existsByCarrera_IdAndUsuario_Id(30L, piloto.getId())).thenReturn(true);
+
+        assertThat(acceso.veCarrera(piloto, carrera)).isTrue();
+        assertThatCode(() -> acceso.exigirVeCarrera(piloto, carrera)).doesNotThrowAnyException();
+    }
+
+    @Test
+    void haberseInscriptoTambienHabilitaAVerLaCarreraPrivada() {
+        Carrera carrera = Carrera.builder().id(30L).nombre("Privada 1")
+                .campeonato(privado).estado(EstadoCarrera.INSCRIPCIONES_ABIERTAS).build();
+        when(miembroRepository.existsByCampeonato_IdAndUsuario_Id(11L, piloto.getId())).thenReturn(false);
+        when(inscripcionRepository.existsByCarrera_IdAndUsuario_Id(30L, piloto.getId())).thenReturn(true);
+
+        assertThat(acceso.veCarrera(piloto, carrera)).isTrue();
+    }
+
+    @Test
+    void haberCorridoUnaCarreraNoAbreElRestoDelCampeonatoPrivado() {
+        Carrera carrera = Carrera.builder().id(30L).nombre("Privada 1")
+                .campeonato(privado).estado(EstadoCarrera.FINALIZADA).build();
+        when(miembroRepository.existsByCampeonato_IdAndUsuario_Id(11L, piloto.getId())).thenReturn(false);
+        when(resultadoCarreraRepository.existsByCarrera_IdAndUsuario_Id(30L, piloto.getId())).thenReturn(true);
+
+        assertThat(acceso.veCarrera(piloto, carrera)).isTrue();
+        assertThat(acceso.veContenido(piloto, privado)).isFalse();
+    }
+
+    @Test
+    void sinCarreraPersistidaNoSeConsultaLaParticipacion() {
+        Carrera carrera = Carrera.builder().nombre("Sin id").campeonato(privado).build();
+
+        assertThat(acceso.participoEnCarrera(piloto, carrera)).isFalse();
+        verify(inscripcionRepository, never()).existsByCarrera_IdAndUsuario_Id(any(), any());
     }
 }

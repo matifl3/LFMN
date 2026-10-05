@@ -6,6 +6,7 @@ import org.example.lfmnacional.dto.campeonato.CampeonatoResponse;
 import org.example.lfmnacional.dto.campeonato.TablaPosicionResponse;
 import org.example.lfmnacional.entity.Campeonato;
 import org.example.lfmnacional.entity.CampeonatoPosicion;
+import org.example.lfmnacional.entity.Categoria;
 import org.example.lfmnacional.entity.Carrera;
 import org.example.lfmnacional.entity.ResultadoCarrera;
 import org.example.lfmnacional.entity.Usuario;
@@ -105,14 +106,23 @@ public class CampeonatoService {
         VisibilidadCampeonato visibilidad = request.visibilidad() != null
                 ? request.visibilidad()
                 : VisibilidadCampeonato.PUBLICO;
+        Categoria categoria = categoriaService.getEntity(request.categoriaId());
+        Usuario admin = resolverAdmin(request.adminId());
+        // Sin esta guarda se creaba un campeonato privado sin dueno: nadie podia
+        // administrarlo ni abrirlo a publico despues, porque cambiarVisibilidad exige
+        // admin. Ademas dejaba a los pilotos que se inscribian sin poder ver su carrera.
+        if (visibilidad == VisibilidadCampeonato.PRIVADO && admin == null) {
+            throw new BusinessException(
+                    "Un campeonato privado tiene que tener un administrador (rol ADMIN_CAMPEONATO)");
+        }
         Campeonato campeonato = Campeonato.builder()
                 .nombre(request.nombre())
                 .temporada(request.temporada())
-                .categoria(categoriaService.getEntity(request.categoriaId()))
+                .categoria(categoria)
                 .estado(request.estado())
                 .sistemaPuntos(request.sistemaPuntos())
                 .visibilidad(visibilidad)
-                .admin(resolverAdmin(request.adminId()))
+                .admin(admin)
                 .build();
         return toResponse(campeonatoRepository.save(campeonato), usuario, Set.of());
     }

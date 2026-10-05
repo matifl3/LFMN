@@ -15,6 +15,8 @@ public interface ResultadoCarreraRepository extends JpaRepository<ResultadoCarre
 
     boolean existsByCarrera_Id(Long carreraId);
 
+    boolean existsByCarrera_IdAndUsuario_Id(Long carreraId, Long usuarioId);
+
     void deleteByCarrera_Id(Long carreraId);
 
     @Modifying
@@ -37,6 +39,7 @@ public interface ResultadoCarreraRepository extends JpaRepository<ResultadoCarre
             select r from ResultadoCarrera r
             where r.usuario.id = :usuarioId
               and (:spectatorId is null
+                   or r.usuario.id = :spectatorId
                    or r.carrera.campeonato.visibilidad <> org.example.lfmnacional.enums.VisibilidadCampeonato.PRIVADO
                    or r.carrera.campeonato.admin.id = :spectatorId
                    or exists (select m from CampeonatoMiembro m
@@ -47,6 +50,7 @@ public interface ResultadoCarreraRepository extends JpaRepository<ResultadoCarre
             select count(r) from ResultadoCarrera r
             where r.usuario.id = :usuarioId
               and (:spectatorId is null
+                   or r.usuario.id = :spectatorId
                    or r.carrera.campeonato.visibilidad <> org.example.lfmnacional.enums.VisibilidadCampeonato.PRIVADO
                    or r.carrera.campeonato.admin.id = :spectatorId
                    or exists (select m from CampeonatoMiembro m
