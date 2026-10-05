@@ -281,93 +281,115 @@
           }
 
           @if (panel() === 'carreras') {
-            <div class="card">
-              <h3 class="card-title">
-                {{ editingCarreraId() ? 'Editar carrera' : 'Nueva carrera' }}
-              </h3>
-              <form class="form-grid" (ngSubmit)="guardarCarrera()">
-                <label class="field">
-                  <span>Nombre</span>
-                  <input
-                    type="text"
-                    name="cNombre"
-                    [ngModel]="cNombre()"
-                    (ngModelChange)="cNombre.set($event)"
-                    required
-                  />
-                </label>
-                <label class="field">
-                  <span>Circuito</span>
-                  <input
-                    type="text"
-                    name="cCircuito"
-                    [ngModel]="cCircuito()"
-                    (ngModelChange)="cCircuito.set($event)"
-                  />
-                </label>
-                <label class="field">
-                  <span>Fecha</span>
-                  <input
-                    type="date"
-                    name="cFecha"
-                    [ngModel]="cFecha()"
-                    (ngModelChange)="cFecha.set($event)"
-                  />
-                </label>
-                <label class="field">
-                  <span>Hora</span>
-                  <input
-                    type="time"
-                    name="cHora"
-                    [ngModel]="cHora()"
-                    (ngModelChange)="cHora.set($event)"
-                  />
-                </label>
-                <label class="field">
-                  <span>Cupo</span>
-                  <input
-                    type="number"
-                    name="cCupo"
-                    min="2"
-                    [ngModel]="cCupo()"
-                    (ngModelChange)="cCupo.set(+$event)"
-                  />
-                </label>
-                <label class="field">
-                  <span>Servidor</span>
-                  <input
-                    type="text"
-                    name="cServidor"
-                    [ngModel]="cServidor()"
-                    (ngModelChange)="cServidor.set($event)"
-                  />
-                </label>
-                <label class="field field-wide">
-                  <span>Link de pista</span>
-                  <input
-                    type="url"
-                    name="cLinkPista"
-                    [ngModel]="cLinkPista()"
-                    (ngModelChange)="cLinkPista.set($event)"
-                  />
-                </label>
-                <div class="form-actions field-wide">
-                  <button type="submit" class="btn btn-primary">
-                    {{ editingCarreraId() ? 'Guardar cambios' : 'Crear carrera' }}
-                  </button>
-                  @if (editingCarreraId()) {
-                    <button type="button" class="btn btn-ghost" (click)="limpiarFormCarrera()">
-                      Cancelar
+            <!--
+              El alta de carreras es solo del ADMIN global. El ADMIN_CAMPEONATO
+              administra un campeonato que le asignaron: por eso ve el formulario
+              unicamente cuando esta editando una carrera existente, y siempre
+              entra en modo edicion (el boton nunca dice "Crear").
+            -->
+            @if (esAdminGlobal() || editingCarreraId() !== null) {
+              <div class="card">
+                <h3 class="card-title">
+                  {{ editingCarreraId() ? 'Editar carrera' : 'Nueva carrera' }}
+                </h3>
+                <form class="form-grid" (ngSubmit)="guardarCarrera()">
+                  <label class="field">
+                    <span>Nombre</span>
+                    <input
+                      type="text"
+                      name="cNombre"
+                      [ngModel]="cNombre()"
+                      (ngModelChange)="cNombre.set($event)"
+                      required
+                    />
+                  </label>
+                  <label class="field">
+                    <span>Circuito</span>
+                    <input
+                      type="text"
+                      name="cCircuito"
+                      [ngModel]="cCircuito()"
+                      (ngModelChange)="cCircuito.set($event)"
+                    />
+                  </label>
+                  <label class="field">
+                    <span>Fecha</span>
+                    <input
+                      type="date"
+                      name="cFecha"
+                      [ngModel]="cFecha()"
+                      (ngModelChange)="cFecha.set($event)"
+                    />
+                  </label>
+                  <label class="field">
+                    <span>Hora</span>
+                    <input
+                      type="time"
+                      name="cHora"
+                      [ngModel]="cHora()"
+                      (ngModelChange)="cHora.set($event)"
+                    />
+                  </label>
+                  <label class="field">
+                    <span>Cupo</span>
+                    <input
+                      type="number"
+                      name="cCupo"
+                      min="2"
+                      [ngModel]="cCupo()"
+                      (ngModelChange)="cCupo.set(+$event)"
+                    />
+                  </label>
+                  <label class="field">
+                    <span>Servidor</span>
+                    <input
+                      type="text"
+                      name="cServidor"
+                      [ngModel]="cServidor()"
+                      (ngModelChange)="cServidor.set($event)"
+                    />
+                  </label>
+                  <label class="field field-wide">
+                    <span>Link de pista</span>
+                    <input
+                      type="url"
+                      name="cLinkPista"
+                      [ngModel]="cLinkPista()"
+                      (ngModelChange)="cLinkPista.set($event)"
+                    />
+                  </label>
+                  <div class="form-actions field-wide">
+                    <button type="submit" class="btn btn-primary">
+                      {{ editingCarreraId() ? 'Guardar cambios' : 'Crear carrera' }}
                     </button>
-                  }
-                </div>
-              </form>
-            </div>
+                    @if (editingCarreraId() || !esAdminGlobal()) {
+                      <button type="button" class="btn btn-ghost" (click)="limpiarFormCarrera()">
+                        Cancelar
+                      </button>
+                    }
+                  </div>
+                </form>
+              </div>
+            }
 
             <div class="card">
               <h3 class="card-title">Calendario</h3>
               @if (carreras().length === 0) {
-                <div class="empty-state"><p>Todavia no creaste carreras.</p></div>
+                <div class="empty-state">
+                  <p>
+                    {{
+                      esAdminGlobal()
+                        ? 'Todavia no creaste carreras.'
+                        : 'Todavia no hay carreras en este campeonato.'
+                    }}
+                  </p>
+                  @if (!esAdminGlobal()) {
+                    <p class="small">
+                      Las carreras las crea el administrador global de la liga. Cuando este tu
+                      calendario, las ves aca para editarlas y cargarles el JSON de la sesion.
+                    </p>
+                  }
+                </div>
               } @else {
                 <table class="table">
                   <thead>

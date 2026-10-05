@@ -48,6 +48,17 @@ public class CampeonatoAccesoService {
         return esAdminGlobal(usuario);
     }
 
+    /**
+     * Por la misma razon que crear un campeonato, crear una carrera es solo del
+     * ADMIN global. El ADMIN_CAMPEONATO carga la sesion del servidor sobre una
+     * carrera que ya existe y edita sus datos, pero no da de alta el calendario:
+     * asi el calendario de un campeonato no puede quedar en manos de quien solo
+     * lo administra.
+     */
+    public boolean puedeCrearCarrera(Usuario usuario) {
+        return esAdminGlobal(usuario);
+    }
+
     // -------------------------------------------------------- relaciones
 
     /** ADMIN global, o ADMIN_CAMPEONATO dueño de este campeonato puntual. */

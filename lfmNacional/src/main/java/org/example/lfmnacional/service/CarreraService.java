@@ -91,8 +91,16 @@ public class CarreraService {
         return carreras.stream().map(c -> toResponse(c, counts, ocultar)).toList();
     }
 
-    @Transactional
-    public CarreraResponse create(CarreraRequest request) {
+/**
+ * Crear la carrera es potestad del ADMIN global. El ADMIN_CAMPEONATO administra
+ * un campeonato que le asignaron y por eso puede editar las carreras y cargarles
+ * la sesion del servidor, pero no da de alta el calendario.
+ */
+@Transactional
+public CarreraResponse create(CarreraRequest request, Usuario usuario) {
+    if (!accesoService.puedeCrearCarrera(usuario)) {
+        throw new BusinessException("Solo el administrador global puede crear carreras");
+    }
         Carrera carrera = Carrera.builder()
                 .nombre(request.nombre())
                 .fecha(request.fecha())

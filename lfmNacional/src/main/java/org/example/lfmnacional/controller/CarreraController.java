@@ -79,12 +79,13 @@ public class CarreraController {
         return carreraService.eloEstimado(id, usuario != null ? usuario.getId() : null);
     }
 
+    /** Solo el ADMIN global crea carreras: el ADMIN_CAMPEONATO las edita. */
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN') or hasRole('ADMIN_CAMPEONATO')")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<CarreraResponse> create(@Valid @RequestBody CarreraRequest request,
                                                   @AuthenticationPrincipal Usuario usuario) {
         accesoService.exigirAdministra(usuario, campeonatoService.getEntity(request.campeonatoId()));
-        return ResponseEntity.status(HttpStatus.CREATED).body(carreraService.create(request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(carreraService.create(request, usuario));
     }
 
     @PutMapping("/{id}")

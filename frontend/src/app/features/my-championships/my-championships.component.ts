@@ -295,6 +295,14 @@ export class MisCampeonatosComponent implements OnInit {
 
   guardarCarrera(): void {
     const id = this.selectedId();
+    const editando = this.editingCarreraId();
+    // El alta de carreras es solo del ADMIN global (mismo criterio que el
+    // campeonato). El backend lo rechaza igual, pero conviene cortarlo aca para no
+    // dejar un formulario a medio llenar que va a fallar seguro.
+    if (!editando && !this.esAdminGlobal()) {
+      this.toast.error('Solo el administrador global puede crear carreras.');
+      return;
+    }
     const nombre = this.cNombre().trim();
     if (!id || !nombre) {
       this.toast.error('El nombre de la carrera es obligatorio.');
@@ -310,7 +318,6 @@ export class MisCampeonatosComponent implements OnInit {
       servidor: this.cServidor().trim() || undefined,
       linkPista: this.cLinkPista().trim() || undefined,
     };
-    const editando = this.editingCarreraId();
     const req = editando
       ? this.api.put<Carrera>(`/carreras/${editando}`, body)
       : this.api.post<Carrera>('/carreras', body);
