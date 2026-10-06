@@ -180,10 +180,11 @@ Constante: `SR_PENALIDAD_RP = −10` (se duplica si es descalificación)
 
 | Evento RP (`tipo`) | `TipoSancion` | Cambio SR |
 |---|---|---|
-| `dt` | DRIVE_THROUGH | −10 |
-| `sg` | STOP_AND_GO | −10 |
 | `dsq` | DESCALIFICACION | **−20** (`−10 × 2`) |
-| otro / null | SEGUNDOS | −10 |
+| `dt`, `sg` u otro / null | SEGUNDOS | −10 |
+
+> `dt` (drive through) y `sg` (stop & go) ya no tienen tipo de sanción propio:
+> se mapean a `SEGUNDOS`, que es el tipo que sí aplica penalización de tiempo.
 
 Reglas:
 - Correlación del piloto por `guid_steam` → `usuario.guid_steam`.

@@ -395,7 +395,7 @@ CREATE TABLE `sancion` (
   `id_externo` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `motivo` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `origen` enum('ADMIN','COMISARIO','REAL_PENALTY') COLLATE utf8mb4_unicode_ci NOT NULL,
-  `tipo` enum('DESCALIFICACION','DRIVE_THROUGH','ELO','PUESTOS','SAFETY_RATING','SEGUNDOS','STOP_AND_GO') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `tipo` enum('DESCALIFICACION','ELO','PUESTOS','SAFETY_RATING','SEGUNDOS') COLLATE utf8mb4_unicode_ci NOT NULL,
   `valor` int DEFAULT NULL,
   `carrera_id` bigint DEFAULT NULL,
   `resolucion_id` bigint DEFAULT NULL,

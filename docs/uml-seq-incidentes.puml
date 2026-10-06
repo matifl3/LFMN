@@ -79,7 +79,7 @@ group alt [quorum ≥ 2 votos concordantes]
   S -> SAN : crear(usuario, carrera, resolucion, tipo, valor)
   activate SAN #f8cecc
 
-  note right of SAN : RF-093: Tipos de sanción:\nPUESTOS, SEGUNDOS,\nDRIVE_THROUGH, STOP_AND_GO,\nDESCALIFICACION
+  note right of SAN : RF-093: Tipos de sanción:\nPUESTOS, SEGUNDOS,\nDESCALIFICACION, ELO,\nSAFETY_RATING
 
   note right of SAN : RF-094: Ajustar Elo\nRF-095: Ajustar SR
 
