@@ -18,6 +18,7 @@ import org.example.lfmnacional.exception.ResourceNotFoundException;
 import org.example.lfmnacional.repository.CampeonatoMiembroRepository;
 import org.example.lfmnacional.repository.CampeonatoPosicionRepository;
 import org.example.lfmnacional.repository.CampeonatoRepository;
+import org.example.lfmnacional.repository.ResultadoCarreraRepository;
 import org.example.lfmnacional.repository.UsuarioRepository;
 import org.example.lfmnacional.service.puntos.SistemaPuntos;
 import org.example.lfmnacional.service.puntos.SistemaPuntosFactory;
@@ -26,7 +27,10 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 @Service
@@ -36,6 +40,7 @@ public class CampeonatoService {
     private final CampeonatoRepository campeonatoRepository;
     private final CampeonatoPosicionRepository campeonatoPosicionRepository;
     private final CampeonatoMiembroRepository miembroRepository;
+    private final ResultadoCarreraRepository resultadoCarreraRepository;
     private final CategoriaService categoriaService;
     private final CampeonatoAccesoService accesoService;
     private final UsuarioRepository usuarioRepository;
@@ -259,6 +264,60 @@ public class CampeonatoService {
             posicion.setPosicion(rank++);
         }
         campeonatoPosicionRepository.saveAll(ordenadas);
+    }
+
+    /**
+     * Rehace la tabla de posiciones desde cero, sumando los puntos de TODAS las
+     * carreras del campeonato segun el {@code posicionFinal} que tienen hoy.
+     *
+     * <p>Existe porque {@link #actualizarPuntos} es acumulativo y solo corre al
+     * cargar resultados: si despues una sancion mueve posiciones (ver
+     * {@code SancionService.aplicarPerdidaPuestos}) la tabla del campeonato queda
+     * con los puntos viejo. Llamar de nuevo a {@code actualizarPuntos} no sirve,
+     * porque sumaria dos veces y ademas la carga manual esta bloqueada si la
+     * carrera ya tiene resultados.
+     *
+     * <p>A diferencia de {@code actualizarPuntos}, corre tambien con el
+     * campeonato cerrado: esto corrige una tabla, no agrega participaciones.
+     */
+    @Transactional
+    @CacheEvict(value = "tabla_posiciones", key = "#campeonatoId")
+    public void recalcularPuntos(Long campeonatoId) {
+        Campeonato campeonato = getEntity(campeonatoId);
+        SistemaPuntos sistema = sistemaPuntosFactory.de(campeonato.getSistemaPuntos());
+
+        Map<Long, Integer> puntosPorUsuario = new LinkedHashMap<>();
+        Map<Long, Usuario> usuarioPorId = new LinkedHashMap<>();
+        for (ResultadoCarrera resultado : resultadoCarreraRepository.findByCarrera_Campeonato_Id(campeonatoId)) {
+            if (resultado.getPosicionFinal() == null) {
+                continue;
+            }
+            Long usuarioId = resultado.getUsuario().getId();
+            puntosPorUsuario.merge(usuarioId, sistema.puntosPara(resultado.getPosicionFinal()), Integer::sum);
+            usuarioPorId.putIfAbsent(usuarioId, resultado.getUsuario());
+        }
+
+        // Se borra y se vuelve a crear en vez de actualizar fila por fila: si un
+        // piloto dejo de tener resultados (se le borraron a mano) su fila tiene
+        // que desaparecer, y con un update quedaria colgada con puntos viejos.
+        campeonatoPosicionRepository.deleteByCampeonato_Id(campeonatoId);
+
+        List<CampeonatoPosicion> filas = new ArrayList<>();
+        int rank = 1;
+        for (Map.Entry<Long, Integer> e : puntosPorUsuario.entrySet()) {
+            filas.add(CampeonatoPosicion.builder()
+                    .campeonato(campeonato)
+                    .usuario(usuarioPorId.get(e.getKey()))
+                    .puntos(e.getValue())
+                    // Provisional: la columna tiene @Positive y recalcularPosiciones()
+                    // asigna abajo el rango real. Poner 0 revienta la validacion.
+                    .posicion(rank++)
+                    .build());
+        }
+        if (!filas.isEmpty()) {
+            campeonatoPosicionRepository.saveAll(filas);
+        }
+        recalcularPosiciones(campeonatoId);
     }
 
     private TablaPosicionResponse toTablaPosicion(CampeonatoPosicion posicion) {

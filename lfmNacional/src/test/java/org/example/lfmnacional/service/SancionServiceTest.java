@@ -33,6 +33,7 @@ class SancionServiceTest {
     @Mock private UsuarioRepository usuarioRepository;
     @Mock private UsuarioService usuarioService;
     @Mock private CarreraService carreraService;
+    @Mock private CampeonatoService campeonatoService;
 
     @InjectMocks
     private SancionService sancionService;
@@ -203,24 +204,35 @@ class SancionServiceTest {
 
     @Test
     void createPuestosConResultadoMuevePosicion() {
-        ResultadoCarrera resultado1 = ResultadoCarrera.builder().id(1L).carrera(carrera).usuario(usuario).posicionFinal(3).tiempoTotal(100000L).build();
-        Usuario usuario2 = Usuario.builder().id(2L).nombrePiloto("P2").elo(1500).safetyRating(100).build();
-        ResultadoCarrera resultado2 = ResultadoCarrera.builder().id(2L).carrera(carrera).usuario(usuario2).posicionFinal(1).tiempoTotal(90000L).build();
-        ResultadoCarrera resultado3 = ResultadoCarrera.builder().id(3L).carrera(carrera).usuario(Usuario.builder().id(3L).nombrePiloto("P3").elo(1500).safetyRating(100).build()).posicionFinal(2).tiempoTotal(95000L).build();
+        Usuario u1 = Usuario.builder().id(1L).nombrePiloto("P1").elo(1500).safetyRating(100).build();
+        Usuario u2 = Usuario.builder().id(2L).nombrePiloto("P2").elo(1500).safetyRating(100).build();
+        Usuario u3 = Usuario.builder().id(3L).nombrePiloto("P3").elo(1500).safetyRating(100).build();
+        Usuario u4 = Usuario.builder().id(4L).nombrePiloto("P4").elo(1500).safetyRating(100).build();
+        ResultadoCarrera r1 = ResultadoCarrera.builder().id(1L).carrera(carrera).usuario(u2).posicionFinal(1).build();
+        ResultadoCarrera r2 = ResultadoCarrera.builder().id(2L).carrera(carrera).usuario(u1).posicionFinal(2).build();
+        ResultadoCarrera r3 = ResultadoCarrera.builder().id(3L).carrera(carrera).usuario(u3).posicionFinal(3).build();
+        ResultadoCarrera r4 = ResultadoCarrera.builder().id(4L).carrera(carrera).usuario(u4).posicionFinal(4).build();
 
-        when(usuarioService.getEntity(1L)).thenReturn(usuario);
+        when(usuarioService.getEntity(1L)).thenReturn(u1);
         when(carreraService.getEntity(1L)).thenReturn(carrera);
-        when(resultadoCarreraRepository.findByCarrera_IdAndUsuario_Id(1L, 1L)).thenReturn(Optional.of(resultado1));
+        when(resultadoCarreraRepository.findByCarrera_IdOrderByPosicionFinalAsc(1L))
+                .thenReturn(List.of(r1, r2, r3, r4));
         when(sancionRepository.save(any(Sancion.class))).thenAnswer(inv -> {
             Sancion s = inv.getArgument(0);
             s.setId(1L);
             return s;
         });
 
+        // El sancionado (u1) es 2do y pierde 2 puestos: cae 4to. Con la cuenta
+        // anterior (2 + 2 = 4) empataba con el 4to y el renumerado lo dejaba 3ro,
+        // o sea la penalizacion se perdia a medias.
         SancionRequest request = new SancionRequest(1L, 1L, null, TipoSancion.PUESTOS, 2, "Test", OrigenSancion.ADMIN, null, null);
         sancionService.create(request);
 
-        assertThat(resultado1.getPosicionFinal()).isEqualTo(5);
+        assertThat(r1.getPosicionFinal()).isEqualTo(1);
+        assertThat(r2.getPosicionFinal()).isEqualTo(4);
+        assertThat(r3.getPosicionFinal()).isEqualTo(2);
+        assertThat(r4.getPosicionFinal()).isEqualTo(3);
     }
 
     @Test
@@ -240,5 +252,102 @@ class SancionServiceTest {
         sancionService.create(request);
 
         assertThat(resultado.getTiempoTotal()).isEqualTo(110000L);
+    }
+
+    @Test
+    void createPuestosRecalculaLaTablaDelCampeonato() {
+        ResultadoCarrera resultado = ResultadoCarrera.builder().id(1L).carrera(carrera).usuario(usuario).posicionFinal(1).build();
+        when(usuarioService.getEntity(1L)).thenReturn(usuario);
+        when(carreraService.getEntity(1L)).thenReturn(carrera);
+        when(resultadoCarreraRepository.findByCarrera_IdOrderByPosicionFinalAsc(1L)).thenReturn(List.of(resultado));
+        when(sancionRepository.save(any(Sancion.class))).thenAnswer(inv -> {
+            Sancion s = inv.getArgument(0);
+            s.setId(1L);
+            return s;
+        });
+
+        sancionService.create(new SancionRequest(1L, 1L, null, TipoSancion.PUESTOS, 2, "Test", OrigenSancion.ADMIN, null, null));
+
+        // Sin esto, el piloto pierde puestos en la carrera y sigue con los puntos
+        // viejo en el campeonato.
+        verify(campeonatoService).recalcularPuntos(1L);
+    }
+
+    @Test
+    void createSegundosRecalculaLaTablaDelCampeonato() {
+        ResultadoCarrera resultado = ResultadoCarrera.builder().id(1L).carrera(carrera).usuario(usuario).posicionFinal(1).tiempoTotal(100000L).build();
+        when(usuarioService.getEntity(1L)).thenReturn(usuario);
+        when(carreraService.getEntity(1L)).thenReturn(carrera);
+        when(resultadoCarreraRepository.findByCarrera_IdAndUsuario_Id(1L, 1L)).thenReturn(Optional.of(resultado));
+        when(resultadoCarreraRepository.findByCarrera_IdOrderByPosicionFinalAsc(1L)).thenReturn(List.of(resultado));
+        when(sancionRepository.save(any(Sancion.class))).thenAnswer(inv -> {
+            Sancion s = inv.getArgument(0);
+            s.setId(1L);
+            return s;
+        });
+
+        sancionService.create(new SancionRequest(1L, 1L, null, TipoSancion.SEGUNDOS, 10, "10s", OrigenSancion.ADMIN, null, null));
+
+        verify(campeonatoService).recalcularPuntos(1L);
+    }
+
+    @Test
+    void createPuestosSinCarreraNoRecalculaLaTabla() {
+        when(usuarioService.getEntity(1L)).thenReturn(usuario);
+        when(sancionRepository.save(any(Sancion.class))).thenAnswer(inv -> {
+            Sancion s = inv.getArgument(0);
+            s.setId(1L);
+            return s;
+        });
+
+        sancionService.create(new SancionRequest(1L, null, null, TipoSancion.PUESTOS, 2, "Test", OrigenSancion.ADMIN, null, null));
+
+        verify(campeonatoService, never()).recalcularPuntos(any());
+    }
+
+    @Test
+    void createEloNoRecalculaLaTabla() {
+        when(usuarioService.getEntity(1L)).thenReturn(usuario);
+        when(carreraService.getEntity(1L)).thenReturn(carrera);
+        when(sancionRepository.save(any(Sancion.class))).thenAnswer(inv -> {
+            Sancion s = inv.getArgument(0);
+            s.setId(1L);
+            return s;
+        });
+
+        sancionService.create(new SancionRequest(1L, 1L, null, TipoSancion.ELO, -30, "Test", OrigenSancion.ADMIN, null, null));
+
+        verify(campeonatoService, never()).recalcularPuntos(any());
+    }
+
+    @Test
+    void revertirPuestosRecalculaLaTablaDelCampeonato() {
+        // Es el camino de la apelacion aprobada: si no recalcula, el piloto se
+        // queda con los puntos del Stewart penalty para siempre.
+        ResultadoCarrera resultado = ResultadoCarrera.builder().id(1L).carrera(carrera).usuario(usuario).posicionFinal(3).build();
+        when(resultadoCarreraRepository.findByCarrera_IdOrderByPosicionFinalAsc(1L)).thenReturn(List.of(resultado));
+        when(sancionRepository.save(any(Sancion.class))).thenAnswer(inv -> inv.getArgument(0));
+        Sancion sancion = Sancion.builder().id(9L).usuario(usuario).carrera(carrera)
+                .tipo(TipoSancion.PUESTOS).valor(2).origen(OrigenSancion.COMISARIO)
+                .efectosAplicados(true).build();
+
+        sancionService.revertirEfectos(sancion);
+
+        // Revertir lo devuelve 2 lugares hacia adelante; como es el unico
+        // clasificado queda primero. Lo que importa es que la tabla del
+        // campeonato se rehaga.
+        assertThat(resultado.getPosicionFinal()).isEqualTo(1);
+        verify(campeonatoService).recalcularPuntos(1L);
+    }
+
+    @Test
+    void revertirPuestosSinCarreraNoRecalculaLaTabla() {
+        when(sancionRepository.save(any(Sancion.class))).thenAnswer(inv -> inv.getArgument(0));
+        Sancion sancion = Sancion.builder().id(9L).usuario(usuario).carrera(null)
+                .tipo(TipoSancion.PUESTOS).valor(2).efectosAplicados(true).build();
+
+        sancionService.revertirEfectos(sancion);
+
+        verify(campeonatoService, never()).recalcularPuntos(any());
     }
 }

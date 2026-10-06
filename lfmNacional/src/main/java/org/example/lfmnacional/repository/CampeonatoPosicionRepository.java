@@ -21,4 +21,14 @@ public interface CampeonatoPosicionRepository extends JpaRepository<CampeonatoPo
     @Modifying
     @Query("delete from CampeonatoPosicion c where c.usuario.id = ?1")
     void deleteByUsuario_Id(Long usuarioId);
+
+    /**
+     * Borra toda la tabla de posiciones de un campeonato. Es lo que usa
+     * CampeonatoService.recalcularPuntos, que la vuelve a armar desde los
+     * resultados actuales. Es bulk a proposito: si no, JPA podria insertar las
+     * filas nuevas antes de borrar las viejas.
+     */
+    @Modifying
+    @Query("delete from CampeonatoPosicion c where c.campeonato.id = ?1")
+    void deleteByCampeonato_Id(Long campeonatoId);
 }

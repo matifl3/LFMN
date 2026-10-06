@@ -45,6 +45,8 @@ class CampeonatoServiceTest {
     @Mock
     private CategoriaService categoriaService;
     @Mock
+    private org.example.lfmnacional.repository.ResultadoCarreraRepository resultadoCarreraRepository;
+    @Mock
     private CampeonatoAccesoService accesoService;
     @Mock
     private UsuarioRepository usuarioRepository;
@@ -337,5 +339,142 @@ class CampeonatoServiceTest {
 
         assertThat(campeonato.getAdmin()).isNull();
         verify(usuarioRepository, never()).findById(anyLong());
+    }
+
+    // ------------------------------------------------------- recalcularPuntos
+
+    /**
+     * El primer {@code saveAll} arma las filas nuevas; el segundo viene de
+     * {@code recalcularPosiciones}, que reordena las mismas entidades. Solo
+     * interesa el primero.
+     */
+    private List<CampeonatoPosicion> capturarFilasGuardadas() {
+        List<CampeonatoPosicion> guardadas = new ArrayList<>();
+        when(campeonatoPosicionRepository.saveAll(any())).thenAnswer(inv -> {
+            List<CampeonatoPosicion> filas = inv.getArgument(0);
+            if (guardadas.isEmpty()) {
+                guardadas.addAll(filas);
+            }
+            return filas;
+        });
+        return guardadas;
+    }
+
+    @Test
+    void recalcularPuntosSumaTodasLasCarrerasYReemplazaLoAcumulado() {
+        when(campeonatoRepository.findById(1L)).thenReturn(Optional.of(campeonato));
+        lenient().when(sistemaPuntosFactory.de(any()))
+                .thenReturn(new org.example.lfmnacional.service.puntos.SistemaPuntosF1());
+        // Ana: 1ra en la carrera 1 y 3ra en la carrera 2. Beto: 2da y 4ta.
+        when(resultadoCarreraRepository.findByCarrera_Campeonato_Id(1L)).thenReturn(List.of(
+                ResultadoCarrera.builder().carrera(carrera).usuario(usuario1).posicionFinal(1).build(),
+                ResultadoCarrera.builder().carrera(carrera).usuario(usuario2).posicionFinal(2).build(),
+                ResultadoCarrera.builder().carrera(carrera).usuario(usuario1).posicionFinal(3).build(),
+                ResultadoCarrera.builder().carrera(carrera).usuario(usuario2).posicionFinal(4).build()));
+
+        List<CampeonatoPosicion> guardadas = capturarFilasGuardadas();
+
+        campeonatoService.recalcularPuntos(1L);
+
+        // 25 + 15 = 40 para Ana, 18 + 12 = 30 para Beto con SistemaPuntosF1.
+        assertThat(guardadas).hasSize(2);
+        assertThat(guardadas).filteredOn(p -> p.getUsuario().getId().equals(1L))
+                .singleElement().extracting(CampeonatoPosicion::getPuntos).isEqualTo(40);
+        assertThat(guardadas).filteredOn(p -> p.getUsuario().getId().equals(2L))
+                .singleElement().extracting(CampeonatoPosicion::getPuntos).isEqualTo(30);
+        // Se borra la tabla antes de rehacerla, si no las filas viejas sobreviven.
+        verify(campeonatoPosicionRepository).deleteByCampeonato_Id(1L);
+    }
+
+    @Test
+    void recalcularPuntosIgnoraResultadosSinPosicionFinal() {
+        when(campeonatoRepository.findById(1L)).thenReturn(Optional.of(campeonato));
+        lenient().when(sistemaPuntosFactory.de(any()))
+                .thenReturn(new org.example.lfmnacional.service.puntos.SistemaPuntosF1());
+        when(resultadoCarreraRepository.findByCarrera_Campeonato_Id(1L)).thenReturn(List.of(
+                ResultadoCarrera.builder().carrera(carrera).usuario(usuario1).posicionFinal(1).build(),
+                ResultadoCarrera.builder().carrera(carrera).usuario(usuario2).posicionFinal(null).build()));
+
+        List<CampeonatoPosicion> guardadas = capturarFilasGuardadas();
+
+        campeonatoService.recalcularPuntos(1L);
+
+        // El que no tiene posicion no entra: no hay que inventarle una fila en 0.
+        assertThat(guardadas).hasSize(1);
+        assertThat(guardadas.get(0).getUsuario().getId()).isEqualTo(1L);
+    }
+
+    @Test
+    void recalcularPuntosDejaLaTablaVaciaSiNoHayResultados() {
+        when(campeonatoRepository.findById(1L)).thenReturn(Optional.of(campeonato));
+        lenient().when(sistemaPuntosFactory.de(any()))
+                .thenReturn(new org.example.lfmnacional.service.puntos.SistemaPuntosF1());
+        when(resultadoCarreraRepository.findByCarrera_Campeonato_Id(1L)).thenReturn(List.of());
+
+        List<List<CampeonatoPosicion>> guardadas = new ArrayList<>();
+        when(campeonatoPosicionRepository.saveAll(any())).thenAnswer(inv -> {
+            guardadas.add(new ArrayList<>(inv.<List<CampeonatoPosicion>>getArgument(0)));
+            return inv.getArgument(0);
+        });
+
+        campeonatoService.recalcularPuntos(1L);
+
+        // Se borra la tabla igual: si antes habia filas de carreras que ya no
+        // tienen resultados, tienen que irse.
+        verify(campeonatoPosicionRepository).deleteByCampeonato_Id(1L);
+        assertThat(guardadas).allSatisfy(filas -> assertThat(filas).isEmpty());
+    }
+
+    @Test
+    void recalcularPuntosAsignaPosicionesSegunPuntos() {
+        when(campeonatoRepository.findById(1L)).thenReturn(Optional.of(campeonato));
+        lenient().when(sistemaPuntosFactory.de(any()))
+                .thenReturn(new org.example.lfmnacional.service.puntos.SistemaPuntosF1());
+        when(resultadoCarreraRepository.findByCarrera_Campeonato_Id(1L)).thenReturn(List.of(
+                ResultadoCarrera.builder().carrera(carrera).usuario(usuario2).posicionFinal(1).build(),
+                ResultadoCarrera.builder().carrera(carrera).usuario(usuario1).posicionFinal(2).build()));
+
+        List<CampeonatoPosicion> guardadas = capturarFilasGuardadas();
+        // findByCampeonato_IdOrderByPuntosDesc es lo que usa recalcularPosiciones.
+        when(campeonatoPosicionRepository.findByCampeonato_IdOrderByPuntosDesc(1L))
+                .thenAnswer(inv -> {
+                    List<CampeonatoPosicion> orden = new ArrayList<>(guardadas);
+                    orden.sort((a, b) -> b.getPuntos() - a.getPuntos());
+                    return orden;
+                });
+
+        campeonatoService.recalcularPuntos(1L);
+
+        assertThat(guardadas).filteredOn(p -> p.getUsuario().getId().equals(2L))
+                .singleElement().extracting(CampeonatoPosicion::getPosicion).isEqualTo(1);
+        assertThat(guardadas).filteredOn(p -> p.getUsuario().getId().equals(1L))
+                .singleElement().extracting(CampeonatoPosicion::getPosicion).isEqualTo(2);
+    }
+
+    @Test
+    void recalcularPuntosWorksConCampeonatoCerrado() {
+        // Corregir la tabla no es agregar participaciones: si el campeonato ya
+        // termino y se aprueba una apelacion, los puntos tienen que corregirse igual.
+        Campeonato cerrado = Campeonato.builder().id(1L).nombre("Test Championship")
+                .temporada("2026").categoria(categoria).estado(EstadoCampeonato.CERRADO)
+                .visibilidad(VisibilidadCampeonato.PUBLICO).build();
+        when(campeonatoRepository.findById(1L)).thenReturn(Optional.of(cerrado));
+        lenient().when(sistemaPuntosFactory.de(any()))
+                .thenReturn(new org.example.lfmnacional.service.puntos.SistemaPuntosF1());
+        when(resultadoCarreraRepository.findByCarrera_Campeonato_Id(1L)).thenReturn(List.of(
+                ResultadoCarrera.builder().carrera(carrera).usuario(usuario1).posicionFinal(1).build()));
+
+        List<CampeonatoPosicion> guardadas = capturarFilasGuardadas();
+        when(campeonatoPosicionRepository.findByCampeonato_IdOrderByPuntosDesc(1L))
+                .thenReturn(List.of());
+
+        campeonatoService.recalcularPuntos(1L);
+
+        verify(campeonatoPosicionRepository).deleteByCampeonato_Id(1L);
+        assertThat(guardadas).singleElement()
+                .satisfies(fila -> {
+                    assertThat(fila.getUsuario().getId()).isEqualTo(1L);
+                    assertThat(fila.getPuntos()).isEqualTo(25);
+                });
     }
 }

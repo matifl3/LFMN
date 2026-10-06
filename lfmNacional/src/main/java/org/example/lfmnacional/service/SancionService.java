@@ -15,9 +15,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -36,6 +38,7 @@ public class SancionService {
     private final ResolucionIncidenteRepository resolucionIncidenteRepository;
     private final UsuarioService usuarioService;
     private final CarreraService carreraService;
+    private final CampeonatoService campeonatoService;
 
     public Sancion getEntity(Long id) {
         return sancionRepository.findById(id)
@@ -209,19 +212,50 @@ public class SancionService {
     }
 
     private void aplicarPerdidaPuestos(Sancion sancion) {
+        moverEnClasificacion(sancion, Math.abs(sancion.getValor() != null ? sancion.getValor() : 0));
+    }
+
+    /**
+     * Perder puestos NO es sumar el valor a {@code posicionFinal}. Si el
+     * sancionado cae justo sobre la posicion de otro, los dos quedan empatados y
+     * el renumerado por numero le termina dando el puesto mejor al sancionado:
+     * en una carrera de 4, un 2do con 2 puestos de penalizacion terminaba 3ro en
+     * vez de 4to, o sea la penalizacion se perdia a medias.
+     *
+     * <p>Lo que corresponde es moverlo N lugares en la lista de la clasificacion
+     * y renumerar desde 1, que es como se aplica una perdida de puestos. El
+     * valor se toma absoluto: en un stewart penalty siempre se pierden lugares,
+     * escribir "-2" no deberia ser un premio de dos puestos.
+     */
+    private void moverEnClasificacion(Sancion sancion, int desplazamiento) {
         if (sancion.getCarrera() == null || sancion.getValor() == null) {
             return;
         }
-        ResultadoCarrera resultado = resultadoCarreraRepository
-                .findByCarrera_IdAndUsuario_Id(sancion.getCarrera().getId(), sancion.getUsuario().getId())
-                .orElseThrow(() -> new BusinessException(
-                        "El usuario no tiene resultado en la carrera indicada"));
-        resultado.setPosicionFinal(resultado.getPosicionFinal() + sancion.getValor());
-        resultadoCarreraRepository.save(resultado);
-        reordenarResultados(sancion.getCarrera().getId());
+        List<ResultadoCarrera> clasificacion = resultadosClasificados(sancion.getCarrera().getId());
+        int origen = indiceDe(clasificacion, sancion);
+        int destino = Math.min(Math.max(origen + desplazamiento, 0), clasificacion.size() - 1);
+        ResultadoCarrera resultado = clasificacion.remove(origen);
+        clasificacion.add(destino, resultado);
+        renumerar(clasificacion);
+        resultadoCarreraRepository.saveAll(clasificacion);
+        recalcularTablaDelCampeonato(sancion.getCarrera());
     }
 
     private void aplicarSegundos(Sancion sancion) {
+        ajustarTiempo(sancion, true);
+    }
+
+    /**
+     * Una penalizacion de tiempo tiene que <em>reclasificar</em>: el piloto cae
+     * en la clasificacion segun su tiempo total nuevo, no en el puesto que tenia
+     * antes. Antes solo se le sumaba el tiempo y se renumeraba por
+     * {@code posicionFinal}, que no cambia, asi que la penalizacion no movia a
+     * nadie de lugar: el piloto quedaba con un tiempo peor y el mismo puesto.
+     *
+     * <p>Sin tiempo total no hay contra que comparar, asi que en vez de un NPE
+     * (sumarle a null) se corta con un mensaje claro.
+     */
+    private void ajustarTiempo(Sancion sancion, boolean sumar) {
         if (sancion.getCarrera() == null || sancion.getValor() == null) {
             return;
         }
@@ -229,9 +263,42 @@ public class SancionService {
                 .findByCarrera_IdAndUsuario_Id(sancion.getCarrera().getId(), sancion.getUsuario().getId())
                 .orElseThrow(() -> new BusinessException(
                         "El usuario no tiene resultado en la carrera indicada"));
-        resultado.setTiempoTotal(resultado.getTiempoTotal() + sancion.getValor() * 1000L);
+        if (resultado.getTiempoTotal() == null) {
+            throw new BusinessException("El usuario no tiene tiempo total en la carrera indicada");
+        }
+        long delta = Math.abs((long) sancion.getValor()) * 1000L;
+        resultado.setTiempoTotal(sumar ? resultado.getTiempoTotal() + delta : resultado.getTiempoTotal() - delta);
         resultadoCarreraRepository.save(resultado);
-        reordenarResultados(sancion.getCarrera().getId());
+        reclasificarPorTiempo(sancion.getCarrera().getId());
+        recalcularTablaDelCampeonato(sancion.getCarrera());
+    }
+
+    /** Reordena por tiempo total ascendente y renumera. Los que no tienen tiempo quedan afuera. */
+    private void reclasificarPorTiempo(Long carreraId) {
+        List<ResultadoCarrera> porTiempo = resultadosDeCarrera(carreraId).stream()
+                .filter(r -> r.getTiempoTotal() != null)
+                .sorted(Comparator.comparing(ResultadoCarrera::getTiempoTotal))
+                .collect(Collectors.toCollection(ArrayList::new));
+        renumerar(porTiempo);
+        resultadoCarreraRepository.saveAll(porTiempo);
+    }
+
+    /**
+     * Mover posiciones o tiempos de una carrera cambia los puntos que el
+     * campeonato le da a ese piloto, asi que la tabla se rehace. Sin esto la
+     * sancion se ve reflejada en el resultado de la carrera y no en el
+     * campeonato, que es donde se juega el campeonato.
+     *
+     * <p>Va como llamada a otro bean a proposito: el {@code @CacheEvict} de la
+     * tabla de posiciones vive en {@code CampeonatoService}, y Spring solo lo
+     * aplica si la llamada entra por su proxy, no desde adentro de la misma
+     * clase.
+     */
+    private void recalcularTablaDelCampeonato(Carrera carrera) {
+        if (carrera.getCampeonato() == null) {
+            return;
+        }
+        campeonatoService.recalcularPuntos(carrera.getCampeonato().getId());
     }
 
     private void revertirCambioElo(Usuario usuario, Integer cambio, Sancion sancion) {
@@ -261,46 +328,44 @@ public class SancionService {
     }
 
     private void revertirPerdidaPuestos(Sancion sancion) {
-        if (sancion.getCarrera() == null || sancion.getValor() == null) {
-            return;
-        }
-        ResultadoCarrera resultado = resultadoCarreraRepository
-                .findByCarrera_IdAndUsuario_Id(sancion.getCarrera().getId(), sancion.getUsuario().getId())
-                .orElseThrow(() -> new BusinessException(
-                        "El usuario no tiene resultado en la carrera indicada"));
-        resultado.setPosicionFinal(resultado.getPosicionFinal() - sancion.getValor());
-        resultadoCarreraRepository.save(resultado);
-        reordenarResultados(sancion.getCarrera().getId());
+        moverEnClasificacion(sancion, -Math.abs(sancion.getValor() != null ? sancion.getValor() : 0));
     }
 
     private void revertirSegundos(Sancion sancion) {
-        if (sancion.getCarrera() == null || sancion.getValor() == null) {
-            return;
-        }
-        ResultadoCarrera resultado = resultadoCarreraRepository
-                .findByCarrera_IdAndUsuario_Id(sancion.getCarrera().getId(), sancion.getUsuario().getId())
-                .orElseThrow(() -> new BusinessException(
-                        "El usuario no tiene resultado en la carrera indicada"));
-        resultado.setTiempoTotal(resultado.getTiempoTotal() - sancion.getValor() * 1000L);
-        resultadoCarreraRepository.save(resultado);
-        reordenarResultados(sancion.getCarrera().getId());
+        ajustarTiempo(sancion, false);
     }
 
-    private void reordenarResultados(Long carreraId) {
-        List<ResultadoCarrera> resultados = resultadoCarreraRepository.findByCarrera_IdOrderByPosicionFinalAsc(carreraId);
-        List<ResultadoCarrera> ordenados = resultados.stream()
-                .sorted(Comparator.comparing(
-                        ResultadoCarrera::getPosicionFinal,
-                        Comparator.nullsLast(Integer::compareTo)))
-                .toList();
-        int pos = 1;
-        for (ResultadoCarrera resultado : ordenados) {
-            if (resultado.getPosicionFinal() == null) {
-                continue;
+    /**
+     * Los resultados de la carrera. El metodo del repository viene ordenado por
+     * posicion, pero abajo cada helper lo reordena por lo que necesita, asi que
+     * el nombre no dice mas que "traeme los resultados".
+     */
+    private List<ResultadoCarrera> resultadosDeCarrera(Long carreraId) {
+        return resultadoCarreraRepository.findByCarrera_IdOrderByPosicionFinalAsc(carreraId);
+    }
+
+    /** Los que tienen posicion asignada, del 1ero al ultimo. Los demas se dejan como estan. */
+    private List<ResultadoCarrera> resultadosClasificados(Long carreraId) {
+        return resultadosDeCarrera(carreraId).stream()
+                .filter(r -> r.getPosicionFinal() != null)
+                .sorted(Comparator.comparing(ResultadoCarrera::getPosicionFinal))
+                .collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    private int indiceDe(List<ResultadoCarrera> clasificacion, Sancion sancion) {
+        for (int i = 0; i < clasificacion.size(); i++) {
+            if (clasificacion.get(i).getUsuario().getId().equals(sancion.getUsuario().getId())) {
+                return i;
             }
+        }
+        throw new BusinessException("El usuario no tiene resultado en la carrera indicada");
+    }
+
+    private void renumerar(List<ResultadoCarrera> clasificacion) {
+        int pos = 1;
+        for (ResultadoCarrera resultado : clasificacion) {
             resultado.setPosicionFinal(pos++);
         }
-        resultadoCarreraRepository.saveAll(ordenados);
     }
 
     private void notificar(Sancion sancion) {
