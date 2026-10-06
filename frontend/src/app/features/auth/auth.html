@@ -123,50 +123,12 @@
         <div>
           <strong style="font-family: var(--font-display); text-transform: uppercase; font-size: var(--fs-sm)">Tu Steam no está vinculado</strong>
           <p class="text-secondary" style="font-size: var(--fs-xs); margin-top: var(--sp-1)">
-            Si ya tenés una cuenta, ingresá con tu email y contraseña para vincularla. Si sos nuevo, creá una cuenta.
+            Completá los datos para crear tu cuenta de piloto y vincular tu Steam.
           </p>
         </div>
       </div>
-      <form [formGroup]="steamLinkForm" (ngSubmit)="vincularCuentaExistente()" style="margin-top: var(--sp-5)" novalidate>
-        <div class="field" [class.invalid]="invalido(steamLinkForm, 'email')">
-          <label for="steam-link-email">Email de tu cuenta</label>
-          <input
-            id="steam-link-email"
-            class="input"
-            type="email"
-            placeholder="piloto@ejemplo.com"
-            formControlName="email"
-            [attr.aria-invalid]="invalido(steamLinkForm, 'email') || null"
-            [attr.aria-describedby]="invalido(steamLinkForm, 'email') ? 'steam-link-email-err' : null"
-          />
-          @for (e of errores(steamLinkForm, 'email'); track e) {
-            <span id="steam-link-email-err" class="error-msg">{{ e }}</span>
-          }
-        </div>
-        <div class="field" [class.invalid]="invalido(steamLinkForm, 'password')">
-          <label for="steam-link-pass">Contraseña</label>
-          <app-password-input
-            id="steam-link-pass"
-            autocomplete="current-password"
-            formControlName="password"
-            [invalido]="invalido(steamLinkForm, 'password')"
-            [ariaDescribedBy]="invalido(steamLinkForm, 'password') ? 'steam-link-pass-err' : null"
-          />
-          @for (e of errores(steamLinkForm, 'password'); track e) {
-            <span id="steam-link-pass-err" class="error-msg">{{ e }}</span>
-          }
-        </div>
-        @if (steamLinkForm.touched && steamLinkForm.invalid) {
-          <div class="error-summary" role="alert">Revisá los campos marcados para continuar.</div>
-        }
-        <button type="submit" class="btn btn-primary btn-lg btn-block" [class.is-loading]="cargando()">
-          Ingresar y vincular Steam
-        </button>
-      </form>
 
-      <div class="divider-or">o creá una cuenta nueva</div>
-
-      <form [formGroup]="steamForm" (ngSubmit)="crearCuentaSteam()" novalidate>
+      <form [formGroup]="steamForm" (ngSubmit)="crearCuentaSteam()" style="margin-top: var(--sp-5)" novalidate>
         <input type="hidden" formControlName="guidSteam" />
         <div class="field" [class.invalid]="invalido(steamForm, 'nombrePiloto')">
           <label for="steam-nombre">Nombre de piloto</label>

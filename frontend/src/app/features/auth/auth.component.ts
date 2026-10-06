@@ -37,11 +37,6 @@ export class AuthComponent implements OnInit {
     email: ['', [Validators.required, Validators.email]],
   });
 
-  readonly steamLinkForm = this.fb.nonNullable.group({
-    email: ['', [Validators.required, Validators.email]],
-    password: ['', Validators.required],
-  });
-
   readonly registerForm = this.fb.nonNullable.group({
     nombrePiloto: ['', Validators.required],
     email: ['', [Validators.required, Validators.email]],
@@ -160,33 +155,6 @@ export class AuthComponent implements OnInit {
         this.cargando.set(false);
         this.auth.setSesion(data.token, data.usuario);
         this.toast.success('Cuenta creada correctamente');
-        this.redirigir();
-      },
-      error: (err) => {
-        this.cargando.set(false);
-        this.toast.error(apiError(err));
-      },
-    });
-  }
-
-  vincularCuentaExistente(): void {
-    if (this.steamLinkForm.invalid) {
-      this.marcarTocados(this.steamLinkForm);
-      this.toast.error('Completá el email y la contraseña de tu cuenta.');
-      return;
-    }
-    this.cargando.set(true);
-    const v = this.steamLinkForm.getRawValue();
-    this.api.post<LoginResponseLFM>('/usuarios/vincular-steam-login', {
-      email: v.email.trim(),
-      password: v.password,
-      guidSteam: this.steamForm.getRawValue().guidSteam,
-    }).subscribe({
-      next: (data) => {
-        this.cargando.set(false);
-        this.auth.setSesion(data.token, data.usuario);
-        this.toast.success(`Steam vinculado a tu cuenta. ¡Bienvenido, ${data.usuario.nombrePiloto || 'piloto'}!`);
-        this.avisarSteamVinculacion(data.usuario);
         this.redirigir();
       },
       error: (err) => {
