@@ -742,6 +742,12 @@ textarea.textarea {
   font-weight: 700;
   color: var(--texto-principal);
 }
+.stat-card .stat-sub {
+  display: block;
+  margin-top: var(--sp-1);
+  font-size: var(--fs-xs);
+  color: var(--texto-terciario);
+}
 
 // ---- Star rating -------------------------------------------------------------
 .stars {

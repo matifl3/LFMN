@@ -129,3 +129,19 @@
 .nowrap {
   white-space: nowrap;
 }
+
+// Texto secundario. El HTML de esta vista ya usaba muted/small desde antes y
+// no hay equivalente global, asi que se definen aca.
+.muted {
+  color: var(--texto-terciario);
+}
+
+.small {
+  font-size: var(--fs-xs);
+}
+
+// La grilla de KPIs global trae un margen vertical pensado para secciones sueltas;
+// dentro del panel de detalle el ritmo lo da el gap de la columna.
+.mc-detail .stat-grid {
+  margin-block: 0;
+}

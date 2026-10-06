@@ -1,7 +1,7 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { SlicePipe } from '@angular/common';
+import { DecimalPipe, SlicePipe } from '@angular/common';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { ApiService, apiError } from '../../core/services/api.service';
@@ -10,11 +10,14 @@ import { AuthService } from '../../core/services/auth.service';
 import {
   Campeonato,
   Carrera,
+  EstadisticasCampeonato,
   MiembroCampeonato,
   TablaPosicion,
 } from '../../core/models/models';
 import { Chip } from '../../shared/components/chip/chip';
 import { Avatar } from '../../shared/components/avatar/avatar';
+import { RankBadge } from '../../shared/components/rank-badge/rank-badge';
+import { fmtLap, fmtFecha } from '../../core/utils/formato';
 
 const ESTADO_CARRERA_LABEL: Record<string, string> = {
   PROGRAMADA: 'Programada',
@@ -30,12 +33,12 @@ const ESTADO_CAMPEONATO_LABEL: Record<string, string> = {
   CERRADO: 'Cerrado',
 };
 
-type Panel = 'pilotos' | 'carreras' | 'tabla' | 'importar';
+type Panel = 'pilotos' | 'carreras' | 'tabla' | 'estadisticas' | 'importar';
 
 @Component({
   selector: 'app-mis-campeonatos',
   standalone: true,
-  imports: [FormsModule, RouterLink, SlicePipe, Chip, Avatar],
+  imports: [FormsModule, RouterLink, SlicePipe, DecimalPipe, Chip, Avatar, RankBadge],
   templateUrl: './my-championships.component.html',
   styleUrl: './my-championships.component.scss',
 })
@@ -52,6 +55,7 @@ export class MisCampeonatosComponent implements OnInit {
   readonly miembros = signal<MiembroCampeonato[]>([]);
   readonly carreras = signal<Carrera[]>([]);
   readonly tabla = signal<TablaPosicion[]>([]);
+  readonly stats = signal<EstadisticasCampeonato | null>(null);
 
   /** El alta/edicion de campeonato vive en el panel de admin, no aca. */
   readonly esAdminGlobal = computed(() => this.auth.esAdmin());
@@ -77,11 +81,44 @@ export class MisCampeonatosComponent implements OnInit {
   readonly ESTADO_CARRERA_LABEL = ESTADO_CARRERA_LABEL;
   readonly ESTADO_CAMPEONATO_LABEL = ESTADO_CAMPEONATO_LABEL;
   readonly estadosCarrera = Object.keys(ESTADO_CARRERA_LABEL);
+  readonly fmtLap = fmtLap;
+  readonly fmtFecha = fmtFecha;
+
+  /** Con signo, para los deltas de Elo y Safety Rating. */
+  delta(v: number): string {
+    if (v === 0) return '0';
+    return v > 0 ? '+' + v : String(v);
+  }
+
+  deltaColor(v: number): string | null {
+    if (v > 0) return 'var(--status-positivo-hi)';
+    if (v < 0) return 'var(--status-peligro)';
+    return null;
+  }
 
   readonly seleccionado = computed<Campeonato | null>(() => {
     const id = this.selectedId();
     return this.campeonatos().find((c) => c.id === id) ?? null;
   });
+
+  /** Piloto con mas puntos, para el dato destacado de la pestana. */
+  readonly lider = computed(() => {
+    const pilotos = this.stats()?.pilotos ?? [];
+    return pilotos.length > 0 ? pilotos[0] : null;
+  });
+
+  /** Ancho de la barra de asistencia de una ronda, en porcentaje del cupo. */
+  readonly asistenciaPct = (inscriptos: number, cupo: number): number => {
+    if (!cupo || cupo <= 0) return 0;
+    return Math.min(100, Math.round((inscriptos / cupo) * 100));
+  };
+
+  /** Ancho de la barra de participacion de un piloto, contra el maximo del campeonato. */
+  readonly participacionPct = (carreras: number): number => {
+    const max = Math.max(...(this.stats()?.pilotos ?? []).map((p) => p.carrerasDisputadas), 0);
+    if (max === 0) return 0;
+    return Math.round((carreras / max) * 100);
+  };
 
   ngOnInit(): void {
     this.cargar();
@@ -124,11 +161,18 @@ export class MisCampeonatosComponent implements OnInit {
       tabla: this.api
         .list<TablaPosicion>(`/campeonatos/${id}/tabla`)
         .pipe(catchError(() => of([] as TablaPosicion[]))),
+      // Solo el organizador del campeonato (o el ADMIN global) puede leerlo. Si
+      // el backend responde 403, la pestana muestra su estado vacio en vez de
+      // romper la carga del resto del detalle.
+      stats: this.api
+        .get<EstadisticasCampeonato>(`/campeonatos/${id}/estadisticas`)
+        .pipe(catchError(() => of(null))),
     }).subscribe({
       next: (r) => {
         this.miembros.set(r.miembros);
         this.carreras.set(r.carreras);
         this.tabla.set(r.tabla);
+        this.stats.set(r.stats);
       },
       error: () => this.toast.error('No se pudo cargar el detalle del campeonato.'),
     });

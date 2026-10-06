@@ -79,4 +79,12 @@ public interface ResultadoCarreraRepository extends JpaRepository<ResultadoCarre
 
     @Query("select count(distinct r.usuario.id) from ResultadoCarrera r")
     long countUsuariosConResultados();
+
+    /**
+     * Resultados de todas las carreras de un campeonato, para las estadisticas del
+     * campeonato. Se cargan enteras y se agregan en memoria (ver
+     * CampeonatoEstadisticasService): un campeonato son unas 30 carreras por 24
+     * pilotos, asi que una consulta agrupada por piloto no paga el costo.
+     */
+    List<ResultadoCarrera> findByCarrera_Campeonato_Id(Long campeonatoId);
 }

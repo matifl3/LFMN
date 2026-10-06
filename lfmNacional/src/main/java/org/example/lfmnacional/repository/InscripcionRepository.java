@@ -33,4 +33,11 @@ public interface InscripcionRepository extends JpaRepository<Inscripcion, Long> 
 
     @Query("select i.carrera.id, count(i) from Inscripcion i where i.estado = 'INSCRIPTO' group by i.carrera.id")
     List<Object[]> countInscriptosPorCarreraRaw();
+
+/**
+     * Inscripciones de todas las carreras de un campeonato. Sirve para contrastar
+     * cuantos se anotaron contra cuantos efectivamente participaron, que es el
+     * dato operativo que le importa al organizador.
+     */
+    List<Inscripcion> findByCarrera_Campeonato_Id(Long campeonatoId);
 }

@@ -4,10 +4,12 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.lfmnacional.dto.campeonato.CampeonatoRequest;
 import org.example.lfmnacional.dto.campeonato.CampeonatoResponse;
+import org.example.lfmnacional.dto.campeonato.EstadisticasCampeonatoResponse;
 import org.example.lfmnacional.dto.campeonato.TablaPosicionResponse;
 import org.example.lfmnacional.entity.Campeonato;
 import org.example.lfmnacional.entity.Usuario;
 import org.example.lfmnacional.service.CampeonatoAccesoService;
+import org.example.lfmnacional.service.CampeonatoEstadisticasService;
 import org.example.lfmnacional.service.CampeonatoService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +26,7 @@ public class CampeonatoController {
 
     private final CampeonatoService campeonatoService;
     private final CampeonatoAccesoService accesoService;
+    private final CampeonatoEstadisticasService estadisticasService;
 
     @GetMapping
     public List<CampeonatoResponse> listAll(@AuthenticationPrincipal Usuario usuario) {
@@ -57,6 +60,21 @@ public class CampeonatoController {
         Campeonato campeonato = campeonatoService.getEntity(id);
         accesoService.exigirVeContenido(usuario, campeonato);
         return campeonatoService.getTabla(id);
+    }
+
+    /**
+     * Estadisticas agregadas del campeonato para su organizador. A diferencia de
+     * la tabla, exige administrar el campeonato y no solo verlo: el resto del
+     * contenido ya se filtra por {@code veContenido}, pero estos numeros son de
+     * la organizacion (asistencia, incidentes, sanciones).
+     */
+    @GetMapping("/{id}/estadisticas")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('ADMIN_CAMPEONATO')")
+    public EstadisticasCampeonatoResponse estadisticas(@PathVariable Long id,
+                                                       @AuthenticationPrincipal Usuario usuario) {
+        Campeonato campeonato = campeonatoService.getEntity(id);
+        accesoService.exigirAdministra(usuario, campeonato);
+        return estadisticasService.estadisticas(campeonato);
     }
 
     /** Solo el ADMIN global crea campeonatos. */

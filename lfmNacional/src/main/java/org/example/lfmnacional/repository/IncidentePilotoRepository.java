@@ -24,4 +24,11 @@ public interface IncidentePilotoRepository extends JpaRepository<IncidentePiloto
     @Modifying
     @Query("delete from IncidentePiloto ip where ip.incidente.reportante.id = ?1")
     void deleteByIncidenteReportanteId(Long reportanteId);
+
+    /**
+     * Pilotos involucrados en los incidentes de todas las carreras de un
+     * campeonato. Trae el rol (CAUSANTE / AFECTADO) para poder separar los
+     * incidentes que el piloto provoco de los que le pasaron.
+     */
+    List<IncidentePiloto> findByIncidente_Carrera_Campeonato_Id(Long campeonatoId);
 }

@@ -29,4 +29,7 @@ public interface IncidenteRepository extends JpaRepository<Incidente, Long> {
     @Modifying
     @Query("delete from Incidente i where i.reportante.id = ?1")
     void deleteByReportante_Id(Long reportanteId);
+
+    /** Incidentes de todas las carreras de un campeonato (estadisticas del campeonato). */
+    List<Incidente> findByCarrera_Campeonato_Id(Long campeonatoId);
 }

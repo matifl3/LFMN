@@ -156,6 +156,76 @@ export interface TablaPosicion {
   posicion: number;
 }
 
+/**
+ * Estadisticas agregadas de un campeonato, para su organizador.
+ * GET /api/campeonatos/{id}/estadisticas — exige administrar el campeonato.
+ * `rondas` viene en orden de fecha descendente; `pilotos` en el orden de la
+ * tabla de posiciones. Los puntos NO se recalculan: salen de la tabla.
+ */
+export interface EstadisticasCampeonato {
+  campeonatoId: number;
+  nombre: string;
+  temporada?: string;
+  categoriaNombre?: string;
+  estado?: string;
+  carrerasTotales: number;
+  carrerasFinalizadas: number;
+  carrerasEnCurso: number;
+  carrerasProgramadas: number;
+  carrerasCanceladas: number;
+  pilotosHabilitados: number;
+  pilotosConParticipacion: number;
+  participaciones: number;
+  abandono: number;
+  porcentajeFinalizacion: number;
+  incidentes: number;
+  incidentesPendientes: number;
+  sanciones: number;
+  rondas: RondaCampeonatoEstadistica[];
+  pilotos: PilotoCampeonatoEstadistica[];
+}
+
+/** Una fila de la tabla "por ronda". `ausentes` = inscriptos que no corrieron. */
+export interface RondaCampeonatoEstadistica {
+  carreraId: number;
+  nombre: string;
+  circuito?: string;
+  fecha?: string;
+  estado?: string;
+  cupoMaximo: number;
+  inscriptos: number;
+  presentes: number;
+  ausentes: number;
+  abandono: number;
+  incidentes: number;
+  sanciones: number;
+  ganador?: string;
+  mejorVueltaMs?: number;
+  mejorVueltaPiloto?: string;
+}
+
+/** Una fila de la tabla "por piloto". `posicion` 0 = todavia sin puntos. */
+export interface PilotoCampeonatoEstadistica {
+  usuarioId: number;
+  nombrePiloto: string;
+  fotoPerfil?: string;
+  elo: number;
+  safetyRating: number;
+  posicion: number;
+  puntos: number;
+  carrerasDisputadas: number;
+  victorias: number;
+  podios: number;
+  poles: number;
+  vueltasRapidas: number;
+  abandono: number;
+  porcentajeFinalizacion: number;
+  eloGanado: number;
+  srGanado: number;
+  incidentes: number;
+  sanciones: number;
+}
+
 export interface Inscripcion {
   id: number;
   carreraId: number;
