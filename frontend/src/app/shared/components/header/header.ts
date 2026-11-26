@@ -1,5 +1,15 @@
-import { Component, HostListener, computed, effect, inject, signal } from '@angular/core';
-import { Router, RouterLink, RouterLinkActive } from '@angular/router';
+import {
+  Component,
+  ElementRef,
+  HostListener,
+  computed,
+  effect,
+  inject,
+  signal,
+} from '@angular/core';
+import { NavigationStart, Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { filter } from 'rxjs';
 import { ApiService, apiError } from '../../../core/services/api.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -10,8 +20,9 @@ export interface NavLink {
   label: string;
 }
 
-const BASE_LINKS: NavLink[] = [
-  { path: '/', label: 'Inicio' },
+// Secciones públicas de la liga. "Inicio" no está: el logo ya lleva a "/".
+// Lo personal (perfil, mis campeonatos, admin) vive en el menú del avatar.
+const NAV_LINKS: NavLink[] = [
   { path: '/carreras', label: 'Carreras' },
   { path: '/campeonato', label: 'Campeonato' },
   { path: '/categorias', label: 'Categorías' },
@@ -32,10 +43,12 @@ export class Header {
   private readonly api = inject(ApiService);
   private readonly toast = inject(ToastService);
   private readonly router = inject(Router);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
-  readonly navLinks = signal<NavLink[]>(BASE_LINKS);
+  readonly navLinks = NAV_LINKS;
   readonly noLeidas = signal(0);
   readonly menuAbierto = signal(false);
+  readonly menuUsuarioAbierto = signal(false);
   readonly miPerfil = computed(() => {
     const id = this.auth.user()?.id;
     return id ? ['/perfil', id] : ['/mi-perfil'];
@@ -44,20 +57,20 @@ export class Header {
   constructor() {
     effect(() => {
       if (this.auth.autenticado()) {
-        const links = [...BASE_LINKS];
-        const id = this.auth.user()?.id;
-        if (id) links.push({ path: `/perfil/${id}`, label: 'Mi perfil' });
-        if (this.auth.esOrganizador())
-          links.push({ path: '/mis-campeonatos', label: 'Mis campeonatos' });
-        if (this.auth.esModerador()) links.push({ path: '/admin', label: 'Admin' });
-        this.navLinks.set(links);
         this.cargarNoLeidas();
       } else {
-        this.navLinks.set(BASE_LINKS);
         this.noLeidas.set(0);
         this.menuAbierto.set(false);
+        this.menuUsuarioAbierto.set(false);
       }
     });
+
+    this.router.events
+      .pipe(
+        filter((e) => e instanceof NavigationStart),
+        takeUntilDestroyed(),
+      )
+      .subscribe(() => this.menuUsuarioAbierto.set(false));
   }
 
   cargarNoLeidas(): void {
@@ -72,14 +85,31 @@ export class Header {
     this.menuAbierto.update((v) => !v);
   }
 
+  alternarMenuUsuario(): void {
+    this.menuUsuarioAbierto.update((v) => !v);
+  }
+
   @HostListener('document:keydown', ['$event'])
   onKey(e: KeyboardEvent): void {
-    if (e.key === 'Escape' && this.menuAbierto()) this.menuAbierto.set(false);
+    if (e.key !== 'Escape') return;
+    if (this.menuAbierto()) this.menuAbierto.set(false);
+    if (this.menuUsuarioAbierto()) {
+      this.menuUsuarioAbierto.set(false);
+      this.host.nativeElement.querySelector<HTMLElement>('.user-menu-toggle')?.focus();
+    }
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(e: MouseEvent): void {
+    if (!this.menuUsuarioAbierto()) return;
+    const menu = this.host.nativeElement.querySelector('.user-menu');
+    if (menu && !menu.contains(e.target as Node)) this.menuUsuarioAbierto.set(false);
   }
 
   salir(): void {
     this.auth.logout();
     this.menuAbierto.set(false);
+    this.menuUsuarioAbierto.set(false);
     this.toast.success('Sesión cerrada');
     this.router.navigate(['/']);
   }

@@ -28,6 +28,87 @@
   }
 }
 
+// ---- Menú de usuario (avatar) ----------------------------------------------
+.user-menu {
+  position: relative;
+}
+
+.user-menu-toggle {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  background: none;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid var(--lbm-rojo);
+    outline-offset: 3px;
+  }
+}
+
+.user-menu-panel {
+  position: absolute;
+  top: calc(100% + var(--sp-2));
+  right: 0;
+  z-index: 50;
+  min-width: 220px;
+  display: flex;
+  flex-direction: column;
+  padding: var(--sp-2);
+  background: var(--bg-paneles);
+  border: 1px solid var(--borde-metal);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-lift);
+  animation: fadeIn 0.12s ease;
+
+  a,
+  .user-menu-salir {
+    display: block;
+    width: 100%;
+    padding: var(--sp-2) var(--sp-3);
+    border-radius: var(--r-sm);
+    font-family: var(--font-display);
+    font-size: var(--fs-xs);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    text-align: left;
+    color: var(--texto-secundario);
+    background: none;
+    border: none;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      color: var(--texto-principal);
+      background: var(--bg-superficie);
+    }
+  }
+
+  a.active {
+    color: var(--lbm-rojo-hi);
+  }
+
+  .user-menu-salir {
+    margin-top: var(--sp-1);
+    border-top: 1px solid var(--borde-hair);
+    border-radius: 0 0 var(--r-sm) var(--r-sm);
+    color: var(--lbm-rojo-hi);
+  }
+}
+
+.user-menu-head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--sp-2) var(--sp-3) var(--sp-3);
+  margin-bottom: var(--sp-1);
+  border-bottom: 1px solid var(--borde-hair);
+  font-size: var(--fs-xs);
+  overflow-wrap: anywhere;
+}
+
 .nav-overlay {
   position: fixed;
   inset: var(--header-h) 0 0 0;

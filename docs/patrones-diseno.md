@@ -40,21 +40,8 @@ declaran como tales.
 | Estructural | **Proxy** | `@Cacheable`, `@CacheEvict`, `@Transactional` | 14 / 27 / 168 ocurrencias |
 | Estructural | **Null Object** | `VueltaService.analisisCarrera()` (`Map.of()`, `List.of()`) | Aplicable a colecciones |
 
-**Lo que se eliminó de la versión anterior de este documento** por no ser GRASP ni GoF:
-idempotencia por hash, registry por clave, registry con TTL, dispatch por `switch` sobre
-enum, get-or-create, command object, mapper/assembler, service layer, compensating action,
-rate limit, fail-soft por paso, singleton "a la GoF" con clase privada, y las reglas
-transversales. Varios eran buenos hallazgos, pero describen convenciones del proyecto, no
-patrones de estos dos catálogos.
-
 ---
-
-## 2. GRASP
-
-GRASP no son clases sino **responsabilidades que hay que ubicar**. Los nueve se verifican
-uno por uno abajo, con los que no se cumplen marcados como tales.
-
-### 2.1 Creator
+### 2. Creator
 
 > *Ubica la creación de una clase A en la clase B que usa A, mantiene datos de A o usa A de
 > forma cercana.*
@@ -511,46 +498,3 @@ El beneficio concreto se ve en el anidamiento: `getOrDefault(uid, Map.of()).getO
 0L)` evita el doble `if (mapa != null)` que haría falta sin él. En el mismo método,
 `Long.MAX_VALUE` se usa como centinela para "sin dato", que es el otro extremo del mismo
 problema: reemplazar la ausencia por un valor que no estalla al comparar.
-
----
-
-## 4. Ausencias verificadas
-
-Se buscó cada patrón de GRASP y GoF en `src/main/java`. **Todos estos dan cero resultados**:
-
-| Patrón | Resultado |
-|---|---|
-| **Adapter** propio (una clase que envuelve a otra del proyecto) | no existe — el rol lo juega Spring (`PasswordEncoder` ← `BCryptPasswordEncoder`) |
-| **Bridge / Mediator / Memento / Interpreter** | no existen |
-| **Composite** | no existe — la cadena de inscripción es lineal, no un árbol |
-| **Decorator** propio | no existe |
-| **Factory Method** | no existe como método que decide la subclase — la decisión está en la Simple Factory |
-| **Iterator** propio | no existe — toda iteración es `for`/`stream` |
-| **Observer** / eventos (`ApplicationEventPublisher`, `@EventListener`) | **no existe**, y es la ausencia con más consecuencias: ver §2.9 |
-| **State** (máquina de estados explícita) | no existe — los estados son enums **datos** (`EstadoCarrera`, `EstadoIncidente`, `EstadoCampeonato`, `EstadoApelacion`, `EstadoInscripcion`: constantes sin comportamiento) y las transiciones son `if` y asignaciones |
-| **Visitor** | no existe — ni de objetos ni de enum; el dispatch por `switch` de `LogroService` y `SancionService` es la variante "poor man's Strategy", no un Visitor |
-| **Flyweight** | no existe |
-| **Singleton a la GoF** (`getInstance()`) | no existe — 0 ocurrencias |
-| **Singleton Null Object propio** | no existe el patrón completo — hay Null Object de colección (§3.7) y get-or-create |
-| **MapStruct** u otro mapper declarativo | no existe — el mapeo es a mano |
-
-Las dos ausencias que pesan:
-
-**No hay Observer.** `NotificacionService` solo lo usan los controllers; los 7 sitios internos
-escriben el repositorio directamente (§2.9). El idioma natural sería Observer con
-`ApplicationEventPublisher`, o un notificador interno con firma de dominio. Ninguno existe.
-
-**No hay State.** Los 5 enums de estado son cajas de constantes, no objetos. La máquina de
-estados de un campeonato o de un incidente está implícita en `if`s repartidos entre servicios.
-Consecuencia práctica: ninguna transición puede listarse ni validarse en un solo lugar.
-
----
-
-## 5. Referencias
-
-| Documento | Contenido |
-|---|---|
-| `docs/arquitectura-y-patrones.md` | Arquitectura, capas, reglas de trabajo y deuda técnica |
-| `docs/flujos.md` | Flujos funcionales y modelo de datos |
-| `docs/formulas-rating.md` | Fórmulas de Elo, Safety Rating y puntos |
-| `docs/analisis-mejoras.md` | Análisis previo de mejoras |

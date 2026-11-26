@@ -1,0 +1,15 @@
+Requisitos
+
+RF1- El usuario puede subir una replay
+RF2- el usuario puede visualizar todos los gráficos que se pueden mostrar
+RF3- el usuario puede seleccionar que gráficos puede ver 
+RF4- El usuario puede cambiar tamaño del grafico
+RF5- el usuario puede cambiar de pestaña en el panel de gráficos
+RF6- el usuario puede visualizar los en un gráficos en un dashboard personalizable
+RF7-
+
+RNF1- El sistema parsea la replay y la divide por vueltas
+RNF2- 
+RNF3-
+RNF4-
+RNF5-

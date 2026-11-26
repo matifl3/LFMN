@@ -1,0 +1,4 @@
+circulo de tracción 
+1-girarlo cosa de quede freno abajo acelerador arriba 
+2-necesitamos un circulo de tracción , para cada curva se toma desde que arranca la curva hasta que termina 
+4- si se detecta que la rueda esta deslizando se representa con un triangulo , si se detecta que alguna de las ruedas esta bloqueando se pinta con una x 

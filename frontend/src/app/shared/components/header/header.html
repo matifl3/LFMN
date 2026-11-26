@@ -6,13 +6,8 @@
     </a>
 
     <nav class="main-nav" [class.open]="menuAbierto()">
-      @for (link of navLinks(); track link.path) {
-        <a
-          [routerLink]="link.path"
-          routerLinkActive="active"
-          [routerLinkActiveOptions]="{ exact: link.path === '/' }"
-          (click)="menuAbierto.set(false)"
-        >
+      @for (link of navLinks; track link.path) {
+        <a [routerLink]="link.path" routerLinkActive="active" (click)="menuAbierto.set(false)">
           {{ link.label }}
         </a>
       }
@@ -51,17 +46,35 @@
       </a>
 
       @if (auth.autenticado()) {
-        <a [routerLink]="miPerfil()" aria-label="Mi perfil">
-          <app-avatar [user]="auth.user()" [size]="38" />
-        </a>
-        <button
-          type="button"
-          class="btn btn-ghost btn-sm"
-          style="font-size: var(--fs-2xs)"
-          (click)="salir()"
-        >
-          Salir
-        </button>
+        <div class="user-menu">
+          <button
+            type="button"
+            class="user-menu-toggle"
+            aria-label="Menú de usuario"
+            aria-controls="menu-usuario"
+            [attr.aria-expanded]="menuUsuarioAbierto()"
+            (click)="alternarMenuUsuario()"
+          >
+            <app-avatar [user]="auth.user()" [size]="38" />
+          </button>
+
+          @if (menuUsuarioAbierto()) {
+            <div id="menu-usuario" class="user-menu-panel">
+              <div class="user-menu-head">
+                <strong>{{ auth.user()?.nombrePiloto || 'Mi cuenta' }}</strong>
+                <span class="text-terciario">{{ auth.user()?.email }}</span>
+              </div>
+              <a [routerLink]="miPerfil()" routerLinkActive="active">Mi perfil</a>
+              @if (auth.esOrganizador()) {
+                <a routerLink="/mis-campeonatos" routerLinkActive="active">Mis campeonatos</a>
+              }
+              @if (auth.esModerador()) {
+                <a routerLink="/admin" routerLinkActive="active">Admin</a>
+              }
+              <button type="button" class="user-menu-salir" (click)="salir()">Salir</button>
+            </div>
+          }
+        </div>
       } @else {
         <a routerLink="/auth" class="btn btn-primary btn-sm">Ingresar</a>
       }
@@ -82,13 +95,8 @@
         <img src="logo.png" alt="" class="brand-logo" />
         <span class="brand-name">LBM Nacional<small>Late Brake Motorsport</small></span>
       </div>
-      @for (link of navLinks(); track link.path) {
-        <a
-          [routerLink]="link.path"
-          routerLinkActive="active"
-          [routerLinkActiveOptions]="{ exact: link.path === '/' }"
-          (click)="menuAbierto.set(false)"
-        >
+      @for (link of navLinks; track link.path) {
+        <a [routerLink]="link.path" routerLinkActive="active" (click)="menuAbierto.set(false)">
           {{ link.label }}
         </a>
       }
@@ -99,6 +107,9 @@
           <a routerLink="/notificaciones" (click)="menuAbierto.set(false)">Notificaciones</a>
           @if (auth.esOrganizador()) {
             <a routerLink="/mis-campeonatos" (click)="menuAbierto.set(false)">Mis campeonatos</a>
+          }
+          @if (auth.esModerador()) {
+            <a routerLink="/admin" (click)="menuAbierto.set(false)">Admin</a>
           }
           <button
             type="button"
