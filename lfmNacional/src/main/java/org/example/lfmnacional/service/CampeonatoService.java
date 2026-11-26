@@ -23,7 +23,6 @@ import org.example.lfmnacional.repository.UsuarioRepository;
 import org.example.lfmnacional.service.puntos.SistemaPuntos;
 import org.example.lfmnacional.service.puntos.SistemaPuntosFactory;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,6 +44,7 @@ public class CampeonatoService {
     private final CampeonatoAccesoService accesoService;
     private final UsuarioRepository usuarioRepository;
     private final SistemaPuntosFactory sistemaPuntosFactory;
+    private final TablaPosicionesService tablaPosicionesService;
 
     public Campeonato getEntity(Long id) {
         return campeonatoRepository.findById(id)
@@ -198,18 +198,15 @@ public class CampeonatoService {
     }
 
     /**
-     * El gate de membresia NO puede vivir adentro: con {@code @Cacheable} el cache
-     * se consulta antes de ejecutar el cuerpo, asi que un no miembro que ya warmio
-     * la cache se saltearia el control. Por eso el control va en el controller,
-     * contra {@link #getEntity(Long)}, y recien despues se llama este metodo.
+     * Tabla de posiciones para quien la pide: controla el acceso adentro de la
+     * transaccion (regla 3 de {@code docs/arquitectura-y-patrones.md}) y recien
+     * despues pide la tabla cacheada a {@link TablaPosicionesService}. El control
+     * no puede ir en el metodo cacheado: ver el javadoc de ese bean.
      */
     @Transactional(readOnly = true)
-    @Cacheable(value = "tabla_posiciones", key = "#id")
-    public List<TablaPosicionResponse> getTabla(Long id) {
-        getEntity(id);
-        return campeonatoPosicionRepository.findByCampeonato_IdOrderByPuntosDesc(id).stream()
-                .map(this::toTablaPosicion)
-                .toList();
+    public List<TablaPosicionResponse> getTabla(Long id, Usuario visor) {
+        accesoService.exigirVeContenido(visor, getEntity(id));
+        return tablaPosicionesService.tabla(id);
     }
 
     @Transactional
@@ -328,14 +325,6 @@ public class CampeonatoService {
             campeonatoPosicionRepository.saveAll(filas);
         }
         recalcularPosiciones(campeonatoId);
-    }
-
-    private TablaPosicionResponse toTablaPosicion(CampeonatoPosicion posicion) {
-        return new TablaPosicionResponse(
-                posicion.getUsuario().getId(),
-                posicion.getUsuario().getNombrePiloto(),
-                posicion.getPuntos(),
-                posicion.getPosicion());
     }
 
     private CampeonatoResponse toResponse(Campeonato campeonato, Usuario usuario, Set<Long> membresias) {

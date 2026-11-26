@@ -1,8 +1,8 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { forkJoin, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
 import { ApiService, apiError } from '../../core/services/api.service';
+import { ErrorCargaService } from '../../core/services/error-carga.service';
 import { ToastService } from '../../core/services/toast.service';
 import { AuthService } from '../../core/services/auth.service';
 import {
@@ -40,6 +40,7 @@ const DECISION_LABEL: Record<string, string> = {
 })
 export class IncidentsComponent implements OnInit {
   readonly api = inject(ApiService);
+  private readonly carga = inject(ErrorCargaService);
   readonly toast = inject(ToastService);
   readonly auth = inject(AuthService);
 
@@ -114,19 +115,19 @@ export class IncidentsComponent implements OnInit {
   private cargar(): void {
     const userId = this.auth.user()?.id;
     const sanciones$ = userId
-      ? this.api.list<Sancion>('/sanciones/usuario/' + userId).pipe(catchError(() => of([])))
+      ? this.api.list<Sancion>('/sanciones/usuario/' + userId).pipe(this.carga.siFalla([]))
       : of<Sancion[]>([]);
     const allSanciones$ = this.auth.esModerador()
-      ? this.api.list<Sancion>('/sanciones').pipe(catchError(() => of([])))
+      ? this.api.list<Sancion>('/sanciones').pipe(this.carga.siFalla([]))
       : of<Sancion[]>([]);
     const decisiones$ = this.auth.esModerador() && userId
-      ? this.api.list<DecisionComisario>('/incidentes/comisario/' + userId + '/decisiones').pipe(catchError(() => of([])))
+      ? this.api.list<DecisionComisario>('/incidentes/comisario/' + userId + '/decisiones').pipe(this.carga.siFalla([]))
       : of<DecisionComisario[]>([]);
     forkJoin({
-      incidentes: this.api.list<Incidente>('/incidentes').pipe(catchError(() => of([]))),
-      carreras: this.api.list<Carrera>('/carreras').pipe(catchError(() => of([]))),
-      apelaciones: this.api.list<Apelacion>('/apelaciones').pipe(catchError(() => of([]))),
-      usuariosBase: this.api.list<UsuarioBasico>('/usuarios/basico').pipe(catchError(() => of([]))),
+      incidentes: this.api.list<Incidente>('/incidentes').pipe(this.carga.siFalla([])),
+      carreras: this.api.list<Carrera>('/carreras').pipe(this.carga.siFalla([])),
+      apelaciones: this.api.list<Apelacion>('/apelaciones').pipe(this.carga.siFalla([])),
+      usuariosBase: this.api.list<UsuarioBasico>('/usuarios/basico').pipe(this.carga.siFalla([])),
       sanciones: sanciones$,
       allSanciones: allSanciones$,
       decisiones: decisiones$,
@@ -159,10 +160,10 @@ export class IncidentsComponent implements OnInit {
   abrirDetalle(id: number): void {
     this.modalDetalle.set(true);
     forkJoin({
-      incidente: this.api.get<Incidente>('/incidentes/' + id).pipe(catchError(() => of(null))),
-      pilotos: this.api.list<IncidentePiloto>('/incidentes/' + id + '/pilotos').pipe(catchError(() => of([]))),
-      votos: this.api.list<Voto>('/votos/incidente/' + id).pipe(catchError(() => of([]))),
-      resolucion: this.api.get<Resolucion>('/incidentes/' + id + '/resolucion').pipe(catchError(() => of(null))),
+      incidente: this.api.get<Incidente>('/incidentes/' + id).pipe(this.carga.siFalla(null)),
+      pilotos: this.api.list<IncidentePiloto>('/incidentes/' + id + '/pilotos').pipe(this.carga.siFalla([])),
+      votos: this.api.list<Voto>('/votos/incidente/' + id).pipe(this.carga.siFalla([])),
+      resolucion: this.api.get<Resolucion>('/incidentes/' + id + '/resolucion').pipe(this.carga.siFalla(null)),
     }).subscribe({
       next: (r) => {
         this.detalleIncidente.set(r.incidente);
@@ -387,8 +388,8 @@ export class IncidentsComponent implements OnInit {
   private cargarApelacionesYSanciones(): void {
     const userId = this.auth.user()?.id;
     forkJoin({
-      apelaciones: this.api.list<Apelacion>('/apelaciones').pipe(catchError(() => of([]))),
-      sanciones: userId ? this.api.list<Sancion>('/sanciones/usuario/' + userId).pipe(catchError(() => of([]))) : of([]),
+      apelaciones: this.api.list<Apelacion>('/apelaciones').pipe(this.carga.siFalla([])),
+      sanciones: userId ? this.api.list<Sancion>('/sanciones/usuario/' + userId).pipe(this.carga.siFalla([])) : of([]),
     }).subscribe({
       next: (r) => {
         this.apelaciones.set(r.apelaciones);

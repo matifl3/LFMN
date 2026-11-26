@@ -53,6 +53,9 @@ class CampeonatoServiceTest {
     @Mock
     private org.example.lfmnacional.service.puntos.SistemaPuntosFactory sistemaPuntosFactory;
 
+    @Mock
+    private TablaPosicionesService tablaPosicionesService;
+
     @InjectMocks
     private CampeonatoService campeonatoService;
 
@@ -223,6 +226,26 @@ class CampeonatoServiceTest {
             List<CampeonatoPosicion> items = iterableToList(iterable);
             return !items.isEmpty() && items.get(0).getPuntos() == 10;
         }));
+    }
+
+    @Test
+    void getTablaControlaElAccesoAntesDeLeerLaTablaCacheada() {
+        // El control va antes que la cache: si se consultara la cache primero,
+        // un no miembro de un campeonato privado veria la tabla ya cacheada.
+        when(campeonatoRepository.findById(1L)).thenReturn(Optional.of(campeonato));
+        doThrow(new BusinessException("privado")).when(accesoService).exigirVeContenido(usuario1, campeonato);
+
+        assertThatThrownBy(() -> campeonatoService.getTabla(1L, usuario1)).isInstanceOf(BusinessException.class);
+        verify(tablaPosicionesService, never()).tabla(any());
+    }
+
+    @Test
+    void getTablaConAccesoDevuelveLaTablaCacheada() {
+        when(campeonatoRepository.findById(1L)).thenReturn(Optional.of(campeonato));
+        when(tablaPosicionesService.tabla(1L)).thenReturn(List.of());
+
+        assertThat(campeonatoService.getTabla(1L, usuario1)).isEmpty();
+        verify(accesoService).exigirVeContenido(usuario1, campeonato);
     }
 
     @Test

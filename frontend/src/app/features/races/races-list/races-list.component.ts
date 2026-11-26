@@ -1,8 +1,8 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { forkJoin, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { forkJoin } from 'rxjs';
 import { ApiService } from '../../../core/services/api.service';
+import { ErrorCargaService } from '../../../core/services/error-carga.service';
 import { Chip } from '../../../shared/components/chip/chip';
 import { EmptyState } from '../../../shared/components/empty-state/empty-state';
 import { Carrera, Categoria } from '../../../core/models/models';
@@ -16,6 +16,7 @@ import { fmtFecha, fmtHora } from '../../../core/utils/formato';
 })
 export class RacesListComponent implements OnInit {
   private readonly api = inject(ApiService);
+  private readonly carga = inject(ErrorCargaService);
   private readonly route = inject(ActivatedRoute);
 
   readonly cats = signal<Categoria[]>([]);
@@ -39,9 +40,9 @@ export class RacesListComponent implements OnInit {
     const cat = this.route.snapshot.queryParamMap.get('cat');
     if (cat) this.filtroCat.set(cat);
     forkJoin({
-      categorias: this.api.list<Categoria>('/categorias').pipe(catchError(() => of([]))),
-      proximas: this.api.list<Carrera>('/carreras/proximas').pipe(catchError(() => of([]))),
-      pasadas: this.api.list<Carrera>('/carreras/pasadas').pipe(catchError(() => of([]))),
+      categorias: this.api.list<Categoria>('/categorias').pipe(this.carga.siFalla([])),
+      proximas: this.api.list<Carrera>('/carreras/proximas').pipe(this.carga.siFalla([])),
+      pasadas: this.api.list<Carrera>('/carreras/pasadas').pipe(this.carga.siFalla([])),
     }).subscribe({
       next: (r) => {
         this.cats.set(r.categorias);

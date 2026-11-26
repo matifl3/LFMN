@@ -431,27 +431,28 @@ list<T>(path: string, params?): Observable<T[]> {
 `normalizeList` existe porque el backend devuelve paginación `{content: [...]}` en algunos endpoints
 y array plano en otros. Sin esto, cada componente tiene que verificar el `Array.isArray()`.
 
-### 4.4 El frontend traga errores — el patrón a mejorar
+### 4.4 Errores de carga: `ErrorCargaService.siFalla`
 
-Este es el punto débil que nos costó el diagnóstico de §3.1:
+Antes los paneles hacían `catchError(() => of([]))`: **cualquier** error se convertía en lista vacía,
+y la UI no distinguía "no hay datos" de "el backend está caído" o de "no tenés permiso". Fue lo que
+demoró el diagnóstico de §3.1.
+
+Ahora se usa `core/services/error-carga.service.ts`:
 
 ```typescript
 resultados: this.api.list<ResultadoCarrera>('/resultados/carrera/' + id)
-    .pipe(catchError(() => of([]))),        // un 500 se ve como "no hay resultados"
+    .pipe(this.carga.siFalla([])),
 ```
 
-`catchError(() => of([]))` convierte **cualquier** error en una lista vacía. La UI no distingue
-"no hay datos" de "el backend está caído" de "no tenés permiso". Solo `carrera` maneja el error
-con un signal `bloqueado`.
+El panel sigue cayendo a su valor vacío, pero el error no se pierde:
 
-Vale la pena cambiarlo a algo tipo:
+- todos quedan en la consola con URL y status;
+- los del servidor (status 0 o 5xx) muestran **un** toast por tanda, aunque fallen varios paneles juntos;
+- los 4xx no muestran toast, porque varios son respuestas normales (404 "no hay resolución", 400 "no estás
+  inscripto"). Si un panel necesita explicar un 4xx (como `bloqueado` en el detalle de carrera), lo
+  maneja él.
 
-```typescript
-.catchError((err) => {
-    this.errorPanel.set(err?.error?.message ?? 'No se pudo cargar');
-    return of([]);
-})
-```
+No volver a usar `catchError(() => of(...))` para cargas.
 
 ### 4.5 Modelos TS que espejan los records
 

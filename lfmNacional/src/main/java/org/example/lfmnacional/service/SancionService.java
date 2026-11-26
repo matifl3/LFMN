@@ -148,10 +148,8 @@ public class SancionService {
     private void aplicarEfectos(Sancion sancion) {
         sancion.setEfectosAplicados(true);
         switch (sancion.getTipo()) {
-            case ELO -> aplicarCambioElo(sancion.getUsuario(), sancion.getValor(),
-                    sancion.getMotivo(), sancion.getCarrera());
-            case SAFETY_RATING -> aplicarCambioSafetyRating(sancion.getUsuario(), sancion.getValor(),
-                    sancion.getMotivo(), sancion.getCarrera());
+            case ELO -> aplicarCambioElo(sancion);
+            case SAFETY_RATING -> aplicarCambioSafetyRating(sancion);
             case PUESTOS -> aplicarPerdidaPuestos(sancion);
             case SEGUNDOS -> aplicarSegundos(sancion);
             default -> {
@@ -176,8 +174,8 @@ public class SancionService {
             return;
         }
         switch (sancion.getTipo()) {
-            case ELO -> revertirCambioElo(sancion.getUsuario(), sancion.getValor(), sancion);
-            case SAFETY_RATING -> revertirCambioSafetyRating(sancion.getUsuario(), sancion.getValor(), sancion);
+            case ELO -> revertirCambioElo(sancion);
+            case SAFETY_RATING -> revertirCambioSafetyRating(sancion);
             case PUESTOS -> revertirPerdidaPuestos(sancion);
             case SEGUNDOS -> revertirSegundos(sancion);
             default -> {
@@ -187,28 +185,51 @@ public class SancionService {
         sancionRepository.save(sancion);
     }
 
-    private void aplicarCambioElo(Usuario usuario, Integer cambio, String motivo, Carrera carrera) {
-        int valor = cambio != null ? cambio : 0;
-        usuario.setElo(usuario.getElo() + valor);
+    /**
+     * El rating no baja de 0, igual que al cargar resultados. Si la sancion pide
+     * mas de lo que el piloto tiene, se aplica hasta 0 y se guarda lo aplicado en
+     * {@code cambioAplicado}, que es lo que se revierte despues.
+     */
+    private void aplicarCambioElo(Sancion sancion) {
+        Usuario usuario = sancion.getUsuario();
+        int aplicado = cambioAcotado(usuario.getElo(), sancion.getValor());
+        usuario.setElo(usuario.getElo() + aplicado);
+        sancion.setCambioAplicado(aplicado);
         usuarioRepository.save(usuario);
         eloSancionRepository.save(EloSancion.builder()
                 .usuario(usuario)
-                .cambio(valor)
-                .motivo(motivo != null ? motivo : "Ajuste manual de Elo")
-                .carrera(carrera)
+                .cambio(aplicado)
+                .motivo(sancion.getMotivo() != null ? sancion.getMotivo() : "Ajuste manual de Elo")
+                .carrera(sancion.getCarrera())
                 .build());
     }
 
-    private void aplicarCambioSafetyRating(Usuario usuario, Integer cambio, String motivo, Carrera carrera) {
-        int valor = cambio != null ? cambio : 0;
-        usuario.setSafetyRating(usuario.getSafetyRating() + valor);
+    private void aplicarCambioSafetyRating(Sancion sancion) {
+        Usuario usuario = sancion.getUsuario();
+        int aplicado = cambioAcotado(usuario.getSafetyRating(), sancion.getValor());
+        usuario.setSafetyRating(usuario.getSafetyRating() + aplicado);
+        sancion.setCambioAplicado(aplicado);
         usuarioRepository.save(usuario);
         safetyRatingSancionRepository.save(SafetyRatingSancion.builder()
                 .usuario(usuario)
-                .cambio(valor)
-                .motivo(motivo != null ? motivo : "Ajuste manual de Safety Rating")
-                .carrera(carrera)
+                .cambio(aplicado)
+                .motivo(sancion.getMotivo() != null ? sancion.getMotivo() : "Ajuste manual de Safety Rating")
+                .carrera(sancion.getCarrera())
                 .build());
+    }
+
+    /** Lo que se puede mover {@code actual} sin bajar de 0. */
+    private static int cambioAcotado(int actual, Integer pedido) {
+        int cambio = pedido != null ? pedido : 0;
+        return Math.max(0, actual + cambio) - actual;
+    }
+
+    /** Lo que se aplico de verdad; en sanciones viejas sin ese dato, el valor pedido. */
+    private static int cambioARevertir(Sancion sancion) {
+        if (sancion.getCambioAplicado() != null) {
+            return sancion.getCambioAplicado();
+        }
+        return sancion.getValor() != null ? sancion.getValor() : 0;
     }
 
     private void aplicarPerdidaPuestos(Sancion sancion) {
@@ -380,26 +401,28 @@ public class SancionService {
         campeonatoService.recalcularPuntos(carrera.getCampeonato().getId());
     }
 
-    private void revertirCambioElo(Usuario usuario, Integer cambio, Sancion sancion) {
-        int valor = cambio != null ? cambio : 0;
-        usuario.setElo(usuario.getElo() - valor);
+    private void revertirCambioElo(Sancion sancion) {
+        Usuario usuario = sancion.getUsuario();
+        int revertido = cambioAcotado(usuario.getElo(), -cambioARevertir(sancion));
+        usuario.setElo(usuario.getElo() + revertido);
         usuarioRepository.save(usuario);
         eloSancionRepository.save(EloSancion.builder()
                 .usuario(usuario)
-                .cambio(-valor)
+                .cambio(revertido)
                 .motivo("Reversion de sancion " + sancion.getId() + ": "
                         + (sancion.getMotivo() != null ? sancion.getMotivo() : "sancion"))
                 .carrera(sancion.getCarrera())
                 .build());
     }
 
-    private void revertirCambioSafetyRating(Usuario usuario, Integer cambio, Sancion sancion) {
-        int valor = cambio != null ? cambio : 0;
-        usuario.setSafetyRating(usuario.getSafetyRating() - valor);
+    private void revertirCambioSafetyRating(Sancion sancion) {
+        Usuario usuario = sancion.getUsuario();
+        int revertido = cambioAcotado(usuario.getSafetyRating(), -cambioARevertir(sancion));
+        usuario.setSafetyRating(usuario.getSafetyRating() + revertido);
         usuarioRepository.save(usuario);
         safetyRatingSancionRepository.save(SafetyRatingSancion.builder()
                 .usuario(usuario)
-                .cambio(-valor)
+                .cambio(revertido)
                 .motivo("Reversion de sancion " + sancion.getId() + ": "
                         + (sancion.getMotivo() != null ? sancion.getMotivo() : "sancion"))
                 .carrera(sancion.getCarrera())

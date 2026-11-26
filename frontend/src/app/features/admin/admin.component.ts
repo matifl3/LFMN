@@ -1,9 +1,9 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { forkJoin, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { forkJoin } from 'rxjs';
 import { ApiService, apiError } from '../../core/services/api.service';
+import { ErrorCargaService } from '../../core/services/error-carga.service';
 import { ToastService } from '../../core/services/toast.service';
 import { AuthService } from '../../core/services/auth.service';
 import {
@@ -74,6 +74,7 @@ type Tab =
 export class AdminComponent implements OnInit {
   readonly auth = inject(AuthService);
   private readonly api = inject(ApiService);
+  private readonly carga = inject(ErrorCargaService);
   private readonly toast = inject(ToastService);
 
   readonly tab = signal<Tab>('carreras');
@@ -171,7 +172,7 @@ export class AdminComponent implements OnInit {
   private cargarSistemasPuntos(): void {
     this.api
       .list<SistemaPuntosCatalogo>('/sistemas-puntos')
-      .pipe(catchError(() => of([] as SistemaPuntosCatalogo[])))
+      .pipe(this.carga.siFalla([] as SistemaPuntosCatalogo[]))
       .subscribe((lista) => {
         this.sistemasPuntos.set(lista);
         // Si el formulario tiene un valor que no existe en el catalogo
@@ -187,13 +188,13 @@ export class AdminComponent implements OnInit {
 
   private cargar(): void {
     forkJoin({
-      carreras: this.api.list<Carrera>('/carreras').pipe(catchError(() => of([]))),
-      campeonatos: this.api.list<Campeonato>('/campeonatos').pipe(catchError(() => of([]))),
-      categorias: this.api.list<Categoria>('/categorias').pipe(catchError(() => of([]))),
-      usuarios: this.api.list<Usuario>('/usuarios').pipe(catchError(() => of([]))),
-      anuncios: this.api.list<Anuncio>('/anuncios').pipe(catchError(() => of([]))),
-      logros: this.api.list<Logro>('/logros').pipe(catchError(() => of([]))),
-      stats: this.api.get<Estadisticas>('/estadisticas').pipe(catchError(() => of(null))),
+      carreras: this.api.list<Carrera>('/carreras').pipe(this.carga.siFalla([])),
+      campeonatos: this.api.list<Campeonato>('/campeonatos').pipe(this.carga.siFalla([])),
+      categorias: this.api.list<Categoria>('/categorias').pipe(this.carga.siFalla([])),
+      usuarios: this.api.list<Usuario>('/usuarios').pipe(this.carga.siFalla([])),
+      anuncios: this.api.list<Anuncio>('/anuncios').pipe(this.carga.siFalla([])),
+      logros: this.api.list<Logro>('/logros').pipe(this.carga.siFalla([])),
+      stats: this.api.get<Estadisticas>('/estadisticas').pipe(this.carga.siFalla(null)),
     }).subscribe({
       next: (r) => {
         this.carreras.set(r.carreras);

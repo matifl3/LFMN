@@ -45,6 +45,15 @@ public class Sancion {
 
     private Integer valor;
 
+    /**
+     * Para ELO y SAFETY_RATING: lo que se le movio de verdad al piloto. Puede ser
+     * menos que {@code valor} porque el rating no baja de 0; revertir devuelve
+     * esto y no {@code valor}, si no el piloto ganaria rating al revertir.
+     * Null en sanciones viejas o de otros tipos: se revierte {@code valor}.
+     */
+    @Column(name = "cambio_aplicado")
+    private Integer cambioAplicado;
+
     @Column(length = 255)
     private String motivo;
 

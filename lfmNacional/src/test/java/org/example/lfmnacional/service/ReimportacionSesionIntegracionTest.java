@@ -64,6 +64,8 @@ class ReimportacionSesionIntegracionTest {
     private SancionService sancionService;
     @Autowired
     private CampeonatoService campeonatoService;
+    @Autowired
+    private TablaPosicionesService tablaPosicionesService;
 
     @Autowired
     private UsuarioRepository usuarioRepository;
@@ -195,7 +197,7 @@ class ReimportacionSesionIntegracionTest {
     void reimportarNoDuplicaPuntos() {
         sesionServidorService.reimportar(carrera.getId(), corregida, null);
 
-        List<TablaPosicionResponse> tabla = campeonatoService.getTabla(campeonatoId);
+        List<TablaPosicionResponse> tabla = tablaPosicionesService.tabla(campeonatoId);
         assertThat(tabla).extracting(TablaPosicionResponse::usuarioId).containsExactly(
                 pilotos.get("Ana").getId(), pilotos.get("Caro").getId(), pilotos.get("Beto").getId(),
                 pilotos.get("Dani").getId(), pilotos.get("Eze").getId());

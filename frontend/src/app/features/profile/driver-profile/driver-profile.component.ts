@@ -2,9 +2,9 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { forkJoin, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { forkJoin } from 'rxjs';
 import { ApiService, apiError } from '../../../core/services/api.service';
+import { ErrorCargaService } from '../../../core/services/error-carga.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { Avatar } from '../../../shared/components/avatar/avatar';
@@ -23,6 +23,7 @@ import { fmtFecha } from '../../../core/utils/formato';
 })
 export class DriverProfileComponent implements OnInit {
   private readonly api = inject(ApiService);
+  private readonly carga = inject(ErrorCargaService);
   private readonly toast = inject(ToastService);
   private readonly auth = inject(AuthService);
   private readonly route = inject(ActivatedRoute);
@@ -53,13 +54,13 @@ export class DriverProfileComponent implements OnInit {
 
   private cargarPerfil(id: number): void {
     forkJoin({
-      usuario: this.api.get<Usuario>(`/usuarios/${id}`).pipe(catchError(() => of(null))),
-      stats: this.api.get<StatsResponse>(`/usuarios/${id}/stats`).pipe(catchError(() => of(null))),
-      elo: this.api.list<HistorialRating>(`/usuarios/${id}/historial-elo`).pipe(catchError(() => of([]))),
-      sr: this.api.list<HistorialRating>(`/usuarios/${id}/historial-safety-rating`).pipe(catchError(() => of([]))),
-      resultados: this.api.list<ResultadoCarrera>(`/resultados/usuario/${id}`).pipe(catchError(() => of([]))),
-      logros: this.api.list<UsuarioLogro>(`/usuarios/${id}/logros/obtenidos`).pipe(catchError(() => of([]))),
-      categorias: this.api.list<Categoria>('/categorias').pipe(catchError(() => of([]))),
+      usuario: this.api.get<Usuario>(`/usuarios/${id}`).pipe(this.carga.siFalla(null)),
+      stats: this.api.get<StatsResponse>(`/usuarios/${id}/stats`).pipe(this.carga.siFalla(null)),
+      elo: this.api.list<HistorialRating>(`/usuarios/${id}/historial-elo`).pipe(this.carga.siFalla([])),
+      sr: this.api.list<HistorialRating>(`/usuarios/${id}/historial-safety-rating`).pipe(this.carga.siFalla([])),
+      resultados: this.api.list<ResultadoCarrera>(`/resultados/usuario/${id}`).pipe(this.carga.siFalla([])),
+      logros: this.api.list<UsuarioLogro>(`/usuarios/${id}/logros/obtenidos`).pipe(this.carga.siFalla([])),
+      categorias: this.api.list<Categoria>('/categorias').pipe(this.carga.siFalla([])),
     }).subscribe({
       next: (r) => {
         this.usuario.set(r.usuario);

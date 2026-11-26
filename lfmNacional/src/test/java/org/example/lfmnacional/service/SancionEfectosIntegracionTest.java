@@ -58,6 +58,8 @@ class SancionEfectosIntegracionTest {
     private SancionService sancionService;
     @Autowired
     private CampeonatoService campeonatoService;
+    @Autowired
+    private TablaPosicionesService tablaPosicionesService;
 
     @Autowired
     private UsuarioRepository usuarioRepository;
@@ -162,7 +164,7 @@ class SancionEfectosIntegracionTest {
      * el cache, lo que devuelve es la base recien escrita.
      */
     private List<TablaPosicionResponse> tabla() {
-        return campeonatoService.getTabla(campeonatoId);
+        return tablaPosicionesService.tabla(campeonatoId);
     }
 
     @Test
@@ -305,6 +307,41 @@ class SancionEfectosIntegracionTest {
         assertThat(tabla()).extracting(TablaPosicionResponse::usuarioId)
                 .containsExactly(ana.getId(), caro.getId(), beto.getId(), dani.getId());
         assertThat(tabla()).extracting(TablaPosicionResponse::puntos).containsExactly(25, 18, 15, 12);
+    }
+
+    private SancionRequest rating(Usuario piloto, TipoSancion tipo, int valor) {
+        return new SancionRequest(piloto.getId(), carrera.getId(), null, tipo, valor, "test",
+                OrigenSancion.ADMIN, null, null);
+    }
+
+    @Test
+    @DisplayName("Una sancion de Elo mas grande que el Elo del piloto lo deja en 0, no negativo")
+    void sancionDeEloNoDejaElEloNegativo() {
+        sancionService.create(rating(beto, TipoSancion.ELO, -5000));
+
+        assertThat(usuarioRepository.findById(beto.getId()).orElseThrow().getElo()).isZero();
+    }
+
+    @Test
+    @DisplayName("Revertir una sancion de Elo acotada devuelve lo que se aplico, no lo que se pidio")
+    void revertirSancionDeEloAcotadaVuelveAlValorOriginal() {
+        // Pide -5000 pero solo se aplican -1200. Revertir +5000 le regalaria 3800.
+        var sancion = sancionService.create(rating(beto, TipoSancion.ELO, -5000));
+
+        sancionService.delete(sancion.id());
+
+        assertThat(usuarioRepository.findById(beto.getId()).orElseThrow().getElo()).isEqualTo(1200);
+    }
+
+    @Test
+    @DisplayName("Lo mismo con el Safety Rating")
+    void sancionDeSafetyRatingSeAcotaYSeRevierteExacta() {
+        var sancion = sancionService.create(rating(caro, TipoSancion.SAFETY_RATING, -3000));
+        assertThat(usuarioRepository.findById(caro.getId()).orElseThrow().getSafetyRating()).isZero();
+
+        sancionService.delete(sancion.id());
+
+        assertThat(usuarioRepository.findById(caro.getId()).orElseThrow().getSafetyRating()).isEqualTo(1200);
     }
 
     @Test

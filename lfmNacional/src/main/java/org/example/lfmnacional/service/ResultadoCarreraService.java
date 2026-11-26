@@ -132,25 +132,30 @@ public class ResultadoCarreraService {
         }
     }
 
+    /**
+     * Solo cuentan los que tienen posicion: un resultado sin posicion (carga
+     * manual) no compitio en la clasificacion, asi que no puede inflar la
+     * cantidad de participantes ni entrar como rival en el calculo del Elo.
+     */
     private void recalcularEloYSafetyRating(Carrera carrera, List<ResultadoCarrera> resultados) {
+        List<ResultadoCarrera> clasificados = resultados.stream()
+                .filter(r -> r.getPosicionFinal() != null)
+                .toList();
         Map<Long, Integer> elos = new HashMap<>();
-        for (ResultadoCarrera resultado : resultados) {
+        for (ResultadoCarrera resultado : clasificados) {
             elos.put(resultado.getUsuario().getId(), resultado.getUsuario().getElo());
         }
         List<Usuario> usuariosActualizar = new ArrayList<>();
         List<EloSancion> eloSanciones = new ArrayList<>();
         List<SafetyRatingSancion> srSanciones = new ArrayList<>();
-        for (ResultadoCarrera resultado : resultados) {
+        for (ResultadoCarrera resultado : clasificados) {
             Integer posicion = resultado.getPosicionFinal();
-            if (posicion == null) {
-                continue;
-            }
             Integer eloPropio = elos.get(resultado.getUsuario().getId());
             List<Integer> rivales = elos.entrySet().stream()
                     .filter(e -> !e.getKey().equals(resultado.getUsuario().getId()))
                     .map(Map.Entry::getValue)
                     .toList();
-            int cambioElo = eloCalculator.calcularCambio(eloPropio, posicion, resultados.size(), rivales);
+            int cambioElo = eloCalculator.calcularCambio(eloPropio, posicion, clasificados.size(), rivales);
             int cambioSr = srCalculator.calcularCambio(resultado.isFinalizo(), posicion);
 
             resultado.setEloGanado(cambioElo);

@@ -1,10 +1,10 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { DecimalPipe, registerLocaleData } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { forkJoin, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { forkJoin } from 'rxjs';
 import localeEsAr from '@angular/common/locales/es-AR';
 import { ApiService } from '../../core/services/api.service';
+import { ErrorCargaService } from '../../core/services/error-carga.service';
 import { EmptyState } from '../../shared/components/empty-state/empty-state';
 import { Categoria, UsuarioBasico } from '../../core/models/models';
 
@@ -19,6 +19,7 @@ registerLocaleData(localeEsAr, 'es-AR');
 })
 export class CategoriesComponent implements OnInit {
   private readonly api = inject(ApiService);
+  private readonly carga = inject(ErrorCargaService);
 
   readonly cats = signal<Categoria[]>([]);
   readonly users = signal<UsuarioBasico[]>([]);
@@ -26,8 +27,8 @@ export class CategoriesComponent implements OnInit {
 
   ngOnInit(): void {
     forkJoin({
-      cats: this.api.list<Categoria>('/categorias').pipe(catchError(() => of([]))),
-      users: this.api.list<UsuarioBasico>('/usuarios/basico').pipe(catchError(() => of([]))),
+      cats: this.api.list<Categoria>('/categorias').pipe(this.carga.siFalla([])),
+      users: this.api.list<UsuarioBasico>('/usuarios/basico').pipe(this.carga.siFalla([])),
     }).subscribe((r) => {
       this.cats.set(r.cats);
       this.users.set(r.users);

@@ -2,9 +2,9 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { forkJoin, of, tap } from 'rxjs';
-import { catchError } from 'rxjs/operators';
 import { AuthService } from '../../../core/services/auth.service';
 import { ApiService, apiError } from '../../../core/services/api.service';
+import { ErrorCargaService } from '../../../core/services/error-carga.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { Avatar } from '../../../shared/components/avatar/avatar';
 import { Chip } from '../../../shared/components/chip/chip';
@@ -49,6 +49,7 @@ function normalizeUrl(valor: string | null | undefined): string | null {
 export class RaceDetailComponent implements OnInit {
   readonly auth = inject(AuthService);
   private readonly api = inject(ApiService);
+  private readonly carga = inject(ErrorCargaService);
   private readonly toast = inject(ToastService);
   private readonly route = inject(ActivatedRoute);
   private readonly sanitizer = inject(DomSanitizer);
@@ -156,39 +157,39 @@ export class RaceDetailComponent implements OnInit {
       ),
       inscriptos: this.api
         .list<Inscripcion>('/inscripciones/carrera/' + id)
-        .pipe(catchError(() => of([]))),
+        .pipe(this.carga.siFalla([])),
       resultados: this.api
         .list<ResultadoCarrera>('/resultados/carrera/' + id)
-        .pipe(catchError(() => of([]))),
+        .pipe(this.carga.siFalla([])),
       clasificaciones: this.api
         .list<SesionClasificacion>('/clasificaciones/carrera/' + id)
-        .pipe(catchError(() => of([]))),
+        .pipe(this.carga.siFalla([])),
       vueltas: user
         ? this.api
             .list<Vuelta>('/vueltas/carrera/' + id + '/usuario/' + user.id)
-            .pipe(catchError(() => of([])))
+            .pipe(this.carga.siFalla([]))
         : of([]),
       analisis: user
         ? this.api
             .list<VueltaAnalisis>('/vueltas/carrera/' + id + '/usuario/' + user.id + '/analisis')
-            .pipe(catchError(() => of([])))
+            .pipe(this.carga.siFalla([]))
         : of([]),
       resumen: user
         ? this.api
             .get<VueltaResumen>(
               '/vueltas/carrera/' + id + '/usuario/' + user.id + '/analisis/resumen',
             )
-            .pipe(catchError(() => of(null)))
+            .pipe(this.carga.siFalla(null))
         : of(null),
       acceso: user
         ? this.api
             .get<CarreraAcceso>('/carreras/' + id + '/acceso-servidor')
-            .pipe(catchError(() => of(null)))
+            .pipe(this.carga.siFalla(null))
         : of(null),
       eloEstimado: user
         ? this.api
             .get<EloEstimado>('/carreras/' + id + '/elo-estimado')
-            .pipe(catchError(() => of(null)))
+            .pipe(this.carga.siFalla(null))
         : of(null),
     }).subscribe({
       next: (r) => {

@@ -1,8 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
 import { ApiService, apiError } from '../../../core/services/api.service';
+import { ErrorCargaService } from '../../../core/services/error-carga.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { Chip } from '../../../shared/components/chip/chip';
@@ -25,6 +24,7 @@ interface RecompensaDisponible {
 })
 export class MyProfileComponent implements OnInit {
   private readonly api = inject(ApiService);
+  private readonly carga = inject(ErrorCargaService);
   private readonly toast = inject(ToastService);
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
@@ -83,7 +83,7 @@ export class MyProfileComponent implements OnInit {
   private cargarInscripciones(): void {
     const id = this.auth.user()?.id;
     if (!id) return;
-    this.api.list<Inscripcion>(`/inscripciones/usuario/${id}`).pipe(catchError(() => of([]))).subscribe({
+    this.api.list<Inscripcion>(`/inscripciones/usuario/${id}`).pipe(this.carga.siFalla([])).subscribe({
       next: (l) => this.inscripciones.set(l.filter((i) => i.estado !== 'CANCELADA')),
     });
   }
@@ -91,7 +91,7 @@ export class MyProfileComponent implements OnInit {
   private cargarRecompensas(): void {
     const id = this.auth.user()?.id;
     if (!id) return;
-    this.api.list<RecompensaDisponible>(`/usuarios/${id}/recompensas/no-reclamadas`).pipe(catchError(() => of([]))).subscribe({
+    this.api.list<RecompensaDisponible>(`/usuarios/${id}/recompensas/no-reclamadas`).pipe(this.carga.siFalla([])).subscribe({
       next: (l) => this.recompensas.set(l),
     });
   }

@@ -1,7 +1,7 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
-import { forkJoin, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { forkJoin } from 'rxjs';
 import { ApiService, apiError } from '../../core/services/api.service';
+import { ErrorCargaService } from '../../core/services/error-carga.service';
 import { ToastService } from '../../core/services/toast.service';
 import { AuthService } from '../../core/services/auth.service';
 import { Avatar } from '../../shared/components/avatar/avatar';
@@ -20,6 +20,7 @@ import { Categoria, Setup, SetupComentario } from '../../core/models/models';
 })
 export class SetupsComponent implements OnInit {
   private readonly api = inject(ApiService);
+  private readonly carga = inject(ErrorCargaService);
   private readonly toast = inject(ToastService);
   private readonly auth = inject(AuthService);
 
@@ -104,8 +105,8 @@ export class SetupsComponent implements OnInit {
       return;
     }
     forkJoin({
-      setups: this.api.list<Setup>('/setups').pipe(catchError(() => of([]))),
-      cats: this.api.list<Categoria>('/categorias').pipe(catchError(() => of([]))),
+      setups: this.api.list<Setup>('/setups').pipe(this.carga.siFalla([])),
+      cats: this.api.list<Categoria>('/categorias').pipe(this.carga.siFalla([])),
     }).subscribe({
       next: (r) => {
         this.cats.set(r.cats);

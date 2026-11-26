@@ -57,9 +57,7 @@ public class CampeonatoController {
 
     @GetMapping("/{id}/tabla")
     public List<TablaPosicionResponse> getTabla(@PathVariable Long id, @AuthenticationPrincipal Usuario usuario) {
-        Campeonato campeonato = campeonatoService.getEntity(id);
-        accesoService.exigirVeContenido(usuario, campeonato);
-        return campeonatoService.getTabla(id);
+        return campeonatoService.getTabla(id, usuario);
     }
 
     /**

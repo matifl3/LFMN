@@ -2,9 +2,9 @@ import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { DecimalPipe, SlicePipe } from '@angular/common';
-import { forkJoin, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { forkJoin } from 'rxjs';
 import { ApiService, apiError } from '../../core/services/api.service';
+import { ErrorCargaService } from '../../core/services/error-carga.service';
 import { ToastService } from '../../core/services/toast.service';
 import { AuthService } from '../../core/services/auth.service';
 import {
@@ -45,6 +45,7 @@ type Panel = 'pilotos' | 'carreras' | 'tabla' | 'estadisticas' | 'importar';
 export class MisCampeonatosComponent implements OnInit {
   readonly auth = inject(AuthService);
   private readonly api = inject(ApiService);
+  private readonly carga = inject(ErrorCargaService);
   private readonly toast = inject(ToastService);
 
   readonly cargando = signal(true);
@@ -127,7 +128,7 @@ export class MisCampeonatosComponent implements OnInit {
   private cargar(): void {
     this.cargando.set(true);
     forkJoin({
-      mios: this.api.list<Campeonato>('/campeonatos/mios').pipe(catchError(() => of([]))),
+      mios: this.api.list<Campeonato>('/campeonatos/mios').pipe(this.carga.siFalla([])),
     }).subscribe({
       next: (r) => {
         this.campeonatos.set(r.mios);
@@ -154,19 +155,19 @@ export class MisCampeonatosComponent implements OnInit {
     forkJoin({
       miembros: this.api
         .list<MiembroCampeonato>(`/campeonatos/${id}/miembros`)
-        .pipe(catchError(() => of([] as MiembroCampeonato[]))),
+        .pipe(this.carga.siFalla([] as MiembroCampeonato[])),
       carreras: this.api
         .list<Carrera>(`/carreras/campeonato/${id}`)
-        .pipe(catchError(() => of([] as Carrera[]))),
+        .pipe(this.carga.siFalla([] as Carrera[])),
       tabla: this.api
         .list<TablaPosicion>(`/campeonatos/${id}/tabla`)
-        .pipe(catchError(() => of([] as TablaPosicion[]))),
+        .pipe(this.carga.siFalla([] as TablaPosicion[])),
       // Solo el organizador del campeonato (o el ADMIN global) puede leerlo. Si
       // el backend responde 403, la pestana muestra su estado vacio en vez de
       // romper la carga del resto del detalle.
       stats: this.api
         .get<EstadisticasCampeonato>(`/campeonatos/${id}/estadisticas`)
-        .pipe(catchError(() => of(null))),
+        .pipe(this.carga.siFalla(null)),
     }).subscribe({
       next: (r) => {
         this.miembros.set(r.miembros);

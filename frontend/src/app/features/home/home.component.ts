@@ -1,8 +1,8 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { forkJoin, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { forkJoin } from 'rxjs';
 import { ApiService, apiError } from '../../core/services/api.service';
+import { ErrorCargaService } from '../../core/services/error-carga.service';
 import { ToastService } from '../../core/services/toast.service';
 import { Modal } from '../../shared/components/modal/modal';
 import { RankBadge } from '../../shared/components/rank-badge/rank-badge';
@@ -22,6 +22,7 @@ const CTA_ESTADOS = ['PROGRAMADA', 'INSCRIPCIONES_ABIERTAS', 'INSCRIPCIONES_CERR
 })
 export class HomeComponent implements OnInit {
   private readonly api = inject(ApiService);
+  private readonly carga = inject(ErrorCargaService);
   private readonly toast = inject(ToastService);
 
   readonly stats = signal({ pilotos: 0, carreras: 0, categorias: 0 });
@@ -39,12 +40,12 @@ export class HomeComponent implements OnInit {
 
   private cargar(): void {
     forkJoin({
-      usuarios: this.api.list<UsuarioBasico>('/usuarios/basico').pipe(catchError(() => of([]))),
-      pasadas: this.api.list<Carrera>('/carreras/pasadas').pipe(catchError(() => of([]))),
-      categorias: this.api.list<Categoria>('/categorias').pipe(catchError(() => of([]))),
-      proximas: this.api.list<Carrera>('/carreras/proximas').pipe(catchError(() => of([]))),
-      campeonatos: this.api.list<Campeonato>('/campeonatos').pipe(catchError(() => of([]))),
-      anuncio: this.api.get<Anuncio>('/anuncios/ultimo').pipe(catchError(() => of(null))),
+      usuarios: this.api.list<UsuarioBasico>('/usuarios/basico').pipe(this.carga.siFalla([])),
+      pasadas: this.api.list<Carrera>('/carreras/pasadas').pipe(this.carga.siFalla([])),
+      categorias: this.api.list<Categoria>('/categorias').pipe(this.carga.siFalla([])),
+      proximas: this.api.list<Carrera>('/carreras/proximas').pipe(this.carga.siFalla([])),
+      campeonatos: this.api.list<Campeonato>('/campeonatos').pipe(this.carga.siFalla([])),
+      anuncio: this.api.get<Anuncio>('/anuncios/ultimo').pipe(this.carga.siFalla(null)),
     }).subscribe({
       next: (r) => {
         this.stats.set({ pilotos: r.usuarios.length, carreras: r.pasadas.length, categorias: r.categorias.length });
