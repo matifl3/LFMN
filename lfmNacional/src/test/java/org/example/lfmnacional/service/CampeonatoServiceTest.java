@@ -156,6 +156,29 @@ class CampeonatoServiceTest {
     }
 
     @Test
+    void conCampeonatoActivoLosResultadosQuedanMarcadosComoQueSuman() {
+        ResultadoCarrera resultado = ResultadoCarrera.builder().usuario(usuario1).posicionFinal(1).carrera(carrera).build();
+        when(campeonatoPosicionRepository.findByCampeonato_IdOrderByPuntosDesc(1L)).thenReturn(List.of());
+
+        campeonatoService.actualizarPuntos(carrera, List.of(resultado));
+
+        assertThat(resultado.getSumaAlCampeonato()).isTrue();
+        verify(resultadoCarreraRepository).saveAll(List.of(resultado));
+    }
+
+    @Test
+    void conCampeonatoCerradoLosResultadosQuedanMarcadosComoQueNoSuman() {
+        // Si no quedara anotado, recalcularPuntos() los sumaria en la proxima sancion.
+        campeonato.setEstado(EstadoCampeonato.CERRADO);
+        ResultadoCarrera resultado = ResultadoCarrera.builder().usuario(usuario1).posicionFinal(1).carrera(carrera).build();
+
+        campeonatoService.actualizarPuntos(carrera, List.of(resultado));
+
+        assertThat(resultado.getSumaAlCampeonato()).isFalse();
+        verify(resultadoCarreraRepository).saveAll(List.of(resultado));
+    }
+
+    @Test
     void acumulaPuntosEntreCarreras() {
         ResultadoCarrera resultado = ResultadoCarrera.builder().usuario(usuario1).posicionFinal(1).carrera(carrera).build();
         CampeonatoPosicion existente = CampeonatoPosicion.builder().campeonato(campeonato).usuario(usuario1).puntos(25).posicion(1).build();
@@ -402,6 +425,29 @@ class CampeonatoServiceTest {
         // El que no tiene posicion no entra: no hay que inventarle una fila en 0.
         assertThat(guardadas).hasSize(1);
         assertThat(guardadas.get(0).getUsuario().getId()).isEqualTo(1L);
+    }
+
+    @Test
+    void recalcularPuntosNoSumaLosResultadosCargadosConElCampeonatoCerrado() {
+        when(campeonatoRepository.findById(1L)).thenReturn(Optional.of(campeonato));
+        // Ana: 1ra en una carrera que sumo y 1ra en una cargada con el campeonato
+        // cerrado. Beto: 2do en una fila vieja (null), que sigue sumando.
+        when(resultadoCarreraRepository.findByCarrera_Campeonato_Id(1L)).thenReturn(List.of(
+                ResultadoCarrera.builder().carrera(carrera).usuario(usuario1).posicionFinal(1)
+                        .sumaAlCampeonato(true).build(),
+                ResultadoCarrera.builder().carrera(carrera).usuario(usuario1).posicionFinal(1)
+                        .sumaAlCampeonato(false).build(),
+                ResultadoCarrera.builder().carrera(carrera).usuario(usuario2).posicionFinal(2)
+                        .sumaAlCampeonato(null).build()));
+
+        List<CampeonatoPosicion> guardadas = capturarFilasGuardadas();
+
+        campeonatoService.recalcularPuntos(1L);
+
+        assertThat(guardadas).filteredOn(p -> p.getUsuario().getId().equals(1L))
+                .singleElement().extracting(CampeonatoPosicion::getPuntos).isEqualTo(25);
+        assertThat(guardadas).filteredOn(p -> p.getUsuario().getId().equals(2L))
+                .singleElement().extracting(CampeonatoPosicion::getPuntos).isEqualTo(18);
     }
 
     @Test

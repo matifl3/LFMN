@@ -216,7 +216,14 @@ public class CampeonatoService {
     @CacheEvict(value = "tabla_posiciones", key = "#carrera.campeonato.id")
     public void actualizarPuntos(Carrera carrera, List<ResultadoCarrera> resultados) {
         Campeonato campeonato = carrera.getCampeonato();
-        if (campeonato.getEstado() != EstadoCampeonato.ACTIVO) {
+        boolean activo = campeonato.getEstado() == EstadoCampeonato.ACTIVO;
+        // Queda anotado en cada resultado para que recalcularPuntos() no sume
+        // despues carreras que se cargaron con el campeonato cerrado.
+        for (ResultadoCarrera resultado : resultados) {
+            resultado.setSumaAlCampeonato(activo);
+        }
+        resultadoCarreraRepository.saveAll(resultados);
+        if (!activo) {
             return;
         }
         List<CampeonatoPosicion> aGuardar = new java.util.ArrayList<>();
@@ -279,6 +286,9 @@ public class CampeonatoService {
      *
      * <p>A diferencia de {@code actualizarPuntos}, corre tambien con el
      * campeonato cerrado: esto corrige una tabla, no agrega participaciones.
+     * Por eso mismo solo suma los resultados que sumaron al cargarse
+     * ({@code sumaAlCampeonato}): una carrera cargada con el campeonato cerrado
+     * no puede aparecer en la tabla por una sancion en otra carrera.
      */
     @Transactional
     @CacheEvict(value = "tabla_posiciones", key = "#campeonatoId")
@@ -289,7 +299,7 @@ public class CampeonatoService {
         Map<Long, Integer> puntosPorUsuario = new LinkedHashMap<>();
         Map<Long, Usuario> usuarioPorId = new LinkedHashMap<>();
         for (ResultadoCarrera resultado : resultadoCarreraRepository.findByCarrera_Campeonato_Id(campeonatoId)) {
-            if (resultado.getPosicionFinal() == null) {
+            if (resultado.getPosicionFinal() == null || Boolean.FALSE.equals(resultado.getSumaAlCampeonato())) {
                 continue;
             }
             Long usuarioId = resultado.getUsuario().getId();

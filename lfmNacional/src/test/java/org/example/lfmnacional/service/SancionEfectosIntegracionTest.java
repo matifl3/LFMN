@@ -276,6 +276,38 @@ class SancionEfectosIntegracionTest {
     }
 
     @Test
+    @DisplayName("Una carrera cargada con el campeonato cerrado no aparece en la tabla por una sancion en otra")
+    void carreraCargadaConCampeonatoCerradoNoSumaAlRecalcular() {
+        // Se cierra el campeonato, se carga una segunda carrera (no suma) y se reabre.
+        Campeonato campeonato = campeonatoRepository.findById(campeonatoId).orElseThrow();
+        campeonato.setEstado(EstadoCampeonato.CERRADO);
+        campeonatoRepository.save(campeonato);
+        Carrera fueraDeTiempo = carreraRepository.save(Carrera.builder()
+                .nombre("Round fuera de tiempo").circuito("Monza")
+                .fecha(LocalDateTime.now().minusHours(1))
+                .estado(EstadoCarrera.FINALIZADA).campeonato(campeonato).build());
+        int pos = 1;
+        for (Usuario piloto : List.of(dani, caro, beto, ana)) {
+            resultadoCarreraRepository.save(ResultadoCarrera.builder()
+                    .carrera(fueraDeTiempo).usuario(piloto).posicionFinal(pos++)
+                    .tiempoTotal(100000L * pos).finalizo(true).build());
+        }
+        campeonatoService.actualizarPuntos(fueraDeTiempo,
+                resultadoCarreraRepository.findByCarrera_IdOrderByPosicionFinalAsc(fueraDeTiempo.getId()));
+        assertThat(tabla()).extracting(TablaPosicionResponse::puntos).containsExactly(25, 18, 15, 12);
+
+        campeonato.setEstado(EstadoCampeonato.ACTIVO);
+        campeonatoRepository.save(campeonato);
+
+        // Una sancion en la primera carrera rehace la tabla: la segunda no tiene que entrar.
+        sancionService.create(puestos(beto, 1, "exceso de velocidad"));
+
+        assertThat(tabla()).extracting(TablaPosicionResponse::usuarioId)
+                .containsExactly(ana.getId(), caro.getId(), beto.getId(), dani.getId());
+        assertThat(tabla()).extracting(TablaPosicionResponse::puntos).containsExactly(25, 18, 15, 12);
+    }
+
+    @Test
     @DisplayName("Sin tiempo total la penalizacion de segundos falla con un mensaje claro, no con NPE")
     void segundosSinTiempoTotalFallaConMensajeClaro() {
         ResultadoCarrera resultado = resultadoCarreraRepository

@@ -51,6 +51,15 @@ public class ResultadoCarrera {
     @Column(name = "vueltas_completadas")
     private Integer vueltasCompletadas;
 
+    /**
+     * Si este resultado suma puntos al campeonato. Se decide una sola vez, al
+     * cargarlo: suma si el campeonato estaba ACTIVO. Recalcular la tabla (por
+     * una sancion) respeta esa decision en vez de sumar todas las carreras.
+     * Null en filas viejas: se toman como que suman, que era el comportamiento.
+     */
+    @Column(name = "suma_al_campeonato")
+    private Boolean sumaAlCampeonato;
+
     @Column(name = "tiempo_total")
     private Long tiempoTotal;
 
