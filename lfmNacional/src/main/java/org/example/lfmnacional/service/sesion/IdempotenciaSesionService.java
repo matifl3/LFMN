@@ -3,6 +3,8 @@ package org.example.lfmnacional.service.sesion;
 import org.example.lfmnacional.dto.sesion.EventoSesionData;
 import org.example.lfmnacional.dto.sesion.SesionServerData;
 import org.springframework.stereotype.Service;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -22,22 +24,22 @@ public class IdempotenciaSesionService {
     private static final int LONGITUD_CLAVE = 40;
 
     /**
+     * Serializa la sesion siempre igual: los records salen con sus campos en el
+     * orden en que estan declarados, asi que dos JSON con el mismo contenido dan
+     * el mismo texto aunque vengan con otro formato, espacios u orden de claves.
+     */
+    private static final ObjectMapper CANONICO = JsonMapper.builder().build();
+
+    /**
      * Clave de la sesion completa: misma carrera + mismo contenido = misma clave.
-     * No incluye el nombre de archivo ni timestamps externos.
+     * Se hashea el JSON entero (no el nombre de archivo ni timestamps externos).
+     *
+     * <p>Antes solo entraban la pista, el tipo y las <em>cantidades</em> de autos,
+     * resultados, vueltas y eventos: un JSON corregido (un GUID o un tiempo
+     * arreglado) daba la misma clave y se rechazaba como duplicado.
      */
     public String claveSesion(Long carreraId, SesionServerData sesion) {
-        StringBuilder sb = new StringBuilder();
-        sb.append(carreraId).append('|')
-                .append(valor(sesion.trackName())).append('|')
-                .append(valor(sesion.trackConfig())).append('|')
-                .append(valor(sesion.type())).append('|')
-                .append(valor(sesion.durationSecs())).append('|')
-                .append(valor(sesion.raceLaps())).append('|')
-                .append(sesion.cars() == null ? 0 : sesion.cars().size()).append('|')
-                .append(sesion.result() == null ? 0 : sesion.result().size()).append('|')
-                .append(sesion.laps() == null ? 0 : sesion.laps().size()).append('|')
-                .append(sesion.events() == null ? 0 : sesion.events().size());
-        return sha256(sb.toString());
+        return sha256(carreraId + "|" + CANONICO.writeValueAsString(sesion));
     }
 
     /**

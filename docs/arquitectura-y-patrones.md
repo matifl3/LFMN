@@ -224,9 +224,16 @@ La ingesta de sesiones de Assetto Corsa se hace por import manual
 (`POST /api/sesiones/importar?carreraId=N`), **no hay folder watcher** a propósito: en Render el disco
 es efímero y la app no debe depender de él.
 
-Cada JSON se hashea con **SHA-256** y se guarda en `sesion_procesada.clave`, que es única:
+Cada JSON se hashea entero (carrera + contenido serializado) con **SHA-256** y se guarda en
+`sesion_procesada.clave`, que es única:
 
-- mismo JSON → `409 Conflict`, no reprocesa
+- mismo JSON → `409 Conflict` con `estado = YA_PROCESADA`, no reprocesa
+- otro JSON para una sesión de ese tipo ya importada en la carrera (un JSON corregido) →
+  `409 Conflict` con `estado = OTRA_SESION_IMPORTADA`. No se mezcla con la anterior.
+- para reemplazarla: `POST /api/sesiones/reimportar?carreraId=N` (ADMIN/COMISARIO). Deshace lo que
+  dejó la anterior (`DeshacerSesionService`: resultados con su Elo/SR revertido y registrado en el
+  historial, vueltas, clasificación y pole, tabla del campeonato) y vuelve a importar. Se bloquea si la
+  carrera tiene sanciones. No toca incidentes ni logros, y no recalcula el Elo de carreras posteriores.
 - los incidentes autogenerados deduplican por `incidente.clave_origen`, así que un reintento no duplica colisiones
 
 ### 2.9 Caché con eviction explícito

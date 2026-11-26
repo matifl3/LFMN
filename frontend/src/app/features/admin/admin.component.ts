@@ -805,9 +805,52 @@ export class AdminComponent implements OnInit {
         },
         error: (err) => {
           this.sesionImportando.set(false);
+          if (this.ofrecerReimportar(err, carreraId, sesion)) return;
           this.toast.error(apiError(err));
         },
       });
+  }
+
+  /**
+   * La carrera ya tiene una sesión de ese tipo con otro contenido (un JSON
+   * corregido). Solo ADMIN y COMISARIO pueden reemplazarla: se pide
+   * confirmación porque borra los resultados y revierte el Elo/SR que dieron.
+   */
+  private ofrecerReimportar(err: unknown, carreraId: string, sesion: unknown): boolean {
+    const e = err as { status?: number; error?: { estado?: string; tipo?: string } };
+    if (e?.status !== 409 || e.error?.estado !== 'OTRA_SESION_IMPORTADA') return false;
+    if (!this.isAdmin() && !this.isComisario()) return false;
+    const tipo = e.error.tipo || '';
+    const aviso =
+      tipo === 'RACE'
+        ? ' Se borran los resultados actuales, se revierte el Elo/SR que dieron y se rehace la tabla del campeonato.'
+        : ' Se reemplazan los tiempos de clasificación y la pole.';
+    if (
+      !confirm(
+        'La carrera ya tiene una sesión ' +
+          tipo +
+          ' importada. ¿Reemplazarla por este JSON?' +
+          aviso,
+      )
+    ) {
+      return true;
+    }
+    this.sesionImportando.set(true);
+    this.api
+      .post<{ tipo?: string }>('/sesiones/reimportar?carreraId=' + carreraId, sesion)
+      .subscribe({
+        next: (res) => {
+          this.sesionImportando.set(false);
+          this.toast.success('Sesión ' + (res?.tipo || tipo) + ' reimportada.');
+          this.sesionImportJson.set('');
+          this.onSesionCarreraChange(carreraId);
+        },
+        error: (err2) => {
+          this.sesionImportando.set(false);
+          this.toast.error(apiError(err2));
+        },
+      });
+    return true;
   }
 
   limpiarFormSesion(): void {

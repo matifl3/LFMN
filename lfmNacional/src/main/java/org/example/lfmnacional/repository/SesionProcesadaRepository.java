@@ -18,5 +18,9 @@ public interface SesionProcesadaRepository extends JpaRepository<SesionProcesada
 
     boolean existsByCarrera_Id(Long carreraId);
 
+    boolean existsByCarrera_IdAndTipo(Long carreraId, String tipo);
+
+    void deleteByCarrera_IdAndTipo(Long carreraId, String tipo);
+
     void deleteByCarrera_Id(Long carreraId);
 }

@@ -88,6 +88,22 @@ class IdempotenciaSesionServiceTest {
     }
 
     @Test
+    void mismasCantidadesPeroDistintoContenidoDistintaClave() {
+        // Un JSON corregido (un tiempo arreglado) tiene los mismos conteos que el
+        // original. Con la clave por cantidades se rechazaba como duplicado.
+        SesionServerData original = sesion("RACE", 3, 3, 5, 4);
+        List<ResultadoSesionData> corregidos = new java.util.ArrayList<>(original.result());
+        ResultadoSesionData r = corregidos.get(0);
+        corregidos.set(0, new ResultadoSesionData(r.driverName(), r.driverGuid(), r.carId(), r.carModel(),
+                r.bestLap(), r.totalTime() + 5000L, r.ballastKG(), r.restrictor()));
+        SesionServerData corregida = new SesionServerData(original.trackName(), original.trackConfig(),
+                original.type(), original.durationSecs(), original.raceLaps(), original.cars(),
+                corregidos, original.laps(), original.events());
+
+        assertThat(service.claveSesion(CARRERA, corregida)).isNotEqualTo(service.claveSesion(CARRERA, original));
+    }
+
+    @Test
     void sesionVaciaNoRevienta() {
         SesionServerData vacia = new SesionServerData(null, null, null, null, null, null, null, null, null);
 
