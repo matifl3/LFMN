@@ -34,6 +34,23 @@ public class ResultadoCarrera {
     @Column(name = "posicion_final")
     private Integer posicionFinal;
 
+    /**
+     * Posicion con la que se cargo el resultado, antes de cualquier sancion.
+     * Las sanciones reclasifican siempre desde aca, asi revertir una no depende
+     * del estado que dejo otra. Null en filas viejas: se completa con la
+     * posicion actual la primera vez que se reclasifica la carrera.
+     */
+    @Column(name = "posicion_original")
+    private Integer posicionOriginal;
+
+    /**
+     * Vueltas completadas segun la sesion de AC. Ordena antes que el tiempo:
+     * el {@code TotalTime} de un doblado puede ser menor que el del ganador.
+     * Null en cargas manuales y filas viejas: entonces solo cuenta el tiempo.
+     */
+    @Column(name = "vueltas_completadas")
+    private Integer vueltasCompletadas;
+
     @Column(name = "tiempo_total")
     private Long tiempoTotal;
 

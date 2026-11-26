@@ -1,0 +1,858 @@
+{
+  "TrackName": "balcarce",
+  "TrackConfig": "chicana",
+  "Type": "RACE",
+  "DurationSecs": 0,
+  "RaceLaps": 10,
+  "Cars": [
+    {
+      "CarId": 0,
+      "Driver": {
+        "Name": "Ana",
+        "Team": "",
+        "Nation": "ARG",
+        "Guid": "76561190000000001",
+        "GuidsList": [
+          ""
+        ]
+      },
+      "Model": "apvs_actc_camaro_2025_tc1",
+      "Skin": "skin_ana",
+      "BallastKG": 0,
+      "Restrictor": 0
+    },
+    {
+      "CarId": 1,
+      "Driver": {
+        "Name": "Beto",
+        "Team": "",
+        "Nation": "ARG",
+        "Guid": "76561190000000002",
+        "GuidsList": [
+          ""
+        ]
+      },
+      "Model": "apvs_actc_camaro_2025_tc1",
+      "Skin": "skin_beto",
+      "BallastKG": 0,
+      "Restrictor": 0
+    },
+    {
+      "CarId": 2,
+      "Driver": {
+        "Name": "Caro",
+        "Team": "",
+        "Nation": "ARG",
+        "Guid": "76561190000000003",
+        "GuidsList": [
+          ""
+        ]
+      },
+      "Model": "apvs_actc_camaro_2025_tc1",
+      "Skin": "skin_caro",
+      "BallastKG": 0,
+      "Restrictor": 0
+    },
+    {
+      "CarId": 3,
+      "Driver": {
+        "Name": "Dani",
+        "Team": "",
+        "Nation": "ARG",
+        "Guid": "76561190000000004",
+        "GuidsList": [
+          ""
+        ]
+      },
+      "Model": "apvs_actc_camaro_2025_tc1",
+      "Skin": "skin_dani",
+      "BallastKG": 0,
+      "Restrictor": 0
+    },
+    {
+      "CarId": 4,
+      "Driver": {
+        "Name": "Eze",
+        "Team": "",
+        "Nation": "ARG",
+        "Guid": "76561190000000005",
+        "GuidsList": [
+          ""
+        ]
+      },
+      "Model": "apvs_actc_camaro_2025_tc1",
+      "Skin": "skin_eze",
+      "BallastKG": 0,
+      "Restrictor": 0
+    }
+  ],
+  "Result": [
+    {
+      "DriverName": "Ana",
+      "DriverGuid": "76561190000000001",
+      "CarId": 0,
+      "CarModel": "apvs_actc_camaro_2025_tc1",
+      "BestLap": 100000,
+      "TotalTime": 1000000,
+      "BallastKG": 0,
+      "Restrictor": 0
+    },
+    {
+      "DriverName": "Beto",
+      "DriverGuid": "76561190000000002",
+      "CarId": 1,
+      "CarModel": "apvs_actc_camaro_2025_tc1",
+      "BestLap": 102000,
+      "TotalTime": 1020000,
+      "BallastKG": 0,
+      "Restrictor": 0
+    },
+    {
+      "DriverName": "Caro",
+      "DriverGuid": "76561190000000003",
+      "CarId": 2,
+      "CarModel": "apvs_actc_camaro_2025_tc1",
+      "BestLap": 105000,
+      "TotalTime": 1050000,
+      "BallastKG": 0,
+      "Restrictor": 0
+    },
+    {
+      "DriverName": "Dani",
+      "DriverGuid": "76561190000000004",
+      "CarId": 3,
+      "CarModel": "apvs_actc_camaro_2025_tc1",
+      "BestLap": 110000,
+      "TotalTime": 990000,
+      "BallastKG": 0,
+      "Restrictor": 0
+    },
+    {
+      "DriverName": "Eze",
+      "DriverGuid": "76561190000000005",
+      "CarId": 4,
+      "CarModel": "apvs_actc_camaro_2025_tc1",
+      "BestLap": 104000,
+      "TotalTime": 0,
+      "BallastKG": 0,
+      "Restrictor": 0
+    }
+  ],
+  "Laps": [
+    {
+      "DriverName": "Ana",
+      "DriverGuid": "76561190000000001",
+      "CarId": 0,
+      "CarModel": "apvs_actc_camaro_2025_tc1",
+      "Timestamp": 160000,
+      "LapTime": 100000,
+      "Sectors": [
+        30000,
+        37000,
+        33000
+      ],
+      "Cuts": 0,
+      "BallastKG": 0,
+      "Tyre": "S",
+      "Restrictor": 0
+    },
+    {
+      "DriverName": "Beto",
+      "DriverGuid": "76561190000000002",
+      "CarId": 1,
+      "CarModel": "apvs_actc_camaro_2025_tc1",
+      "Timestamp": 162000,
+      "LapTime": 102000,
+      "Sectors": [
+        30600,
+        37740,
+        33660
+      ],
+      "Cuts": 0,
+      "BallastKG": 0,
+      "Tyre": "S",
+      "Restrictor": 0
+    },
+    {
+      "DriverName": "Eze",
+      "DriverGuid": "76561190000000005",
+      "CarId": 4,
+      "CarModel": "apvs_actc_camaro_2025_tc1",
+      "Timestamp": 164000,
+      "LapTime": 104000,
+      "Sectors": [
+        31200,
+        38480,
+        34320
+      ],
+      "Cuts": 0,
+      "BallastKG": 0,
+      "Tyre": "S",
+      "Restrictor": 0
+    },
+    {
+      "DriverName": "Caro",
+      "DriverGuid": "76561190000000003",
+      "CarId": 2,
+      "CarModel": "apvs_actc_camaro_2025_tc1",
+      "Timestamp": 165000,
+      "LapTime": 105000,
+      "Sectors": [
+        31500,
+        38850,
+        34650
+      ],
+      "Cuts": 0,
+      "BallastKG": 0,
+      "Tyre": "S",
+      "Restrictor": 0
+    },
+    {
+      "DriverName": "Dani",
+      "DriverGuid": "76561190000000004",
+      "CarId": 3,
+      "CarModel": "apvs_actc_camaro_2025_tc1",
+      "Timestamp": 170000,
+      "LapTime": 110000,
+      "Sectors": [
+        33000,
+        40700,
+        36300
+      ],
+      "Cuts": 0,
+      "BallastKG": 0,
+      "Tyre": "S",
+      "Restrictor": 0
+    },
+    {
+      "DriverName": "Ana",
+      "DriverGuid": "76561190000000001",
+      "CarId": 0,
+      "CarModel": "apvs_actc_camaro_2025_tc1",
+      "Timestamp": 260000,
+      "LapTime": 100000,
+      "Sectors": [
+        30000,
+        37000,
+        33000
+      ],
+      "Cuts": 0,
+      "BallastKG": 0,
+      "Tyre": "S",
+      "Restrictor": 0
+    },
+    {
+      "DriverName": "Beto",
+      "DriverGuid": "76561190000000002",
+      "CarId": 1,
+      "CarModel": "apvs_actc_camaro_2025_tc1",
+      "Timestamp": 264000,
+      "LapTime": 102000,
+      "Sectors": [
+        30600,
+        37740,
+        33660
+      ],
+      "Cuts": 0,
+      "BallastKG": 0,
+      "Tyre": "S",
+      "Restrictor": 0
+    },
+    {
+      "DriverName": "Eze",
+      "DriverGuid": "76561190000000005",
+      "CarId": 4,
+      "CarModel": "apvs_actc_camaro_2025_tc1",
+      "Timestamp": 268000,
+      "LapTime": 104000,
+      "Sectors": [
+        31200,
+        38480,
+        34320
+      ],
+      "Cuts": 0,
+      "BallastKG": 0,
+      "Tyre": "S",
+      "Restrictor": 0
+    },
+    {
+      "DriverName": "Caro",
+      "DriverGuid": "76561190000000003",
+      "CarId": 2,
+      "CarModel": "apvs_actc_camaro_2025_tc1",
+      "Timestamp": 270000,
+      "LapTime": 105000,
+      "Sectors": [
+        31500,
+        38850,
+        34650
+      ],
+      "Cuts": 0,
+      "BallastKG": 0,
+      "Tyre": "S",
+      "Restrictor": 0
+    },
+    {
+      "DriverName": "Dani",
+      "DriverGuid": "76561190000000004",
+      "CarId": 3,
+      "CarModel": "apvs_actc_camaro_2025_tc1",
+      "Timestamp": 280000,
+      "LapTime": 110000,
+      "Sectors": [
+        33000,
+        40700,
+        36300
+      ],
+      "Cuts": 0,
+      "BallastKG": 0,
+      "Tyre": "S",
+      "Restrictor": 0
+    },
+    {
+      "DriverName": "Ana",
+      "DriverGuid": "76561190000000001",
+      "CarId": 0,
+      "CarModel": "apvs_actc_camaro_2025_tc1",
+      "Timestamp": 360000,
+      "LapTime": 100000,
+      "Sectors": [
+        30000,
+        37000,
+        33000
+      ],
+      "Cuts": 0,
+      "BallastKG": 0,
+      "Tyre": "S",
+      "Restrictor": 0
+    },
+    {
+      "DriverName": "Beto",
+      "DriverGuid": "76561190000000002",
+      "CarId": 1,
+      "CarModel": "apvs_actc_camaro_2025_tc1",
+      "Timestamp": 366000,
+      "LapTime": 102000,
+      "Sectors": [
+        30600,
+        37740,
+        33660
+      ],
+      "Cuts": 0,
+      "BallastKG": 0,
+      "Tyre": "S",
+      "Restrictor": 0
+    },
+    {
+      "DriverName": "Eze",
+      "DriverGuid": "76561190000000005",
+      "CarId": 4,
+      "CarModel": "apvs_actc_camaro_2025_tc1",
+      "Timestamp": 372000,
+      "LapTime": 104000,
+      "Sectors": [
+        31200,
+        38480,
+        34320
+      ],
+      "Cuts": 0,
+      "BallastKG": 0,
+      "Tyre": "S",
+      "Restrictor": 0
+    },
+    {
+      "DriverName": "Caro",
+      "DriverGuid": "76561190000000003",
+      "CarId": 2,
+      "CarModel": "apvs_actc_camaro_2025_tc1",
+      "Timestamp": 375000,
+      "LapTime": 105000,
+      "Sectors": [
+        31500,
+        38850,
+        34650
+      ],
+      "Cuts": 0,
+      "BallastKG": 0,
+      "Tyre": "S",
+      "Restrictor": 0
+    },
+    {
+      "DriverName": "Dani",
+      "DriverGuid": "76561190000000004",
+      "CarId": 3,
+      "CarModel": "apvs_actc_camaro_2025_tc1",
+      "Timestamp": 390000,
+      "LapTime": 110000,
+      "Sectors": [
+        33000,
+        40700,
+        36300
+      ],
+      "Cuts": 0,
+      "BallastKG": 0,
+      "Tyre": "S",
+      "Restrictor": 0
+    },
+    {
+      "DriverName": "Ana",
+      "DriverGuid": "76561190000000001",
+      "CarId": 0,
+      "CarModel": "apvs_actc_camaro_2025_tc1",
+      "Timestamp": 460000,
+      "LapTime": 100000,
+      "Sectors": [
+        30000,
+        37000,
+        33000
+      ],
+      "Cuts": 0,
+      "BallastKG": 0,
+      "Tyre": "S",
+      "Restrictor": 0
+    },
+    {
+      "DriverName": "Beto",
+      "DriverGuid": "76561190000000002",
+      "CarId": 1,
+      "CarModel": "apvs_actc_camaro_2025_tc1",
+      "Timestamp": 468000,
+      "LapTime": 102000,
+      "Sectors": [
+        30600,
+        37740,
+        33660
+      ],
+      "Cuts": 0,
+      "BallastKG": 0,
+      "Tyre": "S",
+      "Restrictor": 0
+    },
+    {
+      "DriverName": "Caro",
+      "DriverGuid": "76561190000000003",
+      "CarId": 2,
+      "CarModel": "apvs_actc_camaro_2025_tc1",
+      "Timestamp": 480000,
+      "LapTime": 105000,
+      "Sectors": [
+        31500,
+        38850,
+        34650
+      ],
+      "Cuts": 0,
+      "BallastKG": 0,
+      "Tyre": "S",
+      "Restrictor": 0
+    },
+    {
+      "DriverName": "Dani",
+      "DriverGuid": "76561190000000004",
+      "CarId": 3,
+      "CarModel": "apvs_actc_camaro_2025_tc1",
+      "Timestamp": 500000,
+      "LapTime": 110000,
+      "Sectors": [
+        33000,
+        40700,
+        36300
+      ],
+      "Cuts": 0,
+      "BallastKG": 0,
+      "Tyre": "S",
+      "Restrictor": 0
+    },
+    {
+      "DriverName": "Ana",
+      "DriverGuid": "76561190000000001",
+      "CarId": 0,
+      "CarModel": "apvs_actc_camaro_2025_tc1",
+      "Timestamp": 560000,
+      "LapTime": 100000,
+      "Sectors": [
+        30000,
+        37000,
+        33000
+      ],
+      "Cuts": 0,
+      "BallastKG": 0,
+      "Tyre": "S",
+      "Restrictor": 0
+    },
+    {
+      "DriverName": "Beto",
+      "DriverGuid": "76561190000000002",
+      "CarId": 1,
+      "CarModel": "apvs_actc_camaro_2025_tc1",
+      "Timestamp": 570000,
+      "LapTime": 102000,
+      "Sectors": [
+        30600,
+        37740,
+        33660
+      ],
+      "Cuts": 0,
+      "BallastKG": 0,
+      "Tyre": "S",
+      "Restrictor": 0
+    },
+    {
+      "DriverName": "Caro",
+      "DriverGuid": "76561190000000003",
+      "CarId": 2,
+      "CarModel": "apvs_actc_camaro_2025_tc1",
+      "Timestamp": 585000,
+      "LapTime": 105000,
+      "Sectors": [
+        31500,
+        38850,
+        34650
+      ],
+      "Cuts": 0,
+      "BallastKG": 0,
+      "Tyre": "S",
+      "Restrictor": 0
+    },
+    {
+      "DriverName": "Dani",
+      "DriverGuid": "76561190000000004",
+      "CarId": 3,
+      "CarModel": "apvs_actc_camaro_2025_tc1",
+      "Timestamp": 610000,
+      "LapTime": 110000,
+      "Sectors": [
+        33000,
+        40700,
+        36300
+      ],
+      "Cuts": 0,
+      "BallastKG": 0,
+      "Tyre": "S",
+      "Restrictor": 0
+    },
+    {
+      "DriverName": "Ana",
+      "DriverGuid": "76561190000000001",
+      "CarId": 0,
+      "CarModel": "apvs_actc_camaro_2025_tc1",
+      "Timestamp": 660000,
+      "LapTime": 100000,
+      "Sectors": [
+        30000,
+        37000,
+        33000
+      ],
+      "Cuts": 0,
+      "BallastKG": 0,
+      "Tyre": "S",
+      "Restrictor": 0
+    },
+    {
+      "DriverName": "Beto",
+      "DriverGuid": "76561190000000002",
+      "CarId": 1,
+      "CarModel": "apvs_actc_camaro_2025_tc1",
+      "Timestamp": 672000,
+      "LapTime": 102000,
+      "Sectors": [
+        30600,
+        37740,
+        33660
+      ],
+      "Cuts": 0,
+      "BallastKG": 0,
+      "Tyre": "S",
+      "Restrictor": 0
+    },
+    {
+      "DriverName": "Caro",
+      "DriverGuid": "76561190000000003",
+      "CarId": 2,
+      "CarModel": "apvs_actc_camaro_2025_tc1",
+      "Timestamp": 690000,
+      "LapTime": 105000,
+      "Sectors": [
+        31500,
+        38850,
+        34650
+      ],
+      "Cuts": 0,
+      "BallastKG": 0,
+      "Tyre": "S",
+      "Restrictor": 0
+    },
+    {
+      "DriverName": "Dani",
+      "DriverGuid": "76561190000000004",
+      "CarId": 3,
+      "CarModel": "apvs_actc_camaro_2025_tc1",
+      "Timestamp": 720000,
+      "LapTime": 110000,
+      "Sectors": [
+        33000,
+        40700,
+        36300
+      ],
+      "Cuts": 0,
+      "BallastKG": 0,
+      "Tyre": "S",
+      "Restrictor": 0
+    },
+    {
+      "DriverName": "Ana",
+      "DriverGuid": "76561190000000001",
+      "CarId": 0,
+      "CarModel": "apvs_actc_camaro_2025_tc1",
+      "Timestamp": 760000,
+      "LapTime": 100000,
+      "Sectors": [
+        30000,
+        37000,
+        33000
+      ],
+      "Cuts": 0,
+      "BallastKG": 0,
+      "Tyre": "S",
+      "Restrictor": 0
+    },
+    {
+      "DriverName": "Beto",
+      "DriverGuid": "76561190000000002",
+      "CarId": 1,
+      "CarModel": "apvs_actc_camaro_2025_tc1",
+      "Timestamp": 774000,
+      "LapTime": 102000,
+      "Sectors": [
+        30600,
+        37740,
+        33660
+      ],
+      "Cuts": 0,
+      "BallastKG": 0,
+      "Tyre": "S",
+      "Restrictor": 0
+    },
+    {
+      "DriverName": "Caro",
+      "DriverGuid": "76561190000000003",
+      "CarId": 2,
+      "CarModel": "apvs_actc_camaro_2025_tc1",
+      "Timestamp": 795000,
+      "LapTime": 105000,
+      "Sectors": [
+        31500,
+        38850,
+        34650
+      ],
+      "Cuts": 0,
+      "BallastKG": 0,
+      "Tyre": "S",
+      "Restrictor": 0
+    },
+    {
+      "DriverName": "Dani",
+      "DriverGuid": "76561190000000004",
+      "CarId": 3,
+      "CarModel": "apvs_actc_camaro_2025_tc1",
+      "Timestamp": 830000,
+      "LapTime": 110000,
+      "Sectors": [
+        33000,
+        40700,
+        36300
+      ],
+      "Cuts": 0,
+      "BallastKG": 0,
+      "Tyre": "S",
+      "Restrictor": 0
+    },
+    {
+      "DriverName": "Ana",
+      "DriverGuid": "76561190000000001",
+      "CarId": 0,
+      "CarModel": "apvs_actc_camaro_2025_tc1",
+      "Timestamp": 860000,
+      "LapTime": 100000,
+      "Sectors": [
+        30000,
+        37000,
+        33000
+      ],
+      "Cuts": 0,
+      "BallastKG": 0,
+      "Tyre": "S",
+      "Restrictor": 0
+    },
+    {
+      "DriverName": "Beto",
+      "DriverGuid": "76561190000000002",
+      "CarId": 1,
+      "CarModel": "apvs_actc_camaro_2025_tc1",
+      "Timestamp": 876000,
+      "LapTime": 102000,
+      "Sectors": [
+        30600,
+        37740,
+        33660
+      ],
+      "Cuts": 0,
+      "BallastKG": 0,
+      "Tyre": "S",
+      "Restrictor": 0
+    },
+    {
+      "DriverName": "Caro",
+      "DriverGuid": "76561190000000003",
+      "CarId": 2,
+      "CarModel": "apvs_actc_camaro_2025_tc1",
+      "Timestamp": 900000,
+      "LapTime": 105000,
+      "Sectors": [
+        31500,
+        38850,
+        34650
+      ],
+      "Cuts": 0,
+      "BallastKG": 0,
+      "Tyre": "S",
+      "Restrictor": 0
+    },
+    {
+      "DriverName": "Dani",
+      "DriverGuid": "76561190000000004",
+      "CarId": 3,
+      "CarModel": "apvs_actc_camaro_2025_tc1",
+      "Timestamp": 940000,
+      "LapTime": 110000,
+      "Sectors": [
+        33000,
+        40700,
+        36300
+      ],
+      "Cuts": 0,
+      "BallastKG": 0,
+      "Tyre": "S",
+      "Restrictor": 0
+    },
+    {
+      "DriverName": "Ana",
+      "DriverGuid": "76561190000000001",
+      "CarId": 0,
+      "CarModel": "apvs_actc_camaro_2025_tc1",
+      "Timestamp": 960000,
+      "LapTime": 100000,
+      "Sectors": [
+        30000,
+        37000,
+        33000
+      ],
+      "Cuts": 0,
+      "BallastKG": 0,
+      "Tyre": "S",
+      "Restrictor": 0
+    },
+    {
+      "DriverName": "Beto",
+      "DriverGuid": "76561190000000002",
+      "CarId": 1,
+      "CarModel": "apvs_actc_camaro_2025_tc1",
+      "Timestamp": 978000,
+      "LapTime": 102000,
+      "Sectors": [
+        30600,
+        37740,
+        33660
+      ],
+      "Cuts": 0,
+      "BallastKG": 0,
+      "Tyre": "S",
+      "Restrictor": 0
+    },
+    {
+      "DriverName": "Caro",
+      "DriverGuid": "76561190000000003",
+      "CarId": 2,
+      "CarModel": "apvs_actc_camaro_2025_tc1",
+      "Timestamp": 1005000,
+      "LapTime": 105000,
+      "Sectors": [
+        31500,
+        38850,
+        34650
+      ],
+      "Cuts": 0,
+      "BallastKG": 0,
+      "Tyre": "S",
+      "Restrictor": 0
+    },
+    {
+      "DriverName": "Dani",
+      "DriverGuid": "76561190000000004",
+      "CarId": 3,
+      "CarModel": "apvs_actc_camaro_2025_tc1",
+      "Timestamp": 1050000,
+      "LapTime": 110000,
+      "Sectors": [
+        33000,
+        40700,
+        36300
+      ],
+      "Cuts": 0,
+      "BallastKG": 0,
+      "Tyre": "S",
+      "Restrictor": 0
+    },
+    {
+      "DriverName": "Ana",
+      "DriverGuid": "76561190000000001",
+      "CarId": 0,
+      "CarModel": "apvs_actc_camaro_2025_tc1",
+      "Timestamp": 1060000,
+      "LapTime": 100000,
+      "Sectors": [
+        30000,
+        37000,
+        33000
+      ],
+      "Cuts": 0,
+      "BallastKG": 0,
+      "Tyre": "S",
+      "Restrictor": 0
+    },
+    {
+      "DriverName": "Beto",
+      "DriverGuid": "76561190000000002",
+      "CarId": 1,
+      "CarModel": "apvs_actc_camaro_2025_tc1",
+      "Timestamp": 1080000,
+      "LapTime": 102000,
+      "Sectors": [
+        30600,
+        37740,
+        33660
+      ],
+      "Cuts": 0,
+      "BallastKG": 0,
+      "Tyre": "S",
+      "Restrictor": 0
+    },
+    {
+      "DriverName": "Caro",
+      "DriverGuid": "76561190000000003",
+      "CarId": 2,
+      "CarModel": "apvs_actc_camaro_2025_tc1",
+      "Timestamp": 1110000,
+      "LapTime": 105000,
+      "Sectors": [
+        31500,
+        38850,
+        34650
+      ],
+      "Cuts": 0,
+      "BallastKG": 0,
+      "Tyre": "S",
+      "Restrictor": 0
+    }
+  ],
+  "Events": []
+}

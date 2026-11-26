@@ -106,6 +106,8 @@ public class ResultadoCarreraService {
                             .usuario(usuario)
                             .build());
             resultado.setPosicionFinal(item.posicionFinal());
+            resultado.setPosicionOriginal(item.posicionFinal());
+            resultado.setVueltasCompletadas(item.vueltasCompletadas());
             resultado.setTiempoTotal(item.tiempoTotal());
             resultado.setVueltaRapida(item.vueltaRapida());
             resultado.setPoles(item.poles() != null && item.poles());

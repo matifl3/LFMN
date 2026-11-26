@@ -43,9 +43,15 @@ public class ResultadoImportService {
             return;
         }
 
+        // Primero las vueltas y despues el tiempo: el TotalTime de AC es lo que
+        // tardo cada uno en hacer SUS vueltas, asi que un doblado puede tener
+        // menos tiempo que el ganador y, ordenando solo por tiempo, quedaba 1ro.
         List<ResultadoSesionData> finalizaron = conGuid.stream()
                 .filter(r -> r.totalTime() != null && r.totalTime() > SIN_TIEMPO)
-                .sorted(java.util.Comparator.comparing(ResultadoSesionData::totalTime))
+                .sorted(java.util.Comparator
+                        .comparing((ResultadoSesionData r) -> vueltasCompletadas(sesion, r.driverGuid()),
+                                java.util.Comparator.reverseOrder())
+                        .thenComparing(ResultadoSesionData::totalTime))
                 .toList();
         List<ResultadoSesionData> dnf = conGuid.stream()
                 .filter(r -> r.totalTime() == null || r.totalTime() <= SIN_TIEMPO)
@@ -67,7 +73,8 @@ public class ResultadoImportService {
                     dato.totalTime(), vueltaRapidaValida(dato.bestLap()),
                     null, true, null, null,
                     clasificacionImportService.modeloDe(autos, dato),
-                    clasificacionImportService.skinDe(autos, dato)));
+                    clasificacionImportService.skinDe(autos, dato),
+                    (int) vueltasCompletadas(sesion, dato.driverGuid())));
         }
         for (ResultadoSesionData dato : dnf) {
             Usuario usuario = usuarioRepository.findByGuidSteam(dato.driverGuid()).orElse(null);
@@ -79,7 +86,8 @@ public class ResultadoImportService {
                     dato.totalTime(), vueltaRapidaValida(dato.bestLap()),
                     null, false, null, null,
                     clasificacionImportService.modeloDe(autos, dato),
-                    clasificacionImportService.skinDe(autos, dato)));
+                    clasificacionImportService.skinDe(autos, dato),
+                    (int) vueltasCompletadas(sesion, dato.driverGuid())));
         }
 
         if (items.isEmpty()) {
@@ -97,7 +105,7 @@ public class ResultadoImportService {
                             old.carreraId(), old.usuarioId(), old.posicionFinal(),
                             old.tiempoTotal(), old.vueltaRapida(),
                             true, old.finalizo(), old.eloGanado(), old.srGanado(),
-                            old.modeloAuto(), old.skinAuto()));
+                            old.modeloAuto(), old.skinAuto(), old.vueltasCompletadas()));
                     break;
                 }
             }

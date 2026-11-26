@@ -217,11 +217,8 @@ class SancionServiceTest {
         when(carreraService.getEntity(1L)).thenReturn(carrera);
         when(resultadoCarreraRepository.findByCarrera_IdOrderByPosicionFinalAsc(1L))
                 .thenReturn(List.of(r1, r2, r3, r4));
-        when(sancionRepository.save(any(Sancion.class))).thenAnswer(inv -> {
-            Sancion s = inv.getArgument(0);
-            s.setId(1L);
-            return s;
-        });
+        when(resultadoCarreraRepository.findByCarrera_IdAndUsuario_Id(1L, 1L)).thenReturn(Optional.of(r2));
+        guardarYListarSanciones();
 
         // El sancionado (u1) es 2do y pierde 2 puestos: cae 4to. Con la cuenta
         // anterior (2 + 2 = 4) empataba con el 4to y el renumerado lo dejaba 3ro,
@@ -260,11 +257,8 @@ class SancionServiceTest {
         when(usuarioService.getEntity(1L)).thenReturn(usuario);
         when(carreraService.getEntity(1L)).thenReturn(carrera);
         when(resultadoCarreraRepository.findByCarrera_IdOrderByPosicionFinalAsc(1L)).thenReturn(List.of(resultado));
-        when(sancionRepository.save(any(Sancion.class))).thenAnswer(inv -> {
-            Sancion s = inv.getArgument(0);
-            s.setId(1L);
-            return s;
-        });
+        when(resultadoCarreraRepository.findByCarrera_IdAndUsuario_Id(1L, 1L)).thenReturn(Optional.of(resultado));
+        guardarYListarSanciones();
 
         sancionService.create(new SancionRequest(1L, 1L, null, TipoSancion.PUESTOS, 2, "Test", OrigenSancion.ADMIN, null, null));
 
@@ -349,5 +343,23 @@ class SancionServiceTest {
         sancionService.revertirEfectos(sancion);
 
         verify(campeonatoService, never()).recalcularPuntos(any());
+    }
+
+    /**
+     * La clasificacion se rehace a partir de las sanciones activas de la carrera,
+     * que se leen del repository: la que se acaba de guardar tiene que aparecer
+     * ahi, como pasa con la base real.
+     */
+    private void guardarYListarSanciones() {
+        List<Sancion> guardadas = new java.util.ArrayList<>();
+        when(sancionRepository.save(any(Sancion.class))).thenAnswer(inv -> {
+            Sancion s = inv.getArgument(0);
+            s.setId(1L);
+            if (!guardadas.contains(s)) {
+                guardadas.add(s);
+            }
+            return s;
+        });
+        when(sancionRepository.findByCarrera_Id(1L)).thenAnswer(inv -> List.copyOf(guardadas));
     }
 }

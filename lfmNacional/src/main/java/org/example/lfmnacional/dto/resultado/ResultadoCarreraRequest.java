@@ -13,6 +13,7 @@ public record ResultadoCarreraRequest(
         Integer eloGanado,
         Integer srGanado,
         String modeloAuto,
-        String skinAuto
+        String skinAuto,
+        Integer vueltasCompletadas
 ) {
 }
