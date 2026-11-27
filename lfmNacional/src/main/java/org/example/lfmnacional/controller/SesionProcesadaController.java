@@ -1,5 +1,7 @@
 package org.example.lfmnacional.controller;
 
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.example.lfmnacional.entity.Usuario;
 import lombok.RequiredArgsConstructor;
 import org.example.lfmnacional.dto.sesion.SesionProcesadaResponse;
 import org.example.lfmnacional.service.SesionProcesadaService;
@@ -15,17 +17,17 @@ public class SesionProcesadaController {
     private final SesionProcesadaService sesionProcesadaService;
 
     @GetMapping
-    public List<SesionProcesadaResponse> listAll() {
-        return sesionProcesadaService.listAll();
+    public List<SesionProcesadaResponse> listAll(@AuthenticationPrincipal Usuario visor) {
+        return sesionProcesadaService.listAll(visor);
     }
 
     @GetMapping("/{id}")
-    public SesionProcesadaResponse getById(@PathVariable Long id) {
-        return sesionProcesadaService.getById(id);
+    public SesionProcesadaResponse getById(@PathVariable Long id, @AuthenticationPrincipal Usuario visor) {
+        return sesionProcesadaService.getById(id, visor);
     }
 
     @GetMapping("/carrera/{carreraId}")
-    public List<SesionProcesadaResponse> listarPorCarrera(@PathVariable Long carreraId) {
-        return sesionProcesadaService.listarPorCarrera(carreraId);
+    public List<SesionProcesadaResponse> listarPorCarrera(@PathVariable Long carreraId, @AuthenticationPrincipal Usuario visor) {
+        return sesionProcesadaService.listarPorCarrera(carreraId, visor);
     }
 }

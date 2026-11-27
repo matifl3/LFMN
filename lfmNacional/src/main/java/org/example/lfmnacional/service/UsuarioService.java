@@ -27,10 +27,12 @@ import org.example.lfmnacional.repository.SetupComentarioRepository;
 import org.example.lfmnacional.repository.SetupRepository;
 import org.example.lfmnacional.repository.UsuarioLogroRepository;
 import org.example.lfmnacional.repository.UsuarioRecompensaRepository;
+import org.example.lfmnacional.repository.ResumenResultados;
 import org.example.lfmnacional.repository.UsuarioRepository;
 import org.example.lfmnacional.repository.VotoComisarioRepository;
 import org.example.lfmnacional.repository.VueltaRepository;
 import org.example.lfmnacional.security.JwtUtil;
+import org.example.lfmnacional.security.LoginIntentos;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -43,8 +45,6 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class UsuarioService {
-
-    private static final int MIN_LENGTH_PASSWORD = 6;
 
     private final UsuarioRepository usuarioRepository;
     private final CampeonatoMiembroRepository campeonatoMiembroRepository;
@@ -71,6 +71,7 @@ public class UsuarioService {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final SteamService steamService;
+    private final LoginIntentos loginIntentos;
 
     @Transactional
     @CacheEvict(value = "usuarios", allEntries = true)
@@ -118,14 +119,7 @@ public class UsuarioService {
     @Transactional
     public LoginResponse vincularSteamConLogin(String email, String password, String tokenRegistro) {
         String guidSteam = steamService.extraerGuidRegistro(tokenRegistro);
-        Usuario usuario = usuarioRepository.findByEmail(email)
-                .orElseThrow(() -> new BusinessException("No existe una cuenta con ese email"));
-        if (!usuario.isHabilitado()) {
-            throw new BusinessException("El usuario esta deshabilitado. Contacta a un administrador.");
-        }
-        if (!passwordEncoder.matches(password, usuario.getPassword())) {
-            throw new BusinessException("Email o contrasena invalidos");
-        }
+        Usuario usuario = autenticar(email, password);
         if (usuarioRepository.existsByGuidSteam(guidSteam)) {
             throw new BusinessException("Esa cuenta de Steam ya esta vinculada a otro usuario");
         }
@@ -134,15 +128,30 @@ public class UsuarioService {
     }
 
     public LoginResponse login(LoginRequest request) {
-        Usuario usuario = usuarioRepository.findByEmail(request.email())
-                .orElseThrow(() -> new BusinessException("Email o contrasena invalidos"));
+        Usuario usuario = autenticar(request.email(), request.password());
+        return new LoginResponse(jwtUtil.generarToken(usuario), toResponse(usuario));
+    }
+
+    /**
+     * Valida email + password con bloqueo por cuenta tras varios fallos. El mismo
+     * mensaje para email inexistente o password incorrecta, y el aviso de cuenta
+     * deshabilitada solo despues de una password correcta: no se puede usar para
+     * averiguar que emails existen.
+     */
+    private Usuario autenticar(String email, String password) {
+        if (loginIntentos.bloqueado(email)) {
+            throw new BusinessException("Demasiados intentos fallidos. Proba de nuevo en 15 minutos");
+        }
+        Usuario usuario = usuarioRepository.findByEmail(email).orElse(null);
+        if (usuario == null || !passwordEncoder.matches(password, usuario.getPassword())) {
+            loginIntentos.registrarFallo(email);
+            throw new BusinessException("Email o contrasena invalidos");
+        }
+        loginIntentos.registrarExito(email);
         if (!usuario.isHabilitado()) {
             throw new BusinessException("El usuario esta deshabilitado. Contacta a un administrador.");
         }
-        if (!passwordEncoder.matches(request.password(), usuario.getPassword())) {
-            throw new BusinessException("Email o contrasena invalidos");
-        }
-        return new LoginResponse(jwtUtil.generarToken(usuario), toResponse(usuario));
+        return usuario;
     }
 
     public Usuario getEntity(Long id) {
@@ -180,8 +189,18 @@ public class UsuarioService {
 
     @Transactional
     @CacheEvict(value = "usuarios", allEntries = true)
-    public UsuarioResponse updatePerfil(Long id, UsuarioRequest request) {
+    public UsuarioResponse updatePerfil(Long id, UsuarioRequest request, Usuario actor) {
         Usuario usuario = getEntity(id);
+        boolean cambiaEmail = !usuario.getEmail().equalsIgnoreCase(request.email());
+        // El email es la llave de la recuperacion de password: cambiarlo exige la
+        // password actual, salvo que lo haga un ADMIN sobre otro usuario o que la
+        // cuenta (Steam) todavia no tenga password propia.
+        boolean editaSuPropioPerfil = actor != null && actor.getId().equals(id);
+        if (cambiaEmail && editaSuPropioPerfil && usuario.isPasswordEstablecida()
+                && (request.password() == null
+                    || !passwordEncoder.matches(request.password(), usuario.getPassword()))) {
+            throw new BusinessException("Para cambiar el email ingresa tu contrasena actual");
+        }
         if (!usuario.getEmail().equals(request.email()) && usuarioRepository.existsByEmail(request.email())) {
             throw new BusinessException("Ya existe un usuario con el email " + request.email());
         }
@@ -202,12 +221,8 @@ public class UsuarioService {
         if (usuario.isPasswordEstablecida() && !passwordEncoder.matches(request.passwordActual(), usuario.getPassword())) {
             throw new BusinessException("La contrasena actual es incorrecta");
         }
-        if (request.nuevaPassword() == null || request.nuevaPassword().length() < MIN_LENGTH_PASSWORD) {
-            throw new BusinessException("La nueva contrasena debe tener al menos " + MIN_LENGTH_PASSWORD + " caracteres");
-        }
-        usuario.setPassword(passwordEncoder.encode(request.nuevaPassword()));
-        usuario.setPasswordEstablecida(true);
-        usuario.setTokenVersion((usuario.getTokenVersion() != null ? usuario.getTokenVersion() : 0) + 1);
+        Usuario.validarPasswordNueva(request.nuevaPassword());
+        usuario.establecerPassword(passwordEncoder.encode(request.nuevaPassword()));
         usuarioRepository.save(usuario);
     }
 
@@ -230,7 +245,7 @@ public class UsuarioService {
         Usuario usuario = getEntity(id);
         usuario.setHabilitado(habilitado);
         if (!habilitado) {
-            usuario.setTokenVersion((usuario.getTokenVersion() != null ? usuario.getTokenVersion() : 0) + 1);
+            usuario.invalidarTokens();
         }
         return toResponse(usuarioRepository.save(usuario));
     }
@@ -307,15 +322,11 @@ public class UsuarioService {
     }
 
     public StatsResponse getStats(Long id) {
-        long carrerasDisputadas = resultadoCarreraRepository.countByUsuario_Id(id);
-        long carrerasFinalizadas = resultadoCarreraRepository.countByUsuario_IdAndFinalizoTrue(id);
-        long victorias = resultadoCarreraRepository.countByUsuario_IdAndPosicionFinal(id, 1);
-        long podios = resultadoCarreraRepository.countByUsuario_IdAndPosicionFinalLessThanEqual(id, 3);
-        long poles = resultadoCarreraRepository.countByUsuario_IdAndPolesTrue(id);
+        ResumenResultados r = resultadoCarreraRepository.resumenPorUsuario(id);
         long vueltasRapidas = resultadoCarreraRepository.countVueltaRapidaByUsuario(id);
-        double porcentaje = carrerasDisputadas == 0 ? 0.0
-                : (double) carrerasFinalizadas / carrerasDisputadas * 100;
-        return new StatsResponse(carrerasDisputadas, victorias, podios, poles, vueltasRapidas, porcentaje);
+        double porcentaje = r.carreras() == 0 ? 0.0
+                : (double) r.finalizadas() / r.carreras() * 100;
+        return new StatsResponse(r.carreras(), r.victorias(), r.podios(), r.poles(), vueltasRapidas, porcentaje);
     }
 
     @Transactional(readOnly = true)

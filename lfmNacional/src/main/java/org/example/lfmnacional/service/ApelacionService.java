@@ -27,6 +27,7 @@ public class ApelacionService {
     private final ApelacionRepository apelacionRepository;
     private final SancionService sancionService;
     private final NotificacionRepository notificacionRepository;
+    private final CampeonatoAccesoService accesoService;
 
     public Apelacion getEntity(Long id) {
         return apelacionRepository.findById(id)
@@ -34,25 +35,31 @@ public class ApelacionService {
     }
 
     @Transactional(readOnly = true)
-    public ApelacionResponse getById(Long id) {
-        return toResponse(getEntity(id));
+    public ApelacionResponse getById(Long id, Usuario visor) {
+        Apelacion apelacion = getEntity(id);
+        accesoService.exigirVeCarreraSiHay(visor, apelacion.getSancion().getCarrera());
+        return toResponse(apelacion);
     }
 
     @Transactional(readOnly = true)
-    public List<ApelacionResponse> listAll() {
-        return apelacionRepository.findAllByOrderByFechaDesc().stream()
-                .map(this::toResponse).toList();
+    public List<ApelacionResponse> listAll(Usuario visor) {
+        return visibles(apelacionRepository.findAllByOrderByFechaDesc(), visor);
     }
 
     @Transactional(readOnly = true)
-    public List<ApelacionResponse> listarPendientes() {
-        return apelacionRepository.findByEstadoOrderByFechaAsc(EstadoApelacion.PENDIENTE).stream()
-                .map(this::toResponse).toList();
+    public List<ApelacionResponse> listarPendientes(Usuario visor) {
+        return visibles(apelacionRepository.findByEstadoOrderByFechaAsc(EstadoApelacion.PENDIENTE), visor);
     }
 
     @Transactional(readOnly = true)
-    public List<ApelacionResponse> listarPorUsuario(Long usuarioId) {
-        return apelacionRepository.findByUsuario_IdOrderByFechaDesc(usuarioId).stream()
+    public List<ApelacionResponse> listarPorUsuario(Long usuarioId, Usuario visor) {
+        return visibles(apelacionRepository.findByUsuario_IdOrderByFechaDesc(usuarioId), visor);
+    }
+
+    private List<ApelacionResponse> visibles(List<Apelacion> apelaciones, Usuario visor) {
+        var ve = accesoService.filtroVeCarrera(visor);
+        return apelaciones.stream()
+                .filter(a -> ve.test(a.getSancion().getCarrera()))
                 .map(this::toResponse).toList();
     }
 

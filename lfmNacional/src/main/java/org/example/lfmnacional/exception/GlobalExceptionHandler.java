@@ -45,11 +45,15 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ApiError> handleConflict(DataIntegrityViolationException ex, HttpServletRequest request) {
+        // El mensaje del driver trae nombres de constraints y valores (ej. emails):
+        // va al log, no al cliente.
+        log.warn("Conflicto de integridad en {}: {}", request.getRequestURI(),
+                ex.getMostSpecificCause().getMessage());
         ApiError error = new ApiError(
                 LocalDateTime.now(),
                 HttpStatus.CONFLICT.value(),
                 HttpStatus.CONFLICT.getReasonPhrase(),
-                "Conflicto de integridad de datos: " + ex.getMostSpecificCause().getMessage(),
+                "La operacion choca con datos existentes (duplicado o registro en uso)",
                 request.getRequestURI());
         return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
     }

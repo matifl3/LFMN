@@ -26,7 +26,6 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class RecuperarPasswordService {
 
-    private static final long MIN_LENGTH_PASSWORD = 6;
     private static final String SCOPE_RESET = "reset";
 
     private final UsuarioRepository usuarioRepository;
@@ -48,10 +47,13 @@ public class RecuperarPasswordService {
 
     public void solicitar(String email) {
         usuarioRepository.findByEmail(email).ifPresent(u -> {
+            // Lleva el tokenVersion actual: al restablecer se incrementa, asi que el
+            // link sirve una sola vez (y cualquier cambio de password lo invalida).
             String token = jwtUtil.generarToken(
                     String.valueOf(u.getId()),
                     Map.of("scope", SCOPE_RESET),
-                    expiraMinutos);
+                    expiraMinutos,
+                    u.getVersionTokens());
             String link = frontendUrl + "/recuperar?token="
                     + URLEncoder.encode(token, StandardCharsets.UTF_8);
             JavaMailSender sender = mailSenderProvider.getIfAvailable();
@@ -79,20 +81,20 @@ public class RecuperarPasswordService {
     @Transactional
     public void restablecer(String token, String nuevaPassword) {
         Long userId;
+        int versionToken;
         try {
             userId = jwtUtil.extraerUserId(token, SCOPE_RESET);
+            versionToken = jwtUtil.extraerTokenVersion(token);
         } catch (Exception e) {
             throw new BusinessException("El enlace de recuperación es inválido o expiró");
         }
         Usuario usuario = usuarioRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException("El enlace de recuperación es inválido o expiró"));
-        if (nuevaPassword == null || nuevaPassword.length() < MIN_LENGTH_PASSWORD) {
-            throw new BusinessException(
-                    "La nueva contrasena debe tener al menos " + MIN_LENGTH_PASSWORD + " caracteres");
+        if (versionToken != usuario.getVersionTokens()) {
+            throw new BusinessException("El enlace de recuperación ya fue usado o expiró");
         }
-        usuario.setPassword(passwordEncoder.encode(nuevaPassword));
-        usuario.setPasswordEstablecida(true);
-        usuario.setTokenVersion((usuario.getTokenVersion() != null ? usuario.getTokenVersion() : 0) + 1);
+        Usuario.validarPasswordNueva(nuevaPassword);
+        usuario.establecerPassword(passwordEncoder.encode(nuevaPassword));
         usuarioRepository.save(usuario);
         log.info("Contraseña restablecida para el usuario {}", usuario.getId());
     }

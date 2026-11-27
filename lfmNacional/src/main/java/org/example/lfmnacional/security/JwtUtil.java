@@ -30,7 +30,7 @@ public class JwtUtil {
         Map<String, Object> claims = new HashMap<>();
         claims.put("rol", usuario.getRol().name());
         claims.put("nombrePiloto", usuario.getNombrePiloto());
-        return generarToken(usuario.getEmail(), claims, expiracionMinutos, usuario.getTokenVersion() != null ? usuario.getTokenVersion() : 0);
+        return generarToken(usuario.getEmail(), claims, expiracionMinutos, usuario.getVersionTokens());
     }
 
     public String generarToken(String subject, Map<String, Object> claims, long minutos) {
@@ -79,18 +79,27 @@ public class JwtUtil {
         }
     }
 
-    public String extraerEmail(String token) {
-        return parseClaims(token).getSubject();
+    /**
+     * Verifica firma y expiracion (jjwt lanza {@link JwtException} si falla) y
+     * devuelve los claims. Parsear una vez y leer todo de aca: antes el filtro
+     * verificaba la firma tres veces por request.
+     */
+    public Claims parsear(String token) {
+        return parseClaims(token);
     }
 
-    public boolean esValido(String token, String email) {
-        Claims claims = parseClaims(token);
-        return email.equals(claims.getSubject()) && claims.getExpiration().after(new Date());
+    /** true si es un token de sesion y no uno de proposito unico (reset, Steam). */
+    public static boolean esTokenDeSesion(Claims claims) {
+        return claims.get("scope") == null;
+    }
+
+    public static int tokenVersion(Claims claims) {
+        Object tv = claims.get("tv");
+        return tv == null ? 0 : Integer.parseInt(String.valueOf(tv));
     }
 
     public int extraerTokenVersion(String token) {
-        Object tv = parseClaims(token).get("tv");
-        return tv == null ? 0 : Integer.parseInt(String.valueOf(tv));
+        return tokenVersion(parseClaims(token));
     }
 
     private Claims parseClaims(String token) {

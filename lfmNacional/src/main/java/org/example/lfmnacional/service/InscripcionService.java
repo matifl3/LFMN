@@ -103,8 +103,11 @@ public class InscripcionService {
     }
 
     @Transactional(readOnly = true)
-    public List<InscripcionResponse> listarPorUsuario(Long usuarioId) {
-        return inscripcionRepository.findByUsuario_Id(usuarioId).stream().map(this::toResponse).toList();
+    public List<InscripcionResponse> listarPorUsuario(Long usuarioId, Usuario visor) {
+        var ve = accesoService.filtroVeCarrera(visor);
+        return inscripcionRepository.findByUsuario_Id(usuarioId).stream()
+                .filter(i -> ve.test(i.getCarrera()))
+                .map(this::toResponse).toList();
     }
 
     /**

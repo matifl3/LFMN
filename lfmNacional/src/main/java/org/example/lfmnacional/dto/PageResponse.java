@@ -9,4 +9,7 @@ public record PageResponse<T>(
         long totalElements,
         int totalPages
 ) {
+
+    /** Tope de {@code size} en los listados paginados: evita traer la tabla entera de un saque. */
+    public static final int MAX_SIZE = 100;
 }

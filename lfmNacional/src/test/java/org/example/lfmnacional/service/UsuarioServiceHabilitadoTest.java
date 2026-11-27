@@ -9,11 +9,13 @@ import org.example.lfmnacional.repository.ResultadoCarreraRepository;
 import org.example.lfmnacional.repository.SafetyRatingSancionRepository;
 import org.example.lfmnacional.repository.UsuarioRepository;
 import org.example.lfmnacional.security.JwtUtil;
+import org.example.lfmnacional.security.LoginIntentos;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -40,6 +42,8 @@ class UsuarioServiceHabilitadoTest {
     private PasswordEncoder passwordEncoder;
     @Mock
     private JwtUtil jwtUtil;
+    @Spy
+    private LoginIntentos loginIntentos = new LoginIntentos();
 
     @InjectMocks
     private UsuarioService usuarioService;

@@ -139,6 +139,12 @@ public boolean puedeParticipar(Usuario u, Campeonato c) {
 }
 ```
 
+Para **listados** de cosas que cuelgan de una carrera (incidentes, sanciones, apelaciones, votos,
+resoluciones, inscripciones, sesiones procesadas) está `filtroVeCarrera(visor)`: un `Predicate<Carrera>`
+memoizado por carrera (una consulta de membresía por carrera, no por fila; ADMIN y COMISARIO no
+consultan). Lo que no tiene carrera (una sanción manual) es visible. Para un recurso puntual,
+`exigirVeCarreraSiHay`. Ambos navegan relaciones lazy: se llaman dentro del `@Transactional` del servicio.
+
 Y la visibilidad distingue **el campeonato** de **su contenido**. El nombre, temporada y categoría
 son públicos siempre; el roster, la tabla, las carreras y los resultados exigen membresía:
 
@@ -503,6 +509,7 @@ Cada push a `main` redeploya ambos. `.github/workflows/ci.yml` corre `verify` en
 | `DB_URL` | JDBC de Aiven, con `ssl-mode=REQUIRED` |
 | `DB_USERNAME` / `DB_PASSWORD` | credenciales |
 | `JWT_SECRETO` | **sin default: prod no arranca sin esto** |
+| `ADMIN_PASSWORD` | password del admin sembrado. Sin default en prod: sin ella no se crea, y un `admin@lfm.local` con `admin123` queda deshabilitado |
 | `FRONTEND_URL` | CORS |
 
 En el frontend hay que cambiar las **tres** variants juntas (`environment.ts`,
@@ -536,7 +543,7 @@ aparece", sospechá de la caché antes que del código.
 | Tema | Detalle |
 |---|---|
 | Flyway deshabilitado | `ddl-auto=update` no migra ENUMs; las migraciones están escritas pero inactivas |
-| `DataSeeder` en prod | corre en cada arranque, incluso en producción. Es idempotente, pero crea usuarios de prueba reales |
+| `DataSeeder` en prod | corre en cada arranque, incluso en producción. Es idempotente; en prod ya no crea usuarios de prueba y exige `ADMIN_PASSWORD` |
 | Errores tragados | `catchError(() => of([]))` en varias tabs; impide diagnosticar desde la UI |
 | Paginación inconsistente | algunos endpoints devuelven `{content}`, otros array plano; `normalizeList` lo tapa |
 | Sin tests de frontend | `ng test` no tiene runner configurado y no hay `.spec.ts` |

@@ -29,23 +29,23 @@ public class ApelacionController {
     }
 
     @GetMapping
-    public List<ApelacionResponse> listAll() {
-        return apelacionService.listAll();
+    public List<ApelacionResponse> listAll(@AuthenticationPrincipal Usuario visor) {
+        return apelacionService.listAll(visor);
     }
 
     @GetMapping("/pendientes")
-    public List<ApelacionResponse> listarPendientes() {
-        return apelacionService.listarPendientes();
+    public List<ApelacionResponse> listarPendientes(@AuthenticationPrincipal Usuario visor) {
+        return apelacionService.listarPendientes(visor);
     }
 
     @GetMapping("/usuario/{usuarioId}")
-    public List<ApelacionResponse> listarPorUsuario(@PathVariable Long usuarioId) {
-        return apelacionService.listarPorUsuario(usuarioId);
+    public List<ApelacionResponse> listarPorUsuario(@PathVariable Long usuarioId, @AuthenticationPrincipal Usuario visor) {
+        return apelacionService.listarPorUsuario(usuarioId, visor);
     }
 
     @GetMapping("/{id}")
-    public ApelacionResponse getById(@PathVariable Long id) {
-        return apelacionService.getById(id);
+    public ApelacionResponse getById(@PathVariable Long id, @AuthenticationPrincipal Usuario visor) {
+        return apelacionService.getById(id, visor);
     }
 
     @PutMapping("/{id}/resolucion")

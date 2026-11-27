@@ -70,7 +70,7 @@ public class UsuarioController {
         if (!actual.getRol().equals(Rol.ADMIN) && !actual.getId().equals(id)) {
             throw new BusinessException("No tenes permiso para editar el perfil de otro usuario");
         }
-        return usuarioService.updatePerfil(id, request);
+        return usuarioService.updatePerfil(id, request, actual);
     }
 
     @PutMapping("/{id}/password")

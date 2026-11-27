@@ -52,6 +52,11 @@ export class MyProfileComponent implements OnInit {
   readonly emailValido = computed(() => EMAIL_RE.test(this.email().trim()));
   readonly nombreValido = computed(() => this.nombre().trim().length > 0);
   readonly cambiaEmail = computed(() => this.email().trim() !== (this.user()?.email ?? ''));
+  /** Cambiar el email exige la contraseña actual (si la cuenta tiene una). */
+  readonly passwordEmail = signal('');
+  readonly pidePasswordEmail = computed(
+    () => this.cambiaEmail() && !!this.user()?.passwordEstablecida,
+  );
   readonly datosModificados = computed(() => {
     const u = this.user();
     return this.cambiaEmail() || this.nombre().trim() !== (u?.nombrePiloto ?? '');
@@ -60,6 +65,7 @@ export class MyProfileComponent implements OnInit {
     () =>
       this.datosModificados() &&
       this.emailValido() &&
+      (!this.pidePasswordEmail() || this.passwordEmail().length > 0) &&
       this.nombreValido() &&
       !this.guardandoDatos(),
   );
@@ -242,6 +248,7 @@ export class MyProfileComponent implements OnInit {
     const u = this.user();
     this.nombre.set(u?.nombrePiloto ?? '');
     this.email.set(u?.email ?? '');
+    this.passwordEmail.set('');
   }
 
   guardar(): void {
@@ -252,7 +259,11 @@ export class MyProfileComponent implements OnInit {
     const cambiaEmail = this.cambiaEmail();
     this.guardandoDatos.set(true);
     this.api
-      .put<Usuario>(`/usuarios/${id}/perfil`, { email, nombrePiloto: this.nombre().trim() })
+      .put<Usuario>(`/usuarios/${id}/perfil`, {
+        email,
+        nombrePiloto: this.nombre().trim(),
+        password: this.pidePasswordEmail() ? this.passwordEmail() : undefined,
+      })
       .subscribe({
         next: (u) => {
           this.guardandoDatos.set(false);

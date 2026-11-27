@@ -13,6 +13,8 @@ public interface IncidentePilotoRepository extends JpaRepository<IncidentePiloto
 
     List<IncidentePiloto> findByUsuario_Id(Long usuarioId);
 
+    boolean existsByIncidente_IdAndUsuario_Id(Long incidenteId, Long usuarioId);
+
     @Modifying
     @Query(value = "DELETE FROM incidente_piloto WHERE incidente_id IN (SELECT id FROM incidente WHERE carrera_id = ?1)", nativeQuery = true)
     void deleteByCarreraId(Long carreraId);

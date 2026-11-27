@@ -20,6 +20,8 @@ public class RateLimitFilter extends OncePerRequestFilter {
     private static final int MAX_INTENTOS = 5;
     private static final long VENTANA_MILIS = 60_000;
     private static final long LOCKOUT_MILIS = 300_000;
+    /** Tope de IPs recordadas: sin esto el mapa crece con cada IP (o XFF falso) nueva. */
+    private static final int MAX_IPS = 10_000;
 
     private final Map<String, IntentoCuenta> intentosPorIp = new ConcurrentHashMap<>();
 
@@ -60,6 +62,9 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
     private boolean excedeLimite(String ip) {
         long ahora = System.currentTimeMillis();
+        if (intentosPorIp.size() > MAX_IPS) {
+            limpiar(ahora);
+        }
         IntentoCuenta cuenta = intentosPorIp.computeIfAbsent(ip, k -> IntentoCuenta.vacia());
         synchronized (cuenta) {
             if (ahora < cuenta.bloqueadoHasta()) {
@@ -78,6 +83,21 @@ public class RateLimitFilter extends OncePerRequestFilter {
         }
     }
 
+    private void limpiar(long ahora) {
+        intentosPorIp.entrySet().removeIf(e -> {
+            IntentoCuenta c = e.getValue();
+            synchronized (c) {
+                Long ultima = c.marcas().peekLast();
+                return ahora >= c.bloqueadoHasta() && (ultima == null || ahora - ultima > VENTANA_MILIS);
+            }
+        });
+    }
+
+    /**
+     * La IP sale de X-Forwarded-For (Render esta detras de un proxy) y el cliente
+     * puede falsearla: este filtro frena abuso casual por IP. La proteccion de
+     * fuerza bruta contra una cuenta es {@link LoginIntentos}, que va por email.
+     */
     private String obtenerIp(HttpServletRequest request) {
         String xff = request.getHeader("X-Forwarded-For");
         if (xff != null && !xff.isBlank()) {

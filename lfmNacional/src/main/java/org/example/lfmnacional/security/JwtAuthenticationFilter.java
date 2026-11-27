@@ -1,5 +1,6 @@
 package org.example.lfmnacional.security;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -32,11 +33,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (header != null && header.startsWith("Bearer ")) {
             String token = header.substring(7);
             try {
-                String email = jwtUtil.extraerEmail(token);
-                Usuario usuario = usuarioRepository.findByEmail(email).orElse(null);
+                Claims claims = jwtUtil.parsear(token);   // firma + expiracion, una sola vez
+                Usuario usuario = JwtUtil.esTokenDeSesion(claims)
+                        ? usuarioRepository.findByEmail(claims.getSubject()).orElse(null)
+                        : null;
                 if (usuario != null && usuario.isHabilitado()
-                        && jwtUtil.esValido(token, email)
-                        && jwtUtil.extraerTokenVersion(token) == (usuario.getTokenVersion() != null ? usuario.getTokenVersion() : 0)) {
+                        && JwtUtil.tokenVersion(claims) == usuario.getVersionTokens()) {
                     UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                             usuario,
                             null,

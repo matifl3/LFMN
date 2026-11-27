@@ -1,5 +1,7 @@
 package org.example.lfmnacional.service;
 
+import org.example.lfmnacional.entity.Usuario;
+import org.springframework.data.domain.PageImpl;
 import lombok.RequiredArgsConstructor;
 import org.example.lfmnacional.dto.sancion.SancionRequest;
 import org.example.lfmnacional.dto.sancion.SancionResponse;
@@ -40,6 +42,7 @@ public class SancionService {
     private final CarreraService carreraService;
     private final CampeonatoService campeonatoService;
     private final LogroService logroService;
+    private final CampeonatoAccesoService accesoService;
 
     public Sancion getEntity(Long id) {
         return sancionRepository.findById(id)
@@ -47,25 +50,34 @@ public class SancionService {
     }
 
     @Transactional(readOnly = true)
-    public SancionResponse getById(Long id) {
-        return toResponse(getEntity(id));
+    public SancionResponse getById(Long id, Usuario visor) {
+        Sancion sancion = getEntity(id);
+        accesoService.exigirVeCarreraSiHay(visor, sancion.getCarrera());
+        return toResponse(sancion);
+    }
+
+    /** Filtra las de campeonatos privados: la pagina puede traer menos que {@code size}. */
+    @Transactional(readOnly = true)
+    public Page<SancionResponse> listAll(Pageable pageable, Usuario visor) {
+        Page<Sancion> pagina = sancionRepository.findAll(pageable);
+        return new PageImpl<>(visibles(pagina.getContent(), visor), pageable, pagina.getTotalElements());
     }
 
     @Transactional(readOnly = true)
-    public Page<SancionResponse> listAll(Pageable pageable) {
-        return sancionRepository.findAll(pageable).map(this::toResponse);
+    public List<SancionResponse> listarPorUsuario(Long usuarioId, Usuario visor) {
+        return visibles(sancionRepository.findByUsuario_IdOrderByFechaDesc(usuarioId), visor);
     }
 
     @Transactional(readOnly = true)
-    public List<SancionResponse> listarPorUsuario(Long usuarioId) {
-        return sancionRepository.findByUsuario_IdOrderByFechaDesc(usuarioId).stream()
-                .map(this::toResponse).toList();
-    }
-
-    @Transactional(readOnly = true)
-    public List<SancionResponse> listarPorCarrera(Long carreraId) {
+    public List<SancionResponse> listarPorCarrera(Long carreraId, Usuario visor) {
+        accesoService.exigirVeCarrera(visor, carreraService.getEntity(carreraId));
         return sancionRepository.findByCarrera_Id(carreraId).stream()
                 .map(this::toResponse).toList();
+    }
+
+    private List<SancionResponse> visibles(List<Sancion> sanciones, Usuario visor) {
+        var ve = accesoService.filtroVeCarrera(visor);
+        return sanciones.stream().filter(s -> ve.test(s.getCarrera())).map(this::toResponse).toList();
     }
 
     @Transactional
