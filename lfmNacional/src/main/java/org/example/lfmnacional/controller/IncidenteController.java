@@ -87,15 +87,17 @@ public class IncidenteController {
 
     @PostMapping("/{id}/votos")
     @PreAuthorize("hasRole('ADMIN') or hasRole('COMISARIO')")
-    public VotoResponse votar(@PathVariable Long id, @Valid @RequestBody VotoRequest request) {
-        return incidenteService.votar(id, request);
+    public VotoResponse votar(@AuthenticationPrincipal Usuario actual,
+                              @PathVariable Long id, @Valid @RequestBody VotoRequest request) {
+        return incidenteService.votar(id, request, actual);
     }
 
     @PostMapping("/{id}/resolucion")
     @PreAuthorize("hasRole('ADMIN') or hasRole('COMISARIO')")
     public ResponseEntity<ResolucionResponse> guardarResolucion(
+            @AuthenticationPrincipal Usuario actual,
             @PathVariable Long id,
             @Valid @RequestBody ResolucionRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(incidenteService.guardarResolucion(id, request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(incidenteService.guardarResolucion(id, request, actual));
     }
 }

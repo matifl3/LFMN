@@ -73,7 +73,7 @@
           }
         }
         @if (auth.esModerador()) {
-          <button class="btn btn-primary btn-sm" style="margin-top:var(--sp-4)" (click)="modalNuevaSancion.set(true)">+ Nueva sanción</button>
+          <button class="btn btn-primary btn-sm" style="margin-top:var(--sp-4)" (click)="abrirNuevaSancion(false)">+ Nueva sanción</button>
         }
       }
 
@@ -181,7 +181,7 @@
       </div>
     }
 
-    <h4 style="margin-top:var(--sp-5)">Votos de comisarios ({{ votosIncidente().length }})</h4>
+    <h4 style="margin-top:var(--sp-5)">Votos de comisarios ({{ votosIncidente().length }}/{{ inc.quorumRequerido }})</h4>
     @if (votosIncidente().length === 0) {
       <p class="text-terciario" style="font-size:var(--fs-sm)">Sin votos todavía.</p>
     } @else {
@@ -194,10 +194,13 @@
     }
 
     @if (auth.esModerador() && inc.estado !== 'RESUELTO') {
-      <div style="margin-top:var(--sp-4);display:flex;gap:var(--sp-2)">
-        <button class="btn btn-ghost btn-sm" style="border-color:var(--status-positivo)" (click)="votar('A_FAVOR')">A favor</button>
-        <button class="btn btn-ghost btn-sm" style="border-color:var(--lbm-rojo-dim);color:var(--lbm-rojo-hi)" (click)="votar('EN_CONTRA')">En contra</button>
-        <button class="btn btn-ghost btn-sm" (click)="votar('ABSTENCION')">Abstención</button>
+      @if (miVoto(); as voto) {
+        <p class="text-terciario" style="margin-top:var(--sp-4);font-size:var(--fs-sm)">Tu voto: {{ decisionLabel[voto] || voto }}. Podés cambiarlo hasta que se resuelva.</p>
+      }
+      <div style="margin-top:var(--sp-3);display:flex;gap:var(--sp-2)">
+        <button class="btn btn-ghost btn-sm" style="border-color:var(--status-positivo)" [disabled]="votando()" [attr.aria-pressed]="miVoto()==='A_FAVOR'" (click)="votar('A_FAVOR')">A favor</button>
+        <button class="btn btn-ghost btn-sm" style="border-color:var(--lbm-rojo-dim);color:var(--lbm-rojo-hi)" [disabled]="votando()" [attr.aria-pressed]="miVoto()==='EN_CONTRA'" (click)="votar('EN_CONTRA')">En contra</button>
+        <button class="btn btn-ghost btn-sm" [disabled]="votando()" [attr.aria-pressed]="miVoto()==='ABSTENCION'" (click)="votar('ABSTENCION')">Abstención</button>
       </div>
       <div class="field" style="margin-top:var(--sp-3)"><input class="input" [ngModel]="votoComentario()" (ngModelChange)="votoComentario.set($event)" placeholder="Comentario (opcional)" /></div>
     }
@@ -209,7 +212,11 @@
       </div>
     }
 
-    @if (auth.esModerador() && inc.estado !== 'RESUELTO' && votosIncidente().length >= (inc.quorumRequerido || 2)) {
+    @if (auth.esModerador() && inc.estado !== 'RESUELTO' && votosIncidente().length < inc.quorumRequerido) {
+      <p class="text-terciario" style="margin-top:var(--sp-5);font-size:var(--fs-sm)">Para resolver hacen falta {{ inc.quorumRequerido }} votos de comisarios.</p>
+    }
+
+    @if (auth.esModerador() && inc.estado !== 'RESUELTO' && votosIncidente().length >= inc.quorumRequerido) {
       <div style="margin-top:var(--sp-5)">
         <h4>Resolver incidente</h4>
         <div class="field" style="margin-top:var(--sp-3)"><textarea class="textarea" [ngModel]="resolucionExplicacion()" (ngModelChange)="resolucionExplicacion.set($event)" placeholder="Explicá la resolución del incidente…"></textarea></div>
@@ -217,13 +224,13 @@
           <div class="flex-col gap-2" style="margin-bottom:var(--sp-3)">
             @for (sr of sancionesResolver(); track $index) {
               <div class="flex-between chip chip-sanctioned" style="justify-content:flex-start;gap:var(--sp-2)">
-                <span>{{ sr.tipo }}</span><span>{{ sr.motivo }}</span>
+                <span>{{ usuarioNombre(sr.usuarioId) }}</span><span>{{ sancionDetalle(sr) }}</span><span>{{ sr.motivo }}</span>
                 <button class="btn btn-ghost btn-sm" style="margin-left:auto" aria-label="Quitar sanción de la resolución" (click)="quitarSancionResolver($index)">×</button>
               </div>
             }
           </div>
         }
-        <button class="btn btn-ghost btn-sm" style="margin-bottom:var(--sp-3)" (click)="modalNuevaSancion.set(true)">+ Agregar sanción</button>
+        <button class="btn btn-ghost btn-sm" style="margin-bottom:var(--sp-3)" (click)="abrirNuevaSancion(true)">+ Agregar sanción</button>
         <div><button class="btn btn-primary" [class.is-loading]="resolviendo()" (click)="resolverIncidente()">Resolver incidente</button></div>
       </div>
     }
@@ -254,19 +261,24 @@
   }
 </app-modal>
 
-<app-modal [abierto]="modalNuevaSancion()" [titulo]="'Nueva sanción'" (cerrado)="modalNuevaSancion.set(false)">
+<app-modal [abierto]="modalNuevaSancion()" [titulo]="sancionParaResolucion() ? 'Sanción de la resolución' : 'Nueva sanción'" (cerrado)="modalNuevaSancion.set(false)">
+  @if (sancionParaResolucion()) {
+    <p class="text-terciario" style="margin-bottom:var(--sp-4);font-size:var(--fs-sm)">Se aplica al confirmar la resolución, en la carrera del incidente.</p>
+  }
   <div class="field"><label>Piloto *</label>
     <select class="select" [ngModel]="sanPilotoId()" (ngModelChange)="sanPilotoId.set($event)">
       <option value="">Seleccionar piloto…</option>
       @for (u of usuariosBase(); track u.id) { <option [value]="u.id">{{ u.nombrePiloto }}</option> }
     </select>
   </div>
+  @if (!sancionParaResolucion()) {
   <div class="field"><label>Carrera</label>
     <select class="select" [ngModel]="sanCarreraId()" (ngModelChange)="sanCarreraId.set($event)">
       <option value="">Seleccionar carrera…</option>
       @for (c of carreras(); track c.id) { <option [value]="c.id">{{ c.nombre }}</option> }
     </select>
   </div>
+  }
   <div class="field"><label>Tipo</label>
     <select class="select" [ngModel]="sanTipo()" (ngModelChange)="sanTipo.set($event)">
       <option value="ELO">Elo</option>
@@ -280,6 +292,6 @@
   <div class="field"><label>Motivo *</label><textarea class="textarea" [ngModel]="sanMotivo()" (ngModelChange)="sanMotivo.set($event)"></textarea></div>
   <div style="display:flex;justify-content:flex-end;gap:var(--sp-3);margin-top:var(--sp-4)">
     <button class="btn btn-ghost" (click)="modalNuevaSancion.set(false)">Cancelar</button>
-    <button class="btn btn-primary" [class.is-loading]="enviando()" (click)="crearSancion()">Crear sanción</button>
+    <button class="btn btn-primary" [class.is-loading]="enviando()" (click)="crearSancion()">{{ sancionParaResolucion() ? 'Agregar a la resolución' : 'Crear sanción' }}</button>
   </div>
 </app-modal>

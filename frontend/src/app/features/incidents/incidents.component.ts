@@ -25,6 +25,9 @@ import { FechaRelativaPipe } from '../../core/pipes/fecha-relativa.pipe';
 type Vista = 'incidentes' | 'sanciones' | 'apelaciones' | 'decisiones';
 type FiltroIncidente = 'TODOS' | 'PENDIENTES' | 'RESUELTOS';
 
+/** Sanción que se arma en el panel de resolución y viaja con ella (no se crea sola). */
+type SancionBorrador = Pick<Sancion, 'usuarioId' | 'tipo' | 'valor' | 'motivo'>;
+
 const DECISION_LABEL: Record<string, string> = {
   A_FAVOR: 'A favor',
   EN_CONTRA: 'En contra',
@@ -72,6 +75,8 @@ export class IncidentsComponent implements OnInit {
   readonly resolverRespuesta = signal('');
 
   readonly modalNuevaSancion = signal(false);
+  /** true: el modal de sanción agrega un borrador a la resolución en vez de crearla. */
+  readonly sancionParaResolucion = signal(false);
 
   readonly reportCarreraId = signal('');
   readonly reportVuelta = signal<number | null>(null);
@@ -93,6 +98,12 @@ export class IncidentsComponent implements OnInit {
 
   readonly enviando = signal(false);
   readonly resolviendo = signal(false);
+  readonly votando = signal(false);
+
+  readonly miVoto = computed(
+    () =>
+      this.votosIncidente().find((v) => v.comisarioId === this.auth.user()?.id)?.decision ?? null,
+  );
 
   readonly incidentesFiltrados = computed(() => {
     const f = this.filtroEstado();
@@ -102,7 +113,7 @@ export class IncidentsComponent implements OnInit {
       return true;
     });
   });
-  readonly sancionesResolver = signal<Sancion[]>([]);
+  readonly sancionesResolver = signal<SancionBorrador[]>([]);
 
   ngOnInit(): void {
     if (!this.auth.autenticado()) {
@@ -120,9 +131,12 @@ export class IncidentsComponent implements OnInit {
     const allSanciones$ = this.auth.esModerador()
       ? this.api.list<Sancion>('/sanciones').pipe(this.carga.siFalla([]))
       : of<Sancion[]>([]);
-    const decisiones$ = this.auth.esModerador() && userId
-      ? this.api.list<DecisionComisario>('/incidentes/comisario/' + userId + '/decisiones').pipe(this.carga.siFalla([]))
-      : of<DecisionComisario[]>([]);
+    const decisiones$ =
+      this.auth.esModerador() && userId
+        ? this.api
+            .list<DecisionComisario>('/incidentes/comisario/' + userId + '/decisiones')
+            .pipe(this.carga.siFalla([]))
+        : of<DecisionComisario[]>([]);
     forkJoin({
       incidentes: this.api.list<Incidente>('/incidentes').pipe(this.carga.siFalla([])),
       carreras: this.api.list<Carrera>('/carreras').pipe(this.carga.siFalla([])),
@@ -158,21 +172,31 @@ export class IncidentsComponent implements OnInit {
   }
 
   abrirDetalle(id: number): void {
+    if (this.detalleIncidente()?.id !== id) {
+      this.detalleIncidente.set(null);
+      this.pilotosIncidente.set([]);
+      this.votosIncidente.set([]);
+      this.resolucionIncidente.set(null);
+      this.sancionesResolver.set([]);
+      this.resolucionExplicacion.set('');
+    }
     this.modalDetalle.set(true);
     forkJoin({
       incidente: this.api.get<Incidente>('/incidentes/' + id).pipe(this.carga.siFalla(null)),
-      pilotos: this.api.list<IncidentePiloto>('/incidentes/' + id + '/pilotos').pipe(this.carga.siFalla([])),
+      pilotos: this.api
+        .list<IncidentePiloto>('/incidentes/' + id + '/pilotos')
+        .pipe(this.carga.siFalla([])),
       votos: this.api.list<Voto>('/votos/incidente/' + id).pipe(this.carga.siFalla([])),
-      resolucion: this.api.get<Resolucion>('/incidentes/' + id + '/resolucion').pipe(this.carga.siFalla(null)),
+      resolucion: this.api
+        .get<Resolucion>('/incidentes/' + id + '/resolucion')
+        .pipe(this.carga.siFalla(null)),
     }).subscribe({
       next: (r) => {
         this.detalleIncidente.set(r.incidente);
         this.pilotosIncidente.set(r.pilotos);
         this.votosIncidente.set(r.votos);
         this.resolucionIncidente.set(r.resolucion);
-        this.sancionesResolver.set([]);
         this.asignarPilotoId.set('');
-        this.resolucionExplicacion.set('');
       },
     });
   }
@@ -184,55 +208,68 @@ export class IncidentsComponent implements OnInit {
       this.toast.error('Seleccioná un piloto.');
       return;
     }
-    this.api.post('/incidentes/' + id + '/pilotos', [{ usuarioId, rol: this.asignarRol() }]).subscribe({
-      next: () => {
-        this.toast.success('Piloto asignado.');
-        this.abrirDetalle(id);
-      },
-      error: (err) => this.toast.error(apiError(err)),
-    });
+    this.api
+      .post('/incidentes/' + id + '/pilotos', [{ usuarioId, rol: this.asignarRol() }])
+      .subscribe({
+        next: () => {
+          this.toast.success('Piloto asignado.');
+          this.abrirDetalle(id);
+        },
+        error: (err) => this.toast.error(apiError(err)),
+      });
   }
 
   votar(decision: 'A_FAVOR' | 'EN_CONTRA' | 'ABSTENCION'): void {
     const id = this.detalleIncidente()?.id;
-    if (!id) return;
-    this.api.post('/incidentes/' + id + '/votos', {
-      comisarioId: this.auth.user()?.id,
-      decision,
-      comentario: this.votoComentario()?.trim() || null,
-    }).subscribe({
-      next: () => {
-        this.toast.success('Voto registrado.');
-        this.votoComentario.set('');
-        this.abrirDetalle(id);
-      },
-      error: (err) => this.toast.error(apiError(err)),
-    });
+    if (!id || this.votando()) return;
+    this.votando.set(true);
+    this.api
+      .post('/incidentes/' + id + '/votos', {
+        decision,
+        comentario: this.votoComentario()?.trim() || null,
+      })
+      .subscribe({
+        next: () => {
+          this.votando.set(false);
+          this.toast.success('Voto registrado.');
+          this.votoComentario.set('');
+          this.abrirDetalle(id);
+          this.cargar();
+        },
+        error: (err) => {
+          this.votando.set(false);
+          this.toast.error(apiError(err));
+        },
+      });
   }
 
   resolverIncidente(): void {
     const id = this.detalleIncidente()?.id;
     if (!id) return;
+    const explicacion = this.resolucionExplicacion()?.trim();
+    if (!explicacion) {
+      this.toast.error('Explicá la resolución del incidente.');
+      return;
+    }
     this.resolviendo.set(true);
     const sanciones = this.sancionesResolver();
-    this.api.post('/incidentes/' + id + '/resolucion', {
-      comisarioId: this.auth.user()?.id,
-      explicacion: this.resolucionExplicacion(),
-      sanciones: sanciones.length
-        ? sanciones.map((s) => ({ usuarioId: s.usuarioId, tipo: s.tipo, valor: s.valor, motivo: s.motivo, origen: 'COMISARIO' }))
-        : null,
-    }).subscribe({
-      next: () => {
-        this.resolviendo.set(false);
-        this.toast.success('Incidente resuelto.');
-        this.modalDetalle.set(false);
-        this.cargar();
-      },
-      error: (err) => {
-        this.resolviendo.set(false);
-        this.toast.error(apiError(err));
-      },
-    });
+    this.api
+      .post('/incidentes/' + id + '/resolucion', {
+        explicacion,
+        sanciones: sanciones.length ? sanciones.map((s) => ({ ...s, origen: 'COMISARIO' })) : null,
+      })
+      .subscribe({
+        next: () => {
+          this.resolviendo.set(false);
+          this.toast.success('Incidente resuelto.');
+          this.modalDetalle.set(false);
+          this.cargar();
+        },
+        error: (err) => {
+          this.resolviendo.set(false);
+          this.toast.error(apiError(err));
+        },
+      });
   }
 
   abrirApelar(s: Sancion): void {
@@ -278,14 +315,35 @@ export class IncidentsComponent implements OnInit {
       this.toast.error('Elegí un estado y escribí una respuesta.');
       return;
     }
-    this.api.put<Apelacion>('/apelaciones/' + a.id + '/resolucion', { estado, respuestaAdmin: respuesta }).subscribe({
-      next: () => {
-        this.toast.success('Apelación resuelta.');
-        this.modalResolverApelacion.set(false);
-        this.cargar();
-      },
-      error: (err) => this.toast.error(apiError(err)),
-    });
+    this.api
+      .put<Apelacion>('/apelaciones/' + a.id + '/resolucion', { estado, respuestaAdmin: respuesta })
+      .subscribe({
+        next: () => {
+          this.toast.success('Apelación resuelta.');
+          this.modalResolverApelacion.set(false);
+          this.cargar();
+        },
+        error: (err) => this.toast.error(apiError(err)),
+      });
+  }
+
+  abrirNuevaSancion(paraResolucion: boolean): void {
+    this.sancionParaResolucion.set(paraResolucion);
+    this.limpiarFormSancion();
+    // En la resolución lo habitual es sancionar al causante: lo preselecciona.
+    if (paraResolucion) {
+      const causante = this.pilotosIncidente().find((p) => p.rol === 'CAUSANTE');
+      if (causante) this.sanPilotoId.set(String(causante.usuarioId));
+    }
+    this.modalNuevaSancion.set(true);
+  }
+
+  private limpiarFormSancion(): void {
+    this.sanPilotoId.set('');
+    this.sanCarreraId.set('');
+    this.sanTipo.set('ELO');
+    this.sanValor.set(null);
+    this.sanMotivo.set('');
   }
 
   crearSancion(): void {
@@ -295,31 +353,38 @@ export class IncidentsComponent implements OnInit {
       this.toast.error('Seleccioná un piloto y escribí un motivo.');
       return;
     }
+    if (this.sancionParaResolucion()) {
+      // Se aplica recién al resolver, junto con la resolución y en su misma carrera.
+      this.sancionesResolver.update((arr) => [
+        ...arr,
+        { usuarioId, tipo: this.sanTipo(), valor: this.sanValor() ?? undefined, motivo },
+      ]);
+      this.modalNuevaSancion.set(false);
+      return;
+    }
     this.enviando.set(true);
-    this.api.post<Sancion>('/sanciones', {
-      usuarioId,
-      carreraId: this.sanCarreraId() ? Number(this.sanCarreraId()) : null,
-      tipo: this.sanTipo(),
-      valor: this.sanValor() ?? null,
-      motivo,
-      origen: 'ADMIN',
-    }).subscribe({
-      next: () => {
-        this.enviando.set(false);
-        this.toast.success('Sanción creada.');
-        this.modalNuevaSancion.set(false);
-        this.sanPilotoId.set('');
-        this.sanCarreraId.set('');
-        this.sanTipo.set('ELO');
-        this.sanValor.set(null);
-        this.sanMotivo.set('');
-        this.cargar();
-      },
-      error: (err) => {
-        this.enviando.set(false);
-        this.toast.error(apiError(err));
-      },
-    });
+    this.api
+      .post<Sancion>('/sanciones', {
+        usuarioId,
+        carreraId: this.sanCarreraId() ? Number(this.sanCarreraId()) : null,
+        tipo: this.sanTipo(),
+        valor: this.sanValor() ?? null,
+        motivo,
+        origen: 'ADMIN',
+      })
+      .subscribe({
+        next: () => {
+          this.enviando.set(false);
+          this.toast.success('Sanción creada.');
+          this.modalNuevaSancion.set(false);
+          this.limpiarFormSancion();
+          this.cargar();
+        },
+        error: (err) => {
+          this.enviando.set(false);
+          this.toast.error(apiError(err));
+        },
+      });
   }
 
   enviarReporte(): void {
@@ -330,33 +395,35 @@ export class IncidentsComponent implements OnInit {
       return;
     }
     this.enviando.set(true);
-    this.api.post<Incidente>('/incidentes', {
-      carreraId,
-      vuelta: this.reportVuelta() ?? null,
-      descripcion,
-      videoUrl: this.reportVideo()?.trim() || null,
-    }).subscribe({
-      next: () => {
-        this.enviando.set(false);
-        this.toast.success('Incidente reportado.');
-        this.reportCarreraId.set('');
-        this.reportVuelta.set(null);
-        this.reportDesc.set('');
-        this.reportVideo.set('');
-        this.cargar();
-      },
-      error: (err) => {
-        this.enviando.set(false);
-        this.toast.error(apiError(err));
-      },
-    });
+    this.api
+      .post<Incidente>('/incidentes', {
+        carreraId,
+        vuelta: this.reportVuelta() ?? null,
+        descripcion,
+        videoUrl: this.reportVideo()?.trim() || null,
+      })
+      .subscribe({
+        next: () => {
+          this.enviando.set(false);
+          this.toast.success('Incidente reportado.');
+          this.reportCarreraId.set('');
+          this.reportVuelta.set(null);
+          this.reportDesc.set('');
+          this.reportVideo.set('');
+          this.cargar();
+        },
+        error: (err) => {
+          this.enviando.set(false);
+          this.toast.error(apiError(err));
+        },
+      });
   }
 
   usuarioNombre(id: number): string {
     return this.usuariosBase().find((u) => u.id === id)?.nombrePiloto || 'Comisario #' + id;
   }
 
-  sancionDetalle(s: Sancion): string {
+  sancionDetalle(s: Pick<Sancion, 'tipo' | 'valor'>): string {
     if (s.valor === null || s.valor === undefined) {
       return (s.tipo || 'sanción').toLowerCase().replace(/_/g, ' ');
     }
@@ -389,7 +456,9 @@ export class IncidentsComponent implements OnInit {
     const userId = this.auth.user()?.id;
     forkJoin({
       apelaciones: this.api.list<Apelacion>('/apelaciones').pipe(this.carga.siFalla([])),
-      sanciones: userId ? this.api.list<Sancion>('/sanciones/usuario/' + userId).pipe(this.carga.siFalla([])) : of([]),
+      sanciones: userId
+        ? this.api.list<Sancion>('/sanciones/usuario/' + userId).pipe(this.carga.siFalla([]))
+        : of([]),
     }).subscribe({
       next: (r) => {
         this.apelaciones.set(r.apelaciones);
