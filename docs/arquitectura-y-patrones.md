@@ -26,7 +26,7 @@ LFMN/
 │   │   ├── enums/         15 enums
 │   │   ├── security/      JWT + rate limit
 │   │   ├── config/        Security, cache, schedulers, DataSeeder
-│   │   ├── mapper/        EntityMapper
+│   │   ├── mapper/        EntityMapper (anidados), UsuarioMapper
 │   │   ├── exception/     jerarquía de errores + handler global
 │   │   └── service/inscripcion/  cadena de validadores
 │   └── src/test/java/     17 clases — 136 tests
@@ -83,10 +83,18 @@ literalmente en `frontend/src/app/core/models/models.ts`. Si tocás un DTO, actu
 Los `record` además te dan `equals`, `hashCode` y `toString` gratis, y son serializables por Jackson
 sin anotaciones.
 
-### 2.3 `EntityMapper`: componentes anidados
+### 2.3 Mapeo entidad → DTO: cada servicio mapea lo suyo
 
-Los DTO anidados (dentro de un resultado está el usuario, que tiene nombre y foto) no se resuelven
-con `@Embedded` ni con cascada. Hay un mapper estático con **records de apoyo**:
+La regla real del repo (GRASP Experto + Alta cohesión): **cada servicio arma la respuesta de su
+propio agregado** en un `private XxxResponse toResponse(...)`, porque es el que conoce qué campos
+expone y qué relaciones ya cargó dentro de su transacción (§2.5). No hay un mapper central para todo.
+
+Hay dos excepciones, y solo dos:
+
+| Mapper | Para qué | Por qué está afuera del servicio |
+|---|---|---|
+| `EntityMapper` | piezas **anidadas** que se repiten en muchos DTOs (`UserInfo`, `CarreraInfo`) | las usan decenas de servicios; los `null` se chequean en un solo lugar |
+| `UsuarioMapper` | `completo`, `publico`, `basico` de un `Usuario` | lo devuelven varios servicios (perfil, login, registro) y tiene una regla de privacidad: la vista pública no lleva email, GUID ni estado de la password |
 
 ```java
 public record UserInfo(Long id, String nombrePiloto, String fotoPerfil) {}
@@ -97,8 +105,8 @@ public static UserInfo resolveUsuarioBasico(Usuario usuario) {
 }
 ```
 
-Cada método devuelve un recordchico o `null`, y el mapper principal los compone. Todas las
-verificaciones de null están **en un solo archivo**.
+**Cuándo crear un mapper nuevo:** solo si el mismo DTO se arma en más de un servicio o lleva una
+regla (privacidad, permisos) que no puede divergir. Si no, el `toResponse` va en el servicio.
 
 ### 2.4 Un único lugar para la autorización: `CampeonatoAccesoService`
 

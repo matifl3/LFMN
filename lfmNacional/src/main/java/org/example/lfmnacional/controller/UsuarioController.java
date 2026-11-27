@@ -6,6 +6,8 @@ import org.example.lfmnacional.dto.usuario.*;
 import org.example.lfmnacional.entity.Usuario;
 import org.example.lfmnacional.enums.Rol;
 import org.example.lfmnacional.service.UsuarioService;
+import org.example.lfmnacional.service.BajaUsuarioService;
+import org.example.lfmnacional.service.AutenticacionService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,25 +22,27 @@ import java.util.List;
 public class UsuarioController {
 
     private final UsuarioService usuarioService;
+    private final AutenticacionService autenticacionService;
+    private final BajaUsuarioService bajaUsuarioService;
 
     @PostMapping
     public ResponseEntity<LoginResponse> registrar(@Valid @RequestBody RegistroRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(usuarioService.registrar(request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(autenticacionService.registrar(request));
     }
 
     @PostMapping("/registro-steam")
     public ResponseEntity<LoginResponse> registrarSteam(@Valid @RequestBody SteamRegistroRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(usuarioService.registrarSteam(request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(autenticacionService.registrarSteam(request));
     }
 
     @PostMapping("/vincular-steam-login")
     public LoginResponse vincularSteamConLogin(@Valid @RequestBody SteamVinculacionLoginRequest request) {
-        return usuarioService.vincularSteamConLogin(request.email(), request.password(), request.tokenRegistro());
+        return autenticacionService.vincularSteamConLogin(request.email(), request.password(), request.tokenRegistro());
     }
 
     @PostMapping("/login")
     public LoginResponse login(@Valid @RequestBody LoginRequest request) {
-        return usuarioService.login(request);
+        return autenticacionService.login(request);
     }
 
     @GetMapping
@@ -107,7 +111,7 @@ public class UsuarioController {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable Long id, @AuthenticationPrincipal Usuario actual) {
-        usuarioService.delete(id, actual);
+        bajaUsuarioService.delete(id, actual);
         return ResponseEntity.noContent().build();
     }
 
