@@ -1,3 +1,5 @@
+import { TranslocoPipe } from '@jsverse/transloco';
+import { t, t as translate } from '../../../core/i18n/t';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -26,7 +28,7 @@ type Confirmacion = { tipo: 'steam' } | { tipo: 'inscripcion'; ins: Inscripcion 
 @Component({
   selector: 'app-my-profile',
   standalone: true,
-  imports: [RouterLink, FormsModule, Chip, EmptyState, ConfirmDialog, PasswordInput],
+  imports: [TranslocoPipe, RouterLink, FormsModule, Chip, EmptyState, ConfirmDialog, PasswordInput],
   styleUrl: './my-profile.component.scss',
   templateUrl: './my-profile.component.html',
 })
@@ -120,16 +122,15 @@ export class MyProfileComponent implements OnInit {
     if (!c) return null;
     if (c.tipo === 'steam') {
       return {
-        titulo: 'Desvincular Steam',
-        mensaje:
-          'Sin Steam vinculado, tus próximos resultados de carrera no se van a sumar a tu perfil ni a tus estadísticas. ¿Desvincular igual?',
-        boton: 'Desvincular',
+        titulo: t('miPerfil.confirmar.steamTitulo'),
+        mensaje: t('miPerfil.confirmar.steamMensaje'),
+        boton: t('miPerfil.steam.desvincular'),
       };
     }
     return {
-      titulo: 'Cancelar inscripción',
-      mensaje: `Vas a liberar tu lugar en ${c.ins.carreraNombre}. ¿Cancelar la inscripción?`,
-      boton: 'Cancelar inscripción',
+      titulo: t('miPerfil.confirmar.cancelarTitulo'),
+      mensaje: t('miPerfil.confirmar.cancelarMensaje', { nombre: c.ins.carreraNombre }),
+      boton: t('miPerfil.confirmar.cancelarTitulo'),
     };
   });
 
@@ -167,8 +168,15 @@ export class MyProfileComponent implements OnInit {
     document.getElementById(`mp-tab-${sig}`)?.focus();
   }
 
+  // El parámetro se llama `t` como la pestaña, así que acá se usa `translate` (mismo efecto).
   tabLabel(t: Tab): string {
-    return t === 'datos' ? 'Datos personales' : t === 'password' ? 'Contraseña' : 'Steam';
+    return translate(
+      t === 'datos'
+        ? 'miPerfil.tab.datos'
+        : t === 'password'
+          ? 'miPerfil.tab.password'
+          : 'miPerfil.tab.steam',
+    );
   }
 
   /** Vuelta del OpenID de Steam: /mi-perfil?steam=ok|ocupado|expirado|error */
@@ -182,13 +190,13 @@ export class MyProfileComponent implements OnInit {
       replaceUrl: true,
     });
     if (steam === 'ok') {
-      this.toast.success('Cuenta de Steam vinculada');
+      this.toast.success(t('miPerfil.toast.steamVinculada'));
     } else if (steam === 'ocupado') {
-      this.toast.error('Esa cuenta de Steam ya está vinculada a otro usuario');
+      this.toast.error(t('miPerfil.toast.steamOcupada'));
     } else if (steam === 'expirado') {
-      this.toast.error('El enlace de vinculación expiró. Intentá de nuevo.');
+      this.toast.error(t('miPerfil.toast.steamExpirado'));
     } else {
-      this.toast.error('No se pudo vincular la cuenta de Steam.');
+      this.toast.error(t('miPerfil.toast.steamError'));
     }
   }
 
@@ -269,12 +277,12 @@ export class MyProfileComponent implements OnInit {
           this.guardandoDatos.set(false);
           if (cambiaEmail) {
             this.auth.clearSesion();
-            this.toast.success('Email actualizado. Ingresá de nuevo con tu nuevo email.');
+            this.toast.success(t('miPerfil.toast.emailActualizado'));
             void this.router.navigate(['/auth']);
             return;
           }
           this.aplicarUsuario(u);
-          this.toast.success('Perfil actualizado');
+          this.toast.success(t('miPerfil.toast.perfilActualizado'));
         },
         error: (err) => {
           this.guardandoDatos.set(false);
@@ -295,7 +303,7 @@ export class MyProfileComponent implements OnInit {
       next: () => {
         this.cambiandoPassword.set(false);
         this.auth.clearSesion();
-        this.toast.success('Contraseña actualizada. Ingresá con tu nueva contraseña.');
+        this.toast.success(t('miPerfil.toast.passwordActualizada'));
         void this.router.navigate(['/auth']);
       },
       error: (err) => {
@@ -313,7 +321,7 @@ export class MyProfileComponent implements OnInit {
           window.location.href = data.url;
         } else {
           this.procesandoSteam.set(false);
-          this.toast.error('No se pudo iniciar la vinculación con Steam.');
+          this.toast.error(t('miPerfil.toast.steamNoIniciado'));
         }
       },
       error: (err) => {
@@ -346,7 +354,7 @@ export class MyProfileComponent implements OnInit {
     this.api.del<Usuario>(`/usuarios/${id}/steam`).subscribe({
       next: () => {
         this.procesandoSteam.set(false);
-        this.toast.success('Cuenta de Steam desvinculada');
+        this.toast.success(t('miPerfil.toast.steamDesvinculada'));
         this.refrescarUsuario();
       },
       error: (err) => {
@@ -363,7 +371,7 @@ export class MyProfileComponent implements OnInit {
     this.api.del<void>(`/inscripciones/carrera/${ins.carreraId}/usuario/${id}`).subscribe({
       next: () => {
         this.cancelando.set(null);
-        this.toast.success('Inscripción cancelada');
+        this.toast.success(t('miPerfil.toast.inscripcionCancelada'));
         this.cargarInscripciones();
       },
       error: (err) => {
@@ -382,7 +390,7 @@ export class MyProfileComponent implements OnInit {
       .subscribe({
         next: () => {
           this.reclamando.set(null);
-          this.toast.success('¡Recompensa reclamada!');
+          this.toast.success(t('miPerfil.toast.recompensaReclamada'));
           this.cargarRecompensas();
         },
         error: (err) => {

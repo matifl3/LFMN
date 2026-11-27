@@ -1,4 +1,9 @@
-const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+import { t } from '../i18n/t';
+
+/** Abreviatura del mes (0-11) en el idioma activo. */
+function mes(i: number): string {
+  return t('comun.meses').split(',')[i] ?? '';
+}
 
 export function parseIso(iso: string | number | Date | null | undefined): Date | null {
   if (!iso) return null;
@@ -15,7 +20,7 @@ function two(n: number): string {
 export function fmtFecha(iso: string | number | Date | null | undefined): string {
   const d = parseIso(iso);
   if (!d) return '—';
-  return d.getDate() + ' ' + MESES[d.getMonth()].toUpperCase();
+  return d.getDate() + ' ' + mes(d.getMonth()).toUpperCase();
 }
 
 /** "17" (día del mes); sin fecha → "—". Para el bloque `.race-date`. */
@@ -27,7 +32,7 @@ export function fmtDia(iso: string | number | Date | null | undefined): string {
 /** "AGO"; sin fecha → "". Para el bloque `.race-date`. */
 export function fmtMes(iso: string | number | Date | null | undefined): string {
   const d = parseIso(iso);
-  return d ? MESES[d.getMonth()].toUpperCase() : '';
+  return d ? mes(d.getMonth()).toUpperCase() : '';
 }
 
 /**
@@ -39,20 +44,20 @@ export function fmtCuentaRegresiva(
   ahora: number,
   estado?: string,
 ): string {
-  if (estado === 'EN_CURSO') return 'En curso ahora';
+  if (estado === 'EN_CURSO') return t('comun.tiempo.enCursoAhora');
   const d = parseIso(iso);
   if (!d) return '';
   const diff = d.getTime() - ahora;
-  if (diff <= 0) return 'Arranca en instantes';
+  if (diff <= 0) return t('comun.tiempo.arrancaEnInstantes');
   const MIN = 60_000;
   const HORA = 60 * MIN;
   const DIA = 24 * HORA;
   const dias = Math.floor(diff / DIA);
   const hs = Math.floor((diff % DIA) / HORA);
   const min = Math.floor((diff % HORA) / MIN);
-  if (dias > 0) return 'Faltan ' + dias + ' d ' + hs + ' h';
-  if (hs > 0) return 'Faltan ' + hs + ' h ' + min + ' min';
-  return 'Faltan ' + Math.max(min, 1) + ' min';
+  if (dias > 0) return t('comun.tiempo.faltanDiasHoras', { d: dias, h: hs });
+  if (hs > 0) return t('comun.tiempo.faltanHorasMin', { h: hs, m: min });
+  return t('comun.tiempo.faltanMin', { m: Math.max(min, 1) });
 }
 
 /** "17 AGO · 20:30" */
@@ -62,7 +67,7 @@ export function fmtFechaHora(iso: string | number | Date | null | undefined): st
   return (
     d.getDate() +
     ' ' +
-    MESES[d.getMonth()].toUpperCase() +
+    mes(d.getMonth()).toUpperCase() +
     ' · ' +
     two(d.getHours()) +
     ':' +
@@ -74,7 +79,7 @@ export function fmtFechaHora(iso: string | number | Date | null | undefined): st
 export function fmtHora(iso: string | number | Date | null | undefined): string {
   const d = parseIso(iso);
   if (!d) return '—';
-  return two(d.getHours()) + ':' + two(d.getMinutes()) + ' hs';
+  return t('comun.tiempo.horaSufijo', { hora: two(d.getHours()) + ':' + two(d.getMinutes()) });
 }
 
 /** "hace 5 min" / "hace 2 hs" / "hace 3 días" / "17 AGO" */
@@ -82,14 +87,14 @@ export function fmtRel(iso: string | number | Date | null | undefined): string {
   const d = parseIso(iso);
   if (!d) return '';
   const seg = Math.floor((Date.now() - d.getTime()) / 1000);
-  if (seg < 60) return 'ahora';
+  if (seg < 60) return t('comun.tiempo.ahora');
   const min = Math.floor(seg / 60);
-  if (min < 60) return 'hace ' + min + ' min';
+  if (min < 60) return t('comun.tiempo.haceMin', { n: min });
   const hs = Math.floor(min / 60);
-  if (hs < 24) return 'hace ' + hs + ' hs';
+  if (hs < 24) return t('comun.tiempo.haceHs', { n: hs });
   const dias = Math.floor(hs / 24);
-  if (dias < 7) return 'hace ' + dias + ' días';
-  return d.getDate() + ' ' + MESES[d.getMonth()];
+  if (dias < 7) return t('comun.tiempo.haceDias', { n: dias });
+  return d.getDate() + ' ' + mes(d.getMonth());
 }
 
 /** ms → "m:ss.mmm"; null/NaN → "—" */

@@ -1,3 +1,4 @@
+import { TranslocoPipe } from '@jsverse/transloco';
 import { Component, ElementRef, HostListener, effect, inject, input, output } from '@angular/core';
 
 let modalUid = 0;
@@ -5,6 +6,7 @@ let modalUid = 0;
 @Component({
   selector: 'app-modal',
   standalone: true,
+  imports: [TranslocoPipe],
   template: `
     @if (abierto()) {
       <div
@@ -21,7 +23,12 @@ let modalUid = 0;
             } @else {
               <ng-content select="[app-modal-titulo]" />
             }
-            <button type="button" class="icon-btn modal-close" aria-label="Cerrar" (click)="cerrar()">
+            <button
+              type="button"
+              class="icon-btn modal-close"
+              [attr.aria-label]="'comun.cerrar' | transloco"
+              (click)="cerrar()"
+            >
               ✕
             </button>
           </div>

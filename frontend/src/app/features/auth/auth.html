@@ -1,28 +1,55 @@
 <div class="auth-shell">
   <img class="auth-photo" src="fondo-logo.png" alt="" />
   <div class="auth-card card bracket">
-    <img src="logo.png" alt="LBM Nacional" class="brand-logo" style="height: 48px; margin-inline: auto; margin-bottom: var(--sp-4)" />
-    <h2 style="text-align: center">Ingresar a LBM</h2>
+    <app-selector-idioma class="auth-idioma" />
+    <img
+      src="logo.png"
+      alt="LBM Nacional"
+      class="brand-logo"
+      style="height: 48px; margin-inline: auto; margin-bottom: var(--sp-4)"
+    />
+    <h2 style="text-align: center">{{ 'auth.titulo' | transloco }}</h2>
     <p class="text-secondary text-center" style="font-size: var(--fs-sm); margin-top: var(--sp-2)">
-      Accedé con tu cuenta de piloto para inscribirte a carreras y ver tus estadísticas.
+      {{ 'auth.subtitulo' | transloco }}
     </p>
 
     @if (!modoSteamSetup()) {
       <div class="tabs-pill" style="margin-top: var(--sp-5); width: 100%" role="group">
-        <button type="button" class="tab" [class.active]="tab() === 'login'" [attr.aria-pressed]="tab() === 'login'" (click)="setTab('login')">Iniciar sesión</button>
-        <button type="button" class="tab" [class.active]="tab() === 'register'" [attr.aria-pressed]="tab() === 'register'" (click)="setTab('register')">Crear cuenta</button>
+        <button
+          type="button"
+          class="tab"
+          [class.active]="tab() === 'login'"
+          [attr.aria-pressed]="tab() === 'login'"
+          (click)="setTab('login')"
+        >
+          {{ 'auth.tabLogin' | transloco }}
+        </button>
+        <button
+          type="button"
+          class="tab"
+          [class.active]="tab() === 'register'"
+          [attr.aria-pressed]="tab() === 'register'"
+          (click)="setTab('register')"
+        >
+          {{ 'auth.tabRegistro' | transloco }}
+        </button>
       </div>
 
       <!-- Login -->
       @if (tab() === 'login') {
-        <form [formGroup]="loginForm" (ngSubmit)="login()" style="margin-top: var(--sp-5)" novalidate>
+        <form
+          [formGroup]="loginForm"
+          (ngSubmit)="login()"
+          style="margin-top: var(--sp-5)"
+          novalidate
+        >
           <div class="field" [class.invalid]="invalido(loginForm, 'email')">
-            <label for="login-email">Email</label>
+            <label for="login-email">{{ 'auth.email' | transloco }}</label>
             <input
               id="login-email"
               class="input"
               type="email"
-              placeholder="piloto@ejemplo.com"
+              [placeholder]="'auth.placeholderEmail' | transloco"
               formControlName="email"
               [attr.aria-invalid]="invalido(loginForm, 'email') || null"
               [attr.aria-describedby]="invalido(loginForm, 'email') ? 'login-email-err' : null"
@@ -32,7 +59,7 @@
             }
           </div>
           <div class="field" [class.invalid]="invalido(loginForm, 'password')">
-            <label for="login-pass">Contraseña</label>
+            <label for="login-pass">{{ 'auth.password' | transloco }}</label>
             <app-password-input
               id="login-pass"
               autocomplete="current-password"
@@ -46,42 +73,53 @@
           </div>
           @if (loginForm.touched && loginForm.invalid) {
             <div class="error-summary" role="alert">
-              Revisá los campos marcados para continuar.
+              {{ 'auth.revisarCampos' | transloco }}
             </div>
           }
-          <button type="submit" class="btn btn-primary btn-lg btn-block" [class.is-loading]="cargando()">
-            Ingresar
+          <button
+            type="submit"
+            class="btn btn-primary btn-lg btn-block"
+            [class.is-loading]="cargando()"
+          >
+            {{ 'auth.ingresar' | transloco }}
           </button>
           <p class="auth-recovery-link">
-            <a routerLink="/recuperar">¿Olvidaste tu contraseña?</a>
+            <a routerLink="/recuperar">{{ 'auth.olvidastePassword' | transloco }}</a>
           </p>
         </form>
       }
 
       <!-- Registro email + contraseña -->
       @if (tab() === 'register') {
-        <form [formGroup]="registerForm" (ngSubmit)="registrar()" style="margin-top: var(--sp-5)" novalidate>
+        <form
+          [formGroup]="registerForm"
+          (ngSubmit)="registrar()"
+          style="margin-top: var(--sp-5)"
+          novalidate
+        >
           <div class="field" [class.invalid]="invalido(registerForm, 'nombrePiloto')">
-            <label for="reg-nombre">Nombre de piloto</label>
+            <label for="reg-nombre">{{ 'auth.nombrePiloto' | transloco }}</label>
             <input
               id="reg-nombre"
               class="input"
-              placeholder="Ej. Franco Gómez Reta"
+              [placeholder]="'auth.placeholderNombre' | transloco"
               formControlName="nombrePiloto"
               [attr.aria-invalid]="invalido(registerForm, 'nombrePiloto') || null"
-              [attr.aria-describedby]="invalido(registerForm, 'nombrePiloto') ? 'reg-nombre-err' : null"
+              [attr.aria-describedby]="
+                invalido(registerForm, 'nombrePiloto') ? 'reg-nombre-err' : null
+              "
             />
             @for (e of errores(registerForm, 'nombrePiloto'); track e) {
               <span id="reg-nombre-err" class="error-msg">{{ e }}</span>
             }
           </div>
           <div class="field" [class.invalid]="invalido(registerForm, 'email')">
-            <label for="reg-email">Email</label>
+            <label for="reg-email">{{ 'auth.email' | transloco }}</label>
             <input
               id="reg-email"
               class="input"
               type="email"
-              placeholder="piloto@ejemplo.com"
+              [placeholder]="'auth.placeholderEmail' | transloco"
               formControlName="email"
               [attr.aria-invalid]="invalido(registerForm, 'email') || null"
               [attr.aria-describedby]="invalido(registerForm, 'email') ? 'reg-email-err' : null"
@@ -91,7 +129,7 @@
             }
           </div>
           <div class="field" [class.invalid]="invalido(registerForm, 'password')">
-            <label for="reg-pass">Contraseña</label>
+            <label for="reg-pass">{{ 'auth.password' | transloco }}</label>
             <app-password-input
               id="reg-pass"
               autocomplete="new-password"
@@ -99,18 +137,22 @@
               [invalido]="invalido(registerForm, 'password')"
               [ariaDescribedBy]="invalido(registerForm, 'password') ? 'reg-pass-err' : null"
             />
-            <p class="hint">Mínimo 6 caracteres. Necesaria para ingresar por email.</p>
+            <p class="hint">{{ 'auth.hintPassword' | transloco }}</p>
             @for (e of errores(registerForm, 'password'); track e) {
               <span id="reg-pass-err" class="error-msg">{{ e }}</span>
             }
           </div>
           @if (registerForm.touched && registerForm.invalid) {
             <div class="error-summary" role="alert">
-              Revisá los campos marcados para continuar.
+              {{ 'auth.revisarCampos' | transloco }}
             </div>
           }
-          <button type="submit" class="btn btn-primary btn-lg btn-block" [class.is-loading]="cargando()">
-            Crear cuenta
+          <button
+            type="submit"
+            class="btn btn-primary btn-lg btn-block"
+            [class.is-loading]="cargando()"
+          >
+            {{ 'auth.crearCuenta' | transloco }}
           </button>
         </form>
       }
@@ -121,31 +163,45 @@
       <div class="auth-banner" style="margin-top: var(--sp-5)">
         <div class="banner-icon">!</div>
         <div>
-          <strong style="font-family: var(--font-display); text-transform: uppercase; font-size: var(--fs-sm)">Tu Steam no está vinculado</strong>
+          <strong
+            style="
+              font-family: var(--font-display);
+              text-transform: uppercase;
+              font-size: var(--fs-sm);
+            "
+            >{{ 'auth.steamNoVinculado' | transloco }}</strong
+          >
           <p class="text-secondary" style="font-size: var(--fs-xs); margin-top: var(--sp-1)">
-            Completá los datos para crear tu cuenta de piloto y vincular tu Steam.
+            {{ 'auth.steamCompletar' | transloco }}
           </p>
         </div>
       </div>
 
-      <form [formGroup]="steamForm" (ngSubmit)="crearCuentaSteam()" style="margin-top: var(--sp-5)" novalidate>
+      <form
+        [formGroup]="steamForm"
+        (ngSubmit)="crearCuentaSteam()"
+        style="margin-top: var(--sp-5)"
+        novalidate
+      >
         <input type="hidden" formControlName="tokenRegistro" />
         <div class="field" [class.invalid]="invalido(steamForm, 'nombrePiloto')">
-          <label for="steam-nombre">Nombre de piloto</label>
+          <label for="steam-nombre">{{ 'auth.nombrePiloto' | transloco }}</label>
           <input
             id="steam-nombre"
             class="input"
-            placeholder="Ej. Franco Gómez Reta"
+            [placeholder]="'auth.placeholderNombre' | transloco"
             formControlName="nombrePiloto"
             [attr.aria-invalid]="invalido(steamForm, 'nombrePiloto') || null"
-            [attr.aria-describedby]="invalido(steamForm, 'nombrePiloto') ? 'steam-nombre-err' : null"
+            [attr.aria-describedby]="
+              invalido(steamForm, 'nombrePiloto') ? 'steam-nombre-err' : null
+            "
           />
           @for (e of errores(steamForm, 'nombrePiloto'); track e) {
             <span id="steam-nombre-err" class="error-msg">{{ e }}</span>
           }
         </div>
         <div class="field" [class.invalid]="invalido(steamForm, 'email')">
-          <label for="steam-email">Email</label>
+          <label for="steam-email">{{ 'auth.email' | transloco }}</label>
           <input
             id="steam-email"
             class="input"
@@ -159,14 +215,20 @@
           }
         </div>
         @if (steamForm.touched && steamForm.invalid) {
-          <div class="error-summary" role="alert">Revisá los campos marcados para continuar.</div>
+          <div class="error-summary" role="alert">{{ 'auth.revisarCampos' | transloco }}</div>
         }
-        <button type="submit" class="btn btn-primary btn-lg btn-block" [class.is-loading]="cargando()">Crear cuenta</button>
+        <button
+          type="submit"
+          class="btn btn-primary btn-lg btn-block"
+          [class.is-loading]="cargando()"
+        >
+          {{ 'auth.crearCuenta' | transloco }}
+        </button>
       </form>
     }
 
     @if (!modoSteamSetup()) {
-      <div class="divider-or">o continuar con</div>
+      <div class="divider-or">{{ 'auth.oContinuarCon' | transloco }}</div>
       <button
         type="button"
         class="btn btn-ghost btn-lg btn-block"
@@ -175,14 +237,19 @@
         style="justify-content: center"
       >
         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M11.98 2C6.47 2 2 6.47 2 11.98c0 4.97 3.63 9.1 8.38 9.86l2.27-6.03a2.39 2.39 0 0 1 2.42-1.67h1.33a4.5 4.5 0 1 0-.23-1.13h-1.1a3.61 3.61 0 0 0-3.66 2.52l-2.1 5.57A8.02 8.02 0 0 1 4 11.98a8 8 0 1 1 16 0 8 8 0 0 1-3.9 6.87l.88 1.04A9.24 9.24 0 0 0 22 11.98C22 6.47 17.49 2 11.98 2Zm2.65 8.08a1.36 1.36 0 0 0 2.72 0 1.36 1.36 0 1 0-2.72 0Z"/>
+          <path
+            d="M11.98 2C6.47 2 2 6.47 2 11.98c0 4.97 3.63 9.1 8.38 9.86l2.27-6.03a2.39 2.39 0 0 1 2.42-1.67h1.33a4.5 4.5 0 1 0-.23-1.13h-1.1a3.61 3.61 0 0 0-3.66 2.52l-2.1 5.57A8.02 8.02 0 0 1 4 11.98a8 8 0 1 1 16 0 8 8 0 0 1-3.9 6.87l.88 1.04A9.24 9.24 0 0 0 22 11.98C22 6.47 17.49 2 11.98 2Zm2.65 8.08a1.36 1.36 0 0 0 2.72 0 1.36 1.36 0 1 0-2.72 0Z"
+          />
         </svg>
         Steam
       </button>
     }
 
-    <p class="text-terciario" style="font-size: var(--fs-2xs); text-align: center; margin-top: var(--sp-5)">
-      Al continuar aceptás el Reglamento Deportivo y el Código de Conducta de LBM Nacional.
+    <p
+      class="text-terciario"
+      style="font-size: var(--fs-2xs); text-align: center; margin-top: var(--sp-5)"
+    >
+      {{ 'auth.terminos' | transloco }}
     </p>
   </div>
 </div>

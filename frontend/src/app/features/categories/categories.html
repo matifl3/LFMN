@@ -1,30 +1,32 @@
 <section class="container-wide section">
   <div class="section-head">
     <div>
-      <span class="eyebrow">Por nivel de Elo</span>
-      <h2>Categorías</h2>
+      <span class="eyebrow">{{ 'categorias.eyebrow' | transloco }}</span>
+      <h2>{{ 'categorias.titulo' | transloco }}</h2>
     </div>
   </div>
 
   @if (!cargando() && cats().length > 0) {
     <div class="card cat-resumen">
       @if (miElo() !== null) {
-        <p>
-          Tu Elo: <b class="mono glow-alerta">{{ miElo() }}</b> · podés correr en
-          <b>{{ cuantasPuedo() }}</b> de {{ cats().length }} categorías.
-        </p>
+        <p
+          [innerHTML]="
+            'categorias.resumen'
+              | transloco: { elo: miElo(), n: cuantasPuedo(), total: cats().length }
+          "
+        ></p>
         <button
           type="button"
           class="btn btn-ghost btn-sm"
           [attr.aria-pressed]="soloMias()"
           (click)="toggleSoloMias()"
         >
-          {{ soloMias() ? 'Ver todas' : 'Ver solo las mías' }}
+          {{ (soloMias() ? 'categorias.verTodas' : 'categorias.verMias') | transloco }}
         </button>
       } @else {
         <p class="text-secondary">
-          <a routerLink="/auth" class="detail-link">Ingresá</a> para ver en qué categorías podés
-          correr según tu Elo.
+          <a routerLink="/auth" class="detail-link">{{ 'categorias.ingresa' | transloco }}</a>
+          {{ 'categorias.ingresaResto' | transloco }}
         </p>
       }
     </div>
@@ -40,12 +42,12 @@
       }
     </div>
   } @else if (cats().length === 0) {
-    <app-empty-state texto="No hay categorías publicadas." />
+    <app-empty-state [texto]="'categorias.vacio' | transloco" />
   } @else if (conCarreras().length === 0 && sinCarreras().length === 0) {
-    <app-empty-state texto="Con tu Elo actual no entrás en ninguna categoría." />
+    <app-empty-state [texto]="'categorias.vacioMias' | transloco" />
   } @else {
     @if (conCarreras().length > 0) {
-      <h3 class="cat-grupo">Con carreras programadas</h3>
+      <h3 class="cat-grupo">{{ 'categorias.conCarreras' | transloco }}</h3>
       <div class="grid grid-3">
         @for (t of conCarreras(); track t.cat.id) {
           <ng-container *ngTemplateOutlet="tarjeta; context: { $implicit: t }" />
@@ -53,7 +55,7 @@
       </div>
     }
     @if (sinCarreras().length > 0) {
-      <h3 class="cat-grupo">Sin carreras programadas</h3>
+      <h3 class="cat-grupo">{{ 'categorias.sinCarreras' | transloco }}</h3>
       <div class="grid grid-3 cat-inactivas">
         @for (t of sinCarreras(); track t.cat.id) {
           <ng-container *ngTemplateOutlet="tarjeta; context: { $implicit: t }" />
@@ -80,13 +82,15 @@
         <span class="mono">{{ t.rangoTxt }}</span>
         @switch (t.situacion) {
           @case ('puede') {
-            <span class="chip chip-confirmed">Podés correr</span>
+            <span class="chip chip-confirmed">{{ 'categorias.podesCorrer' | transloco }}</span>
           }
           @case ('falta') {
-            <span class="chip chip-pending">Te faltan {{ t.diferencia }}</span>
+            <span class="chip chip-pending">{{
+              'categorias.teFaltan' | transloco: { n: t.diferencia }
+            }}</span>
           }
           @case ('excede') {
-            <span class="chip chip-closed">Superaste el nivel</span>
+            <span class="chip chip-closed">{{ 'categorias.superaste' | transloco }}</span>
           }
         }
       </div>
@@ -94,7 +98,7 @@
         <div
           class="cat-barra"
           role="img"
-          [attr.aria-label]="'Tu Elo queda al ' + t.posicionPct + '% del rango'"
+          [attr.aria-label]="'categorias.barraAria' | transloco: { pct: t.posicionPct }"
         >
           <span class="cat-marca" [style.left.%]="t.posicionPct"></span>
         </div>
@@ -105,24 +109,36 @@
       <span class="chip chip-category" [title]="t.setup.ayuda">{{ t.setup.label }}</span>
       @if (t.proximas.length > 0) {
         <span class="text-secondary cat-actividad">
-          {{ t.proximas.length }} {{ t.proximas.length === 1 ? 'carrera' : 'carreras' }} · próxima
-          {{ fechaProxima(t.proximas[0]) }}
+          {{
+            'categorias.actividad'
+              | transloco
+                : {
+                    n: t.proximas.length,
+                    carreras:
+                      ((t.proximas.length === 1 ? 'categorias.carrera' : 'categorias.carreras')
+                      | transloco),
+                    fecha: fechaProxima(t.proximas[0]),
+                  }
+          }}
         </span>
       } @else {
-        <span class="text-terciario cat-actividad">Sin carreras programadas</span>
+        <span class="text-terciario cat-actividad">{{ 'categorias.sinCarreras' | transloco }}</span>
       }
     </div>
 
     <div class="cat-acciones">
-      <a [routerLink]="['/carreras']" [queryParams]="{ cat: t.cat.id }" class="btn btn-ghost btn-sm"
-        >Ver carreras</a
+      <a
+        [routerLink]="['/carreras']"
+        [queryParams]="{ cat: t.cat.id }"
+        class="btn btn-ghost btn-sm"
+        >{{ 'categorias.verCarreras' | transloco }}</a
       >
       @if (t.campeonato) {
         <a
           [routerLink]="['/campeonato']"
           [queryParams]="{ id: t.campeonato.id }"
           class="btn btn-ghost btn-sm"
-          >Campeonato</a
+          >{{ 'categorias.campeonato' | transloco }}</a
         >
       }
     </div>

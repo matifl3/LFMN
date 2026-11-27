@@ -1,3 +1,5 @@
+import { TranslocoPipe } from '@jsverse/transloco';
+import { t } from '../../core/i18n/t';
 import {
   Component,
   ElementRef,
@@ -38,6 +40,7 @@ const ESTADOS_INSCRIBIBLES = ['PROGRAMADA', 'INSCRIPCIONES_ABIERTAS'];
   selector: 'app-home',
   standalone: true,
   imports: [
+    TranslocoPipe,
     RouterLink,
     Modal,
     ConfirmDialog,
@@ -135,11 +138,13 @@ export class HomeComponent implements OnInit {
   readonly eyebrowTemporada = computed(() => {
     const champ = this.campeonato();
     if (!champ) return '';
-    const temporada = champ.temporada ? 'Temporada ' + champ.temporada : champ.nombre;
+    const temporada = champ.temporada
+      ? t('home.temporada', { anio: champ.temporada })
+      : champ.nombre;
     const p = this.progreso();
     if (!p || p.rondasTotales === 0) return temporada;
-    if (p.rondasCorridas >= p.rondasTotales) return temporada + ' · Finalizada';
-    return `${temporada} · Ronda ${p.rondasCorridas + 1} de ${p.rondasTotales}`;
+    if (p.rondasCorridas >= p.rondasTotales) return t('home.finalizada', { temporada });
+    return t('home.ronda', { temporada, n: p.rondasCorridas + 1, total: p.rondasTotales });
   });
 
   ngOnInit(): void {
@@ -230,7 +235,7 @@ export class HomeComponent implements OnInit {
       },
       error: () => {
         this.cargandoTabla.set(false);
-        this.toast.error('Error al cargar posiciones.');
+        this.toast.error(t('home.errorPosiciones'));
       },
     });
   }
@@ -369,8 +374,8 @@ export class HomeComponent implements OnInit {
       .join(' · ');
     const lleno = c.cupoMaximo != null && (c.cuposInscritos ?? 0) >= c.cupoMaximo;
     return (
-      `Te vas a inscribir a "${c.nombre}"${partes ? ' (' + partes + ')' : ''}.` +
-      (lleno ? ' El cupo está completo: vas a quedar en lista de espera.' : '')
+      t('home.confirmarMensaje', { nombre: c.nombre, detalle: partes ? ' (' + partes + ')' : '' }) +
+      (lleno ? t('home.confirmarLleno') : '')
     );
   }
 
@@ -384,9 +389,9 @@ export class HomeComponent implements OnInit {
         this.aConfirmar.set(null);
         this.misInscripciones.update((m) => new Map(m).set(c.id, ins?.estado ?? 'INSCRIPTO'));
         if (ins?.estado === 'LISTA_ESPERA') {
-          this.toast.success('Quedaste en lista de espera para ' + c.nombre + '.');
+          this.toast.success(t('home.quedasteEspera', { nombre: c.nombre }));
         } else {
-          this.toast.success('¡Inscripción confirmada en ' + c.nombre + '!');
+          this.toast.success(t('home.inscripcionConfirmada', { nombre: c.nombre }));
           this.proximas.update((l) =>
             l.map((x) =>
               x.id === c.id ? { ...x, cuposInscritos: (x.cuposInscritos ?? 0) + 1 } : x,

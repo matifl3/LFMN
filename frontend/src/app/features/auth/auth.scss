@@ -52,3 +52,12 @@
     }
   }
 }
+// La pantalla de ingreso no muestra el header: el selector de idioma va en la tarjeta.
+.auth-card {
+  position: relative;
+}
+.auth-idioma {
+  position: absolute;
+  top: var(--sp-4);
+  right: var(--sp-4);
+}

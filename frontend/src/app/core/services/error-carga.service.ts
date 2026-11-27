@@ -1,3 +1,4 @@
+import { t } from '../../core/i18n/t';
 import { Injectable, inject } from '@angular/core';
 import { OperatorFunction, catchError, of } from 'rxjs';
 import { apiError } from './api.service';
@@ -41,7 +42,7 @@ export class ErrorCargaService {
     // paneles de la página juntos y no tiene sentido mostrar uno por panel.
     this.avisoPendiente = err;
     setTimeout(() => {
-      this.toast.error('No se pudieron cargar algunos datos. ' + apiError(this.avisoPendiente));
+      this.toast.error(t('comun.cargaParcial', { detalle: apiError(this.avisoPendiente) }));
       this.avisoPendiente = null;
     }, 300);
   }

@@ -1,11 +1,13 @@
 <section class="container section">
   <div class="section-head">
     <div>
-      <span class="eyebrow">Cuenta</span>
-      <h2>Mi perfil</h2>
+      <span class="eyebrow">{{ 'miPerfil.eyebrow' | transloco }}</span>
+      <h2>{{ 'miPerfil.titulo' | transloco }}</h2>
     </div>
     @if (user(); as u) {
-      <a [routerLink]="['/perfil', u.id]" class="btn btn-ghost">Ver perfil público</a>
+      <a [routerLink]="['/perfil', u.id]" class="btn btn-ghost">{{
+        'miPerfil.verPublico' | transloco
+      }}</a>
     }
   </div>
 
@@ -14,7 +16,7 @@
       <div
         class="tabs"
         role="tablist"
-        aria-label="Configuración de la cuenta"
+        [attr.aria-label]="'miPerfil.tabsAria' | transloco"
         style="margin-bottom: var(--sp-6)"
         (keydown)="moverTab($event)"
       >
@@ -44,9 +46,9 @@
           style="margin-bottom: var(--sp-8)"
           (ngSubmit)="guardar()"
         >
-          <h3 style="margin-bottom: var(--sp-5)">Datos personales</h3>
+          <h3 style="margin-bottom: var(--sp-5)">{{ 'miPerfil.tab.datos' | transloco }}</h3>
           <div class="field">
-            <label for="mp-nombre">Nombre de piloto</label>
+            <label for="mp-nombre">{{ 'miPerfil.nombrePiloto' | transloco }}</label>
             <input
               class="input"
               id="mp-nombre"
@@ -58,13 +60,13 @@
               (input)="nombre.set($any($event.target).value)"
             />
             @if (!nombreValido()) {
-              <span id="mp-nombre-err" class="error-msg"
-                >El nombre de piloto no puede quedar vacío.</span
-              >
+              <span id="mp-nombre-err" class="error-msg">{{
+                'miPerfil.nombreVacio' | transloco
+              }}</span>
             }
           </div>
           <div class="field">
-            <label for="mp-mail">Email</label>
+            <label for="mp-mail">{{ 'miPerfil.email' | transloco }}</label>
             <input
               class="input"
               id="mp-mail"
@@ -79,16 +81,18 @@
               (input)="email.set($any($event.target).value)"
             />
             @if (!emailValido()) {
-              <span id="mp-mail-err" class="error-msg">Escribí un email válido.</span>
+              <span id="mp-mail-err" class="error-msg">{{
+                'miPerfil.emailInvalido' | transloco
+              }}</span>
             } @else if (cambiaEmail()) {
               <p id="mp-mail-hint" class="hint">
-                Al cambiar el email se cierra tu sesión y vas a tener que ingresar con el nuevo.
+                {{ 'miPerfil.emailHint' | transloco }}
               </p>
             }
           </div>
           @if (pidePasswordEmail()) {
             <div class="field">
-              <label for="mp-mail-pass">Contraseña actual</label>
+              <label for="mp-mail-pass">{{ 'miPerfil.passwordActual' | transloco }}</label>
               <input
                 class="input"
                 id="mp-mail-pass"
@@ -100,7 +104,7 @@
                 (input)="passwordEmail.set($any($event.target).value)"
               />
               <p id="mp-mail-pass-hint" class="hint">
-                Para cambiar el email confirmá tu contraseña.
+                {{ 'miPerfil.emailPassHint' | transloco }}
               </p>
             </div>
           }
@@ -115,7 +119,7 @@
                 [disabled]="guardandoDatos()"
                 (click)="descartarDatos()"
               >
-                Descartar
+                {{ 'miPerfil.descartar' | transloco }}
               </button>
             }
             <button
@@ -124,7 +128,7 @@
               [class.is-loading]="guardandoDatos()"
               [disabled]="!puedeGuardarDatos()"
             >
-              Guardar cambios
+              {{ 'miPerfil.guardar' | transloco }}
             </button>
           </div>
         </form>
@@ -140,18 +144,20 @@
           (ngSubmit)="cambiarPassword()"
         >
           <h3 style="margin-bottom: var(--sp-2)">
-            {{ requiereActual() ? 'Cambiar contraseña' : 'Crear contraseña' }}
+            {{
+              (requiereActual() ? 'miPerfil.cambiarPassword' : 'miPerfil.crearPassword') | transloco
+            }}
           </h3>
           <p class="text-terciario" style="font-size: var(--fs-sm); margin-bottom: var(--sp-5)">
             @if (requiereActual()) {
-              Al cambiarla se cierra tu sesión en todos los dispositivos.
+              {{ 'miPerfil.cambiarPasswordHint' | transloco }}
             } @else {
-              Creá una contraseña para poder ingresar también con email.
+              {{ 'miPerfil.crearPasswordHint' | transloco }}
             }
           </p>
           @if (requiereActual()) {
             <div class="field">
-              <label for="mp-pass-actual">Contraseña actual</label>
+              <label for="mp-pass-actual">{{ 'miPerfil.passwordActual' | transloco }}</label>
               <app-password-input
                 id="mp-pass-actual"
                 name="passwordActual"
@@ -162,12 +168,12 @@
             </div>
           }
           <div class="field">
-            <label for="mp-pass-nueva">Nueva contraseña</label>
+            <label for="mp-pass-nueva">{{ 'miPerfil.nuevaPassword' | transloco }}</label>
             <app-password-input
               id="mp-pass-nueva"
               name="passwordNueva"
               autocomplete="new-password"
-              [placeholder]="'Mínimo ' + minPassword + ' caracteres'"
+              [placeholder]="'miPerfil.minimoPh' | transloco: { n: minPassword }"
               [invalido]="passwordCorta()"
               [ariaDescribedBy]="passwordCorta() ? 'mp-pass-nueva-err' : null"
               [ngModel]="passwordNueva()"
@@ -175,12 +181,12 @@
             />
             @if (passwordCorta()) {
               <span id="mp-pass-nueva-err" class="error-msg">
-                Usá al menos {{ minPassword }} caracteres.
+                {{ 'miPerfil.usaAlMenos' | transloco: { n: minPassword } }}
               </span>
             }
           </div>
           <div class="field">
-            <label for="mp-pass-repetida">Repetir nueva contraseña</label>
+            <label for="mp-pass-repetida">{{ 'miPerfil.repetirPassword' | transloco }}</label>
             <app-password-input
               id="mp-pass-repetida"
               name="passwordRepetida"
@@ -191,7 +197,9 @@
               (ngModelChange)="passwordRepetida.set($event ?? '')"
             />
             @if (passwordsDistintas()) {
-              <span id="mp-pass-repetida-err" class="error-msg">Las contraseñas no coinciden.</span>
+              <span id="mp-pass-repetida-err" class="error-msg">{{
+                'miPerfil.noCoinciden' | transloco
+              }}</span>
             }
           </div>
           <div class="flex" style="justify-content: flex-end; margin-top: var(--sp-6)">
@@ -201,7 +209,10 @@
               [class.is-loading]="cambiandoPassword()"
               [disabled]="!puedeCambiarPassword()"
             >
-              {{ requiereActual() ? 'Cambiar contraseña' : 'Crear contraseña' }}
+              {{
+                (requiereActual() ? 'miPerfil.cambiarPassword' : 'miPerfil.crearPassword')
+                  | transloco
+              }}
             </button>
           </div>
         </form>
@@ -215,18 +226,17 @@
           aria-labelledby="mp-tab-steam"
           style="margin-bottom: var(--sp-8)"
         >
-          <h3 style="margin-bottom: var(--sp-2)">Vinculación con Steam</h3>
+          <h3 style="margin-bottom: var(--sp-2)">{{ 'miPerfil.steam.titulo' | transloco }}</h3>
           <p class="text-terciario" style="font-size: var(--fs-sm); margin-bottom: var(--sp-5)">
-            Usamos tu cuenta de Steam para verificar tiempos y evitar suplantación de identidad en
-            carrera.
+            {{ 'miPerfil.steam.intro' | transloco }}
           </p>
           @if (!user()?.guidSteam) {
             <div class="steam-aviso" role="note">
               <span class="steam-aviso__icono" aria-hidden="true">!</span>
               <span>
-                <strong>Sin Steam, sin resultados.</strong><br />
-                Vinculá tu cuenta para que los resultados de carrera se sumen automáticamente a tu
-                perfil y a tus estadísticas.
+                <strong>{{ 'miPerfil.steam.avisoTitulo' | transloco }}</strong
+                ><br />
+                {{ 'miPerfil.steam.avisoTexto' | transloco }}
               </span>
             </div>
           }
@@ -246,10 +256,10 @@
               </svg>
               @if (steamUrl(); as url) {
                 <a [href]="url" target="_blank" rel="noopener noreferrer">
-                  Ver mi perfil de Steam
+                  {{ 'miPerfil.steam.verPerfil' | transloco }}
                 </a>
               } @else {
-                <span>Sin vincular</span>
+                <span>{{ 'miPerfil.steam.sinVincular' | transloco }}</span>
               }
             </span>
             <span
@@ -257,7 +267,10 @@
               [class.chip-confirmed]="!!user()?.guidSteam"
               [class.chip-pending]="!user()?.guidSteam"
             >
-              {{ user()?.guidSteam ? 'Verificado' : 'Sin vincular' }}
+              {{
+                (user()?.guidSteam ? 'miPerfil.steam.verificado' : 'miPerfil.steam.sinVincular')
+                  | transloco
+              }}
             </span>
           </div>
           <div class="flex" style="justify-content: flex-end; margin-top: var(--sp-5)">
@@ -269,7 +282,7 @@
                 [disabled]="procesandoSteam()"
                 (click)="pedirDesvincularSteam()"
               >
-                Desvincular
+                {{ 'miPerfil.steam.desvincular' | transloco }}
               </button>
             } @else {
               <button
@@ -279,17 +292,17 @@
                 [disabled]="procesandoSteam()"
                 (click)="vincularSteam()"
               >
-                Vincular con Steam
+                {{ 'miPerfil.steam.vincular' | transloco }}
               </button>
             }
           </div>
         </div>
       }
 
-      <h3 style="margin-bottom: var(--sp-4)">Próximas carreras</h3>
+      <h3 style="margin-bottom: var(--sp-4)">{{ 'miPerfil.proximas' | transloco }}</h3>
       <div class="flex-col gap-3" style="margin-bottom: var(--sp-8)">
         @if (inscripciones().length === 0) {
-          <app-empty-state texto="No estás inscripto en ninguna carrera próxima." />
+          <app-empty-state [texto]="'miPerfil.sinInscripciones' | transloco" />
         } @else {
           @for (ins of inscripciones(); track ins.id) {
             <div class="race-row">
@@ -319,14 +332,16 @@
                   class="btn btn-danger btn-sm"
                   [class.is-loading]="cancelando() === ins.id"
                   [disabled]="cancelando() === ins.id"
-                  [attr.aria-label]="'Cancelar inscripción a ' + ins.carreraNombre"
+                  [attr.aria-label]="
+                    'miPerfil.cancelarAria' | transloco: { nombre: ins.carreraNombre }
+                  "
                   (click)="pedirCancelarInscripcion(ins)"
                 >
-                  Cancelar
+                  {{ 'miPerfil.cancelar' | transloco }}
                 </button>
               } @else {
                 <span class="text-terciario" style="font-size: var(--fs-sm)">
-                  Inscripción cerrada
+                  {{ 'miPerfil.inscripcionCerrada' | transloco }}
                 </span>
               }
             </div>
@@ -336,16 +351,20 @@
     </div>
 
     <aside class="panel-aside">
-      <h4 style="margin-bottom: var(--sp-4)">Recompensas disponibles</h4>
+      <h4 style="margin-bottom: var(--sp-4)">{{ 'miPerfil.recompensas' | transloco }}</h4>
       <div class="flex-col gap-3">
         @if (recompensas().length === 0) {
-          <p class="text-terciario">No tenés recompensas pendientes.</p>
+          <p class="text-terciario">{{ 'miPerfil.sinRecompensas' | transloco }}</p>
         } @else {
           @for (r of recompensas(); track r.recompensaId) {
             <div class="card card-raised" style="padding: var(--sp-4)">
               <div class="flex-between" style="margin-bottom: var(--sp-2)">
-                <strong style="font-size: var(--fs-sm)">{{ r.descripcion || 'Recompensa' }}</strong>
-                <span class="chip chip-confirmed" style="padding: 0.2em 0.6em">Lista</span>
+                <strong style="font-size: var(--fs-sm)">{{
+                  r.descripcion || ('miPerfil.recompensa' | transloco)
+                }}</strong>
+                <span class="chip chip-confirmed" style="padding: 0.2em 0.6em">{{
+                  'miPerfil.lista' | transloco
+                }}</span>
               </div>
               <button
                 type="button"
@@ -354,7 +373,7 @@
                 [disabled]="reclamando() === r.recompensaId"
                 (click)="reclamar(r)"
               >
-                Reclamar
+                {{ 'miPerfil.reclamar' | transloco }}
               </button>
             </div>
           }
@@ -368,7 +387,7 @@
   [abierto]="!!confirmacion()"
   [titulo]="confirmacion()?.titulo ?? ''"
   [mensaje]="confirmacion()?.mensaje ?? ''"
-  [confirmarTexto]="confirmacion()?.boton ?? 'Confirmar'"
+  [confirmarTexto]="confirmacion()?.boton ?? null"
   (aceptado)="confirmar()"
   (cancelado)="aConfirmar.set(null)"
 />

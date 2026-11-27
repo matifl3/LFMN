@@ -2,10 +2,10 @@
   <section class="container-wide section">
     <div class="card" style="max-width: 520px; margin: var(--sp-9) auto">
       <div class="empty-state">
-        <p>Necesitás una sesión de administrador o comisario para acceder a este panel.</p>
-        <a routerLink="/auth" class="btn btn-primary" style="margin-top: var(--sp-4)"
-          >Iniciar sesión</a
-        >
+        <p>{{ 'admin.necesitaSesion' | transloco }}</p>
+        <a routerLink="/auth" class="btn btn-primary" style="margin-top: var(--sp-4)">{{
+          'admin.iniciarSesion' | transloco
+        }}</a>
       </div>
     </div>
   </section>
@@ -13,8 +13,8 @@
   <section class="container-wide section" id="adm-panel">
     <div class="section-head">
       <div>
-        <span class="eyebrow">Solo organizadores</span>
-        <h2>Panel de administración</h2>
+        <span class="eyebrow">{{ 'admin.eyebrow' | transloco }}</span>
+        <h2>{{ 'admin.titulo' | transloco }}</h2>
       </div>
     </div>
 
@@ -25,31 +25,31 @@
           [class.active]="tab() === 'estadisticas'"
           (click)="setTab('estadisticas')"
         >
-          Estadísticas
+          {{ 'admin.tab.estadisticas' | transloco }}
         </button>
       }
       <button class="tab" [class.active]="tab() === 'carreras'" (click)="setTab('carreras')">
-        Carreras
+        {{ 'admin.tab.carreras' | transloco }}
       </button>
       <button class="tab" [class.active]="tab() === 'sesiones'" (click)="setTab('sesiones')">
-        Sesiones
+        {{ 'admin.tab.sesiones' | transloco }}
       </button>
       <button class="tab" [class.active]="tab() === 'campeonatos'" (click)="setTab('campeonatos')">
-        Campeonatos
+        {{ 'admin.tab.campeonatos' | transloco }}
       </button>
       <button class="tab" [class.active]="tab() === 'categorias'" (click)="setTab('categorias')">
-        Categorías
+        {{ 'admin.tab.categorias' | transloco }}
       </button>
       @if (isAdmin()) {
         <button class="tab" [class.active]="tab() === 'pilotos'" (click)="setTab('pilotos')">
-          Pilotos
+          {{ 'admin.tab.pilotos' | transloco }}
         </button>
       }
       <button class="tab" [class.active]="tab() === 'logros'" (click)="setTab('logros')">
-        Logros
+        {{ 'admin.tab.logros' | transloco }}
       </button>
       <button class="tab" [class.active]="tab() === 'anuncios'" (click)="setTab('anuncios')">
-        Anuncios
+        {{ 'admin.tab.anuncios' | transloco }}
       </button>
     </div>
 
@@ -65,56 +65,71 @@
             @if (stats(); as s) {
               <div class="stats-grid">
                 <div class="card stat-card">
-                  <span class="stat-label">Pilotos registrados</span>
+                  <span class="stat-label">{{ 'admin.stats.pilotos' | transloco }}</span>
                   <span class="stat-value">{{ s.totalUsuarios }}</span>
-                  <span class="stat-sub">{{ s.usuariosActivos }} con carrera disputada</span>
+                  <span class="stat-sub">{{
+                    'admin.stats.conCarrera' | transloco: { n: s.usuariosActivos }
+                  }}</span>
                 </div>
                 <div class="card stat-card">
-                  <span class="stat-label">Carreras finalizadas</span>
+                  <span class="stat-label">{{
+                    'admin.stats.carrerasFinalizadas' | transloco
+                  }}</span>
                   <span class="stat-value">{{ s.carrerasFinalizadas }}</span>
-                  <span class="stat-sub">de {{ s.totalCarreras }} totales</span>
+                  <span class="stat-sub">{{
+                    'admin.stats.deTotales' | transloco: { n: s.totalCarreras }
+                  }}</span>
                 </div>
                 <div class="card stat-card">
-                  <span class="stat-label">Incidentes por resolver</span>
+                  <span class="stat-label">{{ 'admin.stats.incidentes' | transloco }}</span>
                   <span class="stat-value">{{
                     s.incidentesPendientes + s.incidentesEnAnalisis
                   }}</span>
-                  <span class="stat-sub"
-                    >{{ s.incidentesResueltos }} resueltos de {{ s.totalIncidentes }}</span
-                  >
+                  <span class="stat-sub">{{
+                    'admin.stats.resueltos'
+                      | transloco: { n: s.incidentesResueltos, total: s.totalIncidentes }
+                  }}</span>
                 </div>
                 <div class="card stat-card">
-                  <span class="stat-label">Sanciones aplicadas</span>
+                  <span class="stat-label">{{ 'admin.stats.sanciones' | transloco }}</span>
                   <span class="stat-value">{{ s.totalSanciones }}</span>
-                  <span class="stat-sub">{{ s.apelacionesPendientes }} apelaciones pendientes</span>
+                  <span class="stat-sub">{{
+                    'admin.stats.apelaciones' | transloco: { n: s.apelacionesPendientes }
+                  }}</span>
                 </div>
                 <div class="card stat-card">
-                  <span class="stat-label">Inscripciones</span>
+                  <span class="stat-label">{{ 'admin.stats.inscripciones' | transloco }}</span>
                   <span class="stat-value">{{ s.totalInscripciones }}</span>
-                  <span class="stat-sub"
-                    >{{ s.carrerasInscripcionesAbiertas }} inscripciones abiertas ·
-                    {{ s.carrerasInscripcionesCerradas }} cerradas · {{ s.carrerasEnCurso }} en
-                    curso</span
-                  >
+                  <span class="stat-sub">{{
+                    'admin.stats.inscripcionesDetalle'
+                      | transloco
+                        : {
+                            abiertas: s.carrerasInscripcionesAbiertas,
+                            cerradas: s.carrerasInscripcionesCerradas,
+                            enCurso: s.carrerasEnCurso,
+                          }
+                  }}</span>
                 </div>
                 <div class="card stat-card">
-                  <span class="stat-label">Setups compartidos</span>
+                  <span class="stat-label">{{ 'admin.stats.setups' | transloco }}</span>
                   <span class="stat-value">{{ s.setupsPublicados }}</span>
                 </div>
                 <div class="card stat-card">
-                  <span class="stat-label">Anuncios publicados</span>
+                  <span class="stat-label">{{ 'admin.stats.anuncios' | transloco }}</span>
                   <span class="stat-value">{{ s.anuncios }}</span>
                 </div>
                 <div class="card stat-card">
-                  <span class="stat-label">Campeonatos</span>
+                  <span class="stat-label">{{ 'admin.tab.campeonatos' | transloco }}</span>
                   <span class="stat-value">{{ s.campeonatos }}</span>
-                  <span class="stat-sub">{{ s.categorias }} categorías</span>
+                  <span class="stat-sub">{{
+                    'admin.stats.nCategorias' | transloco: { n: s.categorias }
+                  }}</span>
                 </div>
               </div>
             } @else {
               <div class="card" style="max-width: 520px">
                 <p class="text-secondary">
-                  Las estadísticas están reservadas para administradores.
+                  {{ 'admin.stats.soloAdmin' | transloco }}
                 </p>
               </div>
             }
@@ -125,11 +140,11 @@
               <table class="table">
                 <thead>
                   <tr>
-                    <th>Carrera</th>
-                    <th>Categoría</th>
-                    <th>Fecha</th>
-                    <th class="num">Cupo</th>
-                    <th>Estado</th>
+                    <th>{{ 'admin.col.carrera' | transloco }}</th>
+                    <th>{{ 'admin.col.categoria' | transloco }}</th>
+                    <th>{{ 'admin.col.fecha' | transloco }}</th>
+                    <th class="num">{{ 'admin.col.cupo' | transloco }}</th>
+                    <th>{{ 'admin.col.estado' | transloco }}</th>
                     <th></th>
                   </tr>
                 </thead>
@@ -164,14 +179,14 @@
                             <button
                               class="btn btn-ghost btn-sm"
                               (click)="editarCarrera(c)"
-                              aria-label="Editar"
+                              [attr.aria-label]="'admin.editar' | transloco"
                             >
                               <span class="ms-icon" aria-hidden="true">edit</span>
                             </button>
                             <button
                               class="btn btn-danger btn-sm"
                               (click)="eliminarCarrera(c.id)"
-                              aria-label="Eliminar"
+                              [attr.aria-label]="'admin.eliminar' | transloco"
                             >
                               <span class="ms-icon" aria-hidden="true">delete</span>
                             </button>
@@ -187,13 +202,13 @@
 
           @if (tab() === 'sesiones') {
             <div class="field" style="max-width: 380px">
-              <label>Carrera</label>
+              <label>{{ 'admin.col.carrera' | transloco }}</label>
               <select
                 class="select"
                 [ngModel]="sesionCarreraId()"
                 (ngModelChange)="onSesionCarreraChange($event)"
               >
-                <option value="">Seleccioná una carrera…</option>
+                <option value="">{{ 'admin.elegiCarrera' | transloco }}</option>
                 @for (c of carreras(); track c.id) {
                   <option [value]="c.id">
                     {{ c.nombre }} · {{ ESTADO_LABEL[c.estado] || c.estado }}
@@ -207,9 +222,9 @@
                   <table class="table">
                     <thead>
                       <tr>
-                        <th>Archivo</th>
-                        <th>Tipo</th>
-                        <th>Procesada</th>
+                        <th>{{ 'admin.col.archivo' | transloco }}</th>
+                        <th>{{ 'admin.col.tipo' | transloco }}</th>
+                        <th>{{ 'admin.col.procesada' | transloco }}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -236,12 +251,12 @@
                 </div>
               } @else {
                 <div class="card">
-                  <p class="hint">Aún no hay sesiones procesadas para esta carrera.</p>
+                  <p class="hint">{{ 'admin.sesiones.vacio' | transloco }}</p>
                 </div>
               }
             } @else {
               <div class="card">
-                <p class="hint">Elegí una carrera para ver sus sesiones importadas.</p>
+                <p class="hint">{{ 'admin.sesiones.elegi' | transloco }}</p>
               </div>
             }
           }
@@ -251,13 +266,13 @@
               <table class="table">
                 <thead>
                   <tr>
-                    <th>Campeonato</th>
-                    <th>Temporada</th>
-                    <th>Categoría</th>
-                    <th>Puntos</th>
-                    <th>Visibilidad</th>
-                    <th>Organizador</th>
-                    <th>Estado</th>
+                    <th>{{ 'admin.col.campeonato' | transloco }}</th>
+                    <th>{{ 'admin.col.temporada' | transloco }}</th>
+                    <th>{{ 'admin.col.categoria' | transloco }}</th>
+                    <th>{{ 'admin.col.puntos' | transloco }}</th>
+                    <th>{{ 'admin.col.visibilidad' | transloco }}</th>
+                    <th>{{ 'admin.col.organizador' | transloco }}</th>
+                    <th>{{ 'admin.col.estado' | transloco }}</th>
                     <th></th>
                   </tr>
                 </thead>
@@ -276,7 +291,11 @@
                             c.visibilidad === 'PRIVADO' ? 'chip-resolved' : 'chip-category'
                           }}"
                         >
-                          {{ c.visibilidad === 'PRIVADO' ? 'Privado' : 'Público' }}
+                          {{
+                            c.visibilidad === 'PRIVADO'
+                              ? ('admin.privado' | transloco)
+                              : ('admin.publico' | transloco)
+                          }}
                         </span>
                       </td>
                       <td>
@@ -301,14 +320,14 @@
                             <button
                               class="btn btn-ghost btn-sm"
                               (click)="editarCampeonato(c)"
-                              aria-label="Editar"
+                              [attr.aria-label]="'admin.editar' | transloco"
                             >
                               <span class="ms-icon" aria-hidden="true">edit</span>
                             </button>
                             <button
                               class="btn btn-danger btn-sm"
                               (click)="eliminarCampeonato(c.id)"
-                              aria-label="Eliminar"
+                              [attr.aria-label]="'admin.eliminar' | transloco"
                             >
                               <span class="ms-icon" aria-hidden="true">delete</span>
                             </button>
@@ -334,10 +353,10 @@
               <table class="table">
                 <thead>
                   <tr>
-                    <th>Categoría</th>
-                    <th>Descripción</th>
-                    <th>Elo range</th>
-                    <th>Setup</th>
+                    <th>{{ 'admin.col.categoria' | transloco }}</th>
+                    <th>{{ 'admin.col.descripcion' | transloco }}</th>
+                    <th>{{ 'admin.col.eloRange' | transloco }}</th>
+                    <th>{{ 'admin.col.setup' | transloco }}</th>
                     <th></th>
                   </tr>
                 </thead>
@@ -357,14 +376,14 @@
                             <button
                               class="btn btn-ghost btn-sm"
                               (click)="editarCategoria(c)"
-                              aria-label="Editar"
+                              [attr.aria-label]="'admin.editar' | transloco"
                             >
                               <span class="ms-icon" aria-hidden="true">edit</span>
                             </button>
                             <button
                               class="btn btn-danger btn-sm"
                               (click)="eliminarCategoria(c.id)"
-                              aria-label="Eliminar"
+                              [attr.aria-label]="'admin.eliminar' | transloco"
                             >
                               <span class="ms-icon" aria-hidden="true">delete</span>
                             </button>
@@ -383,11 +402,11 @@
               <table class="table">
                 <thead>
                   <tr>
-                    <th>Piloto</th>
-                    <th>Email</th>
+                    <th>{{ 'admin.col.piloto' | transloco }}</th>
+                    <th>{{ 'admin.col.email' | transloco }}</th>
                     <th class="num">Elo</th>
                     <th class="num">SR</th>
-                    <th>Rol</th>
+                    <th>{{ 'admin.col.rol' | transloco }}</th>
                     <th></th>
                   </tr>
                 </thead>
@@ -427,9 +446,11 @@
                           (ngModelChange)="updateRol(u, $event)"
                           style="min-width: 120px"
                         >
-                          <option value="USUARIO">Usuario</option>
-                          <option value="COMISARIO">Comisario</option>
-                          <option value="ADMIN_CAMPEONATO">Admin de campeonato</option>
+                          <option value="USUARIO">{{ 'admin.rol.USUARIO' | transloco }}</option>
+                          <option value="COMISARIO">{{ 'admin.rol.COMISARIO' | transloco }}</option>
+                          <option value="ADMIN_CAMPEONATO">
+                            {{ 'admin.rol.ADMIN_CAMPEONATO' | transloco }}
+                          </option>
                           <option value="ADMIN">Admin</option>
                         </select>
                       </td>
@@ -440,7 +461,7 @@
                               class="btn btn-ghost btn-sm"
                               (click)="toggleHabilitado(u)"
                               [class.chip-resolved]="u.habilitado"
-                              aria-label="Habilitar o deshabilitar usuario"
+                              [attr.aria-label]="'admin.habilitarAria' | transloco"
                             >
                               <span class="ms-icon" aria-hidden="true">{{
                                 u.habilitado ? 'check' : 'block'
@@ -449,7 +470,7 @@
                             <button
                               class="btn btn-danger btn-sm"
                               (click)="eliminarUsuario(u)"
-                              aria-label="Eliminar"
+                              [attr.aria-label]="'admin.eliminar' | transloco"
                             >
                               <span class="ms-icon" aria-hidden="true">delete</span>
                             </button>
@@ -468,11 +489,11 @@
               <table class="table">
                 <thead>
                   <tr>
-                    <th>Fecha</th>
-                    <th>Título</th>
-                    <th>Contenido</th>
-                    <th>Imagen</th>
-                    <th>Destacado</th>
+                    <th>{{ 'admin.col.fecha' | transloco }}</th>
+                    <th>{{ 'admin.col.titulo' | transloco }}</th>
+                    <th>{{ 'admin.col.contenido' | transloco }}</th>
+                    <th>{{ 'admin.col.imagen' | transloco }}</th>
+                    <th>{{ 'admin.col.destacado' | transloco }}</th>
                     <th></th>
                   </tr>
                 </thead>
@@ -491,14 +512,16 @@
                       >
                         {{ a.contenido || '—' }}
                       </td>
-                      <td>{{ a.urlImagen ? 'Sí' : 'No' }}</td>
+                      <td>
+                        {{ a.urlImagen ? ('admin.si' | transloco) : ('admin.no' | transloco) }}
+                      </td>
                       <td>
                         @if (isAdmin()) {
                           <button
                             class="btn btn-ghost btn-sm"
                             (click)="toggleDestacado(a)"
                             [class.chip-pending]="a.destacado"
-                            aria-label="Alternar destacado"
+                            [attr.aria-label]="'admin.destacadoAria' | transloco"
                           >
                             <span class="ms-icon" aria-hidden="true">{{
                               a.destacado ? 'star' : 'star_border'
@@ -516,14 +539,14 @@
                             <button
                               class="btn btn-ghost btn-sm"
                               (click)="editarAnuncio(a)"
-                              aria-label="Editar"
+                              [attr.aria-label]="'admin.editar' | transloco"
                             >
                               <span class="ms-icon" aria-hidden="true">edit</span>
                             </button>
                             <button
                               class="btn btn-danger btn-sm"
                               (click)="eliminarAnuncio(a.id)"
-                              aria-label="Eliminar"
+                              [attr.aria-label]="'admin.eliminar' | transloco"
                             >
                               <span class="ms-icon" aria-hidden="true">delete</span>
                             </button>
@@ -542,9 +565,9 @@
               <table class="table">
                 <thead>
                   <tr>
-                    <th>Logro</th>
-                    <th>Condición</th>
-                    <th>Recompensas</th>
+                    <th>{{ 'admin.col.logro' | transloco }}</th>
+                    <th>{{ 'admin.col.condicion' | transloco }}</th>
+                    <th>{{ 'admin.col.recompensas' | transloco }}</th>
                     <th></th>
                   </tr>
                 </thead>
@@ -574,7 +597,7 @@
                                     class="btn btn-ghost btn-sm"
                                     style="padding: 0 4px; margin-left: 4px"
                                     (click)="quitarRecompensa(l.id, r.id)"
-                                    aria-label="Quitar recompensa"
+                                    [attr.aria-label]="'admin.quitarRecompensaAria' | transloco"
                                   >
                                     <span class="ms-icon" aria-hidden="true">close</span>
                                   </button>
@@ -596,7 +619,7 @@
                                 style="width: 180px"
                                 [ngModel]="rDescripcion()"
                                 (ngModelChange)="rDescripcion.set($event)"
-                                placeholder="Descripción"
+                                [placeholder]="'admin.col.descripcion' | transloco"
                               />
                               <select
                                 class="select"
@@ -609,7 +632,7 @@
                                 }
                               </select>
                               <button class="btn btn-primary btn-sm" (click)="agregarRecompensa(l)">
-                                Añadir
+                                {{ 'admin.anadir' | transloco }}
                               </button>
                             </div>
                           }
@@ -621,21 +644,21 @@
                             <button
                               class="btn btn-ghost btn-sm"
                               (click)="toggleAddRecompensa(l.id)"
-                              aria-label="Agregar recompensa"
+                              [attr.aria-label]="'admin.agregarRecompensaAria' | transloco"
                             >
                               <span class="ms-icon" aria-hidden="true">add</span>
                             </button>
                             <button
                               class="btn btn-ghost btn-sm"
                               (click)="editarLogro(l)"
-                              aria-label="Editar"
+                              [attr.aria-label]="'admin.editar' | transloco"
                             >
                               <span class="ms-icon" aria-hidden="true">edit</span>
                             </button>
                             <button
                               class="btn btn-danger btn-sm"
                               (click)="eliminarLogro(l.id)"
-                              aria-label="Eliminar"
+                              [attr.aria-label]="'admin.eliminar' | transloco"
                             >
                               <span class="ms-icon" aria-hidden="true">delete</span>
                             </button>
@@ -656,32 +679,38 @@
         ) {
           <div class="panel-aside">
             @if (tab() === 'carreras') {
-              <h4>{{ editingCarreraId() ? 'Editar carrera' : 'Crear carrera' }}</h4>
+              <h4>
+                {{
+                  editingCarreraId()
+                    ? ('admin.form.editarCarrera' | transloco)
+                    : ('admin.form.crearCarrera' | transloco)
+                }}
+              </h4>
               <div class="field">
-                <label>Nombre *</label
+                <label>{{ 'admin.form.nombre' | transloco }}</label
                 ><input class="input" [ngModel]="cNombre()" (ngModelChange)="cNombre.set($event)" />
               </div>
               <div class="field">
-                <label>Categoría *</label>
+                <label>{{ 'admin.form.categoria' | transloco }}</label>
                 <select
                   class="select"
                   [ngModel]="cCategoriaId()"
                   (ngModelChange)="onCategoriaChange($event)"
                 >
-                  <option value="">Seleccioná una categoría…</option>
+                  <option value="">{{ 'admin.form.elegiCategoria' | transloco }}</option>
                   @for (cat of carrerasCats(); track cat.id) {
                     <option [value]="cat.id">{{ cat.nombre }}</option>
                   }
                 </select>
               </div>
               <div class="field">
-                <label>Campeonato</label>
+                <label>{{ 'admin.col.campeonato' | transloco }}</label>
                 <select
                   class="select"
                   [ngModel]="cCampeonatoId()"
                   (ngModelChange)="cCampeonatoId.set($event)"
                 >
-                  <option value="">Ninguno</option>
+                  <option value="">{{ 'admin.form.ninguno' | transloco }}</option>
                   @for (ch of campeonatosForm(); track ch.id) {
                     <option [value]="ch.id">
                       {{ ch.nombre }}{{ ch.temporada ? ' (' + ch.temporada + ')' : '' }}
@@ -691,7 +720,7 @@
               </div>
               <div class="input-group">
                 <div class="field">
-                  <label>Fecha</label
+                  <label>{{ 'admin.col.fecha' | transloco }}</label
                   ><input
                     type="date"
                     class="input"
@@ -700,7 +729,7 @@
                   />
                 </div>
                 <div class="field">
-                  <label>Hora</label
+                  <label>{{ 'admin.form.hora' | transloco }}</label
                   ><input
                     type="time"
                     class="input"
@@ -711,7 +740,7 @@
               </div>
               <div class="input-group">
                 <div class="field">
-                  <label>Sesión de práctica</label
+                  <label>{{ 'admin.form.practica' | transloco }}</label
                   ><input
                     type="date"
                     class="input"
@@ -720,7 +749,7 @@
                   />
                 </div>
                 <div class="field">
-                  <label>Hora práctica</label
+                  <label>{{ 'admin.form.horaPractica' | transloco }}</label
                   ><input
                     type="time"
                     class="input"
@@ -730,7 +759,7 @@
                 </div>
               </div>
               <div class="field">
-                <label>Circuito</label
+                <label>{{ 'admin.form.circuito' | transloco }}</label
                 ><input
                   class="input"
                   [ngModel]="cCircuito()"
@@ -738,7 +767,7 @@
                 />
               </div>
               <div class="field">
-                <label>Cupo máximo</label
+                <label>{{ 'admin.form.cupoMaximo' | transloco }}</label
                 ><input
                   type="number"
                   class="input"
@@ -747,7 +776,7 @@
                 />
               </div>
               <div class="field">
-                <label>Servidor</label
+                <label>{{ 'admin.form.servidor' | transloco }}</label
                 ><input
                   class="input"
                   [ngModel]="cServidor()"
@@ -755,7 +784,7 @@
                 />
               </div>
               <div class="field">
-                <label>Link pista</label
+                <label>{{ 'admin.form.linkPista' | transloco }}</label
                 ><input
                   class="input"
                   [ngModel]="cLinkPista()"
@@ -767,15 +796,23 @@
                   {{ editingCarreraId() ? 'Actualizar' : 'Crear' }}
                 </button>
                 @if (editingCarreraId()) {
-                  <button class="btn btn-ghost" (click)="limpiarFormCarrera()">Cancelar</button>
+                  <button class="btn btn-ghost" (click)="limpiarFormCarrera()">
+                    {{ 'admin.form.cancelar' | transloco }}
+                  </button>
                 }
               </div>
             }
 
             @if (tab() === 'campeonatos') {
-              <h4>{{ editingCampeonatoId() ? 'Editar campeonato' : 'Crear campeonato' }}</h4>
+              <h4>
+                {{
+                  editingCampeonatoId()
+                    ? ('admin.form.editarCampeonato' | transloco)
+                    : ('admin.form.crearCampeonato' | transloco)
+                }}
+              </h4>
               <div class="field">
-                <label>Nombre *</label
+                <label>{{ 'admin.form.nombre' | transloco }}</label
                 ><input
                   class="input"
                   [ngModel]="chNombre()"
@@ -783,7 +820,7 @@
                 />
               </div>
               <div class="field">
-                <label>Temporada</label
+                <label>{{ 'admin.col.temporada' | transloco }}</label
                 ><input
                   class="input"
                   [ngModel]="chTemporada()"
@@ -792,20 +829,20 @@
                 />
               </div>
               <div class="field">
-                <label>Categoría *</label>
+                <label>{{ 'admin.form.categoria' | transloco }}</label>
                 <select
                   class="select"
                   [ngModel]="chCategoriaId()"
                   (ngModelChange)="chCategoriaId.set($event)"
                 >
-                  <option value="">Seleccioná una categoría…</option>
+                  <option value="">{{ 'admin.form.elegiCategoria' | transloco }}</option>
                   @for (cat of categorias(); track cat.id) {
                     <option [value]="cat.id">{{ cat.nombre }}</option>
                   }
                 </select>
               </div>
               <div class="field">
-                <label>Sistema de puntos</label>
+                <label>{{ 'admin.form.sistemaPuntos' | transloco }}</label>
                 <select
                   class="select"
                   [ngModel]="chSistemaPuntos()"
@@ -813,38 +850,44 @@
                 >
                   @for (s of sistemasPuntosDisponibles(); track s.clave) {
                     <option [value]="s.clave">
-                      {{ s.nombre }}{{ s.porDefecto ? ' (default)' : '' }}
+                      {{ s.nombre }}{{ s.porDefecto ? ('admin.form.default' | transloco) : '' }}
                     </option>
                   }
                 </select>
               </div>
               <div class="field">
-                <label>Organizador</label>
+                <label>{{ 'admin.col.organizador' | transloco }}</label>
                 <select
                   class="select"
                   [ngModel]="chAdminId()"
                   (ngModelChange)="chAdminId.set($event)"
                 >
-                  <option value="">Sin organizador (campeonato de liga)</option>
+                  <option value="">{{ 'admin.form.sinOrganizador' | transloco }}</option>
                   @for (u of organizadores(); track u.id) {
                     <option [value]="u.id">{{ u.nombrePiloto || u.email }}</option>
                   }
                 </select>
               </div>
               <div class="field">
-                <label>Visibilidad</label>
+                <label>{{ 'admin.col.visibilidad' | transloco }}</label>
                 <select
                   class="select"
                   [ngModel]="chVisibilidad()"
                   (ngModelChange)="chVisibilidad.set($event)"
                 >
                   @for (v of VISIBILIDAD_CAMPEONATO; track v) {
-                    <option [value]="v">{{ v === 'PUBLICO' ? 'Público' : 'Privado' }}</option>
+                    <option [value]="v">
+                      {{
+                        v === 'PUBLICO'
+                          ? ('admin.publico' | transloco)
+                          : ('admin.privado' | transloco)
+                      }}
+                    </option>
                   }
                 </select>
               </div>
               <div class="field">
-                <label>Estado</label>
+                <label>{{ 'admin.col.estado' | transloco }}</label>
                 <select
                   class="select"
                   [ngModel]="chEstado()"
@@ -860,15 +903,23 @@
                   {{ editingCampeonatoId() ? 'Actualizar' : 'Crear' }}
                 </button>
                 @if (editingCampeonatoId()) {
-                  <button class="btn btn-ghost" (click)="limpiarFormCampeonato()">Cancelar</button>
+                  <button class="btn btn-ghost" (click)="limpiarFormCampeonato()">
+                    {{ 'admin.form.cancelar' | transloco }}
+                  </button>
                 }
               </div>
             }
 
             @if (tab() === 'categorias') {
-              <h4>{{ editingCategoriaId() ? 'Editar categoría' : 'Crear categoría' }}</h4>
+              <h4>
+                {{
+                  editingCategoriaId()
+                    ? ('admin.form.editarCategoria' | transloco)
+                    : ('admin.form.crearCategoria' | transloco)
+                }}
+              </h4>
               <div class="field">
-                <label>Nombre *</label
+                <label>{{ 'admin.form.nombre' | transloco }}</label
                 ><input
                   class="input"
                   [ngModel]="catNombre()"
@@ -876,7 +927,7 @@
                 />
               </div>
               <div class="field">
-                <label>Descripción</label
+                <label>{{ 'admin.col.descripcion' | transloco }}</label
                 ><textarea
                   class="textarea"
                   [ngModel]="catDescripcion()"
@@ -885,7 +936,7 @@
               </div>
               <div class="input-group">
                 <div class="field">
-                  <label>Elo mínimo</label
+                  <label>{{ 'admin.form.eloMin' | transloco }}</label
                   ><input
                     type="number"
                     class="input"
@@ -894,7 +945,7 @@
                   />
                 </div>
                 <div class="field">
-                  <label>Elo máximo</label
+                  <label>{{ 'admin.form.eloMax' | transloco }}</label
                   ><input
                     type="number"
                     class="input"
@@ -904,15 +955,15 @@
                 </div>
               </div>
               <div class="field">
-                <label>Setup</label>
+                <label>{{ 'admin.col.setup' | transloco }}</label>
                 <select
                   class="select"
                   [ngModel]="catSetup()"
                   (ngModelChange)="catSetup.set($event)"
                 >
-                  <option value="ABIERTO">Abierto</option>
-                  <option value="FIJO">Fijo</option>
-                  <option value="LIBRE">Libre</option>
+                  <option value="ABIERTO">{{ 'admin.form.setupAbierto' | transloco }}</option>
+                  <option value="FIJO">{{ 'admin.form.setupFijo' | transloco }}</option>
+                  <option value="LIBRE">{{ 'admin.form.setupLibre' | transloco }}</option>
                 </select>
               </div>
               <div style="display: flex; gap: var(--sp-2)">
@@ -920,19 +971,27 @@
                   {{ editingCategoriaId() ? 'Actualizar' : 'Crear' }}
                 </button>
                 @if (editingCategoriaId()) {
-                  <button class="btn btn-ghost" (click)="limpiarFormCategoria()">Cancelar</button>
+                  <button class="btn btn-ghost" (click)="limpiarFormCategoria()">
+                    {{ 'admin.form.cancelar' | transloco }}
+                  </button>
                 }
               </div>
             }
 
             @if (tab() === 'anuncios') {
-              <h4>{{ editingAnuncioId() ? 'Editar anuncio' : 'Crear anuncio' }}</h4>
+              <h4>
+                {{
+                  editingAnuncioId()
+                    ? ('admin.form.editarAnuncio' | transloco)
+                    : ('admin.form.crearAnuncio' | transloco)
+                }}
+              </h4>
               <div class="field">
-                <label>Título *</label
+                <label>{{ 'admin.form.titulo' | transloco }}</label
                 ><input class="input" [ngModel]="aTitulo()" (ngModelChange)="aTitulo.set($event)" />
               </div>
               <div class="field">
-                <label>Contenido *</label
+                <label>{{ 'admin.form.contenido' | transloco }}</label
                 ><textarea
                   class="textarea"
                   [ngModel]="aContenido()"
@@ -940,7 +999,7 @@
                 ></textarea>
               </div>
               <div class="field">
-                <label>Imagen</label>
+                <label>{{ 'admin.col.imagen' | transloco }}</label>
                 <input
                   type="file"
                   accept="image/*"
@@ -948,7 +1007,9 @@
                   (change)="onAnuncioFile($event)"
                 />
                 @if (aImagenUrl()) {
-                  <p class="hint">Imagen actual: {{ aImagenUrl() }}</p>
+                  <p class="hint">
+                    {{ 'admin.form.imagenActual' | transloco: { url: aImagenUrl() } }}
+                  </p>
                 }
               </div>
               <div style="display: flex; gap: var(--sp-2)">
@@ -956,19 +1017,27 @@
                   {{ editingAnuncioId() ? 'Actualizar' : 'Crear' }}
                 </button>
                 @if (editingAnuncioId()) {
-                  <button class="btn btn-ghost" (click)="limpiarFormAnuncio()">Cancelar</button>
+                  <button class="btn btn-ghost" (click)="limpiarFormAnuncio()">
+                    {{ 'admin.form.cancelar' | transloco }}
+                  </button>
                 }
               </div>
             }
 
             @if (tab() === 'logros') {
-              <h4>{{ editingLogroId() ? 'Editar logro' : 'Crear logro' }}</h4>
+              <h4>
+                {{
+                  editingLogroId()
+                    ? ('admin.form.editarLogro' | transloco)
+                    : ('admin.form.crearLogro' | transloco)
+                }}
+              </h4>
               <div class="field">
-                <label>Nombre *</label
+                <label>{{ 'admin.form.nombre' | transloco }}</label
                 ><input class="input" [ngModel]="lNombre()" (ngModelChange)="lNombre.set($event)" />
               </div>
               <div class="field">
-                <label>Descripción</label
+                <label>{{ 'admin.col.descripcion' | transloco }}</label
                 ><textarea
                   class="textarea"
                   [ngModel]="lDescripcion()"
@@ -977,7 +1046,7 @@
               </div>
               <div class="input-group">
                 <div class="field">
-                  <label>Condición</label>
+                  <label>{{ 'admin.col.condicion' | transloco }}</label>
                   <select
                     class="select"
                     [ngModel]="lTipoCondicion()"
@@ -989,7 +1058,7 @@
                   </select>
                 </div>
                 <div class="field">
-                  <label>Valor *</label
+                  <label>{{ 'admin.form.valor' | transloco }}</label
                   ><input
                     type="number"
                     class="input"
@@ -999,7 +1068,7 @@
                 </div>
               </div>
               <div class="field">
-                <label>Icono (Material Symbols)</label
+                <label>{{ 'admin.form.icono' | transloco }}</label
                 ><input
                   class="input"
                   [ngModel]="lIcono()"
@@ -1012,28 +1081,30 @@
                   {{ editingLogroId() ? 'Actualizar' : 'Crear' }}
                 </button>
                 @if (editingLogroId()) {
-                  <button class="btn btn-ghost" (click)="limpiarFormLogro()">Cancelar</button>
+                  <button class="btn btn-ghost" (click)="limpiarFormLogro()">
+                    {{ 'admin.form.cancelar' | transloco }}
+                  </button>
                 }
               </div>
             }
 
             @if (tab() === 'sesiones') {
-              <h4>Importar resultados</h4>
+              <h4>{{ 'admin.importar.titulo' | transloco }}</h4>
               <div class="field">
-                <label>Carrera *</label>
+                <label>{{ 'admin.importar.carrera' | transloco }}</label>
                 <select
                   class="select"
                   [ngModel]="sesionCarreraId()"
                   (ngModelChange)="onSesionCarreraChange($event)"
                 >
-                  <option value="">Seleccioná una carrera…</option>
+                  <option value="">{{ 'admin.elegiCarrera' | transloco }}</option>
                   @for (c of carreras(); track c.id) {
                     <option [value]="c.id">{{ c.nombre }}</option>
                   }
                 </select>
               </div>
               <div class="field">
-                <label>JSON de la sesión (QUALIFY / RACE / PRACTICE)</label>
+                <label>{{ 'admin.importar.json' | transloco }}</label>
                 <textarea
                   class="textarea json-editor"
                   [ngModel]="sesionImportJson()"
@@ -1050,11 +1121,11 @@
               />
               <div style="display: flex; gap: var(--sp-2)">
                 <button class="btn btn-ghost btn-block" (click)="sesionJsonFile.click()">
-                  Cargar .json
+                  {{ 'admin.importar.cargar' | transloco }}
                 </button>
               </div>
               <div class="hint" style="margin-top: var(--sp-2)">
-                Podés pegar el JSON o cargarlo desde un archivo .json del servidor de Assetto.
+                {{ 'admin.importar.hint' | transloco }}
               </div>
               <div style="display: flex; gap: var(--sp-2); margin-top: var(--sp-3)">
                 <button
@@ -1062,10 +1133,16 @@
                   [disabled]="sesionImportando() || !sesionCarreraId() || !sesionImportJson()"
                   (click)="importarSesion()"
                 >
-                  {{ sesionImportando() ? 'Importando…' : 'Importar sesión' }}
+                  {{
+                    sesionImportando()
+                      ? ('admin.importar.importando' | transloco)
+                      : ('admin.importar.boton' | transloco)
+                  }}
                 </button>
                 @if (sesionImportJson()) {
-                  <button class="btn btn-ghost" (click)="limpiarFormSesion()">Limpiar</button>
+                  <button class="btn btn-ghost" (click)="limpiarFormSesion()">
+                    {{ 'admin.importar.limpiar' | transloco }}
+                  </button>
                 }
               </div>
             }

@@ -1,3 +1,5 @@
+import { TranslocoPipe } from '@jsverse/transloco';
+import { t } from '../../core/i18n/t';
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -8,7 +10,7 @@ import { PasswordInput } from '../../shared/components/password-input/password-i
 @Component({
   selector: 'app-recovery',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, PasswordInput],
+  imports: [TranslocoPipe, ReactiveFormsModule, RouterLink, PasswordInput],
   styleUrl: './recovery.scss',
   templateUrl: './recovery.html',
 })
@@ -32,7 +34,12 @@ export class RecoveryComponent implements OnInit {
       nuevaPassword: ['', [Validators.required, Validators.minLength(6)]],
       confirmar: ['', Validators.required],
     },
-    { validators: (g) => (g.get('nuevaPassword')?.value === g.get('confirmar')?.value ? null : { contrasenaDistinta: true }) }
+    {
+      validators: (g) =>
+        g.get('nuevaPassword')?.value === g.get('confirmar')?.value
+          ? null
+          : { contrasenaDistinta: true },
+    },
   );
 
   ngOnInit(): void {
@@ -41,7 +48,7 @@ export class RecoveryComponent implements OnInit {
 
   solicitar(): void {
     if (this.emailForm.invalid) {
-      this.toast.error('Ingresá un email válido.');
+      this.toast.error(t('pantallas.recuperar.emailInvalido'));
       return;
     }
     this.cargando.set(true);
@@ -60,23 +67,25 @@ export class RecoveryComponent implements OnInit {
 
   restablecer(): void {
     if (this.resetForm.invalid) {
-      this.toast.error('La contraseña debe tener al menos 6 caracteres y coincidir.');
+      this.toast.error(t('pantallas.recuperar.passwordInvalida'));
       return;
     }
     this.cargando.set(true);
-    this.api.post('/recuperar/restablecer', {
-      token: this.token(),
-      nuevaPassword: this.resetForm.getRawValue().nuevaPassword,
-    }).subscribe({
-      next: () => {
-        this.cargando.set(false);
-        sessionStorage.setItem('lfm_msg_pass_changed', '1');
-        this.router.navigate(['/auth'], { replaceUrl: true });
-      },
-      error: (err) => {
-        this.cargando.set(false);
-        this.toast.error(apiError(err));
-      },
-    });
+    this.api
+      .post('/recuperar/restablecer', {
+        token: this.token(),
+        nuevaPassword: this.resetForm.getRawValue().nuevaPassword,
+      })
+      .subscribe({
+        next: () => {
+          this.cargando.set(false);
+          sessionStorage.setItem('lfm_msg_pass_changed', '1');
+          this.router.navigate(['/auth'], { replaceUrl: true });
+        },
+        error: (err) => {
+          this.cargando.set(false);
+          this.toast.error(apiError(err));
+        },
+      });
   }
 }

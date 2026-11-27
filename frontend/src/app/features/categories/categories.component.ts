@@ -1,3 +1,5 @@
+import { TranslocoPipe } from '@jsverse/transloco';
+import { t } from '../../core/i18n/t';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { RouterLink } from '@angular/router';
@@ -30,7 +32,7 @@ interface Tarjeta {
 @Component({
   selector: 'app-categories',
   standalone: true,
-  imports: [RouterLink, EmptyState, NgTemplateOutlet],
+  imports: [TranslocoPipe, RouterLink, EmptyState, NgTemplateOutlet],
   styleUrl: './categories.scss',
   templateUrl: './categories.html',
 })
@@ -132,27 +134,27 @@ export class CategoriesComponent implements OnInit {
 
   /** Un límite null es "sin límite", igual que RequisitosEloValidador en el backend. */
   private rango(min: number | null, max: number | null): string {
-    if (min == null && max == null) return 'Sin requisito de Elo';
-    if (min == null) return `Hasta ${max} de Elo`;
-    if (max == null) return `Desde ${min} de Elo`;
-    return `${min} – ${max} de Elo`;
+    if (min == null && max == null) return t('categorias.rango.sinRequisito');
+    if (min == null) return t('categorias.rango.hasta', { max });
+    if (max == null) return t('categorias.rango.desde', { min });
+    return t('categorias.rango.entre', { min, max });
   }
 
   /** Mismas etiquetas que el panel de admin. */
   private setup(cat: Categoria): { label: string; ayuda: string } {
     if (cat.setupAbierto) {
       return {
-        label: 'Setup abierto',
-        ayuda: 'Cualquier piloto puede compartir setups de la categoría.',
+        label: t('categorias.setup.abierto'),
+        ayuda: t('categorias.setup.abiertoAyuda'),
       };
     }
     if (cat.setupFijo) {
       return {
-        label: 'Setup fijo',
-        ayuda: 'Todos corren con el setup oficial que publica la liga.',
+        label: t('categorias.setup.fijo'),
+        ayuda: t('categorias.setup.fijoAyuda'),
       };
     }
-    return { label: 'Setup libre', ayuda: 'Cada piloto arma su propio setup.' };
+    return { label: t('categorias.setup.libre'), ayuda: t('categorias.setup.libreAyuda') };
   }
 
   private sigla(nombre: string): string {

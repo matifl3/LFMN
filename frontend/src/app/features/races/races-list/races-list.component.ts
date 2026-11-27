@@ -1,3 +1,5 @@
+import { TranslocoPipe } from '@jsverse/transloco';
+import { t } from '../../../core/i18n/t';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
@@ -11,7 +13,7 @@ import { fmtDia, fmtFecha, fmtHora, fmtMes } from '../../../core/utils/formato';
 @Component({
   selector: 'app-races-list',
   standalone: true,
-  imports: [RouterLink, Chip, EmptyState],
+  imports: [TranslocoPipe, RouterLink, Chip, EmptyState],
   templateUrl: './races-list.html',
 })
 export class RacesListComponent implements OnInit {
@@ -107,13 +109,13 @@ export class RacesListComponent implements OnInit {
    * "Inscripciones abiertas") y marca las que ya pasaron de fecha sin cerrarse.
    */
   chipDe(c: Carrera): { clase: string; label: string } | null {
-    if (c.estado === 'EN_CURSO') return { clase: 'chip-live', label: 'En vivo' };
+    if (c.estado === 'EN_CURSO') return { clase: 'chip-live', label: t('carreras.chip.enVivo') };
     const abierta = c.estado === 'PROGRAMADA' || c.estado === 'INSCRIPCIONES_ABIERTAS';
     if (abierta && this.view() === 'pasadas') {
-      return { clase: 'chip-pending', label: 'Sin resultados' };
+      return { clase: 'chip-pending', label: t('carreras.chip.sinResultados') };
     }
     if (c.estado === 'INSCRIPCIONES_ABIERTAS' && this.isFull(c)) {
-      return { clase: 'chip-closed', label: 'Cupo lleno' };
+      return { clase: 'chip-closed', label: t('carreras.chip.cupoLleno') };
     }
     return null; // el resto lo resuelve <app-chip> con el mapa de estados
   }

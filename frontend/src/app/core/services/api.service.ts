@@ -1,3 +1,4 @@
+import { t } from '../../core/i18n/t';
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, map, throwError, timer } from 'rxjs';
@@ -102,13 +103,8 @@ export class ApiService {
   }
 }
 
-const MENSAJES_HTTP: Record<number, string> = {
-  400: 'La solicitud es inválida. Revisá los datos ingresados.',
-  401: 'Tu sesión venció. Volvé a iniciar sesión.',
-  403: 'No tenés permisos para realizar esta acción.',
-  404: 'No se encontró el recurso solicitado.',
-  500: 'Ocurrió un error interno en el servidor.',
-};
+/** Estados HTTP con mensaje propio (clave `comun.http.<status>`). */
+const MENSAJES_HTTP = new Set([400, 401, 403, 404, 500]);
 
 function esErrorTransitorio(err: HttpErrorResponse): boolean {
   if (err.status === 0) return true;
@@ -124,11 +120,11 @@ export function apiError(err: unknown): string {
     status?: number;
   };
   if (e && (e.status === 0 || e.status === 502 || e.status === 503 || e.status === 504)) {
-    return 'El servidor está arrancando. Reintentá en unos segundos.';
+    return t('comun.http.arrancando');
   }
   const body = e?.error;
   if (typeof body === 'string' && body.startsWith('<')) {
-    return 'El servidor respondió inesperadamente. Reintentá en unos segundos.';
+    return t('comun.http.inesperado');
   }
   if (body && typeof body === 'object') {
     // ApiError trae el texto en `message` y la frase HTTP ("Bad Request") en `error`:
@@ -137,7 +133,7 @@ export function apiError(err: unknown): string {
     if (msg) return msg;
   }
   const status = e?.status;
-  if (status && MENSAJES_HTTP[status]) return MENSAJES_HTTP[status];
-  if (status) return 'Error ' + status;
-  return 'No se pudo conectar con el servidor. ¿Está levantado el backend?';
+  if (status && MENSAJES_HTTP.has(status)) return t('comun.http.' + status);
+  if (status) return t('comun.http.error', { status });
+  return t('comun.http.sinConexion');
 }

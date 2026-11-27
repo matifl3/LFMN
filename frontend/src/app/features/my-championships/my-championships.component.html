@@ -1,14 +1,13 @@
 <section class="container-wide section">
   <div class="section-head">
     <div>
-      <span class="eyebrow">Organizador</span>
-      <h2>Mis campeonatos</h2>
+      <span class="eyebrow">{{ 'misCampeonatos.eyebrow' | transloco }}</span>
+      <h2>{{ 'misCampeonatos.titulo' | transloco }}</h2>
       <p class="section-sub">
-        Tus campeonatos privados con lista de pilotos cerrada. Solo los pilotos que sumes pueden
-        competir y ver el contenido.
+        {{ 'misCampeonatos.intro' | transloco }}
       </p>
     </div>
-    <a routerLink="/" class="btn btn-ghost">Volver al inicio</a>
+    <a routerLink="/" class="btn btn-ghost">{{ 'misCampeonatos.volverInicio' | transloco }}</a>
   </div>
 
   @if (cargando()) {
@@ -21,12 +20,12 @@
       <aside class="mc-side">
         <div class="card mc-side-card">
           <div class="mc-side-head">
-            <h3>Mis campeonatos</h3>
+            <h3>{{ 'misCampeonatos.titulo' | transloco }}</h3>
             <span class="badge-count">{{ campeonatos().length }}</span>
           </div>
 
           @if (campeonatos().length === 0) {
-            <p class="muted small">Todavia no creaste ningun campeonato.</p>
+            <p class="muted small">{{ 'misCampeonatos.sinCampeonatos' | transloco }}</p>
           } @else {
             <ul class="mc-list">
               @for (c of campeonatos(); track c.id) {
@@ -39,7 +38,8 @@
                   >
                     <span class="mc-list-name">{{ c.nombre }}</span>
                     <span class="mc-list-meta">
-                      {{ c.categoriaNombre || 'Sin categoria' }} · {{ c.cantidadMiembros }} pilotos
+                      {{ c.categoriaNombre || ('misCampeonatos.sinCategoria' | transloco) }} ·
+                      {{ 'misCampeonatos.nPilotos' | transloco: { n: c.cantidadMiembros } }}
                     </span>
                     <app-chip
                       [estado]="c.estado"
@@ -56,8 +56,7 @@
         @if (!esAdminGlobal()) {
           <div class="card">
             <p class="muted small">
-              Administras los campeonato que te asigna la organizacion de la liga: armás el roster
-              de pilotos y creás las carreras desde acá.
+              {{ 'misCampeonatos.introAdmin' | transloco }}
             </p>
           </div>
         }
@@ -69,21 +68,24 @@
             <div>
               <h3 class="card-title">{{ camp.nombre }}</h3>
               <p class="muted small">
-                {{ camp.categoriaNombre }} · {{ camp.temporada || 'sin temporada' }} ·
-                {{ camp.cantidadMiembros }} pilotos
+                {{ camp.categoriaNombre }} ·
+                {{ camp.temporada || ('misCampeonatos.sinTemporada' | transloco) }} ·
+                {{ 'misCampeonatos.nPilotos' | transloco: { n: camp.cantidadMiembros } }}
                 @if (camp.adminNombrePiloto) {
-                  · organizado por {{ camp.adminNombrePiloto }}
+                  {{
+                    'misCampeonatos.organizadoPor' | transloco: { nombre: camp.adminNombrePiloto }
+                  }}
                 }
               </p>
             </div>
             <div class="form-actions">
               @if (camp.estado === 'ACTIVO') {
                 <button type="button" class="btn btn-ghost" (click)="cerrarCampeonato(camp)">
-                  Cerrar campeonato
+                  {{ 'misCampeonatos.cerrarCampeonato' | transloco }}
                 </button>
               }
               <button type="button" class="btn btn-danger" (click)="eliminarCampeonato(camp)">
-                Eliminar
+                {{ 'misCampeonatos.eliminar' | transloco }}
               </button>
             </div>
           </div>
@@ -95,7 +97,7 @@
               [class.active]="panel() === 'pilotos'"
               (click)="setPanel('pilotos')"
             >
-              Pilotos
+              {{ 'misCampeonatos.tab.pilotos' | transloco }}
             </button>
             <button
               type="button"
@@ -103,7 +105,7 @@
               [class.active]="panel() === 'carreras'"
               (click)="setPanel('carreras')"
             >
-              Carreras
+              {{ 'misCampeonatos.tab.carreras' | transloco }}
             </button>
             <button
               type="button"
@@ -111,7 +113,7 @@
               [class.active]="panel() === 'tabla'"
               (click)="setPanel('tabla')"
             >
-              Tabla
+              {{ 'misCampeonatos.tab.tabla' | transloco }}
             </button>
             <button
               type="button"
@@ -119,7 +121,7 @@
               [class.active]="panel() === 'estadisticas'"
               (click)="setPanel('estadisticas')"
             >
-              Estadisticas
+              {{ 'misCampeonatos.tab.estadisticas' | transloco }}
             </button>
             <button
               type="button"
@@ -127,16 +129,15 @@
               [class.active]="panel() === 'importar'"
               (click)="setPanel('importar')"
             >
-              Importar sesion
+              {{ 'misCampeonatos.tab.importar' | transloco }}
             </button>
           </div>
 
           @if (panel() === 'pilotos') {
             <div class="card">
-              <h3 class="card-title">Pilotos del campeonato</h3>
+              <h3 class="card-title">{{ 'misCampeonatos.pilotos.titulo' | transloco }}</h3>
               <p class="muted small">
-                Solo estos pilotos pueden competir. El resto ve el calendario pero no los
-                resultados.
+                {{ 'misCampeonatos.pilotos.intro' | transloco }}
               </p>
 
               <form class="inline-form" (ngSubmit)="agregarMiembro()">
@@ -145,23 +146,25 @@
                   name="busquedaPiloto"
                   [ngModel]="busquedaPiloto()"
                   (ngModelChange)="busquedaPiloto.set($event)"
-                  placeholder="Nombre de piloto o email"
+                  [placeholder]="'misCampeonatos.pilotos.buscarPh' | transloco"
                 />
-                <button type="submit" class="btn btn-primary">Sumar piloto</button>
+                <button type="submit" class="btn btn-primary">
+                  {{ 'misCampeonatos.pilotos.sumar' | transloco }}
+                </button>
               </form>
 
               @if (miembros().length === 0) {
                 <div class="empty-state">
-                  <p>Todavia no sumaste pilotos. Sin miembros nadie puede competir.</p>
+                  <p>{{ 'misCampeonatos.pilotos.vacio' | transloco }}</p>
                 </div>
               } @else {
                 <table class="table">
                   <thead>
                     <tr>
                       <th>#</th>
-                      <th>Piloto</th>
+                      <th>{{ 'misCampeonatos.col.piloto' | transloco }}</th>
                       <th>Elo</th>
-                      <th>Safety</th>
+                      <th>{{ 'misCampeonatos.col.safety' | transloco }}</th>
                       <th></th>
                     </tr>
                   </thead>
@@ -186,7 +189,7 @@
                             class="btn btn-ghost btn-sm"
                             (click)="quitarMiembro(m)"
                           >
-                            Quitar
+                            {{ 'misCampeonatos.quitar' | transloco }}
                           </button>
                         </td>
                       </tr>
@@ -207,11 +210,16 @@
             @if (esAdminGlobal() || editingCarreraId() !== null) {
               <div class="card">
                 <h3 class="card-title">
-                  {{ editingCarreraId() ? 'Editar carrera' : 'Nueva carrera' }}
+                  {{
+                    (editingCarreraId()
+                      ? 'misCampeonatos.carrera.editar'
+                      : 'misCampeonatos.carrera.nueva'
+                    ) | transloco
+                  }}
                 </h3>
                 <form class="form-grid" (ngSubmit)="guardarCarrera()">
                   <label class="field">
-                    <span>Nombre</span>
+                    <span>{{ 'misCampeonatos.campo.nombre' | transloco }}</span>
                     <input
                       type="text"
                       name="cNombre"
@@ -221,7 +229,7 @@
                     />
                   </label>
                   <label class="field">
-                    <span>Circuito</span>
+                    <span>{{ 'misCampeonatos.campo.circuito' | transloco }}</span>
                     <input
                       type="text"
                       name="cCircuito"
@@ -230,7 +238,7 @@
                     />
                   </label>
                   <label class="field">
-                    <span>Fecha</span>
+                    <span>{{ 'misCampeonatos.campo.fecha' | transloco }}</span>
                     <input
                       type="date"
                       name="cFecha"
@@ -239,7 +247,7 @@
                     />
                   </label>
                   <label class="field">
-                    <span>Hora</span>
+                    <span>{{ 'misCampeonatos.campo.hora' | transloco }}</span>
                     <input
                       type="time"
                       name="cHora"
@@ -248,7 +256,7 @@
                     />
                   </label>
                   <label class="field">
-                    <span>Cupo</span>
+                    <span>{{ 'misCampeonatos.campo.cupo' | transloco }}</span>
                     <input
                       type="number"
                       name="cCupo"
@@ -258,7 +266,7 @@
                     />
                   </label>
                   <label class="field">
-                    <span>Servidor</span>
+                    <span>{{ 'misCampeonatos.campo.servidor' | transloco }}</span>
                     <input
                       type="text"
                       name="cServidor"
@@ -267,7 +275,7 @@
                     />
                   </label>
                   <label class="field field-wide">
-                    <span>Link de pista</span>
+                    <span>{{ 'misCampeonatos.campo.linkPista' | transloco }}</span>
                     <input
                       type="url"
                       name="cLinkPista"
@@ -277,11 +285,16 @@
                   </label>
                   <div class="form-actions field-wide">
                     <button type="submit" class="btn btn-primary">
-                      {{ editingCarreraId() ? 'Guardar cambios' : 'Crear carrera' }}
+                      {{
+                        (editingCarreraId()
+                          ? 'misCampeonatos.guardarCambios'
+                          : 'misCampeonatos.crearCarrera'
+                        ) | transloco
+                      }}
                     </button>
                     @if (editingCarreraId() || !esAdminGlobal()) {
                       <button type="button" class="btn btn-ghost" (click)="limpiarFormCarrera()">
-                        Cancelar
+                        {{ 'misCampeonatos.cancelar' | transloco }}
                       </button>
                     }
                   </div>
@@ -290,20 +303,20 @@
             }
 
             <div class="card">
-              <h3 class="card-title">Calendario</h3>
+              <h3 class="card-title">{{ 'misCampeonatos.calendario' | transloco }}</h3>
               @if (carreras().length === 0) {
                 <div class="empty-state">
                   <p>
                     {{
-                      esAdminGlobal()
-                        ? 'Todavia no creaste carreras.'
-                        : 'Todavia no hay carreras en este campeonato.'
+                      (esAdminGlobal()
+                        ? 'misCampeonatos.sinCarrerasAdmin'
+                        : 'misCampeonatos.sinCarreras'
+                      ) | transloco
                     }}
                   </p>
                   @if (!esAdminGlobal()) {
                     <p class="small">
-                      Las carreras las crea el administrador global de la liga. Cuando este tu
-                      calendario, las ves aca para editarlas y cargarles el JSON de la sesion.
+                      {{ 'misCampeonatos.carrerasLasCrea' | transloco }}
                     </p>
                   }
                 </div>
@@ -311,10 +324,10 @@
                 <table class="table">
                   <thead>
                     <tr>
-                      <th>Fecha</th>
-                      <th>Carrera</th>
-                      <th>Estado</th>
-                      <th>Inscriptos</th>
+                      <th>{{ 'misCampeonatos.campo.fecha' | transloco }}</th>
+                      <th>{{ 'misCampeonatos.col.carrera' | transloco }}</th>
+                      <th>{{ 'misCampeonatos.col.estado' | transloco }}</th>
+                      <th>{{ 'misCampeonatos.col.inscriptos' | transloco }}</th>
                       <th></th>
                     </tr>
                   </thead>
@@ -338,7 +351,7 @@
                           <select
                             [value]="c.estado"
                             (change)="cambiarEstadoCarrera(c, $any($event.target).value)"
-                            aria-label="Cambiar estado"
+                            [attr.aria-label]="'misCampeonatos.cambiarEstado' | transloco"
                           >
                             @for (estado of estadosCarrera; track estado) {
                               <option [value]="estado">
@@ -351,14 +364,14 @@
                             class="btn btn-ghost btn-sm"
                             (click)="editarCarrera(c)"
                           >
-                            Editar
+                            {{ 'misCampeonatos.editar' | transloco }}
                           </button>
                           <button
                             type="button"
                             class="btn btn-danger btn-sm"
                             (click)="eliminarCarrera(c)"
                           >
-                            Eliminar
+                            {{ 'misCampeonatos.eliminar' | transloco }}
                           </button>
                         </td>
                       </tr>
@@ -371,18 +384,18 @@
 
           @if (panel() === 'tabla') {
             <div class="card">
-              <h3 class="card-title">Tabla de posiciones</h3>
+              <h3 class="card-title">{{ 'misCampeonatos.tabla.titulo' | transloco }}</h3>
               @if (tabla().length === 0) {
                 <div class="empty-state">
-                  <p>Todavia no hay puntos. Se calculan al importar resultados.</p>
+                  <p>{{ 'misCampeonatos.tabla.vacia' | transloco }}</p>
                 </div>
               } @else {
                 <table class="table">
                   <thead>
                     <tr>
                       <th>Pos</th>
-                      <th>Piloto</th>
-                      <th>Puntos</th>
+                      <th>{{ 'misCampeonatos.col.piloto' | transloco }}</th>
+                      <th>{{ 'misCampeonatos.col.puntos' | transloco }}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -406,44 +419,57 @@
               <!-- KPIs: el estado del campeonato en una linea. -->
               <div class="stat-grid">
                 <div class="stat-card">
-                  <span class="stat-label">Carreras</span>
+                  <span class="stat-label">{{ 'misCampeonatos.tab.carreras' | transloco }}</span>
                   <span class="stat-value">{{ s.carrerasTotales }}</span>
                   <span class="stat-sub">
-                    {{ s.carrerasFinalizadas }} disputadas · {{ s.carrerasProgramadas }} por correr
+                    {{
+                      'misCampeonatos.stats.disputadas'
+                        | transloco: { n: s.carrerasFinalizadas, m: s.carrerasProgramadas }
+                    }}
                   </span>
                 </div>
                 <div class="stat-card">
-                  <span class="stat-label">Pilotos</span>
+                  <span class="stat-label">{{ 'misCampeonatos.tab.pilotos' | transloco }}</span>
                   <span class="stat-value">{{ s.pilotosHabilitados }}</span>
-                  <span class="stat-sub"
-                    >{{ s.pilotosConParticipacion }} con al menos una carrera</span
-                  >
+                  <span class="stat-sub">{{
+                    'misCampeonatos.stats.conCarrera' | transloco: { n: s.pilotosConParticipacion }
+                  }}</span>
                 </div>
                 <div class="stat-card">
-                  <span class="stat-label">Finalizacion</span>
+                  <span class="stat-label">{{
+                    'misCampeonatos.stats.finalizacion' | transloco
+                  }}</span>
                   <span class="stat-value">{{ s.porcentajeFinalizacion | number: '1.0-1' }}%</span>
-                  <span class="stat-sub">{{ s.participaciones }} participaciones</span>
+                  <span class="stat-sub">{{
+                    'misCampeonatos.stats.participaciones' | transloco: { n: s.participaciones }
+                  }}</span>
                 </div>
                 <div class="stat-card">
-                  <span class="stat-label">Abandonos</span>
+                  <span class="stat-label">{{ 'misCampeonatos.stats.abandonos' | transloco }}</span>
                   <span class="stat-value">{{ s.abandono }}</span>
-                  <span class="stat-sub">de {{ s.participaciones }} participaciones</span>
+                  <span class="stat-sub">{{
+                    'misCampeonatos.stats.deParticipaciones' | transloco: { n: s.participaciones }
+                  }}</span>
                 </div>
                 <div class="stat-card">
-                  <span class="stat-label">Incidentes</span>
+                  <span class="stat-label">{{
+                    'misCampeonatos.stats.incidentes' | transloco
+                  }}</span>
                   <span class="stat-value">{{ s.incidentes }}</span>
-                  <span class="stat-sub">{{ s.incidentesPendientes }} sin resolver</span>
+                  <span class="stat-sub">{{
+                    'misCampeonatos.stats.sinResolver' | transloco: { n: s.incidentesPendientes }
+                  }}</span>
                 </div>
                 <div class="stat-card">
-                  <span class="stat-label">Sanciones</span>
+                  <span class="stat-label">{{ 'misCampeonatos.stats.sanciones' | transloco }}</span>
                   <span class="stat-value">{{ s.sanciones }}</span>
-                  <span class="stat-sub">en este campeonato</span>
+                  <span class="stat-sub">{{ 'misCampeonatos.stats.enEste' | transloco }}</span>
                 </div>
               </div>
 
               @if (lider(); as l) {
                 <div class="card">
-                  <h3 class="card-title">Lider actual</h3>
+                  <h3 class="card-title">{{ 'misCampeonatos.stats.lider' | transloco }}</h3>
                   <div class="flex flex-center gap-3">
                     <app-avatar
                       [user]="{ fotoPerfil: l.fotoPerfil, nombrePiloto: l.nombrePiloto }"
@@ -454,8 +480,11 @@
                         {{ l.nombrePiloto }}
                       </div>
                       <div class="muted small">
-                        {{ l.puntos }} pts · {{ l.victorias }} victorias · {{ l.podios }} podios ·
-                        {{ l.vueltasRapidas }} vueltas rapidas
+                        {{
+                          'misCampeonatos.stats.liderDetalle'
+                            | transloco
+                              : { pts: l.puntos, v: l.victorias, p: l.podios, vr: l.vueltasRapidas }
+                        }}
                       </div>
                     </div>
                   </div>
@@ -465,26 +494,26 @@
               <!-- Por ronda: el contraste inscriptos vs presentes es lo que
                    dice si el calendario se esta cumpliendo. -->
               <div class="card">
-                <h3 class="card-title">Por ronda</h3>
+                <h3 class="card-title">{{ 'misCampeonatos.stats.porRonda' | transloco }}</h3>
                 @if (s.rondas.length === 0) {
                   <div class="empty-state">
-                    <p>Todavia no hay carreras en este campeonato.</p>
+                    <p>{{ 'misCampeonatos.stats.sinCarreras' | transloco }}</p>
                   </div>
                 } @else {
                   <div class="table-wrap">
                     <table class="table">
                       <thead>
                         <tr>
-                          <th>Fecha</th>
-                          <th>Carrera</th>
-                          <th>Estado</th>
-                          <th class="num">Inscriptos</th>
-                          <th class="num">Presentes</th>
-                          <th class="num">Ausentes</th>
-                          <th>Ganador</th>
-                          <th>Mejor vuelta</th>
-                          <th class="num">Incid.</th>
-                          <th class="num">Sanc.</th>
+                          <th>{{ 'misCampeonatos.campo.fecha' | transloco }}</th>
+                          <th>{{ 'misCampeonatos.col.carrera' | transloco }}</th>
+                          <th>{{ 'misCampeonatos.col.estado' | transloco }}</th>
+                          <th class="num">{{ 'misCampeonatos.col.inscriptos' | transloco }}</th>
+                          <th class="num">{{ 'misCampeonatos.col.presentes' | transloco }}</th>
+                          <th class="num">{{ 'misCampeonatos.col.ausentes' | transloco }}</th>
+                          <th>{{ 'misCampeonatos.col.ganador' | transloco }}</th>
+                          <th>{{ 'misCampeonatos.col.mejorVuelta' | transloco }}</th>
+                          <th class="num">{{ 'misCampeonatos.col.incid' | transloco }}</th>
+                          <th class="num">{{ 'misCampeonatos.col.sanc' | transloco }}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -545,10 +574,10 @@
 
               <!-- Por piloto: mismo orden que la tabla de posiciones. -->
               <div class="card">
-                <h3 class="card-title">Por piloto</h3>
+                <h3 class="card-title">{{ 'misCampeonatos.stats.porPiloto' | transloco }}</h3>
                 @if (s.pilotos.length === 0) {
                   <div class="empty-state">
-                    <p>Todavia no hay pilotos con resultados importados.</p>
+                    <p>{{ 'misCampeonatos.stats.sinPilotos' | transloco }}</p>
                   </div>
                 } @else {
                   <div class="table-wrap">
@@ -556,19 +585,19 @@
                       <thead>
                         <tr>
                           <th>Pos</th>
-                          <th>Piloto</th>
-                          <th class="num">Puntos</th>
-                          <th class="num">Carreras</th>
-                          <th class="num">Victorias</th>
-                          <th class="num">Podios</th>
+                          <th>{{ 'misCampeonatos.col.piloto' | transloco }}</th>
+                          <th class="num">{{ 'misCampeonatos.col.puntos' | transloco }}</th>
+                          <th class="num">{{ 'misCampeonatos.tab.carreras' | transloco }}</th>
+                          <th class="num">{{ 'misCampeonatos.col.victorias' | transloco }}</th>
+                          <th class="num">{{ 'misCampeonatos.col.podios' | transloco }}</th>
                           <th class="num">Poles</th>
-                          <th class="num">V. rapidas</th>
-                          <th class="num">Aband.</th>
-                          <th>Finalizacion</th>
+                          <th class="num">{{ 'misCampeonatos.col.vRapidas' | transloco }}</th>
+                          <th class="num">{{ 'misCampeonatos.col.aband' | transloco }}</th>
+                          <th>{{ 'misCampeonatos.stats.finalizacion' | transloco }}</th>
                           <th class="num">Elo</th>
                           <th class="num">SR</th>
-                          <th class="num">Incid.</th>
-                          <th class="num">Sanc.</th>
+                          <th class="num">{{ 'misCampeonatos.col.incid' | transloco }}</th>
+                          <th class="num">{{ 'misCampeonatos.col.sanc' | transloco }}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -631,8 +660,7 @@
               <div class="card">
                 <div class="empty-state">
                   <p>
-                    No se pudieron cargar las estadisticas. Si no administras este campeonato, solo
-                    podes ver la tabla de posiciones.
+                    {{ 'misCampeonatos.stats.error' | transloco }}
                   </p>
                 </div>
               </div>
@@ -641,20 +669,17 @@
 
           @if (panel() === 'importar') {
             <div class="card">
-              <h3 class="card-title">Importar sesion de Assetto Corsa</h3>
-              <p class="muted small">
-                Pega el JSON exportado por Content Manager. Las sesiones <code>RACE</code> y
-                <code>QUALIFY</code> importan resultados y actualizan Elo, Safety Rating y la tabla.
-              </p>
+              <h3 class="card-title">{{ 'misCampeonatos.importar.titulo' | transloco }}</h3>
+              <p class="muted small" [innerHTML]="'misCampeonatos.importar.intro' | transloco"></p>
 
               <label class="field">
-                <span>Carrera</span>
+                <span>{{ 'misCampeonatos.col.carrera' | transloco }}</span>
                 <select
                   name="importCarreraId"
                   [ngModel]="importCarreraId()"
                   (ngModelChange)="importCarreraId.set($event)"
                 >
-                  <option value="">Elegi una</option>
+                  <option value="">{{ 'misCampeonatos.importar.elegi' | transloco }}</option>
                   @for (c of carreras(); track c.id) {
                     <option [value]="c.id">{{ c.nombre }}</option>
                   }
@@ -662,7 +687,7 @@
               </label>
 
               <label class="field">
-                <span>JSON de la sesion</span>
+                <span>{{ 'misCampeonatos.importar.json' | transloco }}</span>
                 <textarea
                   name="importJson"
                   rows="10"
@@ -674,7 +699,7 @@
 
               <div class="form-actions">
                 <label class="btn btn-ghost">
-                  Cargar archivo
+                  {{ 'misCampeonatos.importar.cargarArchivo' | transloco }}
                   <input type="file" accept=".json" hidden (change)="onImportJsonFile($event)" />
                 </label>
                 <button
@@ -683,7 +708,12 @@
                   [disabled]="importando()"
                   (click)="importarSesion()"
                 >
-                  {{ importando() ? 'Importando' : 'Importar sesion' }}
+                  {{
+                    (importando()
+                      ? 'misCampeonatos.importar.importando'
+                      : 'misCampeonatos.importar.boton'
+                    ) | transloco
+                  }}
                 </button>
               </div>
             </div>
@@ -691,7 +721,7 @@
         } @else {
           <div class="card">
             <div class="empty-state">
-              <p>Elegi un campeonato de la lista o crea el primero.</p>
+              <p>{{ 'misCampeonatos.elegiCampeonato' | transloco }}</p>
             </div>
           </div>
         }

@@ -1,3 +1,5 @@
+import { TranslocoPipe } from '@jsverse/transloco';
+import { t } from '../../../core/i18n/t';
 import { Component, OnInit, computed, effect, inject, input, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
@@ -36,7 +38,7 @@ export interface MiPosicion {
 @Component({
   selector: 'app-panel-piloto',
   standalone: true,
-  imports: [RouterLink],
+  imports: [TranslocoPipe, RouterLink],
   templateUrl: './panel-piloto.html',
   styleUrl: './panel-piloto.scss',
 })
@@ -142,8 +144,8 @@ export class PanelPilotoComponent implements OnInit {
     const pass = this.acceso()?.contrasenaServidor;
     if (!pass) return;
     navigator.clipboard.writeText(pass).then(
-      () => this.toast.success('Contraseña copiada.'),
-      () => this.toast.error('No se pudo copiar la contraseña.'),
+      () => this.toast.success(t('home.panel.copiada')),
+      () => this.toast.error(t('home.panel.noCopiada')),
     );
   }
 }

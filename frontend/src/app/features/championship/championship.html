@@ -2,27 +2,31 @@
   <div class="section-head">
     <div>
       <span class="eyebrow"
-        >{{ champ()?.categoriaNombre || 'Campeonato'
-        }}{{ champ()?.temporada ? ' · Temporada ' + champ()!.temporada : '' }}</span
+        >{{ champ()?.categoriaNombre || ('campeonato.campeonato' | transloco)
+        }}{{
+          champ()?.temporada
+            ? ('campeonato.eyebrowTemporada' | transloco: { anio: champ()!.temporada })
+            : ''
+        }}</span
       >
-      <h2>{{ champ()?.nombre || 'Campeonato' }}</h2>
+      <h2>{{ champ()?.nombre || ('campeonato.campeonato' | transloco) }}</h2>
     </div>
     @if (champs().length > 0) {
       <select
         class="select champ-select"
-        aria-label="Elegir campeonato"
+        [attr.aria-label]="'campeonato.elegir' | transloco"
         [value]="selectedId()"
         (change)="onChange($event)"
       >
         @if (champsConActividad().length > 0) {
-          <optgroup label="Con carreras">
+          <optgroup [label]="'campeonato.conCarreras' | transloco">
             @for (c of champsConActividad(); track c.id) {
               <option [value]="c.id" [selected]="c.id === selectedId()">{{ c.nombre }}</option>
             }
           </optgroup>
         }
         @if (champsSinCarreras().length > 0) {
-          <optgroup label="Sin carreras todavía">
+          <optgroup [label]="'campeonato.sinCarreras' | transloco">
             @for (c of champsSinCarreras(); track c.id) {
               <option [value]="c.id" [selected]="c.id === selectedId()">{{ c.nombre }}</option>
             }
@@ -40,15 +44,15 @@
   } @else if (errorCarga()) {
     <div class="card">
       <div class="empty-state">
-        <h3>No pudimos cargar los campeonatos</h3>
-        <p>Puede ser un problema de conexión o que el servidor esté arrancando.</p>
+        <h3>{{ 'campeonato.errorTitulo' | transloco }}</h3>
+        <p>{{ 'campeonato.errorTexto' | transloco }}</p>
       </div>
     </div>
   } @else if (!champ()) {
     <div class="card">
       <div class="empty-state">
-        <h3>Todavía no hay campeonatos</h3>
-        <p>Cuando la liga publique uno, vas a ver acá su tabla y su calendario.</p>
+        <h3>{{ 'campeonato.vacioTitulo' | transloco }}</h3>
+        <p>{{ 'campeonato.vacioTexto' | transloco }}</p>
       </div>
     </div>
   } @else {
@@ -63,22 +67,24 @@
             >{{ estadoLabel() }}</span
           >
           @if (c.visibilidad === 'PRIVADO') {
-            <span class="chip chip-closed">Privado</span>
+            <span class="chip chip-closed">{{ 'campeonato.privado' | transloco }}</span>
           }
           @if (c.sistemaPuntos) {
-            <span class="text-terciario champ-puntos">Puntos: {{ c.sistemaPuntos }}</span>
+            <span class="text-terciario champ-puntos">{{
+              'campeonato.puntos' | transloco: { sistema: c.sistemaPuntos }
+            }}</span>
           }
         </div>
         @if (progresoTxt(); as txt) {
           <div class="champ-progreso">
             <div class="progress-label">
-              <span>Temporada</span>
+              <span>{{ 'campeonato.temporada' | transloco }}</span>
               <span class="mono">{{ txt }}</span>
             </div>
             <div
               class="progress"
               role="progressbar"
-              aria-label="Rondas corridas"
+              [attr.aria-label]="'campeonato.rondasAria' | transloco"
               [attr.aria-valuenow]="progresoPct()"
               aria-valuemin="0"
               aria-valuemax="100"
@@ -90,7 +96,9 @@
       </div>
       @if (proxima(); as p) {
         <a [routerLink]="['/carreras', p.carrera.id]" class="champ-proxima">
-          <span class="eyebrow alerta">Próxima · Ronda {{ p.numero }}</span>
+          <span class="eyebrow alerta">{{
+            'campeonato.proximaRonda' | transloco: { n: p.numero }
+          }}</span>
           <strong>{{ p.carrera.nombre }}</strong>
           <span class="text-secondary">{{ p.carrera.fecha | fmtFechaHora }}</span>
           @if (cuentaRegresiva(p.carrera); as cr) {
@@ -103,10 +111,10 @@
     <div class="champ-grid">
       <div class="card">
         <div class="card-header">
-          <h3>Posiciones</h3>
+          <h3>{{ 'campeonato.posiciones' | transloco }}</h3>
           @if (miFila(); as mf) {
             <button type="button" class="btn btn-ghost btn-sm" (click)="irAMiFila()">
-              Vas P{{ mf.posicion }} · ir a mi fila
+              {{ 'campeonato.irAMiFila' | transloco: { pos: mf.posicion } }}
             </button>
           }
         </div>
@@ -120,25 +128,25 @@
           }
           @case ('privado') {
             <div class="empty-state">
-              <h3>Campeonato privado</h3>
+              <h3>{{ 'campeonato.privadoTitulo' | transloco }}</h3>
               <p>
-                El calendario es público, pero la tabla y los resultados solo los ven los pilotos
-                que suma el administrador del campeonato.
+                {{ 'campeonato.privadoTexto' | transloco }}
               </p>
             </div>
           }
           @case ('login') {
             <p class="text-terciario">
-              <a routerLink="/auth" class="detail-link">Ingresá</a> para ver la tabla de posiciones.
+              <a routerLink="/auth" class="detail-link">{{ 'campeonato.ingresa' | transloco }}</a>
+              {{ 'campeonato.ingresaTabla' | transloco }}
             </p>
           }
           @case ('vacia') {
             <p class="text-terciario">
-              Todavía no hay posiciones: se arman con la primera carrera.
+              {{ 'campeonato.sinPosiciones' | transloco }}
             </p>
           }
           @case ('error') {
-            <p class="text-terciario">No pudimos cargar la tabla. Probá recargar la página.</p>
+            <p class="text-terciario">{{ 'campeonato.errorTabla' | transloco }}</p>
           }
           @default {
             <div class="table-wrap">
@@ -146,9 +154,11 @@
                 <thead>
                   <tr>
                     <th scope="col">Pos</th>
-                    <th scope="col">Piloto</th>
-                    <th scope="col" class="num">Puntos</th>
-                    <th scope="col" class="num" title="Puntos detrás del líder">Dif.</th>
+                    <th scope="col">{{ 'campeonato.col.piloto' | transloco }}</th>
+                    <th scope="col" class="num">{{ 'campeonato.col.puntos' | transloco }}</th>
+                    <th scope="col" class="num" [title]="'campeonato.col.difTitle' | transloco">
+                      {{ 'campeonato.col.dif' | transloco }}
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -164,7 +174,9 @@
                           t.nombrePiloto
                         }}</a>
                         @if (esMiFila(t)) {
-                          <span class="chip chip-category mi-fila-chip">Vos</span>
+                          <span class="chip chip-category mi-fila-chip">{{
+                            'campeonato.vos' | transloco
+                          }}</span>
                         }
                       </td>
                       <td class="num mono glow-alerta tabla-puntos">{{ t.puntos }}</td>
@@ -180,11 +192,13 @@
 
       <div class="card">
         <div class="card-header">
-          <h3>Calendario</h3>
-          <span class="text-terciario mono">{{ calendario().length }} carreras</span>
+          <h3>{{ 'campeonato.calendario' | transloco }}</h3>
+          <span class="text-terciario mono">{{
+            'campeonato.nCarreras' | transloco: { n: calendario().length }
+          }}</span>
         </div>
         @if (calendario().length === 0) {
-          <p class="text-terciario">Este campeonato todavía no tiene carreras publicadas.</p>
+          <p class="text-terciario">{{ 'campeonato.sinCarrerasPublicadas' | transloco }}</p>
         } @else {
           <ol class="calendario">
             @for (r of calendario(); track r.carrera.id) {
@@ -199,7 +213,9 @@
                 </div>
                 <div class="calendario-info">
                   <span class="text-terciario calendario-ronda">{{
-                    r.numero ? 'Ronda ' + r.numero : 'Cancelada'
+                    r.numero
+                      ? ('campeonato.ronda' | transloco: { n: r.numero })
+                      : ('campeonato.cancelada' | transloco)
                   }}</span>
                   <a [routerLink]="['/carreras', r.carrera.id]" class="detail-link">{{
                     r.carrera.nombre

@@ -199,3 +199,11 @@
     display: none;
   }
 }
+
+// En móvil el selector de idioma vive en el pie del menú lateral: en la barra
+// no entra junto a la hamburguesa, la campanita y el avatar.
+@media (max-width: 900px) {
+  .header-idioma {
+    display: none;
+  }
+}

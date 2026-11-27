@@ -2,14 +2,14 @@
   <div class="section-head">
     <div>
       <span class="eyebrow">{{ eyebrow() }}</span>
-      <h2>Logros</h2>
+      <h2>{{ 'pantallas.logros.titulo' | transloco }}</h2>
     </div>
     @if (auth.autenticado()) {
       <div
         class="progress"
         style="width: 220px"
         role="progressbar"
-        aria-label="Logros desbloqueados"
+        [attr.aria-label]="'pantallas.logros.desbloqueadosAria' | transloco"
         aria-valuemin="0"
         [attr.aria-valuemax]="total()"
         [attr.aria-valuenow]="obtenidos()"
@@ -24,8 +24,10 @@
       class="card flex-between"
       style="margin-bottom: var(--sp-5); gap: var(--sp-4); flex-wrap: wrap"
     >
-      <p class="text-secondary">Iniciá sesión para seguir tu progreso y desbloquear logros.</p>
-      <a routerLink="/auth" class="btn btn-primary btn-sm">Iniciar sesión</a>
+      <p class="text-secondary">{{ 'pantallas.logros.loginParaProgreso' | transloco }}</p>
+      <a routerLink="/auth" class="btn btn-primary btn-sm">{{
+        'pantallas.logros.iniciarSesion' | transloco
+      }}</a>
     </div>
   }
 
@@ -36,7 +38,7 @@
       }
     </div>
   } @else if (logros().length === 0) {
-    <app-empty-state texto="No hay logros publicados." />
+    <app-empty-state [texto]="'pantallas.logros.vacio' | transloco" />
   } @else {
     <div class="grid grid-4">
       @for (lg of ordenados(); track lg.logroId) {
@@ -48,7 +50,7 @@
         >
           @if (lg.obtenido) {
             <span class="achievement-check" aria-hidden="true">✓</span>
-            <span class="sr-only">Obtenido.</span>
+            <span class="sr-only">{{ 'pantallas.logros.obtenidoSr' | transloco }}</span>
           }
           <div class="achievement-icon ms-icon" aria-hidden="true">
             {{ lg.icono || 'emoji_events' }}
@@ -57,16 +59,17 @@
           <p class="text-terciario" style="font-size: var(--fs-xs)">{{ lg.descripcion }}</p>
           @if (lg.obtenido) {
             @if (lg.fechaObtencion) {
-              <span class="text-terciario" style="font-size: var(--fs-2xs)"
-                >Obtenido {{ lg.fechaObtencion | fechaRelativa }}</span
-              >
+              <span class="text-terciario" style="font-size: var(--fs-2xs)">{{
+                'pantallas.logros.obtenidoHace'
+                  | transloco: { cuando: (lg.fechaObtencion | fechaRelativa) }
+              }}</span>
             }
           } @else if (lg.progreso !== undefined && lg.valorCondicion != null) {
             <div
               class="progress"
               style="width: 100%"
               role="progressbar"
-              [attr.aria-label]="'Progreso de ' + lg.nombre"
+              [attr.aria-label]="'pantallas.logros.progresoDe' | transloco: { nombre: lg.nombre }"
               aria-valuemin="0"
               [attr.aria-valuemax]="lg.valorCondicion"
               [attr.aria-valuenow]="lg.progreso"
@@ -77,9 +80,9 @@
               >{{ lg.progreso }} / {{ lg.valorCondicion }}</span
             >
           } @else {
-            <span class="chip chip-pending" style="margin-top: var(--sp-2); padding: 0.2em 0.6em"
-              >Sin desbloquear</span
-            >
+            <span class="chip chip-pending" style="margin-top: var(--sp-2); padding: 0.2em 0.6em">{{
+              'pantallas.logros.sinDesbloquear' | transloco
+            }}</span>
           }
         </div>
       }

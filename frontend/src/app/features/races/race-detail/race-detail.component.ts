@@ -1,3 +1,5 @@
+import { TranslocoPipe } from '@jsverse/transloco';
+import { t } from '../../../core/i18n/t';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
@@ -45,6 +47,7 @@ type PanelPerezoso = 'resultados' | 'clasificacion' | 'analisis';
   selector: 'app-race-detail',
   standalone: true,
   imports: [
+    TranslocoPipe,
     RouterLink,
     Chip,
     Avatar,
@@ -132,19 +135,17 @@ export class RaceDetailComponent implements OnInit {
   );
 
   readonly botonLabel = computed(() => {
-    if (!this.auth.user()) return 'Ingresar para inscribirme';
-    if (!this.inscripcionAbierta()) return 'Inscripción cerrada';
-    if (this.yaInscripto()) return 'Darme de baja';
-    return this.cupoLleno() ? 'Anotarme en lista de espera' : 'Inscribirme';
+    if (!this.auth.user()) return t('carrera.boton.ingresar');
+    if (!this.inscripcionAbierta()) return t('carrera.boton.cerrada');
+    if (this.yaInscripto()) return t('carrera.boton.baja');
+    return this.cupoLleno() ? t('carrera.boton.listaEspera') : t('carrera.boton.inscribirme');
   });
 
   readonly mensajeBaja = computed(() => {
     const c = this.carrera();
-    const nombre = c?.nombre ? '"' + c.nombre + '"' : 'esta carrera';
-    const aviso = this.cupoLleno()
-      ? ' El cupo está lleno: si te arrepentís, volvés a entrar por la lista de espera.'
-      : '';
-    return '¿Seguro que querés darte de baja de ' + nombre + '?' + aviso;
+    const nombre = c?.nombre ? '"' + c.nombre + '"' : t('carrera.baja.estaCarrera');
+    const aviso = this.cupoLleno() ? t('carrera.baja.avisoLleno') : '';
+    return t('carrera.baja.pregunta', { nombre, aviso });
   });
 
   /** Finalizados primero por posición; los DNF siempre al final. */
@@ -381,7 +382,7 @@ export class RaceDetailComponent implements OnInit {
       next: (l) => {
         this.inscriptos.set(l);
         if (darDeBaja) {
-          this.toast.success('Te diste de baja de la carrera.');
+          this.toast.success(t('carrera.toast.baja'));
           return;
         }
         // El backend decide si entra al cupo o a la lista de espera.
@@ -389,11 +390,11 @@ export class RaceDetailComponent implements OnInit {
         const propia = l.find((i) => i.usuarioId === uid && i.estado !== 'CANCELADA');
         this.toast.success(
           propia?.estado === 'LISTA_ESPERA'
-            ? 'Quedaste en la lista de espera. Te avisamos si se libera un lugar.'
-            : '¡Inscripción confirmada!',
+            ? t('carrera.toast.listaEspera')
+            : t('carrera.toast.confirmada'),
         );
       },
-      error: () => this.toast.error('No se pudo actualizar la lista de inscriptos.'),
+      error: () => this.toast.error(t('carrera.toast.errorInscriptos')),
     });
   }
 

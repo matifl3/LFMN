@@ -2,14 +2,14 @@
   <!-- 22 · Tu próxima carrera -->
   <div class="card">
     <div class="card-header">
-      <h3>Tu próxima carrera</h3>
+      <h3>{{ 'home.panel.proxima' | transloco }}</h3>
       @if (carrera(); as c) {
         @if (estadoInscripcion() === 'LISTA_ESPERA') {
-          <span class="chip chip-pending">Lista de espera</span>
+          <span class="chip chip-pending">{{ 'home.panel.listaEspera' | transloco }}</span>
         } @else if (c.estado === 'EN_CURSO') {
-          <span class="chip chip-live">En vivo</span>
+          <span class="chip chip-live">{{ 'home.enVivo' | transloco }}</span>
         } @else {
-          <span class="chip chip-confirmed">Inscripto</span>
+          <span class="chip chip-confirmed">{{ 'home.inscripto' | transloco }}</span>
         }
       }
     </div>
@@ -38,7 +38,7 @@
         <div class="pp-acceso">
           @if (a.servidor) {
             <div class="pp-acceso-fila">
-              <span class="pp-label">Servidor</span>
+              <span class="pp-label">{{ 'home.panel.servidor' | transloco }}</span>
               @if (servidorUrl(); as url) {
                 <a [href]="url" target="_blank" rel="noopener" class="detail-link mono">{{
                   a.servidor
@@ -50,7 +50,7 @@
           }
           @if (a.contrasenaServidor) {
             <div class="pp-acceso-fila">
-              <span class="pp-label">Contraseña</span>
+              <span class="pp-label">{{ 'home.panel.contrasena' | transloco }}</span>
               <span class="mono">{{ mostrarPassword() ? a.contrasenaServidor : '••••••••' }}</span>
               <button
                 type="button"
@@ -60,28 +60,32 @@
                 {{ mostrarPassword() ? 'Ocultar' : 'Ver' }}
               </button>
               <button type="button" class="btn btn-ghost btn-sm" (click)="copiarPassword()">
-                Copiar
+                {{ 'home.panel.copiar' | transloco }}
               </button>
             </div>
           }
         </div>
       } @else if (estadoInscripcion() === 'LISTA_ESPERA') {
         <p class="text-terciario pp-nota">
-          Si se libera un cupo pasás a inscripto y vas a ver acá el acceso al servidor.
+          {{ 'home.panel.esperaTexto' | transloco }}
         </p>
       }
     } @else {
-      <p class="text-terciario">No estás inscripto en ninguna carrera próxima.</p>
-      <a routerLink="/carreras" class="btn btn-secondary btn-sm pp-accion">Ver calendario</a>
+      <p class="text-terciario">{{ 'home.panel.sinInscripcion' | transloco }}</p>
+      <a routerLink="/carreras" class="btn btn-secondary btn-sm pp-accion">{{
+        'home.verCalendario' | transloco
+      }}</a>
     }
   </div>
 
   <!-- 23 · Tu resumen -->
   <div class="card">
     <div class="card-header">
-      <h3>Tu resumen</h3>
+      <h3>{{ 'home.panel.resumen' | transloco }}</h3>
       @if (yo(); as u) {
-        <a [routerLink]="['/perfil', u.id]" class="btn btn-ghost btn-sm">Mi perfil</a>
+        <a [routerLink]="['/perfil', u.id]" class="btn btn-ghost btn-sm">{{
+          'home.panel.miPerfil' | transloco
+        }}</a>
       }
     </div>
 
@@ -94,7 +98,7 @@
             class="pp-delta mono"
             [class.positivo]="deltaElo()! > 0"
             [class.negativo]="deltaElo()! < 0"
-            >{{ deltaTxt(deltaElo()) }} última carrera</span
+            >{{ 'home.panel.ultimaCarrera' | transloco: { delta: deltaTxt(deltaElo()) } }}</span
           >
         }
       </div>
@@ -106,18 +110,22 @@
             class="pp-delta mono"
             [class.positivo]="deltaSr()! > 0"
             [class.negativo]="deltaSr()! < 0"
-            >{{ deltaTxt(deltaSr()) }} última carrera</span
+            >{{ 'home.panel.ultimaCarrera' | transloco: { delta: deltaTxt(deltaSr()) } }}</span
           >
         }
       </div>
       <div class="pp-rating">
-        <span class="pp-label">{{ posicion()?.campeonato || 'Campeonato' }}</span>
+        <span class="pp-label">{{
+          posicion()?.campeonato || ('home.panel.campeonato' | transloco)
+        }}</span>
         @if (posicion(); as p) {
           <span class="pp-valor mono">P{{ p.posicion }}</span>
-          <span class="pp-delta mono">de {{ p.total }} · {{ p.puntos }} pts</span>
+          <span class="pp-delta mono">{{
+            'home.panel.deTotal' | transloco: { total: p.total, puntos: p.puntos }
+          }}</span>
         } @else {
           <span class="pp-valor mono">—</span>
-          <span class="pp-delta">Sin puntos todavía</span>
+          <span class="pp-delta">{{ 'home.panel.sinPuntos' | transloco }}</span>
         }
       </div>
     </div>
@@ -127,15 +135,15 @@
     } @else if (stats(); as s) {
       <dl class="pp-stats">
         <div>
-          <dt>Carreras</dt>
+          <dt>{{ 'home.panel.carreras' | transloco }}</dt>
           <dd class="mono">{{ s.carrerasDisputadas }}</dd>
         </div>
         <div>
-          <dt>Victorias</dt>
+          <dt>{{ 'home.panel.victorias' | transloco }}</dt>
           <dd class="mono">{{ s.victorias }}</dd>
         </div>
         <div>
-          <dt>Podios</dt>
+          <dt>{{ 'home.panel.podios' | transloco }}</dt>
           <dd class="mono">{{ s.podios }}</dd>
         </div>
         <div>

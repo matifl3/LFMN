@@ -1,3 +1,5 @@
+import { TranslocoPipe } from '@jsverse/transloco';
+import { t } from '../../core/i18n/t';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Observable, map } from 'rxjs';
@@ -16,7 +18,7 @@ type LogroEstado = Omit<UsuarioLogro, 'progreso' | 'obtenido'> & {
 @Component({
   selector: 'app-achievements',
   standalone: true,
-  imports: [EmptyState, RouterLink, FechaRelativaPipe],
+  imports: [TranslocoPipe, EmptyState, RouterLink, FechaRelativaPipe],
   styleUrl: './achievements.component.scss',
   templateUrl: './achievements.component.html',
 })
@@ -35,8 +37,8 @@ export class AchievementsComponent implements OnInit {
   );
   readonly eyebrow = computed(() =>
     this.auth.user()
-      ? this.obtenidos() + ' DE ' + this.total() + ' DESBLOQUEADOS'
-      : this.total() + ' LOGROS PARA DESBLOQUEAR',
+      ? t('pantallas.logros.eyebrowConSesion', { n: this.obtenidos(), total: this.total() })
+      : t('pantallas.logros.eyebrowSinSesion', { total: this.total() }),
   );
 
   /**
