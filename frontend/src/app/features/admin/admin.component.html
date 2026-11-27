@@ -19,13 +19,15 @@
     </div>
 
     <div class="tabs" style="margin-bottom: var(--sp-5)">
-      <button
-        class="tab"
-        [class.active]="tab() === 'estadisticas'"
-        (click)="setTab('estadisticas')"
-      >
-        Estadísticas
-      </button>
+      @if (isAdmin()) {
+        <button
+          class="tab"
+          [class.active]="tab() === 'estadisticas'"
+          (click)="setTab('estadisticas')"
+        >
+          Estadísticas
+        </button>
+      }
       <button class="tab" [class.active]="tab() === 'carreras'" (click)="setTab('carreras')">
         Carreras
       </button>
@@ -38,9 +40,11 @@
       <button class="tab" [class.active]="tab() === 'categorias'" (click)="setTab('categorias')">
         Categorías
       </button>
-      <button class="tab" [class.active]="tab() === 'pilotos'" (click)="setTab('pilotos')">
-        Pilotos
-      </button>
+      @if (isAdmin()) {
+        <button class="tab" [class.active]="tab() === 'pilotos'" (click)="setTab('pilotos')">
+          Pilotos
+        </button>
+      }
       <button class="tab" [class.active]="tab() === 'logros'" (click)="setTab('logros')">
         Logros
       </button>
@@ -348,22 +352,24 @@
                       </td>
                       <td>{{ c.setupAbierto ? 'Abierto' : c.setupFijo ? 'Fijo' : 'Libre' }}</td>
                       <td>
-                        <div class="row-actions">
-                          <button
-                            class="btn btn-ghost btn-sm"
-                            (click)="editarCategoria(c)"
-                            aria-label="Editar"
-                          >
-                            <span class="ms-icon" aria-hidden="true">edit</span>
-                          </button>
-                          <button
-                            class="btn btn-danger btn-sm"
-                            (click)="eliminarCategoria(c.id)"
-                            aria-label="Eliminar"
-                          >
-                            <span class="ms-icon" aria-hidden="true">delete</span>
-                          </button>
-                        </div>
+                        @if (isAdmin()) {
+                          <div class="row-actions">
+                            <button
+                              class="btn btn-ghost btn-sm"
+                              (click)="editarCategoria(c)"
+                              aria-label="Editar"
+                            >
+                              <span class="ms-icon" aria-hidden="true">edit</span>
+                            </button>
+                            <button
+                              class="btn btn-danger btn-sm"
+                              (click)="eliminarCategoria(c.id)"
+                              aria-label="Eliminar"
+                            >
+                              <span class="ms-icon" aria-hidden="true">delete</span>
+                            </button>
+                          </div>
+                        }
                       </td>
                     </tr>
                   }
@@ -644,7 +650,10 @@
           }
         </div>
 
-        @if (tab() !== 'pilotos' && tab() !== 'estadisticas') {
+        <!-- COMISARIO solo opera sesiones: el resto de los formularios son ADMIN en el backend. -->
+        @if (
+          tab() === 'sesiones' || (isAdmin() && tab() !== 'pilotos' && tab() !== 'estadisticas')
+        ) {
           <div class="panel-aside">
             @if (tab() === 'carreras') {
               <h4>{{ editingCarreraId() ? 'Editar carrera' : 'Crear carrera' }}</h4>
@@ -923,7 +932,7 @@
                 ><input class="input" [ngModel]="aTitulo()" (ngModelChange)="aTitulo.set($event)" />
               </div>
               <div class="field">
-                <label>Contenido</label
+                <label>Contenido *</label
                 ><textarea
                   class="textarea"
                   [ngModel]="aContenido()"

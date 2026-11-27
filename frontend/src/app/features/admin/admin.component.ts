@@ -1,7 +1,7 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { forkJoin } from 'rxjs';
+import { forkJoin, of } from 'rxjs';
 import { ApiService, apiError } from '../../core/services/api.service';
 import { ErrorCargaService } from '../../core/services/error-carga.service';
 import { ToastService } from '../../core/services/toast.service';
@@ -187,14 +187,20 @@ export class AdminComponent implements OnInit {
   }
 
   private cargar(): void {
+    // /usuarios y /estadisticas son solo ADMIN: un COMISARIO recibiria 403.
+    const admin = this.isAdmin();
     forkJoin({
       carreras: this.api.list<Carrera>('/carreras').pipe(this.carga.siFalla([])),
       campeonatos: this.api.list<Campeonato>('/campeonatos').pipe(this.carga.siFalla([])),
       categorias: this.api.list<Categoria>('/categorias').pipe(this.carga.siFalla([])),
-      usuarios: this.api.list<Usuario>('/usuarios').pipe(this.carga.siFalla([])),
+      usuarios: admin
+        ? this.api.list<Usuario>('/usuarios').pipe(this.carga.siFalla([]))
+        : of([] as Usuario[]),
       anuncios: this.api.list<Anuncio>('/anuncios').pipe(this.carga.siFalla([])),
       logros: this.api.list<Logro>('/logros').pipe(this.carga.siFalla([])),
-      stats: this.api.get<Estadisticas>('/estadisticas').pipe(this.carga.siFalla(null)),
+      stats: admin
+        ? this.api.get<Estadisticas>('/estadisticas').pipe(this.carga.siFalla(null))
+        : of(null),
     }).subscribe({
       next: (r) => {
         this.carreras.set(r.carreras);
@@ -594,6 +600,10 @@ export class AdminComponent implements OnInit {
       this.toast.error('El título es obligatorio.');
       return;
     }
+    if (!this.aContenido()?.trim()) {
+      this.toast.error('El contenido es obligatorio.');
+      return;
+    }
     const file = this.aImagenFile();
     if (file) {
       const fd = new FormData();
@@ -610,7 +620,7 @@ export class AdminComponent implements OnInit {
   private publicarAnuncio(urlImagen: string): void {
     const body: Record<string, unknown> = {
       titulo: this.aTitulo(),
-      contenido: this.aContenido()?.trim() || undefined,
+      contenido: this.aContenido().trim(),
     };
     if (urlImagen) body['urlImagen'] = urlImagen;
     const editing = this.editingAnuncioId();

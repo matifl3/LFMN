@@ -24,7 +24,9 @@ export class ApiService {
     return `${environment.apiUrl}/api${path.startsWith('/') ? '' : '/'}${path}`;
   }
 
-  private params(obj?: Record<string, string | number | boolean | null | undefined>): HttpParams | undefined {
+  private params(
+    obj?: Record<string, string | number | boolean | null | undefined>,
+  ): HttpParams | undefined {
     if (!obj) return undefined;
     let p = new HttpParams();
     for (const k of Object.keys(obj)) {
@@ -45,8 +47,11 @@ export class ApiService {
           params: this.params(options.params),
           responseType: 'json',
         })
-        .pipe(map((res) => (res === null || res === undefined ? (res as T) : (res as T))));
-    return this.reintentar(ejecutar, 0);
+        .pipe(map((res) => res as T));
+    // Solo GET es seguro de repetir: un 0/502 puede llegar DESPUES de que el servidor
+    // proceso la escritura, y reintentar un POST duplicaria inscripciones o devolveria
+    // un 409 falso en /sesiones/importar.
+    return method === 'GET' ? this.reintentar(ejecutar, 0) : ejecutar();
   }
 
   /** Reintenta errores transitorios (cold start de Render: 502/503/504, red, o HTML). */
@@ -54,10 +59,12 @@ export class ApiService {
     return ejecutar().pipe(
       catchError((err) => {
         if (esErrorTransitorio(err) && intento < REINTENTOS_MS.length) {
-          return timer(REINTENTOS_MS[intento]).pipe(mergeMap(() => this.reintentar(ejecutar, intento + 1)));
+          return timer(REINTENTOS_MS[intento]).pipe(
+            mergeMap(() => this.reintentar(ejecutar, intento + 1)),
+          );
         }
         return throwError(() => err);
-      })
+      }),
     );
   }
 
@@ -106,12 +113,16 @@ const MENSAJES_HTTP: Record<number, string> = {
 function esErrorTransitorio(err: HttpErrorResponse): boolean {
   if (err.status === 0) return true;
   if (err.status === 502 || err.status === 503 || err.status === 504) return true;
-  const texto = typeof err.error === 'string' ? err.error : (err.error?.text as string | undefined) || '';
+  const texto =
+    typeof err.error === 'string' ? err.error : (err.error?.text as string | undefined) || '';
   return texto.startsWith('<');
 }
 
 export function apiError(err: unknown): string {
-  const e = err as { error?: { mensaje?: string; error?: string; message?: string } | string; status?: number };
+  const e = err as {
+    error?: { mensaje?: string; error?: string; message?: string } | string;
+    status?: number;
+  };
   if (e && (e.status === 0 || e.status === 502 || e.status === 503 || e.status === 504)) {
     return 'El servidor está arrancando. Reintentá en unos segundos.';
   }

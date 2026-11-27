@@ -51,6 +51,17 @@ public class AnuncioService {
         return toResponse(anuncioRepository.save(anuncio));
     }
 
+    /** PUT completo: una urlImagen ausente quita la imagen (el form la reenvia si se conserva). */
+    @Transactional
+    @CacheEvict(value = {"anuncio_ultimo", "anuncios"}, allEntries = true)
+    public AnuncioResponse update(Long id, AnuncioRequest request) {
+        Anuncio anuncio = getEntity(id);
+        anuncio.setTitulo(request.titulo());
+        anuncio.setContenido(request.contenido());
+        anuncio.setUrlImagen(request.urlImagen());
+        return toResponse(anuncioRepository.save(anuncio));
+    }
+
     @Transactional
     @CacheEvict(value = {"anuncio_ultimo", "anuncios"}, allEntries = true)
     public void delete(Long id) {
