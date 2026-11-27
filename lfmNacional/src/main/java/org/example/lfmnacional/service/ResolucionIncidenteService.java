@@ -1,5 +1,6 @@
 package org.example.lfmnacional.service;
 
+import org.example.lfmnacional.entity.Usuario;
 import lombok.RequiredArgsConstructor;
 import org.example.lfmnacional.dto.incidente.ResolucionResponse;
 import org.example.lfmnacional.dto.incidente.ResolucionUpdateRequest;
@@ -19,6 +20,7 @@ public class ResolucionIncidenteService {
 
     private final ResolucionIncidenteRepository resolucionIncidenteRepository;
     private final SancionRepository sancionRepository;
+    private final CampeonatoAccesoService accesoService;
 
     public ResolucionIncidente getEntity(Long id) {
         return resolucionIncidenteRepository.findById(id)
@@ -26,19 +28,26 @@ public class ResolucionIncidenteService {
     }
 
     @Transactional(readOnly = true)
-    public ResolucionResponse getById(Long id) {
-        return toResponse(getEntity(id));
+    public ResolucionResponse getById(Long id, Usuario visor) {
+        ResolucionIncidente resolucion = getEntity(id);
+        accesoService.exigirVeCarreraSiHay(visor, resolucion.getIncidente().getCarrera());
+        return toResponse(resolucion);
     }
 
     @Transactional(readOnly = true)
-    public List<ResolucionResponse> listAll() {
-        return resolucionIncidenteRepository.findAll().stream()
-                .map(this::toResponse).toList();
+    public List<ResolucionResponse> listAll(Usuario visor) {
+        return visibles(resolucionIncidenteRepository.findAll(), visor);
     }
 
     @Transactional(readOnly = true)
-    public List<ResolucionResponse> listarPorComisario(Long comisarioId) {
-        return resolucionIncidenteRepository.findByComisario_Id(comisarioId).stream()
+    public List<ResolucionResponse> listarPorComisario(Long comisarioId, Usuario visor) {
+        return visibles(resolucionIncidenteRepository.findByComisario_Id(comisarioId), visor);
+    }
+
+    private List<ResolucionResponse> visibles(List<ResolucionIncidente> resoluciones, Usuario visor) {
+        var ve = accesoService.filtroVeCarrera(visor);
+        return resoluciones.stream()
+                .filter(r -> ve.test(r.getIncidente().getCarrera()))
                 .map(this::toResponse).toList();
     }
 

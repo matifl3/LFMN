@@ -1,5 +1,7 @@
 package org.example.lfmnacional.service;
 
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.data.domain.PageImpl;
 import lombok.RequiredArgsConstructor;
 import org.example.lfmnacional.dto.incidente.*;
 import org.example.lfmnacional.dto.sancion.SancionRequest;
@@ -49,6 +51,7 @@ public class IncidenteService {
     private final CarreraService carreraService;
     private final UsuarioService usuarioService;
     private final SancionService sancionService;
+    private final CampeonatoAccesoService accesoService;
 
     public Incidente getEntity(Long id) {
         return incidenteRepository.findById(id)
@@ -56,28 +59,61 @@ public class IncidenteService {
     }
 
     @Transactional(readOnly = true)
-    public IncidenteResponse getById(Long id) {
-        return toResponse(getEntity(id));
+    public IncidenteResponse getById(Long id, Usuario visor) {
+        Incidente incidente = getEntity(id);
+        accesoService.exigirVeCarreraSiHay(visor, incidente.getCarrera());
+        return toResponse(incidente);
+    }
+
+    /**
+     * Los incidentes de campeonatos privados se filtran de la pagina, asi que una
+     * pagina puede traer menos filas que {@code size} (el total no se recalcula).
+     */
+    @Transactional(readOnly = true)
+    public Page<IncidenteResponse> listAll(Pageable pageable, Usuario visor) {
+        Page<Incidente> pagina = incidenteRepository.findAll(pageable);
+        return new PageImpl<>(visibles(pagina.getContent(), visor), pageable, pagina.getTotalElements());
     }
 
     @Transactional(readOnly = true)
-    public Page<IncidenteResponse> listAll(Pageable pageable) {
-        return incidenteRepository.findAll(pageable).map(this::toResponse);
+    public List<IncidenteResponse> listarPorEstado(EstadoIncidente estado, Usuario visor) {
+        return visibles(incidenteRepository.findByEstado(estado), visor);
     }
 
     @Transactional(readOnly = true)
-    public List<IncidenteResponse> listarPorEstado(EstadoIncidente estado) {
-        return incidenteRepository.findByEstado(estado).stream().map(this::toResponse).toList();
-    }
-
-    @Transactional(readOnly = true)
-    public List<IncidenteResponse> listarPorCarrera(Long carreraId) {
+    public List<IncidenteResponse> listarPorCarrera(Long carreraId, Usuario visor) {
+        accesoService.exigirVeCarrera(visor, carreraService.getEntity(carreraId));
         return incidenteRepository.findByCarrera_Id(carreraId).stream().map(this::toResponse).toList();
     }
 
     @Transactional(readOnly = true)
-    public List<IncidenteResponse> listarPorReportante(Long reportanteId) {
-        return incidenteRepository.findByReportante_Id(reportanteId).stream().map(this::toResponse).toList();
+    public List<IncidenteResponse> listarPorReportante(Long reportanteId, Usuario visor) {
+        return visibles(incidenteRepository.findByReportante_Id(reportanteId), visor);
+    }
+
+    /**
+     * Conflicto de interes: quien reporto el incidente o figura como piloto
+     * involucrado no puede votarlo ni resolverlo, aunque sea comisario o admin.
+     */
+    private void exigirNoInvolucrado(Incidente incidente, Usuario comisario) {
+        boolean esReportante = incidente.getReportante() != null
+                && incidente.getReportante().getId().equals(comisario.getId());
+        if (esReportante || incidentePilotoRepository.existsByIncidente_IdAndUsuario_Id(
+                incidente.getId(), comisario.getId())) {
+            throw new AccessDeniedException("No podes votar ni resolver un incidente en el que estas involucrado");
+        }
+    }
+
+    private List<IncidenteResponse> visibles(List<Incidente> incidentes, Usuario visor) {
+        var ve = accesoService.filtroVeCarrera(visor);
+        return incidentes.stream().filter(i -> ve.test(i.getCarrera())).map(this::toResponse).toList();
+    }
+
+    /** Pilotos del incidente para la API: exige poder ver la carrera. */
+    @Transactional(readOnly = true)
+    public List<IncidentePilotoResponse> listarPilotos(Long incidenteId, Usuario visor) {
+        accesoService.exigirVeCarreraSiHay(visor, getEntity(incidenteId).getCarrera());
+        return listarPilotos(incidenteId);
     }
 
     @Transactional
@@ -144,6 +180,7 @@ public class IncidenteService {
     @Transactional
     public ResolucionResponse guardarResolucion(Long incidenteId, ResolucionRequest request, Usuario comisario) {
         Incidente incidente = getEntity(incidenteId);
+        exigirNoInvolucrado(incidente, comisario);
         if (incidente.getEstado() == EstadoIncidente.RESUELTO) {
             throw new BusinessException("El incidente ya esta resuelto");
         }
@@ -190,6 +227,7 @@ public class IncidenteService {
     @Transactional
     public VotoResponse votar(Long incidenteId, VotoRequest request, Usuario comisario) {
         Incidente incidente = getEntity(incidenteId);
+        exigirNoInvolucrado(incidente, comisario);
         if (incidente.getEstado() == EstadoIncidente.RESUELTO) {
             throw new BusinessException("El incidente ya esta resuelto y no acepta votos");
         }
@@ -218,7 +256,8 @@ public class IncidenteService {
     }
 
     @Transactional(readOnly = true)
-    public ResolucionResponse getResolucion(Long incidenteId) {
+    public ResolucionResponse getResolucion(Long incidenteId, Usuario visor) {
+        accesoService.exigirVeCarreraSiHay(visor, getEntity(incidenteId).getCarrera());
         ResolucionIncidente resolucion = resolucionIncidenteRepository.findByIncidente_Id(incidenteId)
                 .orElseThrow(() -> new ResourceNotFoundException("El incidente no tiene resolucion"));
         return toResolucionResponse(resolucion);

@@ -11,18 +11,25 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.Set;
+import java.util.Map;
 import java.util.UUID;
 
-import org.example.lfmnacional.util.FileUtil;
 
 @Slf4j
 @Service
 public class ImagenService {
 
     private static final String SUBDIRECTORIO = "imagenes";
-    private static final Set<String> TIPOS_PERMITIDOS = Set.of(
-            "image/jpeg", "image/png", "image/gif", "image/webp");
+    /**
+     * Content-type permitido -> extension con la que se guarda. La extension sale de
+     * aca y no del nombre del cliente: asi no se puede subir un .html o .svg
+     * declarandolo image/png y que despues se sirva como pagina.
+     */
+    private static final Map<String, String> EXTENSION_POR_TIPO = Map.of(
+            "image/jpeg", ".jpg",
+            "image/png", ".png",
+            "image/gif", ".gif",
+            "image/webp", ".webp");
 
     @Value("${archivos.base-dir}")
     private String baseDir;
@@ -32,10 +39,10 @@ public class ImagenService {
             throw new BusinessException("El archivo no puede estar vacio");
         }
         String contentType = archivo.getContentType();
-        if (contentType == null || !TIPOS_PERMITIDOS.contains(contentType)) {
+        String extension = contentType == null ? null : EXTENSION_POR_TIPO.get(contentType);
+        if (extension == null) {
             throw new BusinessException("Tipo de archivo no permitido. Se aceptan: JPG, PNG, GIF, WebP");
         }
-        String extension = FileUtil.obtenerExtension(archivo.getOriginalFilename());
         String nombreAlmacenado = UUID.randomUUID() + extension;
         Path destino = Paths.get(baseDir, SUBDIRECTORIO, nombreAlmacenado).toAbsolutePath().normalize();
         try {

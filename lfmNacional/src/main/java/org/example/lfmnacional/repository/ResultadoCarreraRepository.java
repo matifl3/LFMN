@@ -61,15 +61,17 @@ public interface ResultadoCarreraRepository extends JpaRepository<ResultadoCarre
                                                   @Param("spectatorId") Long spectatorId,
                                                   Pageable pageable);
 
-    long countByUsuario_Id(Long usuarioId);
-
-    long countByUsuario_IdAndFinalizoTrue(Long usuarioId);
-
-    long countByUsuario_IdAndPosicionFinal(Long usuarioId, Integer posicionFinal);
-
-    long countByUsuario_IdAndPosicionFinalLessThanEqual(Long usuarioId, Integer posicionFinal);
-
-    long countByUsuario_IdAndPolesTrue(Long usuarioId);
+    @Query("""
+            select new org.example.lfmnacional.repository.ResumenResultados(
+                count(r),
+                coalesce(sum(case when r.finalizo = true then 1L else 0L end), 0L),
+                coalesce(sum(case when r.posicionFinal = 1 then 1L else 0L end), 0L),
+                coalesce(sum(case when r.posicionFinal <= 3 then 1L else 0L end), 0L),
+                coalesce(sum(case when r.poles = true then 1L else 0L end), 0L))
+            from ResultadoCarrera r
+            where r.usuario.id = :usuarioId
+            """)
+    ResumenResultados resumenPorUsuario(@Param("usuarioId") Long usuarioId);
 
     @Query("select count(distinct r.carrera.id) from ResultadoCarrera r " +
             "where r.usuario.id = :usuarioId and r.vueltaRapida is not null " +

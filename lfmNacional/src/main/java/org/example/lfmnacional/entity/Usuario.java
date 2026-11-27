@@ -1,5 +1,6 @@
 package org.example.lfmnacional.entity;
 
+import org.example.lfmnacional.exception.BusinessException;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -22,6 +23,9 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class Usuario {
+
+    /** Largo minimo de una password elegida por el usuario (registro, cambio, reset). */
+    public static final int MIN_PASSWORD = 6;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -98,6 +102,34 @@ public class Usuario {
 
     @OneToMany(mappedBy = "usuario")
     private List<Notificacion> notificaciones = new ArrayList<>();
+
+    /** Version de tokens vigente (null en filas viejas = 0). Va en el claim "tv" del JWT. */
+    public int getVersionTokens() {
+        return tokenVersion != null ? tokenVersion : 0;
+    }
+
+    /** Invalida todo JWT y link de recuperacion emitido hasta ahora. */
+    public void invalidarTokens() {
+        tokenVersion = getVersionTokens() + 1;
+    }
+
+    /**
+     * Reemplaza la password por {@code hash} (ya codificado), la marca como propia
+     * y cierra las sesiones abiertas. Unico punto que cambia la password.
+     */
+    public void establecerPassword(String hash) {
+        password = hash;
+        passwordEstablecida = true;
+        invalidarTokens();
+    }
+
+    /** Valida una password nueva en texto plano antes de codificarla. */
+    public static void validarPasswordNueva(String nuevaPassword) {
+        if (nuevaPassword == null || nuevaPassword.length() < MIN_PASSWORD) {
+            throw new BusinessException(
+                    "La nueva contrasena debe tener al menos " + MIN_PASSWORD + " caracteres");
+        }
+    }
 
     @PrePersist
     public void prePersist() {

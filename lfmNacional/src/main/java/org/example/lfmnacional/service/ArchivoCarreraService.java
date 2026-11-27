@@ -58,7 +58,11 @@ public class ArchivoCarreraService {
         }
         String extension = FileUtil.obtenerExtension(archivo.getOriginalFilename());
         String nombreAlmacenado = UUID.randomUUID() + extension;
-        Path destino = Paths.get(baseDir).toAbsolutePath().normalize().resolve(nombreAlmacenado);
+        Path base = Paths.get(baseDir).toAbsolutePath().normalize();
+        Path destino = base.resolve(nombreAlmacenado).normalize();
+        if (!destino.startsWith(base)) {
+            throw new BusinessException("Nombre de archivo no valido");
+        }
         try {
             Files.createDirectories(destino.getParent());
             Files.copy(archivo.getInputStream(), destino, StandardCopyOption.REPLACE_EXISTING);

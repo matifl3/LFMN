@@ -83,7 +83,7 @@ public class DataSeeder implements CommandLineRunner {
                 admin.setHabilitado(true);
                 log.warn("{} tenia la password por defecto: se reemplazo por ADMIN_PASSWORD.", ADMIN_EMAIL);
             }
-            invalidarTokens(admin);
+            admin.invalidarTokens();
             usuarioRepository.save(admin);
             return;
         }
@@ -175,15 +175,11 @@ public class DataSeeder implements CommandLineRunner {
                     .filter(u -> passwordEncoder.matches(DEMO_PASSWORD, u.getPassword()))
                     .ifPresent(u -> {
                         u.setHabilitado(false);
-                        invalidarTokens(u);
+                        u.invalidarTokens();
                         usuarioRepository.save(u);
                         log.warn("Usuario de prueba {} con password conocida: deshabilitado.", email);
                     });
         }
-    }
-
-    private static void invalidarTokens(Usuario usuario) {
-        usuario.setTokenVersion((usuario.getTokenVersion() != null ? usuario.getTokenVersion() : 0) + 1);
     }
 
     private void seedCampeonatos() {

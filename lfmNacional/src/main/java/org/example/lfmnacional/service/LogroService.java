@@ -1,5 +1,6 @@
 package org.example.lfmnacional.service;
 
+import org.example.lfmnacional.repository.ResumenResultados;
 import lombok.RequiredArgsConstructor;
 import org.example.lfmnacional.dto.logro.LogroRequest;
 import org.example.lfmnacional.dto.logro.LogroResponse;
@@ -157,11 +158,10 @@ public class LogroService {
                 .findByUsuario_IdOrderByLogro_Id(usuarioId).stream()
                 .collect(java.util.stream.Collectors.toMap(
                         ul -> ul.getLogro().getId(), ul -> ul));
-        Map<TipoCondicionLogro, Long> metricas = new java.util.EnumMap<>(TipoCondicionLogro.class);
+        MetricasPiloto metricas = new MetricasPiloto(usuario);
         List<UsuarioLogroResponse> response = new ArrayList<>();
         for (Logro logro : logros) {
-            long valor = metricas.computeIfAbsent(logro.getTipoCondicion(),
-                    tipo -> calcularValorMetrica(tipo, usuario));
+            long valor = metricas.valor(logro.getTipoCondicion());
             UsuarioLogro guardado = existentes.get(logro.getId());
             boolean obtenido = (guardado != null && Boolean.TRUE.equals(guardado.getObtenido()))
                     || valor >= logro.getValorCondicion();
@@ -190,8 +190,9 @@ public class LogroService {
                 .collect(java.util.stream.Collectors.toMap(
                         ul -> ul.getLogro().getId(), ul -> ul));
 
+        MetricasPiloto metricas = new MetricasPiloto(usuario);
         for (Logro logro : logros) {
-            int valor = (int) calcularValorMetrica(logro.getTipoCondicion(), usuario);
+            int valor = (int) metricas.valor(logro.getTipoCondicion());
             UsuarioLogro usuarioLogro = existentes.getOrDefault(logro.getId(),
                     UsuarioLogro.builder()
                             .logro(logro)
@@ -218,17 +219,46 @@ public class LogroService {
         }
     }
 
-    private long calcularValorMetrica(TipoCondicionLogro condicion, Usuario usuario) {
-        Long usuarioId = usuario.getId();
-        return switch (condicion) {
-            case VICTORIAS -> resultadoCarreraRepository.countByUsuario_IdAndPosicionFinal(usuarioId, 1);
-            case PODIOS -> resultadoCarreraRepository.countByUsuario_IdAndPosicionFinalLessThanEqual(usuarioId, 3);
-            case CARRERAS -> resultadoCarreraRepository.countByUsuario_Id(usuarioId);
-            case POLES -> resultadoCarreraRepository.countByUsuario_IdAndPolesTrue(usuarioId);
-            case VUELTAS_RAPIDAS -> resultadoCarreraRepository.countVueltaRapidaByUsuario(usuarioId);
-            case CARRERAS_COMPLETADAS -> resultadoCarreraRepository.countByUsuario_IdAndFinalizoTrue(usuarioId);
-            case ELO -> usuario.getElo();
-        };
+    /**
+     * Metricas de un piloto durante UNA evaluacion de logros. Antes cada logro
+     * disparaba su propio COUNT (N logros = N queries); ahora los conteos salen de
+     * una sola query y las vueltas rapidas (query aparte, mas cara) solo se piden
+     * si algun logro las usa.
+     */
+    private final class MetricasPiloto {
+        private final Usuario usuario;
+        private ResumenResultados resumen;
+        private Long vueltasRapidas;
+
+        MetricasPiloto(Usuario usuario) {
+            this.usuario = usuario;
+        }
+
+        long valor(TipoCondicionLogro condicion) {
+            return switch (condicion) {
+                case VICTORIAS -> resumen().victorias();
+                case PODIOS -> resumen().podios();
+                case CARRERAS -> resumen().carreras();
+                case POLES -> resumen().poles();
+                case CARRERAS_COMPLETADAS -> resumen().finalizadas();
+                case VUELTAS_RAPIDAS -> vueltasRapidas();
+                case ELO -> usuario.getElo();
+            };
+        }
+
+        private ResumenResultados resumen() {
+            if (resumen == null) {
+                resumen = resultadoCarreraRepository.resumenPorUsuario(usuario.getId());
+            }
+            return resumen;
+        }
+
+        private long vueltasRapidas() {
+            if (vueltasRapidas == null) {
+                vueltasRapidas = resultadoCarreraRepository.countVueltaRapidaByUsuario(usuario.getId());
+            }
+            return vueltasRapidas;
+        }
     }
 
     private void otorgarRecompensas(Usuario usuario, Logro logro) {

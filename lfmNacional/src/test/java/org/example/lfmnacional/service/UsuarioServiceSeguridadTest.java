@@ -7,12 +7,16 @@ import org.example.lfmnacional.enums.Rol;
 import org.example.lfmnacional.exception.BusinessException;
 import org.example.lfmnacional.repository.UsuarioRepository;
 import org.example.lfmnacional.security.JwtUtil;
+import org.example.lfmnacional.security.LoginIntentos;
+import org.example.lfmnacional.dto.usuario.LoginRequest;
+import org.example.lfmnacional.dto.usuario.UsuarioRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -39,6 +43,8 @@ class UsuarioServiceSeguridadTest {
     private JwtUtil jwtUtil;
     @Mock
     private SteamService steamService;
+    @Spy
+    private LoginIntentos loginIntentos = new LoginIntentos();
 
     @InjectMocks
     private UsuarioService usuarioService;
@@ -101,5 +107,76 @@ class UsuarioServiceSeguridadTest {
         assertThat(usuarioService.getById(1L, piloto).email()).isEqualTo("piloto@lfm.com");
         assertThat(usuarioService.getById(1L, admin).email()).isEqualTo("piloto@lfm.com");
         assertThat(usuarioService.getById(1L, admin).guidSteam()).isEqualTo(GUID);
+    }
+
+    // ---- login: bloqueo por cuenta y sin enumeracion de emails
+
+    @Test
+    void trasCincoFallosLaCuentaSeBloqueaAunqueLuegoLaPasswordSeaCorrecta() {
+        piloto.setPassword("hash");
+        when(usuarioRepository.findByEmail("piloto@lfm.com")).thenReturn(Optional.of(piloto));
+        when(passwordEncoder.matches("mala", "hash")).thenReturn(false);
+        for (int i = 0; i < 5; i++) {
+            assertThatThrownBy(() -> usuarioService.login(new LoginRequest("piloto@lfm.com", "mala")))
+                    .hasMessageContaining("invalidos");
+        }
+
+        assertThatThrownBy(() -> usuarioService.login(new LoginRequest("PILOTO@lfm.com", "buena")))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("Demasiados intentos");
+    }
+
+    @Test
+    void emailInexistenteDaElMismoMensajeQuePasswordIncorrecta() {
+        when(usuarioRepository.findByEmail("nadie@lfm.com")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> usuarioService.login(new LoginRequest("nadie@lfm.com", "x")))
+                .hasMessage("Email o contrasena invalidos");
+    }
+
+    @Test
+    void cuentaDeshabilitadaConPasswordIncorrectaNoRevelaQueEstaDeshabilitada() {
+        piloto.setPassword("hash");
+        piloto.setHabilitado(false);
+        when(usuarioRepository.findByEmail("piloto@lfm.com")).thenReturn(Optional.of(piloto));
+
+        assertThatThrownBy(() -> usuarioService.login(new LoginRequest("piloto@lfm.com", "mala")))
+                .hasMessage("Email o contrasena invalidos");
+    }
+
+    // ---- cambiar el email exige la password actual
+
+    @Test
+    void cambiarSuEmailSinPasswordActualSeRechaza() {
+        piloto.setPassword("hash");
+        piloto.setPasswordEstablecida(true);
+
+        assertThatThrownBy(() -> usuarioService.updatePerfil(1L,
+                new UsuarioRequest("atacante@mail.com", null, "Piloto"), piloto))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("contrasena actual");
+        assertThat(piloto.getEmail()).isEqualTo("piloto@lfm.com");
+    }
+
+    @Test
+    void cambiarSuEmailConPasswordActualCorrectaFunciona() {
+        piloto.setPassword("hash");
+        piloto.setPasswordEstablecida(true);
+        when(passwordEncoder.matches("buena", "hash")).thenReturn(true);
+
+        usuarioService.updatePerfil(1L, new UsuarioRequest("nuevo@lfm.com", "buena", "Piloto"), piloto);
+
+        assertThat(piloto.getEmail()).isEqualTo("nuevo@lfm.com");
+    }
+
+    @Test
+    void elAdminCambiaElEmailDeOtroSinPasswordYElNombreSoloNoLaPide() {
+        piloto.setPasswordEstablecida(true);
+        Usuario admin = Usuario.builder().id(9L).rol(Rol.ADMIN).build();
+
+        usuarioService.updatePerfil(1L, new UsuarioRequest("piloto@lfm.com", null, "Otro nombre"), piloto);
+        usuarioService.updatePerfil(1L, new UsuarioRequest("corregido@lfm.com", null, "Otro nombre"), admin);
+
+        assertThat(piloto.getEmail()).isEqualTo("corregido@lfm.com");
     }
 }

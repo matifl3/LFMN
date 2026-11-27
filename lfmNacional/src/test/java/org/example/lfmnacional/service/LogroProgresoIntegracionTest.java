@@ -102,6 +102,13 @@ class LogroProgresoIntegracionTest {
                 .tiempoTotal(tiempo).finalizo(true).build());
     }
 
+    private Carrera otraCarrera(String nombre) {
+        return carreraRepository.save(Carrera.builder()
+                .nombre(nombre).circuito("Monza")
+                .fecha(LocalDateTime.now().minusDays(1))
+                .estado(EstadoCarrera.FINALIZADA).campeonato(carrera.getCampeonato()).build());
+    }
+
     private Long crearLogro(TipoCondicionLogro tipo, int valor) {
         return logroService.create(new LogroRequest("Test " + tipo + " " + valor + " " + sufijo,
                 "logro de test", tipo, valor, "flag")).id();
@@ -175,5 +182,37 @@ class LogroProgresoIntegracionTest {
         assertThat(logroDe(beto, logroId).fechaObtencion()).isNotNull();
         // Ana la perdio en pista, pero el logro ya era suyo.
         assertThat(logroDe(ana, logroId).obtenido()).isTrue();
+    }
+
+    @Test
+    @DisplayName("el resumen de una sola query cuenta igual que los COUNT que reemplaza")
+    void resumenDeResultadosEnUnaQuery() {
+        // Ana: gano Round 1 (en setUp). Le sumamos un 3ro con pole y un abandono.
+        resultadoCarreraRepository.save(ResultadoCarrera.builder()
+                .carrera(otraCarrera("Round 2")).usuario(ana).posicionFinal(3)
+                .tiempoTotal(120000L).finalizo(true).build());
+        resultadoCarreraRepository.save(ResultadoCarrera.builder()
+                .carrera(otraCarrera("Round 3")).usuario(ana).posicionFinal(4)
+                .poles(true).finalizo(false).build());
+
+        var r = resultadoCarreraRepository.resumenPorUsuario(ana.getId());
+
+        assertThat(r.carreras()).isEqualTo(3);
+        assertThat(r.finalizadas()).isEqualTo(2);
+        assertThat(r.victorias()).isEqualTo(1);
+        assertThat(r.podios()).isEqualTo(2);
+        assertThat(r.poles()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("un piloto sin resultados da todo en cero, no null")
+    void resumenSinResultados() {
+        Usuario nuevo = usuario("nuevo");
+
+        var r = resultadoCarreraRepository.resumenPorUsuario(nuevo.getId());
+
+        assertThat(r.carreras()).isZero();
+        assertThat(r.victorias()).isZero();
+        assertThat(r.poles()).isZero();
     }
 }

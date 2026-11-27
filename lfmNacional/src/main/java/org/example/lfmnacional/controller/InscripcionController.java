@@ -70,8 +70,8 @@ public class InscripcionController {
     }
 
     @GetMapping("/usuario/{usuarioId}")
-    public List<InscripcionResponse> listarPorUsuario(@PathVariable Long usuarioId) {
-        return inscripcionService.listarPorUsuario(usuarioId);
+    public List<InscripcionResponse> listarPorUsuario(@PathVariable Long usuarioId, @AuthenticationPrincipal Usuario visor) {
+        return inscripcionService.listarPorUsuario(usuarioId, visor);
     }
 
     @GetMapping("/carrera/{carreraId}/count")

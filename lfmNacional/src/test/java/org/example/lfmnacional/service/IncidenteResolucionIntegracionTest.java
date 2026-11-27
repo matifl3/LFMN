@@ -109,7 +109,7 @@ class IncidenteResolucionIntegracionTest {
         votar(comisario1, DecisionComisario.A_FAVOR);
         votar(comisario2, DecisionComisario.A_FAVOR);
 
-        assertThat(incidenteService.getById(incidenteId).estado()).isEqualTo(EstadoIncidente.EN_ANALISIS);
+        assertThat(incidenteService.getById(incidenteId, comisario1).estado()).isEqualTo(EstadoIncidente.EN_ANALISIS);
     }
 
     @Test
@@ -132,7 +132,7 @@ class IncidenteResolucionIntegracionTest {
         var resolucion = incidenteService.guardarResolucion(incidenteId, resolucionConSancion(), comisario2);
 
         assertThat(resolucion.comisarioId()).isEqualTo(comisario2.getId());
-        assertThat(incidenteService.getById(incidenteId).estado()).isEqualTo(EstadoIncidente.RESUELTO);
+        assertThat(incidenteService.getById(incidenteId, comisario1).estado()).isEqualTo(EstadoIncidente.RESUELTO);
         var sanciones = sancionRepository.findByResolucion_Id(resolucion.id());
         assertThat(sanciones).hasSize(1);
         assertThat(sanciones.get(0).getOrigen()).isEqualTo(OrigenSancion.COMISARIO);

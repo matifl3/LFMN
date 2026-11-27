@@ -204,4 +204,48 @@ class CampeonatoAccesoServiceTest {
         assertThat(acceso.participoEnCarrera(piloto, carrera)).isFalse();
         verify(inscripcionRepository, never()).existsByCarrera_IdAndUsuario_Id(any(), any());
     }
+
+    // ---- filtroVeCarrera: listados de incidentes, sanciones, apelaciones, etc.
+
+    @Test
+    void filtroOcultaLoDeCampeonatosPrivadosAjenos() {
+        Carrera dePublico = Carrera.builder().id(100L).nombre("Fecha 1").campeonato(publico).build();
+        Carrera dePrivado = Carrera.builder().id(101L).nombre("Fecha 1").campeonato(privado).build();
+
+        var ve = acceso.filtroVeCarrera(piloto);
+
+        assertThat(ve.test(dePublico)).isTrue();
+        assertThat(ve.test(dePrivado)).isFalse();
+        assertThat(ve.test(null)).as("una sancion manual sin carrera es visible").isTrue();
+        assertThat(acceso.filtroVeCarrera(null).test(dePrivado)).as("anonimo").isFalse();
+    }
+
+    @Test
+    void filtroMuestraElPrivadoAlMiembro() {
+        Carrera dePrivado = Carrera.builder().id(101L).nombre("Fecha 1").campeonato(privado).build();
+        when(miembroRepository.existsByCampeonato_IdAndUsuario_Id(11L, 5L)).thenReturn(true);
+
+        assertThat(acceso.filtroVeCarrera(piloto).test(dePrivado)).isTrue();
+    }
+
+    @Test
+    void filtroMemoizaPorCarreraParaNoRepetirQueries() {
+        Carrera dePrivado = Carrera.builder().id(101L).nombre("Fecha 1").campeonato(privado).build();
+        var ve = acceso.filtroVeCarrera(piloto);
+
+        ve.test(dePrivado);
+        ve.test(dePrivado);
+        ve.test(dePrivado);
+
+        verify(miembroRepository, org.mockito.Mockito.times(1)).existsByCampeonato_IdAndUsuario_Id(11L, 5L);
+    }
+
+    @Test
+    void filtroDejaVerTodoAComisarioYAdminSinConsultar() {
+        Carrera dePrivado = Carrera.builder().id(101L).nombre("Fecha 1").campeonato(privadoAjeno).build();
+
+        assertThat(acceso.filtroVeCarrera(comisario).test(dePrivado)).isTrue();
+        assertThat(acceso.filtroVeCarrera(adminGlobal).test(dePrivado)).isTrue();
+        verify(miembroRepository, never()).existsByCampeonato_IdAndUsuario_Id(any(), any());
+    }
 }

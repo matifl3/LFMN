@@ -1,5 +1,7 @@
 package org.example.lfmnacional.controller;
 
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.example.lfmnacional.entity.Usuario;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.lfmnacional.dto.PageResponse;
@@ -27,26 +29,28 @@ public class SancionController {
     @GetMapping
     public PageResponse<SancionResponse> listAll(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "100") int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("fecha").descending());
-        Page<SancionResponse> result = sancionService.listAll(pageable);
+            @RequestParam(defaultValue = "100") int size,
+            @AuthenticationPrincipal Usuario visor) {
+        Pageable pageable = PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), PageResponse.MAX_SIZE),
+                Sort.by("fecha").descending());
+        Page<SancionResponse> result = sancionService.listAll(pageable, visor);
         return new PageResponse<>(result.getContent(), result.getNumber(), result.getSize(),
                 result.getTotalElements(), result.getTotalPages());
     }
 
     @GetMapping("/usuario/{usuarioId}")
-    public List<SancionResponse> listarPorUsuario(@PathVariable Long usuarioId) {
-        return sancionService.listarPorUsuario(usuarioId);
+    public List<SancionResponse> listarPorUsuario(@PathVariable Long usuarioId, @AuthenticationPrincipal Usuario visor) {
+        return sancionService.listarPorUsuario(usuarioId, visor);
     }
 
     @GetMapping("/carrera/{carreraId}")
-    public List<SancionResponse> listarPorCarrera(@PathVariable Long carreraId) {
-        return sancionService.listarPorCarrera(carreraId);
+    public List<SancionResponse> listarPorCarrera(@PathVariable Long carreraId, @AuthenticationPrincipal Usuario visor) {
+        return sancionService.listarPorCarrera(carreraId, visor);
     }
 
     @GetMapping("/{id}")
-    public SancionResponse getById(@PathVariable Long id) {
-        return sancionService.getById(id);
+    public SancionResponse getById(@PathVariable Long id, @AuthenticationPrincipal Usuario visor) {
+        return sancionService.getById(id, visor);
     }
 
     @PostMapping

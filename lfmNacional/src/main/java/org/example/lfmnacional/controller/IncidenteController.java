@@ -35,26 +35,28 @@ public class IncidenteController {
     @GetMapping
     public PageResponse<IncidenteResponse> listAll(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "100") int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("fecha").descending());
-        Page<IncidenteResponse> result = incidenteService.listAll(pageable);
+            @RequestParam(defaultValue = "100") int size,
+            @AuthenticationPrincipal Usuario visor) {
+        Pageable pageable = PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), PageResponse.MAX_SIZE),
+                Sort.by("fecha").descending());
+        Page<IncidenteResponse> result = incidenteService.listAll(pageable, visor);
         return new PageResponse<>(result.getContent(), result.getNumber(), result.getSize(),
                 result.getTotalElements(), result.getTotalPages());
     }
 
     @GetMapping("/estado/{estado}")
-    public List<IncidenteResponse> listarPorEstado(@PathVariable EstadoIncidente estado) {
-        return incidenteService.listarPorEstado(estado);
+    public List<IncidenteResponse> listarPorEstado(@PathVariable EstadoIncidente estado, @AuthenticationPrincipal Usuario visor) {
+        return incidenteService.listarPorEstado(estado, visor);
     }
 
     @GetMapping("/carrera/{carreraId}")
-    public List<IncidenteResponse> listarPorCarrera(@PathVariable Long carreraId) {
-        return incidenteService.listarPorCarrera(carreraId);
+    public List<IncidenteResponse> listarPorCarrera(@PathVariable Long carreraId, @AuthenticationPrincipal Usuario visor) {
+        return incidenteService.listarPorCarrera(carreraId, visor);
     }
 
     @GetMapping("/reportante/{reportanteId}")
-    public List<IncidenteResponse> listarPorReportante(@PathVariable Long reportanteId) {
-        return incidenteService.listarPorReportante(reportanteId);
+    public List<IncidenteResponse> listarPorReportante(@PathVariable Long reportanteId, @AuthenticationPrincipal Usuario visor) {
+        return incidenteService.listarPorReportante(reportanteId, visor);
     }
 
     @GetMapping("/comisario/{comisarioId}/decisiones")
@@ -63,18 +65,18 @@ public class IncidenteController {
     }
 
     @GetMapping("/{id}")
-    public IncidenteResponse getById(@PathVariable Long id) {
-        return incidenteService.getById(id);
+    public IncidenteResponse getById(@PathVariable Long id, @AuthenticationPrincipal Usuario visor) {
+        return incidenteService.getById(id, visor);
     }
 
     @GetMapping("/{id}/pilotos")
-    public List<IncidentePilotoResponse> listarPilotos(@PathVariable Long id) {
-        return incidenteService.listarPilotos(id);
+    public List<IncidentePilotoResponse> listarPilotos(@PathVariable Long id, @AuthenticationPrincipal Usuario visor) {
+        return incidenteService.listarPilotos(id, visor);
     }
 
     @GetMapping("/{id}/resolucion")
-    public ResolucionResponse getResolucion(@PathVariable Long id) {
-        return incidenteService.getResolucion(id);
+    public ResolucionResponse getResolucion(@PathVariable Long id, @AuthenticationPrincipal Usuario visor) {
+        return incidenteService.getResolucion(id, visor);
     }
 
     @PostMapping("/{id}/pilotos")

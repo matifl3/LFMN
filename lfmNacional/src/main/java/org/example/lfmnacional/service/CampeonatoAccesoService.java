@@ -14,7 +14,10 @@ import org.example.lfmnacional.repository.ResultadoCarreraRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /**
@@ -169,6 +172,29 @@ public class CampeonatoAccesoService {
         if (!veContenido(usuario, campeonato)) {
             throw new BusinessException("El campeonato '" + campeonato.getNombre()
                     + "' es privado. Solo los pilotos que agrego el administrador pueden ver su contenido");
+        }
+    }
+
+    /**
+     * Filtro para listados de cosas que cuelgan de una carrera (incidentes,
+     * sanciones, apelaciones, votos, inscripciones...). Lo que no tiene carrera
+     * (ej. una sancion manual) es visible. ADMIN y COMISARIO ven todo sin
+     * consultas; para el resto se memoiza por carrera para no repetir queries de
+     * membresia por cada fila. Usar dentro de una transaccion (navega lazy).
+     */
+    public Predicate<Carrera> filtroVeCarrera(Usuario visor) {
+        if (esAdminGlobal(visor) || esComisario(visor)) {
+            return carrera -> true;
+        }
+        Map<Long, Boolean> memo = new HashMap<>();
+        return carrera -> carrera == null
+                || memo.computeIfAbsent(carrera.getId(), id -> veCarrera(visor, carrera));
+    }
+
+    /** Como {@link #exigirVeCarrera}, pero lo que no cuelga de una carrera pasa. */
+    public void exigirVeCarreraSiHay(Usuario usuario, Carrera carrera) {
+        if (carrera != null) {
+            exigirVeCarrera(usuario, carrera);
         }
     }
 

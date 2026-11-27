@@ -1,5 +1,6 @@
 package org.example.lfmnacional.service;
 
+import org.example.lfmnacional.entity.Usuario;
 import lombok.RequiredArgsConstructor;
 import org.example.lfmnacional.dto.sesion.SesionProcesadaResponse;
 import org.example.lfmnacional.entity.SesionProcesada;
@@ -15,6 +16,7 @@ import java.util.List;
 public class SesionProcesadaService {
 
     private final SesionProcesadaRepository sesionProcesadaRepository;
+    private final CampeonatoAccesoService accesoService;
 
     public SesionProcesada getEntity(Long id) {
         return sesionProcesadaRepository.findById(id)
@@ -22,19 +24,25 @@ public class SesionProcesadaService {
     }
 
     @Transactional(readOnly = true)
-    public SesionProcesadaResponse getById(Long id) {
-        return toResponse(getEntity(id));
+    public SesionProcesadaResponse getById(Long id, Usuario visor) {
+        SesionProcesada sesion = getEntity(id);
+        accesoService.exigirVeCarreraSiHay(visor, sesion.getCarrera());
+        return toResponse(sesion);
     }
 
     @Transactional(readOnly = true)
-    public List<SesionProcesadaResponse> listAll() {
+    public List<SesionProcesadaResponse> listAll(Usuario visor) {
+        var ve = accesoService.filtroVeCarrera(visor);
         return sesionProcesadaRepository.findAllByOrderByFechaProcesamientoDesc().stream()
+                .filter(s -> ve.test(s.getCarrera()))
                 .map(this::toResponse).toList();
     }
 
     @Transactional(readOnly = true)
-    public List<SesionProcesadaResponse> listarPorCarrera(Long carreraId) {
+    public List<SesionProcesadaResponse> listarPorCarrera(Long carreraId, Usuario visor) {
+        var ve = accesoService.filtroVeCarrera(visor);
         return sesionProcesadaRepository.findByCarrera_IdOrderByFechaProcesamientoDesc(carreraId).stream()
+                .filter(s -> ve.test(s.getCarrera()))
                 .map(this::toResponse).toList();
     }
 

@@ -1,5 +1,7 @@
 package org.example.lfmnacional.controller;
 
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.example.lfmnacional.entity.Usuario;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.lfmnacional.dto.incidente.ResolucionResponse;
@@ -19,18 +21,18 @@ public class ResolucionIncidenteController {
     private final ResolucionIncidenteService resolucionIncidenteService;
 
     @GetMapping
-    public List<ResolucionResponse> listAll() {
-        return resolucionIncidenteService.listAll();
+    public List<ResolucionResponse> listAll(@AuthenticationPrincipal Usuario visor) {
+        return resolucionIncidenteService.listAll(visor);
     }
 
     @GetMapping("/{id}")
-    public ResolucionResponse getById(@PathVariable Long id) {
-        return resolucionIncidenteService.getById(id);
+    public ResolucionResponse getById(@PathVariable Long id, @AuthenticationPrincipal Usuario visor) {
+        return resolucionIncidenteService.getById(id, visor);
     }
 
     @GetMapping("/comisario/{comisarioId}")
-    public List<ResolucionResponse> listarPorComisario(@PathVariable Long comisarioId) {
-        return resolucionIncidenteService.listarPorComisario(comisarioId);
+    public List<ResolucionResponse> listarPorComisario(@PathVariable Long comisarioId, @AuthenticationPrincipal Usuario visor) {
+        return resolucionIncidenteService.listarPorComisario(comisarioId, visor);
     }
 
     @PutMapping("/{id}/explicacion")

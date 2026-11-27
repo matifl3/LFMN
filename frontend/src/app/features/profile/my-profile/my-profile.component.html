@@ -86,6 +86,24 @@
               </p>
             }
           </div>
+          @if (pidePasswordEmail()) {
+            <div class="field">
+              <label for="mp-mail-pass">Contraseña actual</label>
+              <input
+                class="input"
+                id="mp-mail-pass"
+                name="passwordEmail"
+                type="password"
+                autocomplete="current-password"
+                aria-describedby="mp-mail-pass-hint"
+                [value]="passwordEmail()"
+                (input)="passwordEmail.set($any($event.target).value)"
+              />
+              <p id="mp-mail-pass-hint" class="hint">
+                Para cambiar el email confirmá tu contraseña.
+              </p>
+            </div>
+          }
           <div
             class="flex"
             style="justify-content: flex-end; gap: var(--sp-3); margin-top: var(--sp-6)"
