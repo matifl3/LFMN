@@ -2,6 +2,7 @@ package org.example.lfmnacional.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.example.lfmnacional.dto.estadistica.EstadisticasResponse;
+import org.example.lfmnacional.dto.estadistica.ResumenLigaResponse;
 import org.example.lfmnacional.service.EstadisticasService;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,5 +20,11 @@ public class EstadisticasController {
     @PreAuthorize("hasRole('ADMIN')")
     public EstadisticasResponse getEstadisticas() {
         return estadisticasService.getEstadisticas();
+    }
+
+    /** Publico (ver SecurityConfig): lo consume el hero del home, tambien sin sesion. */
+    @GetMapping("/resumen")
+    public ResumenLigaResponse getResumen() {
+        return estadisticasService.getResumen();
     }
 }

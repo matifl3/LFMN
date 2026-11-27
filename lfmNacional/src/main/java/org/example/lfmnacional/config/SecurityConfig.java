@@ -51,9 +51,14 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/campeonatos/{id}/miembros/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/campeonatos",
                                 "/api/campeonatos/categoria/**",
-                                "/api/campeonatos/{id}").permitAll()
+                                "/api/campeonatos/{id}",
+                                // El servicio exige veContenido: un anonimo solo ve el de los publicos.
+                                "/api/campeonatos/{id}/progreso").permitAll()
+                        // Conteos publicos del hero del home (el resto de /api/estadisticas es ADMIN).
+                        .requestMatchers(HttpMethod.GET, "/api/estadisticas/resumen").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/carreras/proximas").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/carreras/pasadas").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/carreras/en-curso").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/carreras").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/carreras/{id}").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/usuarios/{id}").permitAll()

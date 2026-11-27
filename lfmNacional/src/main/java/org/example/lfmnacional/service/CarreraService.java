@@ -76,6 +76,14 @@ public class CarreraService {
         return carreras.stream().map(c -> toResponse(c, counts, !accesoService.veCarrera(visor, c))).toList();
     }
 
+    /** Carreras EN_CURSO (ya arrancaron, por eso no salen en proximas): banner "en vivo" del home. */
+    @Transactional(readOnly = true)
+    public List<CarreraResponse> enCurso(Usuario visor) {
+        List<Carrera> carreras = carreraRepository.findByEstadoOrderByFechaAsc(EstadoCarrera.EN_CURSO);
+        Map<Long, Long> counts = countInscriptos();
+        return carreras.stream().map(c -> toResponse(c, counts, !accesoService.veCarrera(visor, c))).toList();
+    }
+
     @Transactional(readOnly = true)
     public List<CarreraResponse> pasadas(Usuario visor) {
         List<Carrera> carreras = carreraRepository.findByFechaBeforeOrderByFechaDesc(LocalDateTime.now());

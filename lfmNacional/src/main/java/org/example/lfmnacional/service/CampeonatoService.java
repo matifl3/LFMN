@@ -3,6 +3,7 @@ package org.example.lfmnacional.service;
 import lombok.RequiredArgsConstructor;
 import org.example.lfmnacional.dto.campeonato.CampeonatoRequest;
 import org.example.lfmnacional.dto.campeonato.CampeonatoResponse;
+import org.example.lfmnacional.dto.campeonato.ProgresoCampeonatoResponse;
 import org.example.lfmnacional.dto.campeonato.TablaPosicionResponse;
 import org.example.lfmnacional.entity.Campeonato;
 import org.example.lfmnacional.entity.CampeonatoPosicion;
@@ -11,6 +12,7 @@ import org.example.lfmnacional.entity.Carrera;
 import org.example.lfmnacional.entity.ResultadoCarrera;
 import org.example.lfmnacional.entity.Usuario;
 import org.example.lfmnacional.enums.EstadoCampeonato;
+import org.example.lfmnacional.enums.EstadoCarrera;
 import org.example.lfmnacional.enums.Rol;
 import org.example.lfmnacional.enums.VisibilidadCampeonato;
 import org.example.lfmnacional.exception.BusinessException;
@@ -18,6 +20,7 @@ import org.example.lfmnacional.exception.ResourceNotFoundException;
 import org.example.lfmnacional.repository.CampeonatoMiembroRepository;
 import org.example.lfmnacional.repository.CampeonatoPosicionRepository;
 import org.example.lfmnacional.repository.CampeonatoRepository;
+import org.example.lfmnacional.repository.CarreraRepository;
 import org.example.lfmnacional.repository.ResultadoCarreraRepository;
 import org.example.lfmnacional.repository.UsuarioRepository;
 import org.example.lfmnacional.service.puntos.SistemaPuntos;
@@ -45,10 +48,25 @@ public class CampeonatoService {
     private final UsuarioRepository usuarioRepository;
     private final SistemaPuntosFactory sistemaPuntosFactory;
     private final TablaPosicionesService tablaPosicionesService;
+    private final CarreraRepository carreraRepository;
 
     public Campeonato getEntity(Long id) {
         return campeonatoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Campeonato no encontrado con id " + id));
+    }
+
+    /**
+     * Rondas corridas sobre el total de la temporada. Las carreras son contenido
+     * del campeonato, asi que se gatea con veContenido igual que la tabla: un
+     * anonimo solo obtiene el de los publicos.
+     */
+    @Transactional(readOnly = true)
+    public ProgresoCampeonatoResponse progreso(Long id, Usuario usuario) {
+        Campeonato campeonato = getEntity(id);
+        accesoService.exigirVeContenido(usuario, campeonato);
+        return new ProgresoCampeonatoResponse(
+                carreraRepository.countByCampeonato_IdAndEstadoNot(id, EstadoCarrera.CANCELADA),
+                carreraRepository.countByCampeonato_IdAndEstado(id, EstadoCarrera.FINALIZADA));
     }
 
     @Transactional(readOnly = true)

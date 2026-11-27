@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.lfmnacional.dto.campeonato.CampeonatoRequest;
 import org.example.lfmnacional.dto.campeonato.CampeonatoResponse;
 import org.example.lfmnacional.dto.campeonato.EstadisticasCampeonatoResponse;
+import org.example.lfmnacional.dto.campeonato.ProgresoCampeonatoResponse;
 import org.example.lfmnacional.dto.campeonato.TablaPosicionResponse;
 import org.example.lfmnacional.entity.Campeonato;
 import org.example.lfmnacional.entity.Usuario;
@@ -53,6 +54,11 @@ public class CampeonatoController {
     @GetMapping("/{id}")
     public CampeonatoResponse getById(@PathVariable Long id, @AuthenticationPrincipal Usuario usuario) {
         return campeonatoService.getById(id, usuario);
+    }
+
+    @GetMapping("/{id}/progreso")
+    public ProgresoCampeonatoResponse getProgreso(@PathVariable Long id, @AuthenticationPrincipal Usuario usuario) {
+        return campeonatoService.progreso(id, usuario);
     }
 
     @GetMapping("/{id}/tabla")
