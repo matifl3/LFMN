@@ -8,8 +8,8 @@ import org.example.lfmnacional.entity.IncidentePiloto;
 import org.example.lfmnacional.entity.ResolucionIncidente;
 import org.example.lfmnacional.entity.Usuario;
 import org.example.lfmnacional.entity.VotoComisario;
-import org.example.lfmnacional.enums.DecisionComisario;
 import org.example.lfmnacional.enums.EstadoIncidente;
+import org.example.lfmnacional.enums.OrigenSancion;
 import org.example.lfmnacional.enums.RolPilotoIncidente;
 import org.example.lfmnacional.exception.BusinessException;
 import org.example.lfmnacional.exception.ResourceNotFoundException;
@@ -34,7 +34,13 @@ import org.springframework.data.domain.Pageable;
 @RequiredArgsConstructor
 public class IncidenteService {
 
-    private static final int QUORUM_A_FAVOR = 2;
+    /**
+     * Votos (de cualquier signo) que tienen que existir antes de poder redactar la
+     * resolucion. Antes eran "votos A_FAVOR" y al llegar a 2 el incidente se
+     * cerraba solo, sin resolucion ni sanciones: el formulario de resolver
+     * desaparecia justo cuando habia acuerdo.
+     */
+    static final int QUORUM_VOTOS = 2;
 
     private final IncidenteRepository incidenteRepository;
     private final IncidentePilotoRepository incidentePilotoRepository;
@@ -129,15 +135,29 @@ public class IncidenteService {
                 .toList();
     }
 
+    /**
+     * Cierra el incidente: exige quorum de votos, una sola resolucion por
+     * incidente y aplica las sanciones en la misma transaccion (si una falla, no
+     * queda ni la resolucion ni el estado RESUELTO). El comisario es siempre el
+     * usuario autenticado, nunca un id que venga en el body.
+     */
     @Transactional
-    public ResolucionResponse guardarResolucion(Long incidenteId, ResolucionRequest request) {
+    public ResolucionResponse guardarResolucion(Long incidenteId, ResolucionRequest request, Usuario comisario) {
         Incidente incidente = getEntity(incidenteId);
         if (incidente.getEstado() == EstadoIncidente.RESUELTO) {
             throw new BusinessException("El incidente ya esta resuelto");
         }
+        if (resolucionIncidenteRepository.findByIncidente_Id(incidenteId).isPresent()) {
+            throw new BusinessException("El incidente ya tiene una resolucion");
+        }
+        long votos = votoComisarioRepository.findByIncidente_Id(incidenteId).size();
+        if (votos < QUORUM_VOTOS) {
+            throw new BusinessException("Faltan votos: se necesitan " + QUORUM_VOTOS
+                    + " para resolver y hay " + votos);
+        }
         ResolucionIncidente resolucion = ResolucionIncidente.builder()
                 .incidente(incidente)
-                .comisario(usuarioService.getEntity(request.comisarioId()))
+                .comisario(comisario)
                 .explicacion(request.explicacion())
                 .build();
         resolucion = resolucionIncidenteRepository.save(resolucion);
@@ -151,38 +171,43 @@ public class IncidenteService {
                         sancion.tipo(),
                         sancion.valor(),
                         sancion.motivo(),
-                        sancion.origen(),
+                        OrigenSancion.COMISARIO,
                         sancion.idExterno(),
                         sancion.fecha());
                 sancionService.create(conResolucion);
             }
         }
 
-        if (incidente.getEstado() == EstadoIncidente.PENDIENTE) {
-            incidente.setEstado(EstadoIncidente.EN_ANALISIS);
-            incidenteRepository.save(incidente);
-        }
+        incidente.setEstado(EstadoIncidente.RESUELTO);
+        incidenteRepository.save(incidente);
         return toResolucionResponse(resolucion);
     }
 
+    /**
+     * Registra (o cambia) el voto del comisario autenticado. El primer voto pasa
+     * el incidente a EN_ANALISIS; cerrarlo es trabajo de {@link #guardarResolucion}.
+     */
     @Transactional
-    public VotoResponse votar(Long incidenteId, VotoRequest request) {
+    public VotoResponse votar(Long incidenteId, VotoRequest request, Usuario comisario) {
         Incidente incidente = getEntity(incidenteId);
         if (incidente.getEstado() == EstadoIncidente.RESUELTO) {
             throw new BusinessException("El incidente ya esta resuelto y no acepta votos");
         }
         VotoComisario voto = votoComisarioRepository
-                .findByIncidente_IdAndComisario_Id(incidenteId, request.comisarioId())
+                .findByIncidente_IdAndComisario_Id(incidenteId, comisario.getId())
                 .orElseGet(() -> VotoComisario.builder()
                         .incidente(incidente)
-                        .comisario(usuarioService.getEntity(request.comisarioId()))
+                        .comisario(comisario)
                         .build());
         voto.setDecision(request.decision());
         voto.setComentario(request.comentario());
         voto.setFecha(LocalDateTime.now());
         voto = votoComisarioRepository.save(voto);
 
-        verificarQuorum(incidenteId);
+        if (incidente.getEstado() == EstadoIncidente.PENDIENTE) {
+            incidente.setEstado(EstadoIncidente.EN_ANALISIS);
+            incidenteRepository.save(incidente);
+        }
         return new VotoResponse(
                 voto.getId(),
                 voto.getIncidente().getId(),
@@ -190,17 +215,6 @@ public class IncidenteService {
                 voto.getDecision(),
                 voto.getComentario(),
                 voto.getFecha());
-    }
-
-    private void verificarQuorum(Long incidenteId) {
-        Incidente incidente = getEntity(incidenteId);
-        long aFavor = votoComisarioRepository.findByIncidente_Id(incidenteId).stream()
-                .filter(v -> v.getDecision() == DecisionComisario.A_FAVOR)
-                .count();
-        if (aFavor >= QUORUM_A_FAVOR && incidente.getEstado() != EstadoIncidente.RESUELTO) {
-            incidente.setEstado(EstadoIncidente.RESUELTO);
-            incidenteRepository.save(incidente);
-        }
     }
 
     @Transactional(readOnly = true)
@@ -257,6 +271,6 @@ public class IncidenteService {
                 incidente.getVideoUrl(),
                 incidente.getFecha(),
                 incidente.getEstado(),
-                QUORUM_A_FAVOR);
+                QUORUM_VOTOS);
     }
 }
