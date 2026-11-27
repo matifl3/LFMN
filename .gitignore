@@ -17,3 +17,6 @@ lfmNacional/sesiones/
 
 # Test data
 testJsonServidor/
+
+# Cache de Angular CLI generada al correr ng desde la raiz
+.angular/

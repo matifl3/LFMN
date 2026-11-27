@@ -11,152 +11,201 @@
 
   <div class="admin-layout">
     <div>
-      <div class="tabs" style="margin-bottom: var(--sp-6)">
-        <button
-          type="button"
-          class="tab"
-          [class.active]="tab() === 'datos'"
-          (click)="tab.set('datos')"
-        >
-          Datos personales
-        </button>
-        <button
-          type="button"
-          class="tab"
-          [class.active]="tab() === 'password'"
-          (click)="tab.set('password')"
-        >
-          Contraseña
-        </button>
-        <button
-          type="button"
-          class="tab"
-          [class.active]="tab() === 'steam'"
-          (click)="tab.set('steam')"
-        >
-          Steam
-        </button>
+      <div
+        class="tabs"
+        role="tablist"
+        aria-label="Configuración de la cuenta"
+        style="margin-bottom: var(--sp-6)"
+        (keydown)="moverTab($event)"
+      >
+        @for (t of tabs; track t) {
+          <button
+            type="button"
+            class="tab"
+            role="tab"
+            [id]="'mp-tab-' + t"
+            [attr.aria-selected]="tab() === t"
+            [attr.aria-controls]="'mp-panel-' + t"
+            [attr.tabindex]="tab() === t ? 0 : -1"
+            [class.active]="tab() === t"
+            (click)="elegirTab(t)"
+          >
+            {{ tabLabel(t) }}
+          </button>
+        }
       </div>
 
       @if (tab() === 'datos') {
-        <div class="card" style="margin-bottom: var(--sp-8)">
+        <form
+          class="card"
+          id="mp-panel-datos"
+          role="tabpanel"
+          aria-labelledby="mp-tab-datos"
+          style="margin-bottom: var(--sp-8)"
+          (ngSubmit)="guardar()"
+        >
           <h3 style="margin-bottom: var(--sp-5)">Datos personales</h3>
           <div class="field">
             <label for="mp-nombre">Nombre de piloto</label>
             <input
               class="input"
               id="mp-nombre"
+              name="nombre"
+              autocomplete="nickname"
+              [attr.aria-invalid]="!nombreValido() || null"
+              [attr.aria-describedby]="!nombreValido() ? 'mp-nombre-err' : null"
               [value]="nombre()"
               (input)="nombre.set($any($event.target).value)"
             />
+            @if (!nombreValido()) {
+              <span id="mp-nombre-err" class="error-msg"
+                >El nombre de piloto no puede quedar vacío.</span
+              >
+            }
           </div>
           <div class="field">
             <label for="mp-mail">Email</label>
             <input
               class="input"
               id="mp-mail"
+              name="email"
               type="email"
+              autocomplete="email"
+              [attr.aria-invalid]="!emailValido() || null"
+              [attr.aria-describedby]="
+                !emailValido() ? 'mp-mail-err' : cambiaEmail() ? 'mp-mail-hint' : null
+              "
               [value]="email()"
               (input)="email.set($any($event.target).value)"
             />
+            @if (!emailValido()) {
+              <span id="mp-mail-err" class="error-msg">Escribí un email válido.</span>
+            } @else if (cambiaEmail()) {
+              <p id="mp-mail-hint" class="hint">
+                Al cambiar el email se cierra tu sesión y vas a tener que ingresar con el nuevo.
+              </p>
+            }
           </div>
-          <div class="flex" style="justify-content: flex-end; margin-top: var(--sp-6)">
+          <div
+            class="flex"
+            style="justify-content: flex-end; gap: var(--sp-3); margin-top: var(--sp-6)"
+          >
+            @if (datosModificados()) {
+              <button
+                type="button"
+                class="btn btn-ghost"
+                [disabled]="guardandoDatos()"
+                (click)="descartarDatos()"
+              >
+                Descartar
+              </button>
+            }
             <button
-              type="button"
+              type="submit"
               class="btn btn-primary"
-              [class.is-loading]="cargando()"
-              [disabled]="cargando()"
-              (click)="guardar()"
+              [class.is-loading]="guardandoDatos()"
+              [disabled]="!puedeGuardarDatos()"
             >
               Guardar cambios
             </button>
           </div>
-        </div>
+        </form>
       }
 
       @if (tab() === 'password') {
-        <div class="card" style="margin-bottom: var(--sp-8)">
+        <form
+          class="card"
+          id="mp-panel-password"
+          role="tabpanel"
+          aria-labelledby="mp-tab-password"
+          style="margin-bottom: var(--sp-8)"
+          (ngSubmit)="cambiarPassword()"
+        >
           <h3 style="margin-bottom: var(--sp-2)">
-            {{ user()?.passwordEstablecida ? 'Cambiar contraseña' : 'Crear contraseña' }}
+            {{ requiereActual() ? 'Cambiar contraseña' : 'Crear contraseña' }}
           </h3>
-          @if (!user()?.passwordEstablecida) {
-            <p class="text-terciario" style="font-size: var(--fs-sm); margin-bottom: var(--sp-5)">
+          <p class="text-terciario" style="font-size: var(--fs-sm); margin-bottom: var(--sp-5)">
+            @if (requiereActual()) {
+              Al cambiarla se cierra tu sesión en todos los dispositivos.
+            } @else {
               Creá una contraseña para poder ingresar también con email.
-            </p>
-          }
-          @if (user()?.passwordEstablecida) {
+            }
+          </p>
+          @if (requiereActual()) {
             <div class="field">
               <label for="mp-pass-actual">Contraseña actual</label>
-              <input
-                class="input"
+              <app-password-input
                 id="mp-pass-actual"
-                type="password"
-                [value]="passwordActual()"
-                (input)="passwordActual.set($any($event.target).value)"
+                name="passwordActual"
+                autocomplete="current-password"
+                [ngModel]="passwordActual()"
+                (ngModelChange)="passwordActual.set($event ?? '')"
               />
             </div>
           }
           <div class="field">
             <label for="mp-pass-nueva">Nueva contraseña</label>
-            <input
-              class="input"
+            <app-password-input
               id="mp-pass-nueva"
-              type="password"
-              placeholder="Mínimo 6 caracteres"
-              [value]="passwordNueva()"
-              (input)="passwordNueva.set($any($event.target).value)"
+              name="passwordNueva"
+              autocomplete="new-password"
+              [placeholder]="'Mínimo ' + minPassword + ' caracteres'"
+              [invalido]="passwordCorta()"
+              [ariaDescribedBy]="passwordCorta() ? 'mp-pass-nueva-err' : null"
+              [ngModel]="passwordNueva()"
+              (ngModelChange)="passwordNueva.set($event ?? '')"
             />
+            @if (passwordCorta()) {
+              <span id="mp-pass-nueva-err" class="error-msg">
+                Usá al menos {{ minPassword }} caracteres.
+              </span>
+            }
+          </div>
+          <div class="field">
+            <label for="mp-pass-repetida">Repetir nueva contraseña</label>
+            <app-password-input
+              id="mp-pass-repetida"
+              name="passwordRepetida"
+              autocomplete="new-password"
+              [invalido]="passwordsDistintas()"
+              [ariaDescribedBy]="passwordsDistintas() ? 'mp-pass-repetida-err' : null"
+              [ngModel]="passwordRepetida()"
+              (ngModelChange)="passwordRepetida.set($event ?? '')"
+            />
+            @if (passwordsDistintas()) {
+              <span id="mp-pass-repetida-err" class="error-msg">Las contraseñas no coinciden.</span>
+            }
           </div>
           <div class="flex" style="justify-content: flex-end; margin-top: var(--sp-6)">
             <button
-              type="button"
+              type="submit"
               class="btn btn-primary"
-              [class.is-loading]="cargando()"
-              [disabled]="cargando()"
-              (click)="cambiarPassword()"
+              [class.is-loading]="cambiandoPassword()"
+              [disabled]="!puedeCambiarPassword()"
             >
-              {{ user()?.passwordEstablecida ? 'Cambiar contraseña' : 'Crear contraseña' }}
+              {{ requiereActual() ? 'Cambiar contraseña' : 'Crear contraseña' }}
             </button>
           </div>
-        </div>
+        </form>
       }
 
       @if (tab() === 'steam') {
-        <div class="card" style="margin-bottom: var(--sp-8)">
+        <div
+          class="card"
+          id="mp-panel-steam"
+          role="tabpanel"
+          aria-labelledby="mp-tab-steam"
+          style="margin-bottom: var(--sp-8)"
+        >
           <h3 style="margin-bottom: var(--sp-2)">Vinculación con Steam</h3>
           <p class="text-terciario" style="font-size: var(--fs-sm); margin-bottom: var(--sp-5)">
             Usamos tu cuenta de Steam para verificar tiempos y evitar suplantación de identidad en
             carrera.
           </p>
           @if (!user()?.guidSteam) {
-            <div
-              style="
-                display: flex;
-                gap: var(--sp-3);
-                align-items: flex-start;
-                border: 1px dashed var(--status-alerta);
-                border-radius: var(--r-sm);
-                padding: var(--sp-4);
-                color: var(--texto-secundario);
-                margin-bottom: var(--sp-5);
-              "
-            >
-              <span
-                style="
-                  flex-shrink: 0;
-                  width: 28px;
-                  height: 28px;
-                  display: grid;
-                  place-items: center;
-                  border-radius: 50%;
-                  background: rgba(245, 166, 35, 0.15);
-                  color: var(--status-alerta);
-                  font-weight: 800;
-                  font-family: var(--font-display);
-                "
-                >!</span
-              >
-              <span style="font-size: var(--fs-sm)">
+            <div class="steam-aviso" role="note">
+              <span class="steam-aviso__icono" aria-hidden="true">!</span>
+              <span>
                 <strong>Sin Steam, sin resultados.</strong><br />
                 Vinculá tu cuenta para que los resultados de carrera se sumen automáticamente a tu
                 perfil y a tus estadísticas.
@@ -177,10 +226,13 @@
                   d="M11.979 0C5.678 0 .511 4.86.022 11.037l6.432 2.658c.545-.371 1.203-.59 1.912-.59.063 0 .125.004.188.006l2.861-4.142V8.91c0-2.495 2.028-4.524 4.524-4.524 2.494 0 4.524 2.031 4.524 4.527s-2.03 4.525-4.524 4.525h-.105l-4.076 2.911c0 .052.004.105.004.159 0 1.875-1.515 3.396-3.39 3.396-1.635 0-3.016-1.173-3.331-2.727L.436 15.27C1.862 20.307 6.486 24 11.979 24c6.627 0 11.999-5.373 11.999-12S18.605 0 11.979 0zM7.54 18.21l-1.473-.61c.262.543.714.999 1.314 1.25 1.297.539 2.793-.076 3.332-1.375.263-.63.264-1.319.005-1.949s-.75-1.121-1.377-1.383c-.624-.26-1.29-.249-1.878-.03l1.523.63c.956.4 1.409 1.5 1.009 2.455-.397.957-1.497 1.41-2.454 1.012H7.54zm11.415-9.303c0-1.662-1.353-3.015-3.015-3.015-1.665 0-3.015 1.353-3.015 3.015 0 1.665 1.35 3.015 3.015 3.015 1.663 0 3.015-1.35 3.015-3.015zm-5.273-.005c0-1.252 1.013-2.266 2.265-2.266 1.249 0 2.266 1.014 2.266 2.266 0 1.251-1.017 2.265-2.266 2.265-1.253 0-2.265-1.014-2.265-2.265z"
                 />
               </svg>
-              <span
-                >{{ user()?.guidSteam || 'Sin vincular'
-                }}{{ user()?.guidSteam ? ' conectado' : '' }}</span
-              >
+              @if (steamUrl(); as url) {
+                <a [href]="url" target="_blank" rel="noopener noreferrer">
+                  Ver mi perfil de Steam
+                </a>
+              } @else {
+                <span>Sin vincular</span>
+              }
             </span>
             <span
               class="chip"
@@ -190,24 +242,36 @@
               {{ user()?.guidSteam ? 'Verificado' : 'Sin vincular' }}
             </span>
           </div>
-          <div
-            class="flex"
-            style="justify-content: flex-end; gap: var(--sp-3); margin-top: var(--sp-5)"
-          >
-            <button type="button" class="btn btn-secondary" (click)="vincularSteam()">
-              Vincular con Steam
-            </button>
-            <button type="button" class="btn btn-danger" (click)="desvincularSteam()">
-              Desvincular
-            </button>
+          <div class="flex" style="justify-content: flex-end; margin-top: var(--sp-5)">
+            @if (user()?.guidSteam) {
+              <button
+                type="button"
+                class="btn btn-danger"
+                [class.is-loading]="procesandoSteam()"
+                [disabled]="procesandoSteam()"
+                (click)="pedirDesvincularSteam()"
+              >
+                Desvincular
+              </button>
+            } @else {
+              <button
+                type="button"
+                class="btn btn-primary"
+                [class.is-loading]="procesandoSteam()"
+                [disabled]="procesandoSteam()"
+                (click)="vincularSteam()"
+              >
+                Vincular con Steam
+              </button>
+            }
           </div>
         </div>
       }
 
-      <h3 style="margin-bottom: var(--sp-4)">Mis inscripciones</h3>
+      <h3 style="margin-bottom: var(--sp-4)">Próximas carreras</h3>
       <div class="flex-col gap-3" style="margin-bottom: var(--sp-8)">
         @if (inscripciones().length === 0) {
-          <app-empty-state texto="No tenés inscripciones activas." />
+          <app-empty-state texto="No estás inscripto en ninguna carrera próxima." />
         } @else {
           @for (ins of inscripciones(); track ins.id) {
             <div class="race-row">
@@ -216,26 +280,37 @@
                 <span class="mon">{{ fechaMes(ins) }}</span>
               </div>
               <div>
-                <strong
+                <a
+                  [routerLink]="['/carreras', ins.carreraId]"
                   style="
                     font-family: var(--font-display);
                     text-transform: uppercase;
                     font-size: var(--fs-base);
+                    font-weight: 700;
                   "
-                  >{{ ins.carreraNombre }}</strong
+                  >{{ ins.carreraNombre }}</a
                 >
                 <div class="text-terciario" style="font-size: var(--fs-sm)">
                   {{ ins.categoriaNombre || '' }}
                 </div>
               </div>
               <app-chip [estado]="ins.estado" tipo="inscripcion" />
-              <button
-                type="button"
-                class="btn btn-danger btn-sm"
-                (click)="cancelarInscripcion(ins)"
-              >
-                Cancelar
-              </button>
+              @if (puedeCancelar(ins)) {
+                <button
+                  type="button"
+                  class="btn btn-danger btn-sm"
+                  [class.is-loading]="cancelando() === ins.id"
+                  [disabled]="cancelando() === ins.id"
+                  [attr.aria-label]="'Cancelar inscripción a ' + ins.carreraNombre"
+                  (click)="pedirCancelarInscripcion(ins)"
+                >
+                  Cancelar
+                </button>
+              } @else {
+                <span class="text-terciario" style="font-size: var(--fs-sm)">
+                  Inscripción cerrada
+                </span>
+              }
             </div>
           }
         }
@@ -254,7 +329,13 @@
                 <strong style="font-size: var(--fs-sm)">{{ r.descripcion || 'Recompensa' }}</strong>
                 <span class="chip chip-confirmed" style="padding: 0.2em 0.6em">Lista</span>
               </div>
-              <button type="button" class="btn btn-primary btn-sm btn-block" (click)="reclamar(r)">
+              <button
+                type="button"
+                class="btn btn-primary btn-sm btn-block"
+                [class.is-loading]="reclamando() === r.recompensaId"
+                [disabled]="reclamando() === r.recompensaId"
+                (click)="reclamar(r)"
+              >
                 Reclamar
               </button>
             </div>
@@ -264,3 +345,12 @@
     </aside>
   </div>
 </section>
+
+<app-confirm-dialog
+  [abierto]="!!confirmacion()"
+  [titulo]="confirmacion()?.titulo ?? ''"
+  [mensaje]="confirmacion()?.mensaje ?? ''"
+  [confirmarTexto]="confirmacion()?.boton ?? 'Confirmar'"
+  (aceptado)="confirmar()"
+  (cancelado)="aConfirmar.set(null)"
+/>

@@ -6,3 +6,28 @@
     grid-template-columns: 1fr;
   }
 }
+
+.steam-aviso {
+  display: flex;
+  gap: var(--sp-3);
+  align-items: flex-start;
+  border: 1px dashed var(--status-alerta);
+  border-radius: var(--r-sm);
+  padding: var(--sp-4);
+  color: var(--texto-secundario);
+  font-size: var(--fs-sm);
+  margin-bottom: var(--sp-5);
+}
+
+.steam-aviso__icono {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(245, 166, 35, 0.15);
+  color: var(--status-alerta);
+  font-weight: 800;
+  font-family: var(--font-display);
+}
