@@ -1,13 +1,11 @@
 <section class="container-wide section">
   @if (cargando()) {
     <div class="flex-col gap-3">
-      <div class="skeleton-card"><span class="skeleton" style="width: 80%"></span></div>
-      <div class="skeleton-card"><span class="skeleton" style="width: 60%"></span></div>
+      <div class="skeleton-card"><span class="skeleton skeleton-80"></span></div>
+      <div class="skeleton-card"><span class="skeleton skeleton-60"></span></div>
     </div>
   } @else if (bloqueado()) {
-    <a routerLink="/carreras" class="btn btn-ghost btn-sm" style="margin-bottom: var(--sp-5)">
-      Volver a carreras
-    </a>
+    <a routerLink="/carreras" class="btn btn-ghost btn-sm volver">Volver a carreras</a>
     <div class="card">
       <div class="empty-state">
         <h3>Carrera de campeonato privado</h3>
@@ -16,13 +14,24 @@
           resultados y la telemetría tenés que ser piloto del campeonato: pedile al administrador
           que te sume.
         </p>
-        <a routerLink="/auth" class="btn btn-primary" style="margin-top: var(--sp-4)"
-          >Iniciar sesión</a
-        >
+        @if (!auth.autenticado()) {
+          <a routerLink="/auth" class="btn btn-primary empty-cta">Iniciar sesión</a>
+        }
       </div>
     </div>
-  } @else if (carrera()) {
-    <a routerLink="/carreras" class="btn btn-ghost btn-sm" style="margin-bottom: var(--sp-5)">
+  } @else if (errorCarga()) {
+    <a routerLink="/carreras" class="btn btn-ghost btn-sm volver">Volver a carreras</a>
+    <div class="card">
+      <div class="empty-state">
+        <h3>No pudimos cargar la carrera</h3>
+        <p>Puede ser un problema de conexión o que el servidor esté arrancando.</p>
+        <button type="button" class="btn btn-primary empty-cta" (click)="cargar()">
+          Reintentar
+        </button>
+      </div>
+    </div>
+  } @else if (carrera(); as c) {
+    <a routerLink="/carreras" class="btn btn-ghost btn-sm volver">
       <svg
         width="16"
         height="16"
@@ -41,35 +50,33 @@
 
     <div class="detail-header">
       <div>
-        <span class="eyebrow alerta">{{ carrera()?.categoriaNombre || 'CARRERA' }} · Ronda</span>
-        <h1>{{ carrera()?.nombre || 'Carrera' }}</h1>
-        <p class="text-secondary">
-          {{ carrera()?.circuito || '—' }} — {{ carrera()?.fecha | fmtFechaHora }}
-        </p>
+        <span class="eyebrow alerta"
+          >{{ c.categoriaNombre || 'Carrera'
+          }}{{ ronda() ? ' · Ronda ' + ronda()!.numero + ' de ' + ronda()!.total : '' }}</span
+        >
+        <h1>{{ c.nombre || 'Carrera' }}</h1>
+        <p class="text-secondary">{{ c.circuito || '—' }} — {{ c.fecha | fmtFechaHora }}</p>
       </div>
-      <div style="display: flex; flex-direction: column; align-items: flex-end; gap: var(--sp-3)">
-        @if (carrera(); as c) {
-          <app-chip [estado]="c.estado" tipo="carrera" />
-        }
-        @if (botonLabel()) {
-          <button
-            class="btn btn-primary btn-sm"
-            [disabled]="botonDisabled()"
-            (click)="toggleInscripcion()"
-          >
-            {{ botonLabel() }}
-          </button>
-        }
+      <div class="detail-header-acciones">
+        <app-chip [estado]="c.estado" tipo="carrera" />
+        <button
+          type="button"
+          class="btn btn-primary btn-sm"
+          [disabled]="botonDisabled()"
+          (click)="toggleInscripcion()"
+        >
+          {{ inscribiendo() ? 'Procesando…' : botonLabel() }}
+        </button>
       </div>
     </div>
 
-    <div class="tabs" style="margin-bottom: var(--sp-6)" role="group">
+    <div class="tabs detail-tabs" role="group" aria-label="Secciones de la carrera">
       <button
         type="button"
         class="tab"
         [class.active]="panel() === 'info'"
         [attr.aria-pressed]="panel() === 'info'"
-        (click)="panel.set('info')"
+        (click)="abrirPanel('info')"
       >
         Información
       </button>
@@ -78,7 +85,7 @@
         class="tab"
         [class.active]="panel() === 'archivos'"
         [attr.aria-pressed]="panel() === 'archivos'"
-        (click)="panel.set('archivos')"
+        (click)="abrirPanel('archivos')"
       >
         Archivos
       </button>
@@ -87,16 +94,16 @@
         class="tab"
         [class.active]="panel() === 'inscriptos'"
         [attr.aria-pressed]="panel() === 'inscriptos'"
-        (click)="panel.set('inscriptos')"
+        (click)="abrirPanel('inscriptos')"
       >
-        Inscriptos <span class="count">{{ inscriptos().length }}</span>
+        Inscriptos <span class="count">{{ inscriptosVisibles().length }}</span>
       </button>
       <button
         type="button"
         class="tab"
         [class.active]="panel() === 'resultados'"
         [attr.aria-pressed]="panel() === 'resultados'"
-        (click)="panel.set('resultados')"
+        (click)="abrirPanel('resultados')"
       >
         Resultados
       </button>
@@ -105,7 +112,7 @@
         class="tab"
         [class.active]="panel() === 'clasificacion'"
         [attr.aria-pressed]="panel() === 'clasificacion'"
-        (click)="panel.set('clasificacion')"
+        (click)="abrirPanel('clasificacion')"
       >
         Clasificación
       </button>
@@ -114,7 +121,7 @@
         class="tab"
         [class.active]="panel() === 'analisis'"
         [attr.aria-pressed]="panel() === 'analisis'"
-        (click)="panel.set('analisis')"
+        (click)="abrirPanel('analisis')"
       >
         Análisis
       </button>
@@ -124,22 +131,22 @@
       <div class="info-grid">
         <div class="info-tile">
           <div class="label">Fecha y hora</div>
-          <div class="value">{{ carrera()?.fecha | fmtFechaHora }}</div>
+          <div class="value">{{ c.fecha | fmtFechaHora }}</div>
         </div>
-        @if (carrera()?.practicaFecha) {
+        @if (c.practicaFecha) {
           <div class="info-tile">
             <div class="label">Sesión de práctica</div>
-            <div class="value">{{ carrera()?.practicaFecha | fmtFechaHora }}</div>
+            <div class="value">{{ c.practicaFecha | fmtFechaHora }}</div>
           </div>
         }
         <div class="info-tile">
           <div class="label">Circuito</div>
-          <div class="value">{{ carrera()?.circuito || '—' }}</div>
+          <div class="value">{{ c.circuito || '—' }}</div>
         </div>
         <div class="info-tile">
           <div class="label">Categoría</div>
           <div class="value">
-            <span class="chip chip-category">{{ carrera()?.categoriaNombre || '—' }}</span>
+            <span class="chip chip-category">{{ c.categoriaNombre || '—' }}</span>
           </div>
         </div>
         <div class="info-tile">
@@ -168,25 +175,19 @@
                 </svg>
                 Conectarse al servidor
               </a>
-              <div
-                class="mono text-terciario"
-                style="margin-top: var(--sp-2); font-size: var(--fs-2xs)"
-              >
-                {{ servidorLabel() }}
-              </div>
+              <div class="mono text-terciario servidor-host">{{ servidorLabel() }}</div>
             </div>
           } @else {
-            <div class="value mono">{{ carrera()?.servidor || '—' }}</div>
+            <div class="value mono">{{ c.servidor || '—' }}</div>
           }
         </div>
         @if (accesoVisible()) {
           <div class="info-tile">
             <div class="label">Contraseña del servidor</div>
-            <div class="value mono" style="display: flex; align-items: center; gap: var(--sp-3)">
-              <span>{{
-                mostrarPassword() ? acceso()?.contrasenaServidor || '—' : '••••••••'
-              }}</span>
+            <div class="value mono password-fila">
+              <span>{{ mostrarPassword() ? acceso()?.contrasenaServidor : '••••••••' }}</span>
               <button
+                type="button"
                 class="btn btn-ghost btn-sm"
                 (click)="mostrarPassword.set(!mostrarPassword())"
               >
@@ -195,13 +196,27 @@
             </div>
           </div>
         }
-        <div class="info-tile" style="grid-column: span 2">
+        <div class="info-tile info-tile-ancho">
           <div class="label">Cupo</div>
           <div class="value mono">
-            {{ inscriptosActivos() }} / {{ carrera()?.cupoMaximo || '—' }}
+            @if (c.cupoMaximo) {
+              {{ inscriptosActivos() }} / {{ c.cupoMaximo }}
+            } @else {
+              {{ inscriptosActivos() }} inscriptos
+            }
+            @if (enEspera() > 0) {
+              <span class="text-terciario cupo-espera">· {{ enEspera() }} en espera</span>
+            }
           </div>
-          @if (carrera()?.cupoMaximo) {
-            <div class="progress" style="margin-top: var(--sp-3)">
+          @if (c.cupoMaximo) {
+            <div
+              class="progress cupo-barra"
+              role="progressbar"
+              aria-label="Cupo ocupado"
+              [attr.aria-valuenow]="cupoPct()"
+              aria-valuemin="0"
+              aria-valuemax="100"
+            >
               <div
                 class="progress-bar"
                 [class.full]="cupoLleno()"
@@ -211,16 +226,16 @@
           }
         </div>
         @if (eloEstimado(); as elo) {
-          <div class="info-tile" style="grid-column: span 2">
+          <div class="info-tile info-tile-ancho">
             <div class="label">Elo estimado según tu posición</div>
-            <div class="value" style="display: flex; gap: var(--sp-4); flex-wrap: wrap">
+            <div class="value elo-fila">
               <span
                 >Esperada: <b>P{{ elo.posicionEsperada }}</b>
                 <span class="mono" [style.color]="eloColor(elo.deltaEsperado)">{{
                   eloTxt(elo.deltaEsperado)
                 }}</span>
               </span>
-              <span class="text-secondary" style="font-size: var(--fs-xs)"
+              <span class="text-secondary elo-casos"
                 >Mejor caso {{ eloTxt(elo.deltaMejorCaso) }} · Peor caso
                 {{ eloTxt(elo.deltaPeorCaso) }}</span
               >
@@ -231,9 +246,9 @@
     }
 
     @if (panel() === 'archivos') {
-      <h3 style="margin-bottom: var(--sp-4)">Archivos de la carrera</h3>
-      @if (carrera()?.linkPista) {
-        <a class="file-row" [href]="carrera()!.linkPista!" target="_blank" rel="noopener">
+      <h3 class="panel-titulo">Archivos de la carrera</h3>
+      @if (linkPista(); as url) {
+        <a class="file-row" [href]="url" target="_blank" rel="noopener noreferrer">
           <span>Descargar Pista</span>
           <span class="btn btn-ghost btn-sm" aria-hidden="true">
             <svg
@@ -253,8 +268,8 @@
           </span>
         </a>
       }
-      @if (carrera()?.linkAuto) {
-        <a class="file-row" [href]="carrera()!.linkAuto!" target="_blank" rel="noopener">
+      @if (linkAuto(); as url) {
+        <a class="file-row" [href]="url" target="_blank" rel="noopener noreferrer">
           <span>Descargar Auto</span>
           <span class="btn btn-ghost btn-sm" aria-hidden="true">
             <svg
@@ -274,32 +289,30 @@
           </span>
         </a>
       }
-      @if (!carrera()?.linkPista && !carrera()?.linkAuto) {
+      @if (!linkPista() && !linkAuto()) {
         <p class="text-terciario">No hay archivos publicados para esta carrera.</p>
       }
     }
 
     @if (panel() === 'inscriptos') {
       <h3>
-        Inscriptos <span class="mono text-terciario">({{ inscriptos().length }})</span>
+        Inscriptos <span class="mono text-terciario">({{ inscriptosVisibles().length }})</span>
       </h3>
-      @if (inscriptos().length === 0) {
-        <p class="text-terciario" style="margin-top: var(--sp-4)">
-          Todavía no hay inscriptos. ¡Sé el primero!
-        </p>
+      @if (inscriptosVisibles().length === 0) {
+        <p class="text-terciario panel-vacio">Todavía no hay inscriptos. ¡Sé el primero!</p>
       } @else {
-        <div class="card" style="margin-top: var(--sp-4)">
-          @for (i of inscriptos(); track i.id) {
+        <div class="card panel-vacio">
+          @for (i of inscriptosVisibles(); track i.id) {
             <div class="entrant-row">
               <app-avatar
                 [user]="{ fotoPerfil: i.fotoPerfil, nombrePiloto: i.nombrePiloto }"
                 [size]="36"
               />
-              <div style="flex: 1">
+              <div class="entrant-info">
                 <a [routerLink]="['/perfil', i.usuarioId]" class="detail-link">{{
                   i.nombrePiloto || 'Piloto #' + i.usuarioId
                 }}</a>
-                <div class="text-terciario" style="font-size: var(--fs-xs)">
+                <div class="text-terciario entrant-stats">
                   Elo {{ i.elo ?? '—' }} · SR {{ i.safetyRating ?? '—' }}
                 </div>
               </div>
@@ -314,8 +327,10 @@
     }
 
     @if (panel() === 'resultados') {
-      <h3 style="margin-bottom: var(--sp-4)">Resultados</h3>
-      @if (resultados().length === 0) {
+      <h3 class="panel-titulo">Resultados</h3>
+      @if (cargandoPanel() === 'resultados') {
+        <div class="skeleton-card"><span class="skeleton skeleton-80"></span></div>
+      } @else if (resultados().length === 0) {
         <p class="text-terciario">Sin resultados publicados.</p>
       } @else {
         <div class="table-wrap">
@@ -332,7 +347,7 @@
             </thead>
             <tbody>
               @for (r of resultadosSorted(); track r.id) {
-                <tr [class]="'podium-' + r.posicionFinal">
+                <tr [class]="r.finalizo === false ? '' : 'podium-' + r.posicionFinal">
                   <td>
                     @if (r.finalizo === false) {
                       <span class="chip chip-rejected">DNF</span>
@@ -348,13 +363,8 @@
                   <td class="num mono">{{ r.tiempoTotal | fmtLap }}</td>
                   <td class="num mono">{{ r.vueltaRapida | fmtLap }}</td>
                   <td class="num mono">{{ r.poles ? 'POLE' : '—' }}</td>
-                  <td
-                    class="num mono"
-                    [style.color]="
-                      (r.eloGanado ?? 0) >= 0 ? 'var(--status-positivo)' : 'var(--lbm-rojo-hi)'
-                    "
-                  >
-                    {{ (r.eloGanado ?? 0) > 0 ? '+' : '' }}{{ r.eloGanado ?? '—' }}
+                  <td class="num mono" [style.color]="eloColor(r.eloGanado)">
+                    {{ eloTxt(r.eloGanado) }}
                   </td>
                 </tr>
               }
@@ -365,8 +375,10 @@
     }
 
     @if (panel() === 'clasificacion') {
-      <h3 style="margin-bottom: var(--sp-4)">Clasificación</h3>
-      @if (clasificaciones().length === 0) {
+      <h3 class="panel-titulo">Clasificación</h3>
+      @if (cargandoPanel() === 'clasificacion') {
+        <div class="skeleton-card"><span class="skeleton skeleton-80"></span></div>
+      } @else if (clasificaciones().length === 0) {
         <p class="text-terciario">Sin tiempos registrados.</p>
       } @else {
         <div class="table-wrap">
@@ -381,15 +393,19 @@
               </tr>
             </thead>
             <tbody>
-              @for (c of clasificacionesSorted(); track c.id) {
+              @for (q of clasificacionesSorted(); track q.id) {
                 <tr>
                   <td><app-rank-badge [posicion]="$index + 1" /></td>
-                  <td>{{ c.nombrePiloto || 'Piloto #' + c.usuarioId }}</td>
-                  <td class="num mono">{{ c.tiempo | fmtLap }}</td>
-                  <td class="num mono">
-                    {{ c.diferenciaPole === 0 ? 'POLE' : (c.diferenciaPole | fmtLap) }}
+                  <td>
+                    <a [routerLink]="['/perfil', q.usuarioId]" class="detail-link">{{
+                      q.nombrePiloto || 'Piloto #' + q.usuarioId
+                    }}</a>
                   </td>
-                  <td class="num mono">{{ c.modeloAuto || '—' }}</td>
+                  <td class="num mono">{{ q.tiempo | fmtLap }}</td>
+                  <td class="num mono">
+                    {{ q.diferenciaPole === 0 ? 'POLE' : (q.diferenciaPole | fmtLap) }}
+                  </td>
+                  <td class="num mono">{{ q.modeloAuto || '—' }}</td>
                 </tr>
               }
             </tbody>
@@ -399,40 +415,33 @@
     }
 
     @if (panel() === 'analisis') {
-      <h3 style="margin-bottom: var(--sp-4)">Análisis por vuelta</h3>
-      @if (analisis().length === 0) {
+      <h3 class="panel-titulo">Análisis por vuelta</h3>
+      @if (!auth.autenticado()) {
         <p class="text-terciario">
-          @if (auth.autenticado()) {
-            Sin vueltas registradas de carrera.
-          } @else {
-            Ingresá para ver tu análisis por vuelta.
-          }
+          <a routerLink="/auth" class="detail-link">Ingresá</a> para ver tu análisis por vuelta.
         </p>
+      } @else if (cargandoPanel() === 'analisis') {
+        <div class="skeleton-card"><span class="skeleton skeleton-80"></span></div>
+      } @else if (analisis().length === 0) {
+        <p class="text-terciario">Sin vueltas registradas de carrera.</p>
       } @else {
         @if (resumen(); as r) {
-          <div
-            style="
-              display: grid;
-              grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-              gap: var(--sp-4);
-              margin-bottom: var(--sp-5);
-            "
-          >
-            <div class="card" style="padding: var(--sp-4)">
-              <h4 style="margin-bottom: var(--sp-3)">Vuelta teórica</h4>
-              <p class="text-terciario" style="font-size: var(--fs-xs); margin-bottom: var(--sp-3)">
+          <div class="resumen-grid">
+            <div class="card resumen-card">
+              <h4>Vuelta teórica</h4>
+              <p class="text-terciario resumen-nota">
                 Suma de tus mejores sectores vs mejor vuelta real
               </p>
-              <div style="display: grid; gap: var(--sp-2)">
-                <div style="display: flex; justify-content: space-between">
+              <div class="kv-lista">
+                <div class="kv">
                   <span class="text-secondary">Teórica</span
                   ><b class="mono">{{ r.teoricaMs | fmtLap }}</b>
                 </div>
-                <div style="display: flex; justify-content: space-between">
+                <div class="kv">
                   <span class="text-secondary">Mejor real · V{{ r.numeroVueltaMejor }}</span
                   ><b class="mono">{{ r.mejorVueltaMs | fmtLap }}</b>
                 </div>
-                <div style="display: flex; justify-content: space-between">
+                <div class="kv">
                   <span class="text-secondary">Potencial perdido</span
                   ><b
                     class="mono"
@@ -444,9 +453,9 @@
                 </div>
               </div>
             </div>
-            <div class="card" style="padding: var(--sp-4)">
-              <h4 style="margin-bottom: var(--sp-3)">Sectores vs mejor sector</h4>
-              <div class="table-wrap" style="margin-bottom: var(--sp-3)">
+            <div class="card resumen-card">
+              <h4>Sectores vs mejor sector</h4>
+              <div class="table-wrap resumen-tabla">
                 <table class="table">
                   <thead>
                     <tr>
@@ -478,64 +487,64 @@
                   </tbody>
                 </table>
               </div>
-              <p class="text-terciario" style="font-size: var(--fs-xs)">
+              <p class="text-terciario resumen-nota">
                 Vuelta teórica del mejor sector:
                 <b class="mono">{{ r.teoricaParrillaMs | fmtLap }}</b>
               </p>
             </div>
-            <div class="card" style="padding: var(--sp-4)">
-              <h4 style="margin-bottom: var(--sp-3)">Consistencia</h4>
-              <div style="display: grid; gap: var(--sp-2)">
-                <div style="display: flex; justify-content: space-between">
+            <div class="card resumen-card">
+              <h4>Consistencia</h4>
+              <div class="kv-lista">
+                <div class="kv">
                   <span class="text-secondary">Promedio</span
                   ><b class="mono">{{ r.mediaMs | fmtLap }}</b>
                 </div>
-                <div style="display: flex; justify-content: space-between">
+                <div class="kv">
                   <span class="text-secondary">Desvío estándar</span
                   ><b class="mono">{{ r.desvioMs | fmtLap }}</b>
                 </div>
-                <div style="display: flex; justify-content: space-between">
+                <div class="kv">
                   <span class="text-secondary">Vueltas completadas</span
                   ><b class="mono">{{ r.vueltasTotales }}</b>
                 </div>
-                <div style="display: flex; justify-content: space-between">
+                <div class="kv">
                   <span class="text-secondary">Dentro de ±0.5s</span
                   ><b class="mono"
                     >{{ r.dentroDe500ms }}
-                    <span style="color: var(--texto-terciario)"
+                    <span class="text-terciario"
                       >({{ pct(r.dentroDe500ms, r.vueltasTotales) }})</span
                     ></b
                   >
                 </div>
-                <div style="display: flex; justify-content: space-between">
+                <div class="kv">
                   <span class="text-secondary">Dentro de ±1s</span
                   ><b class="mono"
                     >{{ r.dentroDe1s }}
-                    <span style="color: var(--texto-terciario)"
+                    <span class="text-terciario"
                       >({{ pct(r.dentroDe1s, r.vueltasTotales) }})</span
                     ></b
                   >
                 </div>
               </div>
             </div>
-            <div class="card" style="padding: var(--sp-4)">
-              <h4 style="margin-bottom: var(--sp-3)">Posiciones</h4>
-              <div style="display: grid; gap: var(--sp-2)">
-                <div style="display: flex; justify-content: space-between">
+            <div class="card resumen-card">
+              <h4>Posiciones</h4>
+              <div class="kv-lista">
+                <div class="kv">
                   <span class="text-secondary">Grilla</span
                   ><b class="mono">{{ posTxt(r.posicionGrilla) }}</b>
                 </div>
-                <div style="display: flex; justify-content: space-between">
+                <div class="kv">
                   <span class="text-secondary">Final</span
                   ><b class="mono">{{ posTxt(r.posicionFinal) }}</b>
                 </div>
-                <div style="display: flex; justify-content: space-between">
+                <div class="kv">
                   <span class="text-secondary">Ganadas / perdidas</span
                   ><b class="mono" [style.color]="eloColor(r.posicionesGanadas)">{{
                     posGanadasTxt(r.posicionesGanadas)
                   }}</b>
                 </div>
-                <div style="display: flex; justify-content: space-between">
+                <div class="kv">
                   <span class="text-secondary">Mejor posición en carrera</span
                   ><b class="mono">{{ posTxt(r.posicionPico) }}</b>
                 </div>
@@ -543,13 +552,29 @@
             </div>
           </div>
         }
-        <div class="card" style="margin-bottom: var(--sp-5); padding: var(--sp-4)">
-          <h4 style="margin-bottom: var(--sp-2)">Evolución de posición</h4>
-          <div [innerHTML]="posicionesChart()"></div>
+        <div class="card chart-card">
+          <h4>Evolución de posición</h4>
+          @if (posicionesChart(); as svg) {
+            <div class="chart-con-eje">
+              @if (rangoPosiciones(); as rp) {
+                <div class="chart-eje mono text-terciario" aria-hidden="true">
+                  <span>P{{ rp.mejor }}</span>
+                  <span>P{{ rp.peor }}</span>
+                </div>
+              }
+              <div class="chart-svg" [innerHTML]="svg"></div>
+            </div>
+          } @else {
+            <p class="text-terciario">Hace falta más de una vuelta para graficar.</p>
+          }
         </div>
-        <div class="card" style="margin-bottom: var(--sp-5); padding: var(--sp-4)">
-          <h4 style="margin-bottom: var(--sp-2)">Diferencia con el líder (seg)</h4>
-          <div [innerHTML]="deltasChart()"></div>
+        <div class="card chart-card">
+          <h4>Diferencia con el líder (seg)</h4>
+          @if (deltasChart(); as svg) {
+            <div [innerHTML]="svg"></div>
+          } @else {
+            <p class="text-terciario">Hace falta más de una vuelta para graficar.</p>
+          }
         </div>
         <div class="table-wrap">
           <table class="table">
@@ -585,7 +610,20 @@
         </div>
       }
     }
+
+    <app-confirm-dialog
+      [abierto]="confirmandoBaja()"
+      titulo="Darte de baja"
+      [mensaje]="mensajeBaja()"
+      confirmarTexto="Darme de baja"
+      (aceptado)="confirmarBaja()"
+      (cancelado)="confirmandoBaja.set(false)"
+    />
   } @else {
-    <div class="empty-state"><p>Carrera no encontrada.</p></div>
+    <div class="empty-state">
+      <h3>Carrera no encontrada</h3>
+      <p>Puede que se haya eliminado o que el link esté mal.</p>
+      <a routerLink="/carreras" class="btn btn-primary empty-cta">Ver todas las carreras</a>
+    </div>
   }
 </section>
