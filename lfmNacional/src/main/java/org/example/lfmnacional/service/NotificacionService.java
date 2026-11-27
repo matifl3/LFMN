@@ -1,5 +1,6 @@
 package org.example.lfmnacional.service;
 
+import org.example.lfmnacional.entity.Usuario;
 import lombok.RequiredArgsConstructor;
 import org.example.lfmnacional.dto.notificacion.NotificacionRequest;
 import org.example.lfmnacional.dto.notificacion.NotificacionResponse;
@@ -17,6 +18,7 @@ public class NotificacionService {
 
     private final NotificacionRepository notificacionRepository;
     private final UsuarioService usuarioService;
+    private final CampeonatoAccesoService accesoService;
 
     public Notificacion getEntity(Long id) {
         return notificacionRepository.findById(id)
@@ -24,8 +26,10 @@ public class NotificacionService {
     }
 
     @Transactional(readOnly = true)
-    public NotificacionResponse getById(Long id) {
-        return toResponse(getEntity(id));
+    public NotificacionResponse getById(Long id, Usuario actor) {
+        Notificacion notificacion = getEntity(id);
+        accesoService.exigirPropio(actor, notificacion.getUsuario().getId(), "ver esta notificacion");
+        return toResponse(notificacion);
     }
 
     @Transactional(readOnly = true)
@@ -58,8 +62,9 @@ public class NotificacionService {
     }
 
     @Transactional
-    public NotificacionResponse marcarLeida(Long id) {
+    public NotificacionResponse marcarLeida(Long id, Usuario actor) {
         Notificacion notificacion = getEntity(id);
+        accesoService.exigirPropio(actor, notificacion.getUsuario().getId(), "marcar esta notificacion");
         notificacion.setLeida(true);
         return toResponse(notificacionRepository.save(notificacion));
     }
@@ -72,8 +77,10 @@ public class NotificacionService {
     }
 
     @Transactional
-    public void delete(Long id) {
-        notificacionRepository.delete(getEntity(id));
+    public void delete(Long id, Usuario actor) {
+        Notificacion notificacion = getEntity(id);
+        accesoService.exigirPropio(actor, notificacion.getUsuario().getId(), "borrar esta notificacion");
+        notificacionRepository.delete(notificacion);
     }
 
     private NotificacionResponse toResponse(Notificacion notificacion) {

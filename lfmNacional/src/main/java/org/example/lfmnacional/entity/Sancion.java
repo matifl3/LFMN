@@ -82,4 +82,12 @@ public class Sancion {
             efectosAplicados = true;
         }
     }
+
+    /** Lo que se aplico de verdad; en sanciones viejas sin ese dato, el valor pedido. */
+    public int cambioARevertir() {
+        if (cambioAplicado != null) {
+            return cambioAplicado;
+        }
+        return valor != null ? valor : 0;
+    }
 }

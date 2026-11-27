@@ -186,7 +186,7 @@ class InscripcionServiceTest {
         when(inscripcionRepository.findById(1L)).thenReturn(Optional.of(inscripcion));
         when(inscripcionRepository.save(any(Inscripcion.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        var response = inscripcionService.baja(1L);
+        var response = inscripcionService.baja(1L, usuario);
 
         assertThat(response.estado()).isEqualTo(EstadoInscripcion.CANCELADA);
     }
@@ -202,7 +202,7 @@ class InscripcionServiceTest {
         when(inscripcionRepository.findByCarrera_IdAndEstado(1L, EstadoInscripcion.LISTA_ESPERA))
                 .thenReturn(List.of(espera));
 
-        inscripcionService.baja(1L);
+        inscripcionService.baja(1L, usuario);
 
         verify(inscripcionRepository).save(argThat(i -> i.getUsuario().getId().equals(2L) && i.getEstado() == EstadoInscripcion.INSCRIPTO));
     }
@@ -212,7 +212,7 @@ class InscripcionServiceTest {
         Inscripcion inscripcion = Inscripcion.builder().id(1L).carrera(carrera).usuario(usuario).estado(EstadoInscripcion.CANCELADA).build();
         when(inscripcionRepository.findById(1L)).thenReturn(Optional.of(inscripcion));
 
-        assertThatThrownBy(() -> inscripcionService.baja(1L))
+        assertThatThrownBy(() -> inscripcionService.baja(1L, usuario))
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("ya fue cancelada");
     }
@@ -222,7 +222,7 @@ class InscripcionServiceTest {
         carrera.setFecha(LocalDateTime.now().plusMinutes(3));
         when(carreraService.getEntity(1L)).thenReturn(carrera);
 
-        assertThatThrownBy(() -> inscripcionService.cancelar(1L, 1L))
+        assertThatThrownBy(() -> inscripcionService.cancelar(1L, 1L, usuario))
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("ya estan cerradas");
     }

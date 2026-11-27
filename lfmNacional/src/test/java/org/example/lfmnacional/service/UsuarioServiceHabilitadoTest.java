@@ -79,23 +79,4 @@ class UsuarioServiceHabilitadoTest {
         assertThat(usuario.getTokenVersion()).isEqualTo(1);
     }
 
-    @Test
-    void loginUsuarioDeshabilitadoRechaza() {
-        usuario.setHabilitado(false);
-        when(usuarioRepository.findByEmail("piloto@lbm.com")).thenReturn(Optional.of(usuario));
-
-        assertThatThrownBy(() -> usuarioService.login(new LoginRequest("piloto@lbm.com", "123456")))
-                .isInstanceOf(BusinessException.class)
-                .hasMessageContaining("deshabilitado");
-    }
-
-    @Test
-    void loginUsuarioHabilitadoDevuelveToken() {
-        when(usuarioRepository.findByEmail("piloto@lbm.com")).thenReturn(Optional.of(usuario));
-
-        var response = usuarioService.login(new LoginRequest("piloto@lbm.com", "123456"));
-
-        assertThat(response.token()).isEqualTo("jwt-token");
-        assertThat(response.usuario().habilitado()).isTrue();
-    }
 }

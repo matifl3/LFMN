@@ -1,5 +1,7 @@
 package org.example.lfmnacional.service;
 
+import org.example.lfmnacional.service.sancion.EfectoSancion;
+import org.example.lfmnacional.service.sancion.EfectosSancion;
 import org.example.lfmnacional.entity.Usuario;
 import org.springframework.data.domain.PageImpl;
 import lombok.RequiredArgsConstructor;
@@ -7,7 +9,6 @@ import org.example.lfmnacional.dto.sancion.SancionRequest;
 import org.example.lfmnacional.dto.sancion.SancionResponse;
 import org.example.lfmnacional.entity.*;
 import org.example.lfmnacional.enums.TipoNotificacion;
-import org.example.lfmnacional.enums.TipoSancion;
 import org.example.lfmnacional.exception.BusinessException;
 import org.example.lfmnacional.exception.ResourceNotFoundException;
 import org.example.lfmnacional.mapper.EntityMapper;
@@ -17,11 +18,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -31,18 +29,15 @@ import org.springframework.data.domain.Pageable;
 public class SancionService {
 
     private final SancionRepository sancionRepository;
-    private final EloSancionRepository eloSancionRepository;
-    private final SafetyRatingSancionRepository safetyRatingSancionRepository;
     private final ResultadoCarreraRepository resultadoCarreraRepository;
     private final NotificacionRepository notificacionRepository;
     private final ApelacionRepository apelacionRepository;
-    private final UsuarioRepository usuarioRepository;
     private final ResolucionIncidenteRepository resolucionIncidenteRepository;
     private final UsuarioService usuarioService;
     private final CarreraService carreraService;
-    private final CampeonatoService campeonatoService;
     private final LogroService logroService;
     private final CampeonatoAccesoService accesoService;
+    private final EfectosSancion efectos;
 
     public Sancion getEntity(Long id) {
         return sancionRepository.findById(id)
@@ -158,16 +153,10 @@ public class SancionService {
                 .build();
     }
 
+    /** El efecto concreto lo decide el tipo: ver {@link EfectoSancion} y sus implementaciones. */
     private void aplicarEfectos(Sancion sancion) {
         sancion.setEfectosAplicados(true);
-        switch (sancion.getTipo()) {
-            case ELO -> aplicarCambioElo(sancion);
-            case SAFETY_RATING -> aplicarCambioSafetyRating(sancion);
-            case PUESTOS -> aplicarPerdidaPuestos(sancion);
-            case SEGUNDOS -> aplicarSegundos(sancion);
-            default -> {
-            }
-        }
+        efectos.de(sancion.getTipo()).ifPresent(efecto -> efecto.aplicar(sancion));
         reevaluarLogros(sancion);
     }
 
@@ -187,14 +176,7 @@ public class SancionService {
         if (!Boolean.TRUE.equals(sancion.getEfectosAplicados())) {
             return;
         }
-        switch (sancion.getTipo()) {
-            case ELO -> revertirCambioElo(sancion);
-            case SAFETY_RATING -> revertirCambioSafetyRating(sancion);
-            case PUESTOS -> revertirPerdidaPuestos(sancion);
-            case SEGUNDOS -> revertirSegundos(sancion);
-            default -> {
-            }
-        }
+        efectos.de(sancion.getTipo()).ifPresent(efecto -> efecto.revertir(sancion));
         sancion.setEfectosAplicados(false);
         sancionRepository.save(sancion);
         reevaluarLogros(sancion);
@@ -208,7 +190,8 @@ public class SancionService {
     private void reevaluarLogros(Sancion sancion) {
         java.util.Map<Long, Usuario> afectados = new java.util.LinkedHashMap<>();
         afectados.put(sancion.getUsuario().getId(), sancion.getUsuario());
-        boolean reclasifica = sancion.getTipo() == TipoSancion.PUESTOS || sancion.getTipo() == TipoSancion.SEGUNDOS;
+        boolean reclasifica = efectos.de(sancion.getTipo())
+                .map(EfectoSancion::reclasificaCarrera).orElse(false);
         if (reclasifica && sancion.getCarrera() != null) {
             for (ResultadoCarrera r : resultadoCarreraRepository
                     .findByCarrera_IdOrderByPosicionFinalAsc(sancion.getCarrera().getId())) {
@@ -216,266 +199,6 @@ public class SancionService {
             }
         }
         afectados.values().forEach(logroService::evaluarLogros);
-    }
-
-    /**
-     * El rating no baja de 0, igual que al cargar resultados. Si la sancion pide
-     * mas de lo que el piloto tiene, se aplica hasta 0 y se guarda lo aplicado en
-     * {@code cambioAplicado}, que es lo que se revierte despues.
-     */
-    private void aplicarCambioElo(Sancion sancion) {
-        Usuario usuario = sancion.getUsuario();
-        int aplicado = cambioAcotado(usuario.getElo(), sancion.getValor());
-        usuario.setElo(usuario.getElo() + aplicado);
-        sancion.setCambioAplicado(aplicado);
-        usuarioRepository.save(usuario);
-        eloSancionRepository.save(EloSancion.builder()
-                .usuario(usuario)
-                .cambio(aplicado)
-                .motivo(sancion.getMotivo() != null ? sancion.getMotivo() : "Ajuste manual de Elo")
-                .carrera(sancion.getCarrera())
-                .build());
-    }
-
-    private void aplicarCambioSafetyRating(Sancion sancion) {
-        Usuario usuario = sancion.getUsuario();
-        int aplicado = cambioAcotado(usuario.getSafetyRating(), sancion.getValor());
-        usuario.setSafetyRating(usuario.getSafetyRating() + aplicado);
-        sancion.setCambioAplicado(aplicado);
-        usuarioRepository.save(usuario);
-        safetyRatingSancionRepository.save(SafetyRatingSancion.builder()
-                .usuario(usuario)
-                .cambio(aplicado)
-                .motivo(sancion.getMotivo() != null ? sancion.getMotivo() : "Ajuste manual de Safety Rating")
-                .carrera(sancion.getCarrera())
-                .build());
-    }
-
-    /** Lo que se puede mover {@code actual} sin bajar de 0. */
-    private static int cambioAcotado(int actual, Integer pedido) {
-        int cambio = pedido != null ? pedido : 0;
-        return Math.max(0, actual + cambio) - actual;
-    }
-
-    /** Lo que se aplico de verdad; en sanciones viejas sin ese dato, el valor pedido. */
-    private static int cambioARevertir(Sancion sancion) {
-        if (sancion.getCambioAplicado() != null) {
-            return sancion.getCambioAplicado();
-        }
-        return sancion.getValor() != null ? sancion.getValor() : 0;
-    }
-
-    private void aplicarPerdidaPuestos(Sancion sancion) {
-        if (sancion.getCarrera() == null || sancion.getValor() == null) {
-            return;
-        }
-        resultadoDe(sancion);
-        reclasificar(sancion.getCarrera());
-    }
-
-    private void aplicarSegundos(Sancion sancion) {
-        ajustarTiempo(sancion, true);
-    }
-
-    /**
-     * Una penalizacion de tiempo tiene que <em>reclasificar</em>: el piloto cae
-     * en la clasificacion segun su tiempo total nuevo, no se queda en el puesto
-     * que tenia con un tiempo peor.
-     *
-     * <p>Sin tiempo total no hay contra que comparar, asi que en vez de un NPE
-     * (sumarle a null) se corta con un mensaje claro.
-     */
-    private void ajustarTiempo(Sancion sancion, boolean sumar) {
-        if (sancion.getCarrera() == null || sancion.getValor() == null) {
-            return;
-        }
-        ResultadoCarrera resultado = resultadoDe(sancion);
-        if (resultado.getTiempoTotal() == null) {
-            throw new BusinessException("El usuario no tiene tiempo total en la carrera indicada");
-        }
-        long delta = Math.abs((long) sancion.getValor()) * 1000L;
-        resultado.setTiempoTotal(sumar ? resultado.getTiempoTotal() + delta : resultado.getTiempoTotal() - delta);
-        resultadoCarreraRepository.save(resultado);
-        if (!sumar) {
-            // reclasificar() aplica las sanciones activas: la que se revierte ya no cuenta.
-            sancion.setEfectosAplicados(false);
-        }
-        reclasificar(sancion.getCarrera());
-    }
-
-    private void revertirPerdidaPuestos(Sancion sancion) {
-        if (sancion.getCarrera() == null || sancion.getValor() == null) {
-            return;
-        }
-        // reclasificar() aplica las sanciones activas: la que se revierte ya no cuenta.
-        sancion.setEfectosAplicados(false);
-        reclasificar(sancion.getCarrera());
-    }
-
-    private void revertirSegundos(Sancion sancion) {
-        ajustarTiempo(sancion, false);
-    }
-
-    /**
-     * Orden real de llegada: los que terminaron adelante de los que no, y entre
-     * los que terminaron primero el que hizo mas vueltas y despues el de menor
-     * tiempo. El tiempo solo no alcanza porque el de un doblado es el de sus
-     * vueltas, que son menos, y puede ser menor que el del ganador. Entre los
-     * que no terminaron no se compara nada: el sort es estable y quedan en el
-     * orden original.
-     */
-    private static final Comparator<ResultadoCarrera> ORDEN_DE_LLEGADA = (a, b) -> {
-        if (a.isFinalizo() != b.isFinalizo()) {
-            return a.isFinalizo() ? -1 : 1;
-        }
-        if (!a.isFinalizo()) {
-            return 0;
-        }
-        return Comparator
-                .comparing(ResultadoCarrera::getVueltasCompletadas, Comparator.nullsLast(Comparator.reverseOrder()))
-                .thenComparing(ResultadoCarrera::getTiempoTotal, Comparator.nullsLast(Comparator.naturalOrder()))
-                .compare(a, b);
-    };
-
-    /**
-     * Rehace la clasificacion de la carrera desde cero cada vez que se aplica o
-     * revierte una sancion de PUESTOS o SEGUNDOS.
-     *
-     * <p>Antes cada sancion movia la clasificacion que habia dejado la anterior:
-     * una de segundos reordenaba toda la carrera solo por tiempo (un doblado o un
-     * DNF con tiempo 0 podian quedar 1ros) y deshacia en silencio una perdida de
-     * puestos ya aplicada; al revertir esa perdida el piloto subia desde un lugar
-     * que ya no era el penalizado. Partiendo siempre de la posicion original, el
-     * resultado depende solo de que sanciones estan activas, no del orden en que
-     * se aplicaron o revirtieron.
-     *
-     * <ol>
-     *   <li>Orden base: {@code posicionOriginal}, la de la carga.</li>
-     *   <li>Si hay alguna sancion de segundos activa, el tiempo cambio y se
-     *       reordena por {@link #ORDEN_DE_LLEGADA}. Si no hay, no se toca: una
-     *       carga manual puede tener un orden que no sale de los tiempos.</li>
-     *   <li>Las perdidas de puestos activas, de la mas vieja a la mas nueva.</li>
-     * </ol>
-     *
-     * <p>Los resultados sin posicion quedan afuera, como estaban.
-     */
-    private void reclasificar(Carrera carrera) {
-        List<ResultadoCarrera> clasificacion = resultadosDeCarrera(carrera.getId()).stream()
-                .filter(r -> r.getPosicionOriginal() != null || r.getPosicionFinal() != null)
-                .collect(Collectors.toCollection(ArrayList::new));
-        for (ResultadoCarrera resultado : clasificacion) {
-            // Filas cargadas antes de existir la columna: la posicion actual es
-            // la original mientras no tengan perdidas de puestos ya aplicadas.
-            if (resultado.getPosicionOriginal() == null) {
-                resultado.setPosicionOriginal(resultado.getPosicionFinal());
-            }
-        }
-        clasificacion.sort(Comparator.comparing(ResultadoCarrera::getPosicionOriginal));
-
-        List<Sancion> activas = sancionRepository.findByCarrera_Id(carrera.getId()).stream()
-                .filter(s -> Boolean.TRUE.equals(s.getEfectosAplicados()) && s.getValor() != null)
-                .sorted(Comparator.comparing(Sancion::getFecha, Comparator.nullsLast(Comparator.naturalOrder()))
-                        .thenComparing(Sancion::getId, Comparator.nullsLast(Comparator.naturalOrder())))
-                .toList();
-
-        if (activas.stream().anyMatch(s -> s.getTipo() == TipoSancion.SEGUNDOS)) {
-            clasificacion.sort(ORDEN_DE_LLEGADA);
-        }
-        for (Sancion sancion : activas) {
-            if (sancion.getTipo() == TipoSancion.PUESTOS) {
-                bajarPuestos(clasificacion, sancion.getUsuario().getId(), Math.abs(sancion.getValor()));
-            }
-        }
-
-        renumerar(clasificacion);
-        resultadoCarreraRepository.saveAll(clasificacion);
-        recalcularTablaDelCampeonato(carrera);
-    }
-
-    /**
-     * Perder puestos NO es sumar el valor a {@code posicionFinal}: si el
-     * sancionado cae sobre la posicion de otro quedan empatados y el renumerado
-     * le da el mejor puesto al sancionado. Se lo mueve N lugares en la lista y
-     * despues se renumera. Si no le quedan N lugares, cae ultimo. El valor se
-     * toma absoluto: escribir "-2" no deberia ser un premio de dos puestos.
-     */
-    private void bajarPuestos(List<ResultadoCarrera> clasificacion, Long usuarioId, int puestos) {
-        for (int origen = 0; origen < clasificacion.size(); origen++) {
-            if (clasificacion.get(origen).getUsuario().getId().equals(usuarioId)) {
-                int destino = Math.min(origen + puestos, clasificacion.size() - 1);
-                clasificacion.add(destino, clasificacion.remove(origen));
-                return;
-            }
-        }
-    }
-
-    private ResultadoCarrera resultadoDe(Sancion sancion) {
-        return resultadoCarreraRepository
-                .findByCarrera_IdAndUsuario_Id(sancion.getCarrera().getId(), sancion.getUsuario().getId())
-                .orElseThrow(() -> new BusinessException(
-                        "El usuario no tiene resultado en la carrera indicada"));
-    }
-
-    /**
-     * Mover posiciones o tiempos de una carrera cambia los puntos que el
-     * campeonato le da a ese piloto, asi que la tabla se rehace. Sin esto la
-     * sancion se ve reflejada en el resultado de la carrera y no en el
-     * campeonato, que es donde se juega el campeonato.
-     *
-     * <p>Va como llamada a otro bean a proposito: el {@code @CacheEvict} de la
-     * tabla de posiciones vive en {@code CampeonatoService}, y Spring solo lo
-     * aplica si la llamada entra por su proxy, no desde adentro de la misma
-     * clase.
-     */
-    private void recalcularTablaDelCampeonato(Carrera carrera) {
-        if (carrera.getCampeonato() == null) {
-            return;
-        }
-        campeonatoService.recalcularPuntos(carrera.getCampeonato().getId());
-    }
-
-    private void revertirCambioElo(Sancion sancion) {
-        Usuario usuario = sancion.getUsuario();
-        int revertido = cambioAcotado(usuario.getElo(), -cambioARevertir(sancion));
-        usuario.setElo(usuario.getElo() + revertido);
-        usuarioRepository.save(usuario);
-        eloSancionRepository.save(EloSancion.builder()
-                .usuario(usuario)
-                .cambio(revertido)
-                .motivo("Reversion de sancion " + sancion.getId() + ": "
-                        + (sancion.getMotivo() != null ? sancion.getMotivo() : "sancion"))
-                .carrera(sancion.getCarrera())
-                .build());
-    }
-
-    private void revertirCambioSafetyRating(Sancion sancion) {
-        Usuario usuario = sancion.getUsuario();
-        int revertido = cambioAcotado(usuario.getSafetyRating(), -cambioARevertir(sancion));
-        usuario.setSafetyRating(usuario.getSafetyRating() + revertido);
-        usuarioRepository.save(usuario);
-        safetyRatingSancionRepository.save(SafetyRatingSancion.builder()
-                .usuario(usuario)
-                .cambio(revertido)
-                .motivo("Reversion de sancion " + sancion.getId() + ": "
-                        + (sancion.getMotivo() != null ? sancion.getMotivo() : "sancion"))
-                .carrera(sancion.getCarrera())
-                .build());
-    }
-
-    /**
-     * Los resultados de la carrera. El metodo del repository viene ordenado por
-     * posicion, pero abajo cada helper lo reordena por lo que necesita, asi que
-     * el nombre no dice mas que "traeme los resultados".
-     */
-    private List<ResultadoCarrera> resultadosDeCarrera(Long carreraId) {
-        return resultadoCarreraRepository.findByCarrera_IdOrderByPosicionFinalAsc(carreraId);
-    }
-
-    private void renumerar(List<ResultadoCarrera> clasificacion) {
-        int pos = 1;
-        for (ResultadoCarrera resultado : clasificacion) {
-            resultado.setPosicionFinal(pos++);
-        }
     }
 
     private void notificar(Sancion sancion) {

@@ -5,10 +5,10 @@ import org.example.lfmnacional.entity.*;
 import org.example.lfmnacional.enums.*;
 import org.example.lfmnacional.exception.BusinessException;
 import org.example.lfmnacional.repository.*;
+import org.example.lfmnacional.service.sancion.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -35,8 +35,12 @@ class SancionServiceTest {
     @Mock private CarreraService carreraService;
     @Mock private CampeonatoService campeonatoService;
     @Mock private LogroService logroService;
+    @Mock private ResolucionIncidenteRepository resolucionIncidenteRepository;
 
-    @InjectMocks
+    /**
+     * Armado a mano: los efectos por tipo son beans reales sobre los mismos mocks,
+     * asi estos tests siguen cubriendo el comportamiento de punta a punta.
+     */
     private SancionService sancionService;
 
     private Categoria categoria;
@@ -46,6 +50,17 @@ class SancionServiceTest {
 
     @BeforeEach
     void setUp() {
+        ReclasificacionCarrera reclasificacion =
+                new ReclasificacionCarrera(sancionRepository, resultadoCarreraRepository, campeonatoService);
+        EfectosSancion efectos = new EfectosSancion(List.of(
+                new EfectoElo(usuarioRepository, eloSancionRepository),
+                new EfectoSafetyRating(usuarioRepository, safetyRatingSancionRepository),
+                new EfectoPuestos(reclasificacion),
+                new EfectoSegundos(reclasificacion, resultadoCarreraRepository)));
+        sancionService = new SancionService(sancionRepository, resultadoCarreraRepository,
+                notificacionRepository, apelacionRepository, resolucionIncidenteRepository,
+                usuarioService, carreraService, logroService,
+                new CampeonatoAccesoService(null, null, null), efectos);
         categoria = Categoria.builder().id(1L).nombre("GT3").build();
         campeonato = Campeonato.builder().id(1L).nombre("Champ").estado(EstadoCampeonato.ACTIVO).categoria(categoria).build();
         carrera = Carrera.builder().id(1L).nombre("Race").campeonato(campeonato).estado(EstadoCarrera.FINALIZADA).build();

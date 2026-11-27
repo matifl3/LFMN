@@ -64,7 +64,11 @@ public class GlobalExceptionHandler {
                 LocalDateTime.now(),
                 HttpStatus.FORBIDDEN.value(),
                 HttpStatus.FORBIDDEN.getReasonPhrase(),
-                "No tienes permisos para realizar esta accion",
+                // El de @PreAuthorize dice "Access Denied": se reemplaza. Los de
+                // reglas de recurso traen un mensaje para mostrar.
+                ex instanceof PermisoDenegadoException
+                        ? ex.getMessage()
+                        : "No tienes permisos para realizar esta accion",
                 request.getRequestURI());
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
     }

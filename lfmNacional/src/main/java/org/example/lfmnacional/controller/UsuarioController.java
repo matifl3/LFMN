@@ -5,8 +5,9 @@ import lombok.RequiredArgsConstructor;
 import org.example.lfmnacional.dto.usuario.*;
 import org.example.lfmnacional.entity.Usuario;
 import org.example.lfmnacional.enums.Rol;
-import org.example.lfmnacional.exception.BusinessException;
 import org.example.lfmnacional.service.UsuarioService;
+import org.example.lfmnacional.service.BajaUsuarioService;
+import org.example.lfmnacional.service.AutenticacionService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -21,25 +22,27 @@ import java.util.List;
 public class UsuarioController {
 
     private final UsuarioService usuarioService;
+    private final AutenticacionService autenticacionService;
+    private final BajaUsuarioService bajaUsuarioService;
 
     @PostMapping
     public ResponseEntity<LoginResponse> registrar(@Valid @RequestBody RegistroRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(usuarioService.registrar(request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(autenticacionService.registrar(request));
     }
 
     @PostMapping("/registro-steam")
     public ResponseEntity<LoginResponse> registrarSteam(@Valid @RequestBody SteamRegistroRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(usuarioService.registrarSteam(request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(autenticacionService.registrarSteam(request));
     }
 
     @PostMapping("/vincular-steam-login")
     public LoginResponse vincularSteamConLogin(@Valid @RequestBody SteamVinculacionLoginRequest request) {
-        return usuarioService.vincularSteamConLogin(request.email(), request.password(), request.tokenRegistro());
+        return autenticacionService.vincularSteamConLogin(request.email(), request.password(), request.tokenRegistro());
     }
 
     @PostMapping("/login")
     public LoginResponse login(@Valid @RequestBody LoginRequest request) {
-        return usuarioService.login(request);
+        return autenticacionService.login(request);
     }
 
     @GetMapping
@@ -67,9 +70,6 @@ public class UsuarioController {
     public UsuarioResponse updatePerfil(@PathVariable Long id,
                                         @AuthenticationPrincipal Usuario actual,
                                         @Valid @RequestBody UsuarioRequest request) {
-        if (!actual.getRol().equals(Rol.ADMIN) && !actual.getId().equals(id)) {
-            throw new BusinessException("No tenes permiso para editar el perfil de otro usuario");
-        }
         return usuarioService.updatePerfil(id, request, actual);
     }
 
@@ -77,10 +77,7 @@ public class UsuarioController {
     public void updatePassword(@PathVariable Long id,
                                @AuthenticationPrincipal Usuario actual,
                                @Valid @RequestBody CambioPasswordRequest request) {
-        if (!actual.getId().equals(id)) {
-            throw new BusinessException("No tenes permiso para cambiar la password de otro usuario");
-        }
-        usuarioService.updatePassword(id, request);
+        usuarioService.updatePassword(id, request, actual);
     }
 
     // Vincular Steam solo via OpenID (GET /api/steam/vincular-url): no hay PUT que
@@ -90,10 +87,7 @@ public class UsuarioController {
     @DeleteMapping("/{id}/steam")
     public UsuarioResponse desvincularSteam(@PathVariable Long id,
                                             @AuthenticationPrincipal Usuario actual) {
-        if (!actual.getId().equals(id)) {
-            throw new BusinessException("No tenes permiso para desvincular Steam de otro usuario");
-        }
-        return usuarioService.desvincularSteam(id);
+        return usuarioService.desvincularSteam(id, actual);
     }
 
     @PutMapping("/{id}/rol")
@@ -117,10 +111,7 @@ public class UsuarioController {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable Long id, @AuthenticationPrincipal Usuario actual) {
-        if (actual.getId().equals(id)) {
-            throw new BusinessException("No podes eliminar tu propia cuenta");
-        }
-        usuarioService.delete(id);
+        bajaUsuarioService.delete(id, actual);
         return ResponseEntity.noContent().build();
     }
 

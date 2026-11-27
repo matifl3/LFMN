@@ -1,7 +1,7 @@
 package org.example.lfmnacional.service;
 
+import org.example.lfmnacional.exception.PermisoDenegadoException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.AccessDeniedException;
 import org.example.lfmnacional.dto.apelacion.ApelacionRequest;
 import org.example.lfmnacional.dto.apelacion.ApelacionResolucionRequest;
 import org.example.lfmnacional.dto.apelacion.ApelacionResponse;
@@ -68,7 +68,7 @@ public class ApelacionService {
         Sancion sancion = sancionService.getEntity(request.sancionId());
         // Solo el sancionado puede apelar su propia sancion.
         if (!sancion.getUsuario().getId().equals(usuario.getId())) {
-            throw new AccessDeniedException("Solo podes apelar tus propias sanciones");
+            throw new PermisoDenegadoException("Solo podes apelar tus propias sanciones");
         }
         if (apelacionRepository.existsBySancion_IdAndUsuario_Id(request.sancionId(), usuario.getId())) {
             throw new BusinessException("Ya existe una apelacion para esta sancion");

@@ -26,7 +26,7 @@ LFMN/
 │   │   ├── enums/         15 enums
 │   │   ├── security/      JWT + rate limit
 │   │   ├── config/        Security, cache, schedulers, DataSeeder
-│   │   ├── mapper/        EntityMapper
+│   │   ├── mapper/        EntityMapper (anidados), UsuarioMapper
 │   │   ├── exception/     jerarquía de errores + handler global
 │   │   └── service/inscripcion/  cadena de validadores
 │   └── src/test/java/     17 clases — 136 tests
@@ -83,10 +83,18 @@ literalmente en `frontend/src/app/core/models/models.ts`. Si tocás un DTO, actu
 Los `record` además te dan `equals`, `hashCode` y `toString` gratis, y son serializables por Jackson
 sin anotaciones.
 
-### 2.3 `EntityMapper`: componentes anidados
+### 2.3 Mapeo entidad → DTO: cada servicio mapea lo suyo
 
-Los DTO anidados (dentro de un resultado está el usuario, que tiene nombre y foto) no se resuelven
-con `@Embedded` ni con cascada. Hay un mapper estático con **records de apoyo**:
+La regla real del repo (GRASP Experto + Alta cohesión): **cada servicio arma la respuesta de su
+propio agregado** en un `private XxxResponse toResponse(...)`, porque es el que conoce qué campos
+expone y qué relaciones ya cargó dentro de su transacción (§2.5). No hay un mapper central para todo.
+
+Hay dos excepciones, y solo dos:
+
+| Mapper | Para qué | Por qué está afuera del servicio |
+|---|---|---|
+| `EntityMapper` | piezas **anidadas** que se repiten en muchos DTOs (`UserInfo`, `CarreraInfo`) | las usan decenas de servicios; los `null` se chequean en un solo lugar |
+| `UsuarioMapper` | `completo`, `publico`, `basico` de un `Usuario` | lo devuelven varios servicios (perfil, login, registro) y tiene una regla de privacidad: la vista pública no lleva email, GUID ni estado de la password |
 
 ```java
 public record UserInfo(Long id, String nombrePiloto, String fotoPerfil) {}
@@ -97,8 +105,8 @@ public static UserInfo resolveUsuarioBasico(Usuario usuario) {
 }
 ```
 
-Cada método devuelve un recordchico o `null`, y el mapper principal los compone. Todas las
-verificaciones de null están **en un solo archivo**.
+**Cuándo crear un mapper nuevo:** solo si el mismo DTO se arma en más de un servicio o lleva una
+regla (privacidad, permisos) que no puede divergir. Si no, el `toResponse` va en el servicio.
 
 ### 2.4 Un único lugar para la autorización: `CampeonatoAccesoService`
 
@@ -144,6 +152,10 @@ resoluciones, inscripciones, sesiones procesadas) está `filtroVeCarrera(visor)`
 memoizado por carrera (una consulta de membresía por carrera, no por fila; ADMIN y COMISARIO no
 consultan). Lo que no tiene carrera (una sanción manual) es visible. Para un recurso puntual,
 `exigirVeCarreraSiHay`. Ambos navegan relaciones lazy: se llaman dentro del `@Transactional` del servicio.
+
+Los **recursos con dueño** (perfil, setup, notificación, inscripción, recompensa) usan
+`exigirPropio`, `exigirPropioOAdmin` y `exigirPropioOAdministraCarrera`, llamados desde el servicio.
+Ningún controller decide permisos (GRASP Controlador): solo traduce HTTP y pasa el `@AuthenticationPrincipal`.
 
 Y la visibilidad distingue **el campeonato** de **su contenido**. El nombre, temporada y categoría
 son públicos siempre; el roster, la tabla, las carreras y los resultados exigen membresía:
@@ -199,7 +211,8 @@ Jerarquía corta, mapeada en `GlobalExceptionHandler`:
 |---|---|---|
 | `BusinessException` | 400 | regla de negocio (privado, ELO, estado) |
 | `ResourceNotFoundException` | 404 | no existe |
-| `AccessDeniedException` | 403 | rol insuficiente |
+| `AccessDeniedException` | 403 | rol insuficiente (`@PreAuthorize`): mensaje genérico |
+| `PermisoDenegadoException` | 403 | regla sobre un recurso ("este setup no es tuyo"): su mensaje viaja al front |
 | `DataIntegrityViolationException` | 409 | FK o unique violada |
 | `Exception` | 500 | todo lo demás, mensaje genérico |
 
@@ -327,6 +340,23 @@ Restricción práctica: `email` y `nombrePiloto` son únicos y el contexto se co
 los datos se generan con un sufijo `UUID` en `@BeforeEach`.
 
 ---
+
+### 2.13 Efectos de sanción por tipo (Polimorfismo)
+
+Cada `TipoSancion` con efecto es un bean `EfectoSancion` (`service/sancion/`) con `aplicar` y
+`revertir`; `EfectosSancion` los registra por tipo, como `SistemaPuntosFactory`. `SancionService`
+solo orquesta (guardar, notificar, reevaluar logros) y no tiene un `switch` por tipo.
+
+| Pieza | Patrón GRASP | Qué hace |
+|---|---|---|
+| `EfectoElo`, `EfectoSafetyRating` | Polimorfismo + Template Method (`EfectoRating`) | mueven el rating sin bajar de 0 y dejan historial |
+| `EfectoPuestos`, `EfectoSegundos` | Polimorfismo | reclasifican la carrera |
+| `ReclasificacionCarrera` | Fabricación pura | rehace la clasificación desde las sanciones activas |
+| `Usuario.ajustarElo/SafetyRating`, `Sancion.cambioARevertir` | Experto en información | la regla vive en la entidad que tiene el dato |
+
+**Agregar un tipo de sanción** = un valor en el enum + una clase `@Component` que implemente
+`EfectoSancion`. Un tipo sin efecto registrado (hoy `DESCALIFICACION`) se guarda y notifica sin
+tocar rating ni clasificación. Dos efectos para el mismo tipo cortan el arranque.
 
 ## 3. Los dos bugs que después costaron tiempo
 

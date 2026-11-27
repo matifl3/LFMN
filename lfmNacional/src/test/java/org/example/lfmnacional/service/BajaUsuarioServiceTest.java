@@ -30,6 +30,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -42,7 +43,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class UsuarioServiceDeleteTest {
+class BajaUsuarioServiceTest {
 
     @Mock
     private UsuarioRepository usuarioRepository;
@@ -93,15 +94,19 @@ class UsuarioServiceDeleteTest {
     @Mock
     private JwtUtil jwtUtil;
 
+    /** Real: los chequeos de dueno/admin no tocan repositorios. */
+    @Spy
+    private CampeonatoAccesoService accesoService = new CampeonatoAccesoService(null, null, null);
+
     @InjectMocks
-    private UsuarioService usuarioService;
+    private BajaUsuarioService bajaUsuarioService;
 
     @Test
     void deleteLimpiaDependenciasAntesDeEliminarElUsuario() {
         long id = 5L;
         when(usuarioRepository.findById(id)).thenReturn(Optional.of(Usuario.builder().id(id).build()));
 
-        usuarioService.delete(id);
+        bajaUsuarioService.delete(id, admin());
 
         verify(votoComisarioRepository).deleteByComisario_Id(id);
         verify(votoComisarioRepository).deleteByIncidenteReportanteId(id);
@@ -142,7 +147,7 @@ class UsuarioServiceDeleteTest {
         long id = 7L;
         when(usuarioRepository.findById(id)).thenReturn(Optional.of(Usuario.builder().id(id).build()));
 
-        usuarioService.delete(id);
+        bajaUsuarioService.delete(id, admin());
 
         InOrder orden = org.mockito.Mockito.inOrder(
                 apelacionRepository, sancionRepository, resolucionIncidenteRepository,
@@ -166,9 +171,23 @@ class UsuarioServiceDeleteTest {
     void deleteUsuarioInexistenteNoBorraNada() {
         when(usuarioRepository.findById(9L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> usuarioService.delete(9L))
+        assertThatThrownBy(() -> bajaUsuarioService.delete(9L, admin()))
                 .isInstanceOf(ResourceNotFoundException.class);
 
+        verify(usuarioRepository, never()).deleteById(any());
+    }
+
+    private static Usuario admin() {
+        return Usuario.builder().id(999L).rol(org.example.lfmnacional.enums.Rol.ADMIN).build();
+    }
+
+    @Test
+    void elAdminNoPuedeBorrarSuPropiaCuenta() {
+        Usuario admin = admin();
+
+        assertThatThrownBy(() -> bajaUsuarioService.delete(999L, admin))
+                .isInstanceOf(org.example.lfmnacional.exception.BusinessException.class)
+                .hasMessageContaining("propia cuenta");
         verify(usuarioRepository, never()).deleteById(any());
     }
 }

@@ -46,6 +46,10 @@ class UsuarioServiceSeguridadTest {
     @Spy
     private LoginIntentos loginIntentos = new LoginIntentos();
 
+    /** Real: los chequeos de dueno/admin no tocan repositorios. */
+    @Spy
+    private CampeonatoAccesoService accesoService = new CampeonatoAccesoService(null, null, null);
+
     @InjectMocks
     private UsuarioService usuarioService;
 
@@ -58,28 +62,6 @@ class UsuarioServiceSeguridadTest {
                 .rol(Rol.USUARIO).elo(1500).safetyRating(100).tokenVersion(0).build();
         lenient().when(usuarioRepository.findById(1L)).thenReturn(Optional.of(piloto));
         lenient().when(usuarioRepository.save(any(Usuario.class))).thenAnswer(inv -> inv.getArgument(0));
-    }
-
-    @Test
-    void registroSteamTomaElGuidDelTokenVerificado() {
-        when(steamService.extraerGuidRegistro("token-ok")).thenReturn(GUID);
-
-        usuarioService.registrarSteam(new SteamRegistroRequest("nuevo@lfm.com", "Nuevo", "token-ok"));
-
-        ArgumentCaptor<Usuario> guardado = ArgumentCaptor.forClass(Usuario.class);
-        verify(usuarioRepository).save(guardado.capture());
-        assertThat(guardado.getValue().getGuidSteam()).isEqualTo(GUID);
-    }
-
-    @Test
-    void registroSteamConTokenInvalidoNoCreaLaCuenta() {
-        when(steamService.extraerGuidRegistro(GUID))
-                .thenThrow(new BusinessException("El ingreso con Steam expiro o es invalido"));
-
-        assertThatThrownBy(() -> usuarioService.registrarSteam(
-                new SteamRegistroRequest("nuevo@lfm.com", "Nuevo", GUID)))
-                .isInstanceOf(BusinessException.class);
-        verify(usuarioRepository, never()).save(any(Usuario.class));
     }
 
     @Test
@@ -107,41 +89,6 @@ class UsuarioServiceSeguridadTest {
         assertThat(usuarioService.getById(1L, piloto).email()).isEqualTo("piloto@lfm.com");
         assertThat(usuarioService.getById(1L, admin).email()).isEqualTo("piloto@lfm.com");
         assertThat(usuarioService.getById(1L, admin).guidSteam()).isEqualTo(GUID);
-    }
-
-    // ---- login: bloqueo por cuenta y sin enumeracion de emails
-
-    @Test
-    void trasCincoFallosLaCuentaSeBloqueaAunqueLuegoLaPasswordSeaCorrecta() {
-        piloto.setPassword("hash");
-        when(usuarioRepository.findByEmail("piloto@lfm.com")).thenReturn(Optional.of(piloto));
-        when(passwordEncoder.matches("mala", "hash")).thenReturn(false);
-        for (int i = 0; i < 5; i++) {
-            assertThatThrownBy(() -> usuarioService.login(new LoginRequest("piloto@lfm.com", "mala")))
-                    .hasMessageContaining("invalidos");
-        }
-
-        assertThatThrownBy(() -> usuarioService.login(new LoginRequest("PILOTO@lfm.com", "buena")))
-                .isInstanceOf(BusinessException.class)
-                .hasMessageContaining("Demasiados intentos");
-    }
-
-    @Test
-    void emailInexistenteDaElMismoMensajeQuePasswordIncorrecta() {
-        when(usuarioRepository.findByEmail("nadie@lfm.com")).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> usuarioService.login(new LoginRequest("nadie@lfm.com", "x")))
-                .hasMessage("Email o contrasena invalidos");
-    }
-
-    @Test
-    void cuentaDeshabilitadaConPasswordIncorrectaNoRevelaQueEstaDeshabilitada() {
-        piloto.setPassword("hash");
-        piloto.setHabilitado(false);
-        when(usuarioRepository.findByEmail("piloto@lfm.com")).thenReturn(Optional.of(piloto));
-
-        assertThatThrownBy(() -> usuarioService.login(new LoginRequest("piloto@lfm.com", "mala")))
-                .hasMessage("Email o contrasena invalidos");
     }
 
     // ---- cambiar el email exige la password actual

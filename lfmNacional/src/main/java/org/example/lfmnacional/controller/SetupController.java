@@ -7,8 +7,6 @@ import org.example.lfmnacional.dto.setup.SetupRequest;
 import org.example.lfmnacional.dto.setup.SetupResponse;
 import org.example.lfmnacional.entity.Setup;
 import org.example.lfmnacional.entity.Usuario;
-import org.example.lfmnacional.enums.Rol;
-import org.example.lfmnacional.exception.BusinessException;
 import org.example.lfmnacional.service.SetupService;
 import org.springframework.core.io.PathResource;
 import org.springframework.core.io.Resource;
@@ -87,11 +85,7 @@ public class SetupController {
             @PathVariable Long id,
             @AuthenticationPrincipal Usuario actual,
             @RequestPart("archivo") MultipartFile archivo) {
-        Setup setup = setupService.getEntity(id);
-        if (!actual.getRol().equals(Rol.ADMIN) && !setup.getAutor().getId().equals(actual.getId())) {
-            throw new BusinessException("No tenes permiso para subir archivos a este setup");
-        }
-        setupService.guardarArchivo(id, archivo);
+        setupService.guardarArchivo(id, archivo, actual);
         return ResponseEntity.ok(Map.of("mensaje", "Archivo subido correctamente"));
     }
 
@@ -124,21 +118,13 @@ public class SetupController {
     public SetupResponse update(@PathVariable Long id,
                                 @AuthenticationPrincipal Usuario actual,
                                 @Valid @RequestBody SetupRequest request) {
-        Setup setup = setupService.getEntity(id);
-        if (!actual.getRol().equals(Rol.ADMIN) && !setup.getAutor().getId().equals(actual.getId())) {
-            throw new BusinessException("No tenes permiso para editar este setup");
-        }
-        return setupService.update(id, request);
+        return setupService.update(id, request, actual);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id,
                                        @AuthenticationPrincipal Usuario actual) {
-        Setup setup = setupService.getEntity(id);
-        if (!actual.getRol().equals(Rol.ADMIN) && !setup.getAutor().getId().equals(actual.getId())) {
-            throw new BusinessException("No tenes permiso para borrar este setup");
-        }
-        setupService.delete(id);
+        setupService.delete(id, actual);
         return ResponseEntity.noContent().build();
     }
 }

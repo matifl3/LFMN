@@ -1,6 +1,6 @@
 package org.example.lfmnacional.service;
 
-import org.springframework.security.access.AccessDeniedException;
+import org.example.lfmnacional.exception.PermisoDenegadoException;
 import org.springframework.data.domain.PageImpl;
 import lombok.RequiredArgsConstructor;
 import org.example.lfmnacional.dto.incidente.*;
@@ -100,7 +100,7 @@ public class IncidenteService {
                 && incidente.getReportante().getId().equals(comisario.getId());
         if (esReportante || incidentePilotoRepository.existsByIncidente_IdAndUsuario_Id(
                 incidente.getId(), comisario.getId())) {
-            throw new AccessDeniedException("No podes votar ni resolver un incidente en el que estas involucrado");
+            throw new PermisoDenegadoException("No podes votar ni resolver un incidente en el que estas involucrado");
         }
     }
 
