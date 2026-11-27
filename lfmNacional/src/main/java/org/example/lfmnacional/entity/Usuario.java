@@ -123,6 +123,28 @@ public class Usuario {
         invalidarTokens();
     }
 
+    /**
+     * Mueve el Elo en {@code pedido} sin bajar de 0 (igual que al cargar
+     * resultados) y devuelve lo que se aplico de verdad, que es lo que despues
+     * se revierte.
+     */
+    public int ajustarElo(int pedido) {
+        int aplicado = cambioSinBajarDeCero(elo, pedido);
+        elo = elo + aplicado;
+        return aplicado;
+    }
+
+    /** Como {@link #ajustarElo}, para el Safety Rating. */
+    public int ajustarSafetyRating(int pedido) {
+        int aplicado = cambioSinBajarDeCero(safetyRating, pedido);
+        safetyRating = safetyRating + aplicado;
+        return aplicado;
+    }
+
+    private static int cambioSinBajarDeCero(int actual, int pedido) {
+        return Math.max(0, actual + pedido) - actual;
+    }
+
     /** Valida una password nueva en texto plano antes de codificarla. */
     public static void validarPasswordNueva(String nuevaPassword) {
         if (nuevaPassword == null || nuevaPassword.length() < MIN_PASSWORD) {

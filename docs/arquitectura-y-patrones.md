@@ -333,6 +333,23 @@ los datos se generan con un sufijo `UUID` en `@BeforeEach`.
 
 ---
 
+### 2.13 Efectos de sanción por tipo (Polimorfismo)
+
+Cada `TipoSancion` con efecto es un bean `EfectoSancion` (`service/sancion/`) con `aplicar` y
+`revertir`; `EfectosSancion` los registra por tipo, como `SistemaPuntosFactory`. `SancionService`
+solo orquesta (guardar, notificar, reevaluar logros) y no tiene un `switch` por tipo.
+
+| Pieza | Patrón GRASP | Qué hace |
+|---|---|---|
+| `EfectoElo`, `EfectoSafetyRating` | Polimorfismo + Template Method (`EfectoRating`) | mueven el rating sin bajar de 0 y dejan historial |
+| `EfectoPuestos`, `EfectoSegundos` | Polimorfismo | reclasifican la carrera |
+| `ReclasificacionCarrera` | Fabricación pura | rehace la clasificación desde las sanciones activas |
+| `Usuario.ajustarElo/SafetyRating`, `Sancion.cambioARevertir` | Experto en información | la regla vive en la entidad que tiene el dato |
+
+**Agregar un tipo de sanción** = un valor en el enum + una clase `@Component` que implemente
+`EfectoSancion`. Un tipo sin efecto registrado (hoy `DESCALIFICACION`) se guarda y notifica sin
+tocar rating ni clasificación. Dos efectos para el mismo tipo cortan el arranque.
+
 ## 3. Los dos bugs que después costaron tiempo
 
 Documentados porque ilustran por qué los patrones de §2.4 y §2.5 existen.
