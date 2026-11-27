@@ -4,6 +4,7 @@ import { Header } from './shared/components/header/header';
 import { Footer } from './shared/components/footer/footer';
 import { ToastContainer } from './shared/components/toast-container/toast-container';
 import { MotionService } from './core/services/motion.service';
+import { AuthService } from './core/services/auth.service';
 
 @Component({
   imports: [RouterOutlet, Header, Footer, ToastContainer],
@@ -14,10 +15,12 @@ import { MotionService } from './core/services/motion.service';
 export class App {
   private readonly motion = inject(MotionService);
   private readonly router = inject(Router);
+  private readonly auth = inject(AuthService);
   protected readonly esAuth = signal(false);
 
   constructor() {
     this.motion.iniciar();
+    this.auth.revalidar();
     const esRutaAuth = () => this.router.url.startsWith('/auth');
     this.esAuth.set(esRutaAuth());
     this.router.events.subscribe((e) => {

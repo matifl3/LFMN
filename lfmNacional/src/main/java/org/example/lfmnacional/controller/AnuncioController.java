@@ -40,6 +40,12 @@ public class AnuncioController {
         return ResponseEntity.status(HttpStatus.CREATED).body(anuncioService.create(request));
     }
 
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public AnuncioResponse update(@PathVariable Long id, @Valid @RequestBody AnuncioRequest request) {
+        return anuncioService.update(id, request);
+    }
+
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {

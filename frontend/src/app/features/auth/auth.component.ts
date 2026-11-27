@@ -87,7 +87,12 @@ export class AuthComponent implements OnInit {
 
   private nextValor(): string {
     const n = this.route.snapshot.queryParamMap.get('next') || '';
-    if (n.startsWith('/') && !n.startsWith('//') && !/^https?:\/\//i.test(n) && !n.toLowerCase().startsWith('javascript:')) {
+    if (
+      n.startsWith('/') &&
+      !n.startsWith('//') &&
+      !/^https?:\/\//i.test(n) &&
+      !n.toLowerCase().startsWith('javascript:')
+    ) {
       return n;
     }
     return '';
@@ -149,22 +154,24 @@ export class AuthComponent implements OnInit {
     }
     this.cargando.set(true);
     const v = this.steamForm.getRawValue();
-    this.api.post<LoginResponseLFM>('/usuarios/registro-steam', {
-      email: v.email.trim(),
-      nombrePiloto: v.nombrePiloto.trim(),
-      tokenRegistro: v.tokenRegistro,
-    }).subscribe({
-      next: (data) => {
-        this.cargando.set(false);
-        this.auth.setSesion(data.token, data.usuario);
-        this.toast.success('Cuenta creada correctamente');
-        this.redirigir();
-      },
-      error: (err) => {
-        this.cargando.set(false);
-        this.toast.error(apiError(err));
-      },
-    });
+    this.api
+      .post<LoginResponseLFM>('/usuarios/registro-steam', {
+        email: v.email.trim(),
+        nombrePiloto: v.nombrePiloto.trim(),
+        tokenRegistro: v.tokenRegistro,
+      })
+      .subscribe({
+        next: (data) => {
+          this.cargando.set(false);
+          this.auth.setSesion(data.token, data.usuario);
+          this.toast.success('Cuenta creada correctamente');
+          this.redirigir();
+        },
+        error: (err) => {
+          this.cargando.set(false);
+          this.toast.error(apiError(err));
+        },
+      });
   }
 
   registrar(): void {
@@ -175,23 +182,29 @@ export class AuthComponent implements OnInit {
     }
     this.cargando.set(true);
     const v = this.registerForm.getRawValue();
-    this.api.post<LoginResponseLFM>('/usuarios', {
-      email: v.email.trim(),
-      nombrePiloto: v.nombrePiloto.trim(),
-      password: v.password,
-    }).subscribe({
-      next: (data) => {
-        this.cargando.set(false);
-        this.auth.setSesion(data.token, data.usuario);
-        this.toast.success('Cuenta creada correctamente. ¡Bienvenido, ' + (data.usuario.nombrePiloto || 'piloto') + '!');
-        this.avisarSteamVinculacion(data.usuario);
-        this.redirigir();
-      },
-      error: (err) => {
-        this.cargando.set(false);
-        this.toast.error(apiError(err));
-      },
-    });
+    this.api
+      .post<LoginResponseLFM>('/usuarios', {
+        email: v.email.trim(),
+        nombrePiloto: v.nombrePiloto.trim(),
+        password: v.password,
+      })
+      .subscribe({
+        next: (data) => {
+          this.cargando.set(false);
+          this.auth.setSesion(data.token, data.usuario);
+          this.toast.success(
+            'Cuenta creada correctamente. ¡Bienvenido, ' +
+              (data.usuario.nombrePiloto || 'piloto') +
+              '!',
+          );
+          this.avisarSteamVinculacion(data.usuario);
+          this.redirigir();
+        },
+        error: (err) => {
+          this.cargando.set(false);
+          this.toast.error(apiError(err));
+        },
+      });
   }
 
   private avisarSteamVinculacion(usuario: Usuario): void {
@@ -199,7 +212,7 @@ export class AuthComponent implements OnInit {
       this.toast.mostrar(
         'No tenés Steam vinculado: los resultados de carrera no se sumarán a tu perfil. Vinculalo desde Mi perfil',
         '',
-        6000
+        6000,
       );
     }
   }
@@ -222,7 +235,11 @@ export class AuthComponent implements OnInit {
               this.toast.success(`¡Bienvenido, ${usuario.nombrePiloto || 'piloto'}!`);
               this.redirigir();
             },
-            error: (err) => this.toast.error(apiError(err)),
+            error: (err) => {
+              // Sin usuario la sesion queda a medias (token guardado, autenticado() false).
+              this.auth.clearSesion();
+              this.toast.error(apiError(err));
+            },
           });
         },
         error: (err) => this.toast.error(apiError(err)),
@@ -234,7 +251,7 @@ export class AuthComponent implements OnInit {
       this.toast.error(
         steam === 'expirado'
           ? 'El enlace de ingreso con Steam expiró. Intentá de nuevo.'
-          : 'No se pudo ingresar con Steam.'
+          : 'No se pudo ingresar con Steam.',
       );
     }
   }

@@ -59,7 +59,15 @@ export function fmtCuentaRegresiva(
 export function fmtFechaHora(iso: string | number | Date | null | undefined): string {
   const d = parseIso(iso);
   if (!d) return '—';
-  return d.getDate() + ' ' + MESES[d.getMonth()].toUpperCase() + ' · ' + two(d.getHours()) + ':' + two(d.getMinutes());
+  return (
+    d.getDate() +
+    ' ' +
+    MESES[d.getMonth()].toUpperCase() +
+    ' · ' +
+    two(d.getHours()) +
+    ':' +
+    two(d.getMinutes())
+  );
 }
 
 /** "20:30 hs" */
@@ -103,20 +111,24 @@ export function fmtDif(ms: number | null | undefined): string {
 }
 
 /** Iniciales de un piloto */
-export function iniciales(user: { nombrePiloto?: string; email?: string } | null | undefined): string {
+export function iniciales(
+  user: { nombrePiloto?: string; email?: string } | null | undefined,
+): string {
   if (!user) return '?';
   const n = user.nombrePiloto || user.email || '?';
   const parts = n.trim().split(/\s+/);
   const first = parts[0]?.[0] ?? '';
-  const last = parts.length > 1 ? parts[parts.length - 1]?.[0] ?? '' : '';
+  const last = parts.length > 1 ? (parts[parts.length - 1]?.[0] ?? '') : '';
   return (first + last).toUpperCase() || '?';
 }
 
+/** Lista de permitidos: rutas internas (`/x`, no `//host`) y http(s). Todo lo demas se descarta. */
 export function sanitizeUrl(url: string | null | undefined): string {
   if (!url) return '';
-  const s = String(url).trim().toLowerCase();
-  if (s.startsWith('javascript:') || s.startsWith('data:') || s.startsWith('vbscript:')) return '';
-  return url;
+  const s = String(url).trim();
+  if (s.startsWith('/') && !s.startsWith('//')) return s;
+  if (/^https?:\/\//i.test(s)) return s;
+  return '';
 }
 
 /** Paginación inconsistente del backend: `.content || r` tipado */
