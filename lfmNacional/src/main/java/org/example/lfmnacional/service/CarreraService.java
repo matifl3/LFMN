@@ -18,6 +18,7 @@ import org.example.lfmnacional.exception.ResourceNotFoundException;
 import org.example.lfmnacional.repository.CarreraRepository;
 import org.example.lfmnacional.repository.InscripcionRepository;
 import org.example.lfmnacional.repository.NotificacionRepository;
+import org.example.lfmnacional.repository.ResultadoCarreraRepository;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,6 +44,7 @@ public class CarreraService {
     private final ArchivoCarreraService archivoCarreraService;
     private final InscripcionRepository inscripcionRepository;
     private final NotificacionRepository notificacionRepository;
+    private final ResultadoCarreraRepository resultadoCarreraRepository;
     private final EloCalculator eloCalculator;
 
     public Carrera getEntity(Long id) {
@@ -129,6 +131,13 @@ public CarreraResponse create(CarreraRequest request, Usuario usuario) {
     @Transactional
     public CarreraResponse update(Long id, CarreraRequest request) {
         Carrera carrera = getEntity(id);
+        if (!carrera.getCampeonato().getId().equals(request.campeonatoId())
+                && resultadoCarreraRepository.existsByCarrera_Id(id)) {
+            // Los puntos de esta carrera ya estan sumados en la tabla del campeonato
+            // actual: moverla los dejaria ahi y el destino no los recibiria.
+            throw new BusinessException("La carrera " + carrera.getNombre()
+                    + " ya tiene resultados cargados: no se puede mover a otro campeonato");
+        }
         LocalDateTime fechaAnterior = carrera.getFecha();
         carrera.setNombre(request.nombre());
         carrera.setFecha(request.fecha());
@@ -190,6 +199,13 @@ public CarreraResponse create(CarreraRequest request, Usuario usuario) {
     @Transactional
     public void delete(Long id) {
         Carrera carrera = getEntity(id);
+        if (resultadoCarreraRepository.existsByCarrera_Id(id)) {
+            // El borrado en cascada se llevaria los resultados y el historial de
+            // Elo/SR, pero no revierte el Elo/SR de los pilotos ni los puntos ya
+            // sumados en CampeonatoPosicion: quedarian valores sin origen.
+            throw new BusinessException("La carrera " + carrera.getNombre()
+                    + " ya tiene resultados cargados y no se puede eliminar. Cancelala en su lugar.");
+        }
         carreraRepository.delete(carrera);
     }
 

@@ -607,7 +607,7 @@ export class AdminComponent implements OnInit {
     const file = this.aImagenFile();
     if (file) {
       const fd = new FormData();
-      fd.append('file', file);
+      fd.append('archivo', file);
       this.api.post<{ url: string }>('/imagenes', fd).subscribe({
         next: (res) => this.publicarAnuncio(res?.url || ''),
         error: (err) => this.toast.error(apiError(err)),

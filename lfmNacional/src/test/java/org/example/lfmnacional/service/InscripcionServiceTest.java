@@ -218,6 +218,18 @@ class InscripcionServiceTest {
     }
 
     @Test
+    void bajaPorIdEnVentanaDe5MinutosLanzaExcepcion() {
+        carrera.setFecha(LocalDateTime.now().plusMinutes(3));
+        Inscripcion inscripcion = Inscripcion.builder().id(1L).carrera(carrera).usuario(usuario).estado(EstadoInscripcion.INSCRIPTO).build();
+        when(inscripcionRepository.findById(1L)).thenReturn(Optional.of(inscripcion));
+
+        assertThatThrownBy(() -> inscripcionService.baja(1L, usuario))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("ya estan cerradas");
+        verify(inscripcionRepository, never()).save(any());
+    }
+
+    @Test
     void cancelarEnVentanaDe5MinutosLanzaExcepcion() {
         carrera.setFecha(LocalDateTime.now().plusMinutes(3));
         when(carreraService.getEntity(1L)).thenReturn(carrera);
