@@ -12,6 +12,7 @@ import { RankBadge } from '../../../shared/components/rank-badge/rank-badge';
 import { FmtFechaHoraPipe } from '../../../core/pipes/fmt-fecha.pipe';
 import { FmtLapPipe } from '../../../core/pipes/fmt-lap.pipe';
 import { FmtDifPipe } from '../../../core/pipes/fmt-dif.pipe';
+import { normalizeUrl } from '../../../core/utils/formato';
 import {
   Carrera,
   CarreraAcceso,
@@ -25,20 +26,6 @@ import {
 } from '../../../core/models/models';
 
 const ESTADOS_INSCRIPCION = ['PROGRAMADA', 'INSCRIPCIONES_ABIERTAS'] as const;
-
-/**
- * Devuelve una URL navegable o `null` si el valor no es un enlace. Acepta lo que
- * suele pegar la gente: con o sin `http://`, o solo `host:puerto`, que es como
- * se ve un server de Assetto Corsa.
- */
-function normalizeUrl(valor: string | null | undefined): string | null {
-  const v = (valor ?? '').trim();
-  if (!v) return null;
-  if (/^https?:\/\//i.test(v)) return v;
-  // host:puerto o un dominio suelto. Excluye "Servidor 1" y frases sueltas.
-  if (/^[a-z0-9-]+(\.[a-z0-9-]+)+(:\d+)?(\/\S*)?$/i.test(v)) return 'http://' + v;
-  return null;
-}
 
 @Component({
   selector: 'app-race-detail',

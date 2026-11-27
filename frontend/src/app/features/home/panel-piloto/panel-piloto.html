@@ -1,0 +1,148 @@
+<div class="grid grid-2 panel-piloto">
+  <!-- 22 · Tu próxima carrera -->
+  <div class="card">
+    <div class="card-header">
+      <h3>Tu próxima carrera</h3>
+      @if (carrera(); as c) {
+        @if (estadoInscripcion() === 'LISTA_ESPERA') {
+          <span class="chip chip-pending">Lista de espera</span>
+        } @else if (c.estado === 'EN_CURSO') {
+          <span class="chip chip-live">En vivo</span>
+        } @else {
+          <span class="chip chip-confirmed">Inscripto</span>
+        }
+      }
+    </div>
+
+    @if (cargandoHome()) {
+      <div class="skeleton-card"><span class="skeleton pp-skeleton"></span></div>
+    } @else if (carrera(); as c) {
+      <a [routerLink]="['/carreras', c.id]" class="pp-carrera">
+        <div class="race-date">
+          <span class="day">{{ dia(c) }}</span>
+          <span class="mon">{{ mes(c) }}</span>
+        </div>
+        <div class="race-meta">
+          <strong>{{ c.nombre }}</strong>
+          <span
+            >{{ c.categoriaNombre ? c.categoriaNombre + ' · ' : '' }}{{ c.circuito || ''
+            }}{{ c.fecha ? ' · ' + hora(c) : '' }}</span
+          >
+        </div>
+      </a>
+      @if (cuentaRegresiva()) {
+        <div class="pp-countdown mono glow-alerta" aria-live="polite">{{ cuentaRegresiva() }}</div>
+      }
+
+      @if (acceso(); as a) {
+        <div class="pp-acceso">
+          @if (a.servidor) {
+            <div class="pp-acceso-fila">
+              <span class="pp-label">Servidor</span>
+              @if (servidorUrl(); as url) {
+                <a [href]="url" target="_blank" rel="noopener" class="detail-link mono">{{
+                  a.servidor
+                }}</a>
+              } @else {
+                <span class="mono">{{ a.servidor }}</span>
+              }
+            </div>
+          }
+          @if (a.contrasenaServidor) {
+            <div class="pp-acceso-fila">
+              <span class="pp-label">Contraseña</span>
+              <span class="mono">{{ mostrarPassword() ? a.contrasenaServidor : '••••••••' }}</span>
+              <button
+                type="button"
+                class="btn btn-ghost btn-sm"
+                (click)="mostrarPassword.set(!mostrarPassword())"
+              >
+                {{ mostrarPassword() ? 'Ocultar' : 'Ver' }}
+              </button>
+              <button type="button" class="btn btn-ghost btn-sm" (click)="copiarPassword()">
+                Copiar
+              </button>
+            </div>
+          }
+        </div>
+      } @else if (estadoInscripcion() === 'LISTA_ESPERA') {
+        <p class="text-terciario pp-nota">
+          Si se libera un cupo pasás a inscripto y vas a ver acá el acceso al servidor.
+        </p>
+      }
+    } @else {
+      <p class="text-terciario">No estás inscripto en ninguna carrera próxima.</p>
+      <a routerLink="/carreras" class="btn btn-secondary btn-sm pp-accion">Ver calendario</a>
+    }
+  </div>
+
+  <!-- 23 · Tu resumen -->
+  <div class="card">
+    <div class="card-header">
+      <h3>Tu resumen</h3>
+      @if (yo(); as u) {
+        <a [routerLink]="['/perfil', u.id]" class="btn btn-ghost btn-sm">Mi perfil</a>
+      }
+    </div>
+
+    <div class="pp-ratings">
+      <div class="pp-rating">
+        <span class="pp-label">Elo</span>
+        <span class="pp-valor mono">{{ yo()?.elo ?? '—' }}</span>
+        @if (deltaElo() !== null) {
+          <span
+            class="pp-delta mono"
+            [class.positivo]="deltaElo()! > 0"
+            [class.negativo]="deltaElo()! < 0"
+            >{{ deltaTxt(deltaElo()) }} última carrera</span
+          >
+        }
+      </div>
+      <div class="pp-rating">
+        <span class="pp-label">Safety Rating</span>
+        <span class="pp-valor mono">{{ yo()?.safetyRating ?? '—' }}</span>
+        @if (deltaSr() !== null) {
+          <span
+            class="pp-delta mono"
+            [class.positivo]="deltaSr()! > 0"
+            [class.negativo]="deltaSr()! < 0"
+            >{{ deltaTxt(deltaSr()) }} última carrera</span
+          >
+        }
+      </div>
+      <div class="pp-rating">
+        <span class="pp-label">{{ posicion()?.campeonato || 'Campeonato' }}</span>
+        @if (posicion(); as p) {
+          <span class="pp-valor mono">P{{ p.posicion }}</span>
+          <span class="pp-delta mono">de {{ p.total }} · {{ p.puntos }} pts</span>
+        } @else {
+          <span class="pp-valor mono">—</span>
+          <span class="pp-delta">Sin puntos todavía</span>
+        }
+      </div>
+    </div>
+
+    @if (cargando()) {
+      <div class="skeleton-card"><span class="skeleton pp-skeleton"></span></div>
+    } @else if (stats(); as s) {
+      <dl class="pp-stats">
+        <div>
+          <dt>Carreras</dt>
+          <dd class="mono">{{ s.carrerasDisputadas }}</dd>
+        </div>
+        <div>
+          <dt>Victorias</dt>
+          <dd class="mono">{{ s.victorias }}</dd>
+        </div>
+        <div>
+          <dt>Podios</dt>
+          <dd class="mono">{{ s.podios }}</dd>
+        </div>
+        <div>
+          <dt>Poles</dt>
+          <dd class="mono">{{ s.poles }}</dd>
+        </div>
+      </dl>
+    }
+  </div>
+</div>
