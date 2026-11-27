@@ -5,122 +5,119 @@
       <h2>Setups</h2>
     </div>
     @if (autenticado()) {
-      <button type="button" class="btn btn-primary" (click)="toggleUpload()">{{ uploadVisible() ? 'Cerrar' : 'Subir setup' }}</button>
+      <button type="button" class="btn btn-primary" (click)="abrirUpload()">Subir setup</button>
+    } @else {
+      <a routerLink="/auth" class="btn btn-secondary">Ingresá para subir el tuyo</a>
     }
   </div>
 
-  @if (!autenticado()) {
-    <app-locked-state />
-  } @else {
-  @if (uploadVisible()) {
-    <div class="card" style="margin-bottom: var(--sp-6)">
-      <div class="card-header">
-        <h4>Subir un setup</h4>
-      </div>
-      <div class="grid grid-3" style="gap: var(--sp-4)">
-        <div class="field">
-          <label>Título</label>
-          <input class="input" placeholder="Ej. Ferrari 296 — Seco / alta velocidad" (input)="fTitulo.set(inputVal($event))" />
-        </div>
-        <div class="field">
-          <label>Circuito</label>
-          <input class="input" placeholder="Ej. Termas de Río Hondo" (input)="fCircuito.set(inputVal($event))" />
-        </div>
-        <div class="field">
-          <label>Vehículo</label>
-          <input class="input" placeholder="Ej. Ferrari 296 GT3" (input)="fVehiculo.set(inputVal($event))" />
-        </div>
-        <div class="field">
-          <label>Archivo del setup</label>
-          <div class="dropzone" role="button" (click)="fileInput.click()">
-            @if (archivoNombre()) {
-              <span>{{ archivoNombre() }}</span>
-            } @else {
-              <span>Arrastrá el archivo aquí o <strong>click para seleccionar</strong></span>
-            }
-            <span class="text-terciario" style="font-size: var(--fs-2xs)">.json, .ini u otro formato de setup</span>
-          </div>
-          <input #fileInput type="file" style="display: none" (change)="onFileSelect($event)" />
-        </div>
-        <div class="field">
-          <label>Categoría</label>
-          <select class="select" (change)="fCategoria.set(selectNum($event))">
-            <option value="">—</option>
-            @for (c of cats(); track c.id) {
-              <option [value]="c.id">{{ c.nombre }}{{ c.setupFijo ? ' (setup fijo)' : '' }}</option>
-            }
-          </select>
-          @if (fCategoriaFija()) {
-            <p class="hint">Esta categoría tiene un setup oficial. {{ esAdmin() ? 'Podés publicarlo como comité.' : 'Solo el comité puede publicar en esta categoría.' }}</p>
-          }
-        </div>
-      </div>
-      <div class="field">
-        <label>Descripción</label>
-        <textarea class="textarea" placeholder="Comportamiento, condiciones de uso, tips…" (input)="fDescripcion.set(inputVal($event))"></textarea>
-      </div>
-      <button type="button" class="btn btn-primary" [disabled]="!puedePublicar()" [title]="!puedePublicar() ? 'Solo el comité puede publicar setups fijos' : ''" (click)="publicar()">Publicar setup</button>
-    </div>
-  }
-
   <div class="setup-filters">
-    <input class="input" placeholder="Buscar por vehículo, circuito o título…" (input)="searchText.set(inputVal($event))" />
-    <select class="select" (change)="filterCircuito.set(selectStr($event))">
+    <input
+      class="input setup-buscar"
+      aria-label="Buscar setups"
+      placeholder="Buscar por vehículo, circuito, categoría o título…"
+      (input)="searchText.set(inputVal($event))"
+    />
+    <select class="select" aria-label="Categoría" (change)="setFiltroCategoria($event)">
+      <option value="">Todas las categorías</option>
+      @for (c of catsConSetups(); track c.id) {
+        <option [value]="c.id" [selected]="c.id === filterCategoria()">{{ c.nombre }}</option>
+      }
+    </select>
+    <select class="select" aria-label="Circuito" (change)="filterCircuito.set(selectStr($event))">
       <option value="">Todos los circuitos</option>
       @for (c of circuitos(); track c) {
         <option [value]="c">{{ c }}</option>
       }
     </select>
-    <select class="select" (change)="filterVehiculo.set(selectStr($event))">
+    <select class="select" aria-label="Vehículo" (change)="filterVehiculo.set(selectStr($event))">
       <option value="">Todos los vehículos</option>
       @for (v of vehiculos(); track v) {
         <option [value]="v">{{ v }}</option>
       }
     </select>
-    <select class="select" style="margin-left: auto" (change)="filterOrder.set(selectStr($event))">
+    <select
+      class="select setup-orden"
+      aria-label="Orden"
+      (change)="filterOrder.set($any(selectStr($event)))"
+    >
       <option value="rating">Mejor puntuados</option>
       <option value="recientes">Más recientes</option>
     </select>
   </div>
 
-  <div class="admin-layout" style="grid-template-columns: 1.1fr 1.5fr">
-
+  <div class="setups-layout">
     <div class="flex-col gap-4">
       @if (cargando()) {
-        <div class="skeleton-card" style="padding: var(--sp-5)">
-          <span class="skeleton" style="width: 80%"></span>
-          <span class="skeleton" style="width: 60%"></span>
-        </div>
+        @for (i of [1, 2]; track i) {
+          <div class="skeleton-card">
+            <span class="skeleton skeleton-80"></span>
+            <span class="skeleton skeleton-60"></span>
+          </div>
+        }
       } @else if (setups().length === 0) {
         <app-empty-state texto="Aún no hay setups publicados." />
       } @else if (filtered().length === 0) {
         <app-empty-state texto="No hay setups que coincidan con la búsqueda." />
       } @else {
         @for (s of filtered(); track s.id) {
-          <div class="card setup-card" [class.bracket]="s.id === selectedId()" style="cursor: pointer; position: relative" (click)="select(s.id)">
+          <div
+            class="card setup-card"
+            role="button"
+            tabindex="0"
+            [class.bracket]="s.id === selectedId()"
+            [attr.aria-pressed]="s.id === selectedId()"
+            (click)="select(s.id)"
+            (keydown.enter)="select(s.id)"
+          >
             <div class="setup-card-cover">
               <span class="chip chip-category">{{ s.circuito }}</span>
+              @if (s.categoriaNombre) {
+                <span class="chip">{{ s.categoriaNombre }}</span>
+              }
               @if (esSetupFijo(s)) {
                 <span class="chip chip-upcoming">Setup fijo</span>
+              }
+              @if (!s.archivo) {
+                <span class="chip chip-closed">Sin archivo</span>
               }
             </div>
             <h4>{{ s.titulo }}</h4>
             <div class="flex-between">
               <span class="author-row">
-                <app-avatar [user]="{ nombrePiloto: s.autorNombre, fotoPerfil: s.autorFoto }" [size]="24" />
-                {{ s.autorNombre || ('Piloto #' + s.autorId) }}
+                <app-avatar
+                  [user]="{ nombrePiloto: s.autorNombre, fotoPerfil: s.autorFoto }"
+                  [size]="24"
+                />
+                {{ s.autorNombre || 'Piloto #' + s.autorId }}
               </span>
               <app-star-rating [puntaje]="s.promedioCalificacion" />
             </div>
-            <div class="text-terciario mono" style="font-size: var(--fs-2xs)">
-              @if (s.promedioCalificacion != null) {
-                {{ s.promedioCalificacion.toFixed(1) }} ·
-              }
-              publicado {{ s.fechaPublicacion | fechaRelativa }}
+            <div class="text-terciario mono setup-meta">
+              {{ s.vehiculo }} · publicado {{ s.fechaPublicacion | fechaRelativa }}
             </div>
-            @if (esAdmin()) {
-              <button type="button" class="btn btn-danger btn-sm btn-icon" title="Eliminar setup" style="position: absolute; top: var(--sp-3); right: var(--sp-3); z-index: 1" (click)="eliminarSetup($event, s.id)">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+            @if (puedeEditar(s)) {
+              <button
+                type="button"
+                class="btn btn-danger btn-sm btn-icon setup-borrar"
+                title="Eliminar setup"
+                aria-label="Eliminar setup"
+                (click)="pedirBorrarSetup($event, s)"
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  aria-hidden="true"
+                >
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path
+                    d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+                  ></path>
+                </svg>
               </button>
             }
           </div>
@@ -128,142 +125,438 @@
       }
     </div>
 
-    <div class="card" style="align-self: start">
-      @if (detailCargando()) {
+    <div class="card setup-detalle">
+      @if (detailCargando() && !detail()) {
         <div class="skeleton-card">
-          <span class="skeleton" style="width: 80%"></span>
-          <span class="skeleton" style="width: 60%"></span>
+          <span class="skeleton skeleton-80"></span>
+          <span class="skeleton skeleton-60"></span>
         </div>
       } @else {
         @let s = detail();
         @if (s) {
           <div class="card-header">
             <div>
-              <div class="flex-between" style="align-items: baseline">
+              <div class="flex-between setup-detalle-top">
                 <span class="eyebrow">{{ s.vehiculo }}</span>
                 @if (esSetupFijo(s)) {
                   <span class="chip chip-upcoming">Setup fijo</span>
                 }
               </div>
-              <h3 style="margin-top: var(--sp-2)">{{ s.titulo }}</h3>
-              <span class="author-row" style="margin-top: var(--sp-2)">
-                <app-avatar [user]="{ nombrePiloto: s.autorNombre, fotoPerfil: s.autorFoto }" [size]="24" />
-                Subido por {{ s.autorNombre || ('Piloto #' + s.autorId) }} · {{ s.fechaPublicacion | fechaRelativa }}
+              <h3 class="setup-detalle-titulo">{{ s.titulo }}</h3>
+              <span class="author-row setup-detalle-autor">
+                <app-avatar
+                  [user]="{ nombrePiloto: s.autorNombre, fotoPerfil: s.autorFoto }"
+                  [size]="24"
+                />
+                Subido por {{ s.autorNombre || 'Piloto #' + s.autorId }} ·
+                {{ s.fechaPublicacion | fechaRelativa }}
               </span>
             </div>
-            <div class="flex-col" style="gap:var(--sp-2); align-items: flex-end">
+            <div class="flex-col setup-acciones">
               @if (s.archivo) {
-                <a class="btn btn-primary" [href]="'/api/setups/' + s.id + '/descargar'">Descargar setup</a>
+                @if (autenticado()) {
+                  <button
+                    type="button"
+                    class="btn btn-primary"
+                    [disabled]="descargando()"
+                    (click)="descargar(s)"
+                  >
+                    {{ descargando() ? 'Descargando…' : 'Descargar setup' }}
+                  </button>
+                } @else {
+                  <a routerLink="/auth" class="btn btn-primary">Ingresá para descargar</a>
+                }
               } @else {
                 <span class="chip chip-closed">Sin archivo</span>
               }
               @if (puedeEditar(s)) {
-                <button type="button" class="btn btn-ghost btn-sm" (click)="editarSetup(s)">Editar</button>
+                <label class="btn btn-ghost btn-sm" [class.disabled]="subiendoArchivo()">
+                  {{
+                    subiendoArchivo()
+                      ? 'Subiendo…'
+                      : s.archivo
+                        ? 'Reemplazar archivo'
+                        : 'Subir archivo'
+                  }}
+                  <input
+                    type="file"
+                    class="oculto"
+                    [attr.accept]="extensionesTxt"
+                    [disabled]="subiendoArchivo()"
+                    (change)="subirArchivo(s, $event)"
+                  />
+                </label>
+                <button type="button" class="btn btn-ghost btn-sm" (click)="editarSetup(s)">
+                  Editar
+                </button>
               }
             </div>
           </div>
 
           @if (editingId() === s.id) {
-            <div class="card" style="margin-bottom: var(--sp-4)">
+            <div class="card setup-editar">
               <div class="card-header">
                 <h4>Editar setup</h4>
               </div>
-              <div class="grid grid-2" style="gap: var(--sp-3)">
+              <div class="grid grid-2 form-grid">
                 <div class="field">
-                  <label>Título</label>
-                  <input class="input" [value]="eTitulo()" (input)="eTitulo.set(inputVal($event))" />
+                  <label for="e-titulo">Título</label>
+                  <input
+                    id="e-titulo"
+                    class="input"
+                    [value]="eTitulo()"
+                    (input)="eTitulo.set(inputVal($event))"
+                  />
                 </div>
                 <div class="field">
-                  <label>Circuito</label>
-                  <input class="input" [value]="eCircuito()" (input)="eCircuito.set(inputVal($event))" />
+                  <label for="e-circuito">Circuito</label>
+                  <input
+                    id="e-circuito"
+                    class="input"
+                    list="lista-circuitos"
+                    [value]="eCircuito()"
+                    (input)="eCircuito.set(inputVal($event))"
+                  />
                 </div>
                 <div class="field">
-                  <label>Vehículo</label>
-                  <input class="input" [value]="eVehiculo()" (input)="eVehiculo.set(inputVal($event))" />
+                  <label for="e-vehiculo">Vehículo</label>
+                  <input
+                    id="e-vehiculo"
+                    class="input"
+                    list="lista-vehiculos"
+                    [value]="eVehiculo()"
+                    (input)="eVehiculo.set(inputVal($event))"
+                  />
                 </div>
                 <div class="field">
-                  <label>Categoría</label>
-                  <select class="select" [value]="eCategoria() ?? ''" (change)="eCategoria.set(selectNum($event))">
+                  <label for="e-categoria">Categoría</label>
+                  <select
+                    id="e-categoria"
+                    class="select"
+                    (change)="eCategoria.set(selectNum($event))"
+                  >
                     <option value="">—</option>
                     @for (c of cats(); track c.id) {
-                      <option [value]="c.id">{{ c.nombre }}</option>
+                      <option [value]="c.id" [selected]="c.id === eCategoria()">
+                        {{ c.nombre }}
+                      </option>
                     }
                   </select>
                 </div>
               </div>
               <div class="field">
-                <label>Descripción</label>
-                <textarea class="textarea" [value]="eDescripcion()" (input)="eDescripcion.set(inputVal($event))"></textarea>
+                <label for="e-desc">Descripción</label>
+                <textarea
+                  id="e-desc"
+                  class="textarea"
+                  [value]="eDescripcion()"
+                  (input)="eDescripcion.set(inputVal($event))"
+                ></textarea>
               </div>
-              <div style="display:flex;gap:var(--sp-2)">
-                <button type="button" class="btn btn-primary" (click)="guardarEdit()">Guardar cambios</button>
-                <button type="button" class="btn btn-ghost" (click)="cancelarEdit()">Cancelar</button>
+              <div class="flex gap-2">
+                <button type="button" class="btn btn-primary" (click)="guardarEdit()">
+                  Guardar cambios
+                </button>
+                <button type="button" class="btn btn-ghost" (click)="cancelarEdit()">
+                  Cancelar
+                </button>
               </div>
             </div>
           }
 
-          <p class="text-secondary" style="font-size: var(--fs-sm); margin: var(--sp-4) 0 var(--sp-5)">{{ s.descripcion || 'Sin descripción.' }}</p>
+          <p class="text-secondary setup-desc">{{ s.descripcion || 'Sin descripción.' }}</p>
 
-          <div class="grid grid-3" style="margin-bottom: var(--sp-6)">
+          <div class="grid grid-3 setup-stats">
             <div class="stat-card">
               <div class="stat-label">Circuito</div>
-              <div class="stat-value" style="font-size: var(--fs-md)">{{ s.circuito }}</div>
+              <div class="stat-value">{{ s.circuito }}</div>
             </div>
             <div class="stat-card">
               <div class="stat-label">Calificación</div>
-              <div class="stat-value" style="font-size: var(--fs-md)">{{ promedio(s) }}</div>
+              <div class="stat-value">
+                {{ promedio(s) }}
+                @if (autenticado() && calificaciones().length > 0) {
+                  <span class="text-terciario setup-votos"
+                    >· {{ calificaciones().length }}
+                    {{ calificaciones().length === 1 ? 'voto' : 'votos' }}</span
+                  >
+                }
+              </div>
             </div>
             <div class="stat-card">
               <div class="stat-label">Categoría</div>
-              <div class="stat-value" style="font-size: var(--fs-md)">{{ s.categoriaNombre || '—' }}</div>
+              <div class="stat-value">{{ s.categoriaNombre || '—' }}</div>
             </div>
           </div>
 
           <div class="field">
-            <label>Tu calificación</label>
-            <div class="slider-row">
-              <app-star-rating [puntaje]="myRating()" />
-              <input class="input" type="range" min="1" max="5" step="1" [value]="myRating()" [disabled]="!autenticado()" title="Ingresá para calificar" (input)="myRating.set(+inputVal($event))" (change)="calificar($event, s.id)" />
-            </div>
-          </div>
-
-          <h4 style="margin: var(--sp-5) 0 var(--sp-3)">Comentarios <span class="text-terciario mono" style="font-size: var(--fs-sm)">({{ comentarios().length }})</span></h4>
-
-          @if (comentarios().length === 0) {
-            <p class="text-terciario" style="font-size: var(--fs-sm)">Todavía no hay comentarios.</p>
-          } @else {
-            @for (c of comentarios(); track c.id) {
-              <div class="comment">
-                <app-avatar [user]="{ nombrePiloto: c.nombrePiloto, fotoPerfil: c.fotoPerfil }" [size]="34" />
-                <div style="flex: 1">
-                  <div class="flex-between">
-                    <strong style="font-size: var(--fs-sm)">{{ c.nombrePiloto || ('Piloto #' + c.usuarioId) }}</strong>
-                    <span class="text-terciario mono" style="font-size: var(--fs-2xs)">{{ c.fecha | fechaRelativa }}</span>
-                  </div>
-                  <p class="text-secondary" style="font-size: var(--fs-sm); margin-top: var(--sp-1)">{{ c.texto }}</p>
-                </div>
-                @if (esAdmin()) {
-                  <button type="button" class="btn btn-danger btn-sm btn-icon" title="Eliminar comentario" style="align-self: flex-start; margin-left: var(--sp-2)" (click)="eliminarComentario($event, s.id, c.id)">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+            <label id="tu-calif">Tu calificación</label>
+            @if (!autenticado()) {
+              <p class="text-terciario setup-nota">
+                <a routerLink="/auth" class="detail-link">Ingresá</a> para calificar este setup.
+              </p>
+            } @else if (esMio(s)) {
+              <p class="text-terciario setup-nota">No podés calificar tu propio setup.</p>
+            } @else {
+              <div
+                class="estrellas"
+                role="radiogroup"
+                aria-labelledby="tu-calif"
+                (mouseleave)="puntajeHover.set(null)"
+              >
+                @for (n of estrellas; track n) {
+                  <button
+                    type="button"
+                    class="estrella"
+                    role="radio"
+                    [attr.aria-checked]="miPuntaje() === n"
+                    [attr.aria-label]="n + (n === 1 ? ' estrella' : ' estrellas')"
+                    [class.llena]="n <= (puntajeHover() ?? miPuntaje() ?? 0)"
+                    (mouseenter)="puntajeHover.set(n)"
+                    (focus)="puntajeHover.set(n)"
+                    (blur)="puntajeHover.set(null)"
+                    (click)="calificar(s, n)"
+                  >
+                    ★
                   </button>
                 }
+                <span class="text-terciario setup-nota">{{
+                  miPuntaje() ? 'Tu nota: ' + miPuntaje() : 'Todavía no lo calificaste'
+                }}</span>
               </div>
             }
-          }
+          </div>
 
-          @if (autenticado()) {
-            <div class="field" style="margin-top: var(--sp-5); margin-bottom: 0">
-              <label>Agregar comentario</label>
-              <textarea class="textarea" placeholder="Contá cómo te fue con este setup…" (input)="fComentario.set(inputVal($event))"></textarea>
-              <button type="button" class="btn btn-secondary" style="align-self: flex-end" (click)="publicarComentario(s.id)">Publicar comentario</button>
+          <h4 class="setup-comentarios-titulo">
+            Comentarios
+            @if (autenticado()) {
+              <span class="text-terciario mono">({{ comentarios().length }})</span>
+            }
+          </h4>
+
+          @if (!autenticado()) {
+            <p class="text-terciario setup-nota">
+              <a routerLink="/auth" class="detail-link">Ingresá</a> para leer y dejar comentarios.
+            </p>
+          } @else {
+            @if (comentarios().length === 0) {
+              <p class="text-terciario setup-nota">Todavía no hay comentarios.</p>
+            } @else {
+              @for (c of comentarios(); track c.id) {
+                <div class="comment">
+                  <app-avatar
+                    [user]="{ nombrePiloto: c.nombrePiloto, fotoPerfil: c.fotoPerfil }"
+                    [size]="34"
+                  />
+                  <div class="comment-cuerpo">
+                    <div class="flex-between">
+                      <strong class="comment-autor">{{
+                        c.nombrePiloto || 'Piloto #' + c.usuarioId
+                      }}</strong>
+                      <span class="text-terciario mono comment-fecha">{{
+                        c.fecha | fechaRelativa
+                      }}</span>
+                    </div>
+                    <p class="text-secondary comment-texto">{{ c.texto }}</p>
+                  </div>
+                  @if (puedeBorrarComentario(c)) {
+                    <button
+                      type="button"
+                      class="btn btn-danger btn-sm btn-icon comment-borrar"
+                      title="Eliminar comentario"
+                      aria-label="Eliminar comentario"
+                      (click)="pedirBorrarComentario(s.id, c)"
+                    >
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        aria-hidden="true"
+                      >
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path
+                          d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+                        ></path>
+                      </svg>
+                    </button>
+                  }
+                </div>
+              }
+            }
+            <div class="field setup-comentar">
+              <label for="nuevo-comentario">Agregar comentario</label>
+              <textarea
+                id="nuevo-comentario"
+                class="textarea"
+                placeholder="Contá cómo te fue con este setup…"
+                [value]="fComentario()"
+                (input)="fComentario.set(inputVal($event))"
+              ></textarea>
+              <button
+                type="button"
+                class="btn btn-secondary setup-comentar-btn"
+                (click)="publicarComentario(s.id)"
+              >
+                Publicar comentario
+              </button>
             </div>
           }
-        } @else {
+        } @else if (!cargando()) {
           <p class="text-terciario">Seleccioná un setup de la lista para ver el detalle.</p>
         }
       }
     </div>
-
   </div>
-  }
 </section>
+
+<datalist id="lista-circuitos">
+  @for (c of circuitos(); track c) {
+    <option [value]="c"></option>
+  }
+</datalist>
+<datalist id="lista-vehiculos">
+  @for (v of vehiculos(); track v) {
+    <option [value]="v"></option>
+  }
+</datalist>
+
+<app-modal [abierto]="uploadVisible()" titulo="Subir un setup" (cerrado)="cerrarUpload()">
+  <div class="grid grid-2 form-grid">
+    <div class="field">
+      <label for="f-titulo">Título *</label>
+      <input
+        id="f-titulo"
+        class="input"
+        placeholder="Ej. Ferrari 296 — Seco / alta velocidad"
+        [class.invalido]="intentoPublicar() && faltanCampos().titulo"
+        [value]="fTitulo()"
+        (input)="fTitulo.set(inputVal($event))"
+      />
+      @if (intentoPublicar() && faltanCampos().titulo) {
+        <p class="hint hint-error">Poné un título.</p>
+      }
+    </div>
+    <div class="field">
+      <label for="f-categoria">Categoría</label>
+      <select id="f-categoria" class="select" (change)="fCategoria.set(selectNum($event))">
+        <option value="">—</option>
+        @for (c of cats(); track c.id) {
+          <option [value]="c.id" [selected]="c.id === fCategoria()">
+            {{ c.nombre }}{{ c.setupFijo ? ' (setup fijo)' : '' }}
+          </option>
+        }
+      </select>
+      @if (setupLabel(fCategoriaInfo()); as txt) {
+        <p class="hint">
+          {{ txt }}
+          @if (fCategoriaFija()) {
+            {{
+              esAdmin()
+                ? 'Podés publicarlo como comité.'
+                : 'Solo el comité puede publicar en esta categoría.'
+            }}
+          }
+        </p>
+      }
+    </div>
+    <div class="field">
+      <label for="f-circuito">Circuito *</label>
+      <input
+        id="f-circuito"
+        class="input"
+        list="lista-circuitos"
+        placeholder="Ej. Termas de Río Hondo"
+        [class.invalido]="intentoPublicar() && faltanCampos().circuito"
+        [value]="fCircuito()"
+        (input)="fCircuito.set(inputVal($event))"
+      />
+      @if (intentoPublicar() && faltanCampos().circuito) {
+        <p class="hint hint-error">Indicá el circuito.</p>
+      }
+    </div>
+    <div class="field">
+      <label for="f-vehiculo">Vehículo *</label>
+      <input
+        id="f-vehiculo"
+        class="input"
+        list="lista-vehiculos"
+        placeholder="Ej. Ferrari 296 GT3"
+        [class.invalido]="intentoPublicar() && faltanCampos().vehiculo"
+        [value]="fVehiculo()"
+        (input)="fVehiculo.set(inputVal($event))"
+      />
+      @if (intentoPublicar() && faltanCampos().vehiculo) {
+        <p class="hint hint-error">Indicá el vehículo.</p>
+      }
+    </div>
+  </div>
+
+  <div class="field">
+    <label for="f-archivo">Archivo del setup</label>
+    <div
+      class="dropzone"
+      role="button"
+      tabindex="0"
+      [class.over]="arrastrando()"
+      (click)="fileInput.click()"
+      (keydown.enter)="fileInput.click()"
+      (dragover)="onDragOver($event)"
+      (dragleave)="onDragLeave()"
+      (drop)="onDrop($event)"
+    >
+      @if (archivo(); as f) {
+        <span>{{ f.name }}</span>
+      } @else {
+        <span>Arrastrá el archivo acá o <strong>hacé click para elegirlo</strong></span>
+      }
+      <span class="text-terciario dropzone-ayuda">{{ extensionesTxt }} · hasta 10 MB</span>
+    </div>
+    <input
+      #fileInput
+      id="f-archivo"
+      type="file"
+      class="oculto"
+      [attr.accept]="extensionesTxt"
+      (change)="onFileSelect($event)"
+    />
+    @if (errorArchivo(); as err) {
+      <p class="hint hint-error">{{ err }}</p>
+    }
+  </div>
+
+  <div class="field">
+    <label for="f-desc">Descripción</label>
+    <textarea
+      id="f-desc"
+      class="textarea"
+      placeholder="Comportamiento, condiciones de uso, tips…"
+      [value]="fDescripcion()"
+      (input)="fDescripcion.set(inputVal($event))"
+    ></textarea>
+  </div>
+
+  <div class="flex gap-2 modal-acciones">
+    <button type="button" class="btn btn-ghost" (click)="cerrarUpload()">Cancelar</button>
+    <button
+      type="button"
+      class="btn btn-primary"
+      [disabled]="!puedePublicar() || publicando()"
+      [title]="!puedePublicar() ? 'Solo el comité puede publicar setups fijos' : ''"
+      (click)="publicar()"
+    >
+      {{ publicando() ? 'Publicando…' : 'Publicar setup' }}
+    </button>
+  </div>
+</app-modal>
+
+<app-confirm-dialog
+  [abierto]="!!aConfirmar()"
+  titulo="Confirmar"
+  [mensaje]="mensajeConfirmacion()"
+  confirmarTexto="Eliminar"
+  (aceptado)="confirmarBorrado()"
+  (cancelado)="aConfirmar.set(null)"
+/>

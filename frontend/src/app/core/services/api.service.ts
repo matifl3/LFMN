@@ -81,6 +81,14 @@ export class ApiService {
     return this.api<T>(path, { method: 'PATCH', body });
   }
 
+  /**
+   * Descarga binaria con el JWT del interceptor. Un `<a href="/api/...">` no
+   * sirve: no manda el token y en prod la ruta relativa cae en Vercel, no en Render.
+   */
+  blob(path: string): Observable<Blob> {
+    return this.reintentar(() => this.http.get(this.url(path), { responseType: 'blob' }), 0);
+  }
+
   /** Lista tipada tolerando paginación inconsistente ({content} || array) */
   list<T>(path: string, params?: ApiOptions['params']): Observable<T[]> {
     return this.get<unknown>(path, params).pipe(map((r) => normalizeList<T>(r)));
