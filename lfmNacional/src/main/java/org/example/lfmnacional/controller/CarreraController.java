@@ -51,6 +51,11 @@ public class CarreraController {
         return carreraService.proximas(usuario);
     }
 
+    @GetMapping("/en-curso")
+    public List<CarreraResponse> enCurso(@AuthenticationPrincipal Usuario usuario) {
+        return carreraService.enCurso(usuario);
+    }
+
     @GetMapping("/pasadas")
     public List<CarreraResponse> pasadas(@AuthenticationPrincipal Usuario usuario) {
         return carreraService.pasadas(usuario);

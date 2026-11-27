@@ -5,7 +5,9 @@
   <div class="hero-overlay"></div>
   <div class="container">
     <div class="hero-content">
-      <span class="eyebrow alerta">Temporada 2026 · Ronda 8 de 16</span>
+      @if (eyebrowTemporada()) {
+        <span class="eyebrow alerta">{{ eyebrowTemporada() }}</span>
+      }
       <h1>
         Compite. Subí de Elo. <br />
         <span class="glow-rojo">Hacete un nombre.</span>
@@ -15,83 +17,121 @@
         de Elo y un sistema de Safety Rating que premia el respeto en pista.
       </p>
       <div class="hero-ctas">
-        <div class="cta-dropdown">
-          <button
-            type="button"
-            class="btn btn-primary btn-lg"
-            [class.is-loading]="cargando()"
-            [disabled]="ctaItems().length === 0"
-            [attr.aria-expanded]="ctaAbierto()"
-            aria-haspopup="menu"
-            aria-controls="cta-panel"
-            (click)="alternarCta()"
+        @if (modoHero() === 'visitante') {
+          <a routerLink="/auth" [queryParams]="{ tab: 'registro' }" class="btn btn-primary btn-lg"
+            >Crear cuenta</a
           >
-            Inscribirme a la próxima carrera
-            <svg
-              width="14"
-              height="14"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              aria-hidden="true"
+          <a routerLink="/carreras" class="btn btn-secondary btn-lg">Ver calendario</a>
+        } @else {
+          @if (miProximaCarrera(); as mia) {
+            <a [routerLink]="['/carreras', mia.id]" class="btn btn-primary btn-lg"
+              >Ver mi carrera</a
             >
-              <path d="m6 9 6 6 6-6"></path>
-            </svg>
-          </button>
-          @if (ctaAbierto()) {
-            <div id="cta-panel" class="cta-dropdown-panel open" role="menu">
-              @if (ctaItems().length === 0) {
-                <div class="cta-dropdown-item">
-                  <span>No hay carreras próximas publicadas todavía.</span>
-                </div>
-              } @else {
-                @for (c of ctaItems(); track c.id) {
-                  <a
-                    class="cta-dropdown-item"
-                    [routerLink]="['/carreras', c.id]"
-                    (click)="ctaAbierto.set(false)"
+          }
+          @if (
+            cargando() ||
+            (modoHero() === 'inscripto' ? otrasInscribibles().length : inscribibles().length) > 0
+          ) {
+            <div class="cta-dropdown">
+              <button
+                type="button"
+                class="btn btn-lg cta-trigger"
+                [class.btn-primary]="modoHero() !== 'inscripto'"
+                [class.btn-secondary]="modoHero() === 'inscripto'"
+                [class.is-loading]="cargando()"
+                [disabled]="cargando()"
+                [attr.aria-expanded]="ctaAbierto()"
+                aria-haspopup="menu"
+                aria-controls="cta-panel"
+                (click)="alternarCta()"
+                (keydown)="teclaTrigger($event)"
+              >
+                {{
+                  modoHero() === 'inscripto' ? 'Inscribirme a otra' : 'Inscribirme a una carrera'
+                }}
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="m6 9 6 6 6-6"></path>
+                </svg>
+              </button>
+              @if (ctaAbierto()) {
+                <div class="cta-dropdown-panel open">
+                  <div
+                    id="cta-panel"
+                    role="menu"
+                    aria-label="Carreras con inscripción abierta"
+                    (keydown)="teclaMenu($event)"
                   >
-                    <div class="flex gap-3">
-                      <div class="race-date">
-                        <span class="day">{{ raceDay(c) }}</span>
-                        <span class="mon">{{ raceMon(c) }}</span>
-                      </div>
-                      <div class="race-meta">
-                        <strong
-                          style="
-                            color: var(--texto-principal);
-                            font-family: var(--font-display);
-                            text-transform: uppercase;
-                            font-size: var(--fs-sm);
-                          "
-                        >
-                          {{ c.nombre }}{{ c.categoriaNombre ? ' — ' + c.categoriaNombre : '' }}
-                        </strong>
-                        <span>{{ c.circuito || '' }}{{ c.fecha ? ' · ' + raceHora(c) : '' }}</span>
-                      </div>
-                    </div>
-                  </a>
-                }
+                    @for (c of inscribibles(); track c.id) {
+                      <button
+                        type="button"
+                        role="menuitem"
+                        tabindex="-1"
+                        class="cta-dropdown-item"
+                        (click)="elegirCarrera(c)"
+                      >
+                        <div class="flex gap-3 cta-item-row">
+                          <div class="race-date">
+                            <span class="day">{{ raceDay(c) }}</span>
+                            <span class="mon">{{ raceMon(c) }}</span>
+                          </div>
+                          <div class="race-meta">
+                            <strong>
+                              {{ c.nombre }}{{ c.categoriaNombre ? ' — ' + c.categoriaNombre : '' }}
+                            </strong>
+                            <span
+                              >{{ c.circuito || '' }}{{ c.fecha ? ' · ' + raceHora(c) : ''
+                              }}{{ cupoTxt(c) ? ' · ' + cupoTxt(c) + ' inscriptos' : '' }}</span
+                            >
+                          </div>
+                          @if (yaInscripto(c)) {
+                            <span class="chip chip-confirmed cta-item-chip">Inscripto</span>
+                          } @else if (autenticado()) {
+                            <span class="chip chip-upcoming cta-item-chip">Inscribirme</span>
+                          }
+                        </div>
+                      </button>
+                    }
+                    <a
+                      routerLink="/carreras"
+                      role="menuitem"
+                      tabindex="-1"
+                      class="cta-dropdown-item cta-dropdown-todas"
+                      (click)="ctaAbierto.set(false)"
+                      >Ver calendario completo</a
+                    >
+                  </div>
+                </div>
               }
             </div>
+          } @else if (modoHero() === 'libre') {
+            <a routerLink="/carreras" class="btn btn-primary btn-lg">Ver calendario</a>
           }
-        </div>
-        <a routerLink="/campeonato" class="btn btn-secondary btn-lg">Ver campeonato</a>
+          @if (modoHero() === 'libre' || (!cargando() && otrasInscribibles().length === 0)) {
+            <a routerLink="/campeonato" class="btn btn-secondary btn-lg">Ver campeonato</a>
+          }
+        }
       </div>
       <div class="hero-stats">
         <div class="hero-stat">
-          <div class="stat-value glow-rojo">{{ stats().pilotos.toLocaleString('es-AR') }}</div>
+          <div class="stat-value glow-rojo">{{ statTxt(resumen()?.pilotosActivos) }}</div>
           <span class="text-terciario hero-stat-label">Pilotos activos</span>
         </div>
         <div class="hero-stat">
-          <div class="stat-value">{{ stats().carreras.toLocaleString('es-AR') }}</div>
+          <div class="stat-value">{{ statTxt(resumen()?.carrerasCorridas) }}</div>
           <span class="text-terciario hero-stat-label">Carreras corridas</span>
         </div>
         <div class="hero-stat">
-          <div class="stat-value">{{ stats().categorias.toLocaleString('es-AR') }}</div>
+          <div class="stat-value">{{ statTxt(resumen()?.categoriasActivas) }}</div>
           <span class="text-terciario hero-stat-label">Categorías activas</span>
         </div>
       </div>
@@ -99,13 +139,101 @@
   </div>
 </section>
 
+@if (autenticado()) {
+  <section class="container-wide section section-piloto">
+    <div class="section-head">
+      <div>
+        <span class="eyebrow">Tu temporada</span>
+        <h2>Hola, {{ nombrePiloto() }}</h2>
+      </div>
+    </div>
+    <app-panel-piloto
+      [carrera]="miProximaCarrera()"
+      [estadoInscripcion]="miEstadoInscripcion()"
+      [posicion]="miPosicion()"
+      [cargandoHome]="cargando()"
+    />
+  </section>
+}
+
+@if (!autenticado()) {
+  <section class="container-wide section section-como" aria-labelledby="como-titulo">
+    <div class="section-head">
+      <div>
+        <span class="eyebrow">Cómo funciona</span>
+        <h2 id="como-titulo">De tu primera carrera a pelear el campeonato</h2>
+      </div>
+    </div>
+    <ol class="como-pasos">
+      <li class="card como-paso">
+        <span class="como-num mono" aria-hidden="true">01</span>
+        <svg class="como-icono" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="8" r="4"></circle>
+          <path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"></path>
+        </svg>
+        <h3>Creá tu cuenta</h3>
+        <p class="text-secondary">
+          Registrate y vinculá tu Steam: así cada resultado de carrera se suma solo a tu perfil.
+        </p>
+        <a routerLink="/auth" [queryParams]="{ tab: 'registro' }" class="detail-link"
+          >Crear cuenta →</a
+        >
+      </li>
+      <li class="card como-paso">
+        <span class="como-num mono" aria-hidden="true">02</span>
+        <svg class="como-icono" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M5 21V4"></path>
+          <path d="M5 4h12l-2 4 2 4H5"></path>
+        </svg>
+        <h3>Corré tu primera carrera</h3>
+        <p class="text-secondary">
+          Elegí una fecha del calendario, inscribite y entrá al servidor con el acceso que ves al
+          quedar inscripto.
+        </p>
+        <a routerLink="/carreras" class="detail-link">Ver calendario →</a>
+      </li>
+      <li class="card como-paso">
+        <span class="como-num mono" aria-hidden="true">03</span>
+        <svg class="como-icono" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M3 17l6-6 4 4 8-8"></path>
+          <path d="M15 7h6v6"></path>
+        </svg>
+        <h3>Subí de Elo y de categoría</h3>
+        <p class="text-secondary">
+          Tus resultados mueven tu Elo y correr limpio sube tu Safety Rating. Con más Elo accedés a
+          categorías más rápidas.
+        </p>
+        <a routerLink="/categorias" class="detail-link">Ver categorías →</a>
+      </li>
+    </ol>
+  </section>
+}
+
 <section class="container-wide section">
   <div class="section-head">
     <div>
-      <span class="eyebrow">En vivo ahora</span>
+      <span class="eyebrow">{{
+        enCurso().length > 0 ? 'En vivo ahora' : 'Esta semana en la liga'
+      }}</span>
       <h2>Lo que está pasando en la liga</h2>
     </div>
   </div>
+
+  @if (enCurso().length > 0) {
+    <div class="live-banner" role="status">
+      <span class="chip chip-live">En vivo</span>
+      <div class="live-banner-carreras">
+        @for (c of enCurso(); track c.id) {
+          <a [routerLink]="['/carreras', c.id]" class="live-banner-item">
+            <strong>{{ c.nombre }}</strong>
+            <span
+              >{{ c.categoriaNombre ? c.categoriaNombre + ' · ' : '' }}{{ c.circuito || '' }}</span
+            >
+          </a>
+        }
+      </div>
+    </div>
+  }
 
   <div class="grid grid-3">
     <div class="card">
@@ -116,19 +244,56 @@
       @if (cargando()) {
         <div class="flex-col gap-3">
           @for (i of [1, 2]; track i) {
-            <div class="skeleton-card"><span class="skeleton" style="width: 70%"></span></div>
+            <div class="skeleton-card"><span class="skeleton skeleton-70"></span></div>
           }
         </div>
       } @else if (proximas().length === 0) {
         <p class="text-terciario">No hay carreras próximas publicadas todavía.</p>
       } @else {
-        <div class="flex-col gap-3">
-          @for (c of proximas().slice(0, 2); track c.id) {
-            <a
-              [routerLink]="['/carreras', c.id]"
-              class="card card-hover"
-              style="padding: var(--sp-4)"
-            >
+        @let dest = proximas()[0];
+        <a [routerLink]="['/carreras', dest.id]" class="card card-hover proxima-destacada">
+          <div class="flex gap-3">
+            <div class="race-date">
+              <span class="day">{{ raceDay(dest) }}</span>
+              <span class="mon">{{ raceMon(dest) }}</span>
+            </div>
+            <div class="race-meta">
+              <strong>{{ dest.nombre }}</strong>
+              <span>{{ dest.circuito }}{{ dest.fecha ? ' · ' + raceHora(dest) : '' }}</span>
+            </div>
+          </div>
+          @if (dest.categoriaNombre) {
+            <span class="chip chip-category proxima-chip">{{ dest.categoriaNombre }}</span>
+          }
+          @if (cuentaRegresiva(dest)) {
+            <div class="proxima-countdown mono glow-alerta">{{ cuentaRegresiva(dest) }}</div>
+          }
+          @if (cupoPct(dest) !== null) {
+            <div class="proxima-cupo">
+              <div class="progress-label">
+                <span>Cupo</span>
+                <span class="mono">{{ cupoTxt(dest) }}</span>
+              </div>
+              <div
+                class="progress"
+                role="progressbar"
+                aria-label="Cupo ocupado"
+                [attr.aria-valuenow]="cupoPct(dest)"
+                aria-valuemin="0"
+                aria-valuemax="100"
+              >
+                <div
+                  class="progress-bar"
+                  [class.full]="cupoPct(dest) === 100"
+                  [style.width.%]="cupoPct(dest)"
+                ></div>
+              </div>
+            </div>
+          }
+        </a>
+        <div class="flex-col gap-3 proxima-resto">
+          @for (c of proximas().slice(1, 3); track c.id) {
+            <a [routerLink]="['/carreras', c.id]" class="card card-hover proxima-card">
               <div class="flex gap-3">
                 <div class="race-date">
                   <span class="day">{{ raceDay(c) }}</span>
@@ -148,26 +313,33 @@
     <div class="card">
       <div class="card-header">
         <h3>{{ campeonato()?.nombre || 'Campeonato' }}</h3>
-        <a [routerLink]="['/campeonato']" class="btn btn-ghost btn-sm">{{
-          campeonato()?.temporada || 'Temp. 2026'
-        }}</a>
+        <a [routerLink]="['/campeonato']" class="btn btn-ghost btn-sm">Ver tabla</a>
       </div>
-      @if (top3().length === 0) {
+      @if (cargando() || cargandoTabla()) {
+        <div class="flex-col gap-3">
+          @for (i of [1, 2, 3]; track i) {
+            <div class="skeleton-card"><span class="skeleton skeleton-60"></span></div>
+          }
+        </div>
+      } @else if (!campeonato()) {
+        <p class="text-terciario">No hay campeonatos activos en este momento.</p>
+      } @else if (!autenticado()) {
+        <p class="text-terciario">
+          <a routerLink="/auth" class="detail-link">Ingresá</a> para ver la tabla de posiciones.
+        </p>
+      } @else if (top3().length === 0) {
         <p class="text-terciario">Aún no hay posiciones registradas.</p>
       } @else {
         <div class="flex-col gap-3">
           @for (t of top3(); track $index) {
-            <div class="flex-between" style="gap: var(--sp-3)">
+            <div class="flex-between top3-fila">
               <div class="flex-center gap-2">
                 <app-rank-badge [posicion]="t.posicion || $index + 1" />
-                <a
-                  [routerLink]="['/perfil', t.usuarioId]"
-                  class="detail-link"
-                  style="font-weight: 600"
-                  >{{ t.nombrePiloto }}</a
-                >
+                <a [routerLink]="['/perfil', t.usuarioId]" class="detail-link top3-piloto">{{
+                  t.nombrePiloto
+                }}</a>
               </div>
-              <span class="mono glow-alerta" style="font-weight: 700">{{ t.puntos }} pts</span>
+              <span class="mono glow-alerta top3-puntos">{{ t.puntos }} pts</span>
             </div>
           }
         </div>
@@ -176,48 +348,46 @@
 
     <div class="card">
       <div class="card-header">
-        <h3>Último anuncio</h3>
-        <span class="chip chip-upcoming">Anuncio</span>
+        <h3>Anuncios</h3>
+        @if (anuncioPrincipal()?.destacado) {
+          <span class="chip chip-upcoming">Destacado</span>
+        }
       </div>
-      @if (anuncio(); as an) {
+      @if (cargando()) {
+        <div class="skeleton-card"><span class="skeleton skeleton-70"></span></div>
+      } @else if (anuncioPrincipal(); as an) {
         @if (an.urlImagen) {
           <img
+            class="anuncio-img"
             [src]="an.urlImagen | assetUrl"
             alt=""
-            style="
-              border-radius: var(--r-sm);
-              margin-bottom: var(--sp-4);
-              max-height: 180px;
-              object-fit: cover;
-              width: 100%;
-            "
             referrerpolicy="no-referrer"
           />
         }
         <h4>{{ an.titulo }}</h4>
-        <span class="mono text-terciario" style="font-size: var(--fs-2xs)">{{
-          an.fecha | fechaRelativa
-        }}</span>
-        <p
-          class="text-secondary"
-          style="
-            margin-top: var(--sp-2);
-            display: -webkit-box;
-            -webkit-line-clamp: 3;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-          "
-        >
-          {{ an.contenido || an.titulo }}
-        </p>
+        <span class="mono text-terciario anuncio-fecha">{{ an.fecha | fechaRelativa }}</span>
+        <p class="text-secondary anuncio-extracto">{{ an.contenido || an.titulo }}</p>
         <button
           type="button"
-          class="btn btn-secondary btn-sm"
-          style="margin-top: var(--sp-4)"
-          (click)="anuncioAbierto.set(true)"
+          class="btn btn-secondary btn-sm anuncio-leer"
+          (click)="anuncioSeleccionado.set(an)"
         >
           Leer completo
         </button>
+        @if (otrosAnuncios().length > 0) {
+          <ul class="anuncios-otros">
+            @for (o of otrosAnuncios(); track o.id) {
+              <li>
+                <button type="button" class="anuncio-otro" (click)="anuncioSeleccionado.set(o)">
+                  <span class="anuncio-otro-titulo">{{ o.titulo }}</span>
+                  <span class="mono text-terciario anuncio-fecha">{{
+                    o.fecha | fechaRelativa
+                  }}</span>
+                </button>
+              </li>
+            }
+          </ul>
+        }
       } @else {
         <p class="text-terciario">Todavía no hay anuncios.</p>
       }
@@ -226,22 +396,29 @@
 </section>
 
 <app-modal
-  [abierto]="anuncioAbierto()"
-  [titulo]="anuncio()?.titulo || 'Anuncio'"
-  (cerrado)="anuncioAbierto.set(false)"
+  [abierto]="!!anuncioSeleccionado()"
+  [titulo]="anuncioSeleccionado()?.titulo || 'Anuncio'"
+  (cerrado)="anuncioSeleccionado.set(null)"
 >
-  @if (anuncio(); as an) {
+  @if (anuncioSeleccionado(); as an) {
     @if (an.urlImagen) {
       <img
+        class="anuncio-modal-img"
         [src]="an.urlImagen | assetUrl"
         alt=""
-        style="border-radius: var(--r-sm); margin-bottom: var(--sp-4); max-width: 100%"
         referrerpolicy="no-referrer"
       />
     }
-    <span class="mono text-terciario" style="font-size: var(--fs-2xs)">{{
-      an.fecha | fechaRelativa
-    }}</span>
-    <p class="text-secondary" style="margin-top: var(--sp-3)">{{ an.contenido || an.titulo }}</p>
+    <span class="mono text-terciario anuncio-fecha">{{ an.fecha | fechaRelativa }}</span>
+    <p class="text-secondary anuncio-completo">{{ an.contenido || an.titulo }}</p>
   }
 </app-modal>
+
+<app-confirm-dialog
+  [abierto]="!!aConfirmar()"
+  titulo="Confirmar inscripción"
+  [mensaje]="mensajeConfirmacion()"
+  [confirmarTexto]="inscribiendo() ? 'Inscribiendo…' : 'Inscribirme'"
+  (aceptado)="confirmarInscripcion()"
+  (cancelado)="aConfirmar.set(null)"
+/>

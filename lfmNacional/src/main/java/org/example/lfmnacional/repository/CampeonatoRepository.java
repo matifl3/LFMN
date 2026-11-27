@@ -18,6 +18,9 @@ public interface CampeonatoRepository extends JpaRepository<Campeonato, Long> {
 
     List<Campeonato> findByAdmin_IdOrderByIdDesc(Long adminId);
 
+    @Query("select count(distinct c.categoria.id) from Campeonato c where c.estado = ?1")
+    long countCategoriasConCampeonatoEn(org.example.lfmnacional.enums.EstadoCampeonato estado);
+
     @Modifying
     @Query("update Campeonato c set c.admin = null where c.admin.id = ?1")
     void desvincularAdmin(Long usuarioId);

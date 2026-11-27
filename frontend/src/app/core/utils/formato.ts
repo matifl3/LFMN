@@ -18,6 +18,43 @@ export function fmtFecha(iso: string | number | Date | null | undefined): string
   return d.getDate() + ' ' + MESES[d.getMonth()].toUpperCase();
 }
 
+/** "17" (día del mes); sin fecha → "—". Para el bloque `.race-date`. */
+export function fmtDia(iso: string | number | Date | null | undefined): string {
+  const d = parseIso(iso);
+  return d ? String(d.getDate()) : '—';
+}
+
+/** "AGO"; sin fecha → "". Para el bloque `.race-date`. */
+export function fmtMes(iso: string | number | Date | null | undefined): string {
+  const d = parseIso(iso);
+  return d ? MESES[d.getMonth()].toUpperCase() : '';
+}
+
+/**
+ * Cuenta regresiva a una carrera: "Faltan 2 d 4 h", "Faltan 3 h 20 min",
+ * "Faltan 5 min". Una carrera EN_CURSO devuelve "En curso ahora"; sin fecha, "".
+ */
+export function fmtCuentaRegresiva(
+  iso: string | number | Date | null | undefined,
+  ahora: number,
+  estado?: string,
+): string {
+  if (estado === 'EN_CURSO') return 'En curso ahora';
+  const d = parseIso(iso);
+  if (!d) return '';
+  const diff = d.getTime() - ahora;
+  if (diff <= 0) return 'Arranca en instantes';
+  const MIN = 60_000;
+  const HORA = 60 * MIN;
+  const DIA = 24 * HORA;
+  const dias = Math.floor(diff / DIA);
+  const hs = Math.floor((diff % DIA) / HORA);
+  const min = Math.floor((diff % HORA) / MIN);
+  if (dias > 0) return 'Faltan ' + dias + ' d ' + hs + ' h';
+  if (hs > 0) return 'Faltan ' + hs + ' h ' + min + ' min';
+  return 'Faltan ' + Math.max(min, 1) + ' min';
+}
+
 /** "17 AGO · 20:30" */
 export function fmtFechaHora(iso: string | number | Date | null | undefined): string {
   const d = parseIso(iso);
@@ -95,4 +132,18 @@ export function toNumber(v: unknown, fallback: number | null = null): number | n
   if (v === null || v === undefined || v === '') return fallback;
   const n = Number(v);
   return isNaN(n) ? fallback : n;
+}
+
+/**
+ * Devuelve una URL navegable o `null` si el valor no es un enlace. Acepta lo que
+ * suele pegar la gente: con o sin `http://`, o solo `host:puerto`, que es como
+ * se ve un server de Assetto Corsa.
+ */
+export function normalizeUrl(valor: string | null | undefined): string | null {
+  const v = (valor ?? '').trim();
+  if (!v) return null;
+  if (/^https?:\/\//i.test(v)) return v;
+  // host:puerto o un dominio suelto. Excluye "Servidor 1" y frases sueltas.
+  if (/^[a-z0-9-]+(\.[a-z0-9-]+)+(:\d+)?(\/\S*)?$/i.test(v)) return 'http://' + v;
+  return null;
 }

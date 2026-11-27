@@ -6,7 +6,7 @@ import { ErrorCargaService } from '../../../core/services/error-carga.service';
 import { Chip } from '../../../shared/components/chip/chip';
 import { EmptyState } from '../../../shared/components/empty-state/empty-state';
 import { Carrera, Categoria } from '../../../core/models/models';
-import { fmtFecha, fmtHora } from '../../../core/utils/formato';
+import { fmtDia, fmtFecha, fmtHora, fmtMes } from '../../../core/utils/formato';
 
 @Component({
   selector: 'app-races-list',
@@ -63,11 +63,11 @@ export class RacesListComponent implements OnInit {
   }
 
   raceDay(c: Carrera): string {
-    return fmtFecha(c.fecha).split(' ')[0];
+    return fmtDia(c.fecha);
   }
 
   raceMon(c: Carrera): string {
-    return fmtFecha(c.fecha).split(' ')[1] || '';
+    return fmtMes(c.fecha);
   }
 
   raceHora(c: Carrera): string {

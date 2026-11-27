@@ -7,7 +7,7 @@ import { AuthService } from '../../../core/services/auth.service';
 import { Chip } from '../../../shared/components/chip/chip';
 import { EmptyState } from '../../../shared/components/empty-state/empty-state';
 import { Inscripcion, Usuario } from '../../../core/models/models';
-import { fmtFecha } from '../../../core/utils/formato';
+import { fmtDia, fmtMes } from '../../../core/utils/formato';
 
 interface RecompensaDisponible {
   id?: number;
@@ -97,11 +97,11 @@ export class MyProfileComponent implements OnInit {
   }
 
   fechaDia(ins: Inscripcion): string {
-    return fmtFecha(ins.carreraFecha).split(' ')[0];
+    return fmtDia(ins.carreraFecha);
   }
 
   fechaMes(ins: Inscripcion): string {
-    return fmtFecha(ins.carreraFecha).split(' ')[1] || '';
+    return fmtMes(ins.carreraFecha);
   }
 
   guardar(): void {

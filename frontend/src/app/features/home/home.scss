@@ -2,9 +2,29 @@
   .cta-dropdown-item {
     text-align: left;
   }
-}
-.mt-3 {
-  margin-top: var(--sp-3);
+  // Los ítems ahora son <button>: resetear el estilo nativo para que se vean
+  // igual que los <a> del patrón global.
+  button.cta-dropdown-item {
+    width: 100%;
+    background: none;
+    border: 0;
+    border-bottom: 1px solid var(--borde-hair);
+    color: inherit;
+    font: inherit;
+  }
+  .cta-item-row {
+    align-items: center;
+  }
+  .cta-item-chip {
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+  .cta-dropdown-todas {
+    color: var(--texto-secundario);
+    font-size: var(--fs-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
 }
 .hero-photo {
   position: absolute;
@@ -19,12 +39,218 @@
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(to right, var(--bg-principal) 0%, rgba(18, 18, 18, 0.75) 38%, rgba(18, 18, 18, 0) 68%),
+    linear-gradient(
+      to right,
+      var(--bg-principal) 0%,
+      rgba(18, 18, 18, 0.75) 38%,
+      rgba(18, 18, 18, 0) 68%
+    ),
     linear-gradient(180deg, rgba(18, 18, 18, 0.2) 0%, transparent 40%);
   pointer-events: none;
 }
 @media (max-width: 900px) {
   .hero-photo {
     opacity: 0.35;
+  }
+}
+
+// ---- "En vivo" (carreras EN_CURSO) -------------------------------------------
+.live-banner {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--sp-3) var(--sp-4);
+  margin-bottom: var(--sp-5);
+  padding: var(--sp-3) var(--sp-4);
+  border: 1px solid var(--borde-metal);
+  border-radius: var(--r-sm);
+  background: var(--bg-superficie);
+}
+.live-banner-carreras {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2) var(--sp-5);
+}
+.live-banner-item {
+  display: flex;
+  flex-direction: column;
+  strong {
+    font-family: var(--font-display);
+    text-transform: uppercase;
+    color: var(--texto-principal);
+    font-size: var(--fs-sm);
+  }
+  span {
+    color: var(--texto-terciario);
+    font-size: var(--fs-xs);
+  }
+  &:hover strong {
+    text-decoration: underline;
+  }
+}
+
+// ---- Tarjetas (antes estilos inline) ----------------------------------------
+.skeleton-70 {
+  width: 70%;
+}
+.skeleton-60 {
+  width: 60%;
+}
+.proxima-card {
+  padding: var(--sp-4);
+}
+.top3-fila {
+  gap: var(--sp-3);
+}
+.top3-piloto {
+  font-weight: 600;
+}
+.top3-puntos {
+  font-weight: 700;
+}
+.anuncio-img {
+  width: 100%;
+  max-height: 180px;
+  object-fit: cover;
+  border-radius: var(--r-sm);
+  margin-bottom: var(--sp-4);
+}
+.anuncio-modal-img {
+  max-width: 100%;
+  border-radius: var(--r-sm);
+  margin-bottom: var(--sp-4);
+}
+.anuncio-fecha {
+  font-size: var(--fs-2xs);
+}
+// pre-line: respeta los saltos de línea que escribió el admin en el anuncio.
+.anuncio-extracto {
+  margin-top: var(--sp-2);
+  white-space: pre-line;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.anuncio-completo {
+  margin-top: var(--sp-3);
+  white-space: pre-line;
+}
+.anuncio-leer {
+  margin-top: var(--sp-4);
+}
+
+// La sección del piloto va pegada a la de la liga: sin el padding inferior completo.
+.section-piloto {
+  padding-bottom: 0;
+}
+
+// ---- 13 · Próxima carrera destacada -------------------------------------------
+.proxima-destacada {
+  display: block;
+  padding: var(--sp-4);
+}
+.proxima-chip {
+  margin-top: var(--sp-3);
+}
+.proxima-countdown {
+  margin-top: var(--sp-3);
+  font-size: var(--fs-lg);
+  font-weight: 700;
+}
+.proxima-cupo {
+  margin-top: var(--sp-3);
+  .progress-label {
+    font-size: var(--fs-xs);
+    color: var(--texto-terciario);
+    margin: 0 0 var(--sp-1);
+  }
+}
+.proxima-resto {
+  margin-top: var(--sp-3);
+}
+
+// ---- 20 · Anuncios anteriores -------------------------------------------------
+.anuncios-otros {
+  list-style: none;
+  margin: var(--sp-5) 0 0;
+  padding: var(--sp-3) 0 0;
+  border-top: 1px solid var(--borde-hair);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+}
+.anuncio-otro {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--sp-3);
+  padding: var(--sp-2) 0;
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  &:hover .anuncio-otro-titulo,
+  &:focus-visible .anuncio-otro-titulo {
+    text-decoration: underline;
+  }
+}
+.anuncio-otro-titulo {
+  color: var(--texto-principal);
+  font-size: var(--fs-sm);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// ---- 15 · Cómo funciona (solo visitantes) -----------------------------------
+.section-como {
+  padding-bottom: 0;
+}
+.como-pasos {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--sp-5);
+}
+.como-paso {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  h3 {
+    margin: 0;
+  }
+  p {
+    margin: 0;
+    flex: 1;
+  }
+}
+.como-num {
+  position: absolute;
+  top: var(--sp-4);
+  right: var(--sp-4);
+  color: var(--texto-disabled);
+  font-size: var(--fs-sm);
+}
+.como-icono {
+  width: 28px;
+  height: 28px;
+  fill: none;
+  stroke: var(--lbm-rojo-hi);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+@media (max-width: 900px) {
+  .como-pasos {
+    grid-template-columns: 1fr;
   }
 }

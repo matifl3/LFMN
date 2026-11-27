@@ -2,7 +2,9 @@ package org.example.lfmnacional.service;
 
 import lombok.RequiredArgsConstructor;
 import org.example.lfmnacional.dto.estadistica.EstadisticasResponse;
+import org.example.lfmnacional.dto.estadistica.ResumenLigaResponse;
 import org.example.lfmnacional.enums.EstadoApelacion;
+import org.example.lfmnacional.enums.EstadoCampeonato;
 import org.example.lfmnacional.enums.EstadoCarrera;
 import org.example.lfmnacional.enums.EstadoIncidente;
 import org.example.lfmnacional.enums.Rol;
@@ -62,6 +64,16 @@ public class EstadisticasService {
                 anuncioRepository.count(),
                 campeonatoRepository.count(),
                 categoriaRepository.count()
+        );
+    }
+
+    /** Conteos publicos del home: tres queries de count, sin cargar listas. */
+    @Transactional(readOnly = true)
+    public ResumenLigaResponse getResumen() {
+        return new ResumenLigaResponse(
+                resultadoCarreraRepository.countUsuariosConResultados(),
+                carreraRepository.countByEstado(EstadoCarrera.FINALIZADA),
+                campeonatoRepository.countCategoriasConCampeonatoEn(EstadoCampeonato.ACTIVO)
         );
     }
 }

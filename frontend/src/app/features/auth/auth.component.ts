@@ -44,6 +44,8 @@ export class AuthComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    // "Crear cuenta" del home llega con ?tab=registro.
+    if (this.route.snapshot.queryParamMap.get('tab') === 'registro') this.tab.set('register');
     if (sessionStorage.getItem('lfm_msg_pass_changed')) {
       sessionStorage.removeItem('lfm_msg_pass_changed');
       this.toast.success('Contraseña actualizada. Ingresá con tu nueva contraseña.');

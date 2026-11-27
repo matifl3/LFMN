@@ -486,6 +486,19 @@ export interface UsuarioRecompensa {
   fechaReclamada?: string;
 }
 
+/** GET /api/estadisticas/resumen (público): números del hero del home. */
+export interface ResumenLiga {
+  pilotosActivos: number;
+  carrerasCorridas: number;
+  categoriasActivas: number;
+}
+
+/** GET /api/campeonatos/{id}/progreso: rondas corridas sobre el total (sin canceladas). */
+export interface ProgresoCampeonato {
+  rondasTotales: number;
+  rondasCorridas: number;
+}
+
 export interface Estadisticas {
   totalUsuarios: number;
   usuariosActivos: number;

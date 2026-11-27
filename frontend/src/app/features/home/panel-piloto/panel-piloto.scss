@@ -1,0 +1,107 @@
+:host {
+  display: block;
+}
+.panel-piloto {
+  margin-bottom: var(--sp-6);
+}
+.pp-skeleton {
+  width: 65%;
+}
+.pp-carrera {
+  display: flex;
+  gap: var(--sp-3);
+  align-items: center;
+  &:hover strong {
+    text-decoration: underline;
+  }
+}
+.pp-countdown {
+  margin-top: var(--sp-3);
+  font-size: var(--fs-lg);
+  font-weight: 700;
+}
+.pp-acceso {
+  margin-top: var(--sp-4);
+  padding-top: var(--sp-3);
+  border-top: 1px solid var(--borde-hair);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+.pp-acceso-fila {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--sp-2) var(--sp-3);
+}
+.pp-label {
+  color: var(--texto-terciario);
+  font-size: var(--fs-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.pp-nota {
+  margin-top: var(--sp-3);
+  font-size: var(--fs-sm);
+}
+.pp-accion {
+  margin-top: var(--sp-3);
+}
+.pp-ratings {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--sp-4);
+}
+.pp-rating {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  min-width: 0;
+  .pp-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+.pp-valor {
+  font-size: var(--fs-2xl);
+  font-weight: 700;
+  color: var(--texto-principal);
+}
+.pp-delta {
+  font-size: var(--fs-2xs);
+  color: var(--texto-terciario);
+  &.positivo {
+    color: var(--status-positivo);
+  }
+  &.negativo {
+    color: var(--lbm-rojo-hi);
+  }
+}
+.pp-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--sp-3);
+  margin: var(--sp-5) 0 0;
+  padding-top: var(--sp-4);
+  border-top: 1px solid var(--borde-hair);
+  dt {
+    color: var(--texto-terciario);
+    font-size: var(--fs-2xs);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  dd {
+    margin: 0;
+    font-size: var(--fs-md);
+    color: var(--texto-principal);
+  }
+}
+@media (max-width: 600px) {
+  .pp-ratings {
+    grid-template-columns: 1fr 1fr;
+  }
+  .pp-stats {
+    grid-template-columns: 1fr 1fr;
+  }
+}
