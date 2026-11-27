@@ -127,11 +127,16 @@ public class DataSeeder implements CommandLineRunner {
         }
     }
 
+    private static final java.util.Set<String> DESCRIPCIONES_VIEJAS =
+            java.util.Set.of("Completa tu primera carrera", "Completa 10 carreras");
+
     private void seedLogros() {
-        seedLogro("Primera carrera", "Completa tu primera carrera",
+        // CARRERAS cuenta tambien las que no terminaste: la descripcion decia
+        // "Completa", que es CARRERAS_COMPLETADAS.
+        seedLogro("Primera carrera", "Corre tu primera carrera",
                 TipoCondicionLogro.CARRERAS, 1, "flag",
                 "Primer logro de la liga");
-        seedLogro("Piloto fiel", "Completa 10 carreras",
+        seedLogro("Piloto fiel", "Corre 10 carreras",
                 TipoCondicionLogro.CARRERAS, 10, "event",
                 "Medalla de constancia por 10 carreras");
         seedLogro("Primera victoria", "Gana tu primera carrera",
@@ -172,10 +177,22 @@ public class DataSeeder implements CommandLineRunner {
                 logro.getRecompensas().add(recompensa);
                 logroRepository.save(logro);
             }
-        } else if (!icono.equals(existente.get().getIcono())) {
+        } else {
             Logro logro = existente.get();
-            logro.setIcono(icono);
-            logroRepository.save(logro);
+            boolean cambio = false;
+            if (!icono.equals(logro.getIcono())) {
+                logro.setIcono(icono);
+                cambio = true;
+            }
+            // Solo pisa la descripcion si sigue siendo la vieja del seed: si un
+            // admin la edito desde el panel, se respeta.
+            if (logro.getDescripcion() != null && DESCRIPCIONES_VIEJAS.contains(logro.getDescripcion())) {
+                logro.setDescripcion(descripcion);
+                cambio = true;
+            }
+            if (cambio) {
+                logroRepository.save(logro);
+            }
         }
     }
 }

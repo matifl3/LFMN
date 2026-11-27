@@ -22,6 +22,7 @@ import org.example.lfmnacional.repository.RecompensaRepository;
 import org.example.lfmnacional.repository.ResultadoCarreraRepository;
 import org.example.lfmnacional.repository.UsuarioLogroRepository;
 import org.example.lfmnacional.repository.UsuarioRecompensaRepository;
+import org.example.lfmnacional.repository.UsuarioRepository;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -43,6 +44,7 @@ public class LogroService {
     private final NotificacionRepository notificacionRepository;
     private final ResultadoCarreraRepository resultadoCarreraRepository;
     private final UsuarioService usuarioService;
+    private final UsuarioRepository usuarioRepository;
 
     public Logro getEntity(Long id) {
         return logroRepository.findById(id)
@@ -74,7 +76,9 @@ public class LogroService {
                 .valorCondicion(request.valorCondicion())
                 .icono(request.icono())
                 .build();
-        return toResponse(logroRepository.save(logro));
+        logro = logroRepository.save(logro);
+        evaluarParaTodos();
+        return toResponse(logro);
     }
 
     @Transactional
@@ -89,7 +93,20 @@ public class LogroService {
         logro.setTipoCondicion(request.tipoCondicion());
         logro.setValorCondicion(request.valorCondicion());
         logro.setIcono(request.icono());
-        return toResponse(logroRepository.save(logro));
+        logro = logroRepository.save(logro);
+        evaluarParaTodos();
+        return toResponse(logro);
+    }
+
+    /**
+     * Un logro nuevo (o con el umbral cambiado) se evalua contra el historial que
+     * ya existe: si no, un piloto con 25 carreras veia "0 / 20" hasta correr la
+     * siguiente. La liga es chica, asi que recorrer todos los usuarios es barato.
+     */
+    private void evaluarParaTodos() {
+        for (Usuario usuario : usuarioRepository.findAll()) {
+            evaluarLogros(usuario);
+        }
     }
 
     @Transactional
@@ -126,19 +143,41 @@ public class LogroService {
         recompensaRepository.delete(recompensa);
     }
 
+    /**
+     * El progreso se calcula en vivo y no se lee de {@code usuario_logro}: esa
+     * tabla solo se actualiza en los caminos que llaman a evaluarLogros, y
+     * cualquier otro cambio en los resultados (o en el Elo) dejaba la barra
+     * desactualizada. La tabla queda como registro de "obtenido" y su fecha.
+     */
     @Transactional(readOnly = true)
     public List<UsuarioLogroResponse> listarLogrosUsuario(Long usuarioId) {
-        usuarioService.getEntity(usuarioId);
+        Usuario usuario = usuarioService.getEntity(usuarioId);
         List<Logro> logros = logroRepository.findAll();
         Map<Long, UsuarioLogro> existentes = usuarioLogroRepository
                 .findByUsuario_IdOrderByLogro_Id(usuarioId).stream()
                 .collect(java.util.stream.Collectors.toMap(
                         ul -> ul.getLogro().getId(), ul -> ul));
+        Map<TipoCondicionLogro, Long> metricas = new java.util.EnumMap<>(TipoCondicionLogro.class);
         List<UsuarioLogroResponse> response = new ArrayList<>();
         for (Logro logro : logros) {
-            UsuarioLogro usuarioLogro = existentes.getOrDefault(logro.getId(),
-                    UsuarioLogro.builder().progreso(0).obtenido(false).build());
-            response.add(toUsuarioLogroResponse(logro, usuarioLogro));
+            long valor = metricas.computeIfAbsent(logro.getTipoCondicion(),
+                    tipo -> calcularValorMetrica(tipo, usuario));
+            UsuarioLogro guardado = existentes.get(logro.getId());
+            boolean obtenido = (guardado != null && Boolean.TRUE.equals(guardado.getObtenido()))
+                    || valor >= logro.getValorCondicion();
+            int progreso = obtenido
+                    ? logro.getValorCondicion()
+                    : (int) Math.min(valor, logro.getValorCondicion());
+            response.add(new UsuarioLogroResponse(
+                    logro.getId(),
+                    logro.getNombre(),
+                    logro.getDescripcion(),
+                    logro.getTipoCondicion(),
+                    logro.getValorCondicion(),
+                    logro.getIcono(),
+                    progreso,
+                    obtenido,
+                    guardado != null ? guardado.getFechaObtencion() : null));
         }
         return response;
     }
@@ -160,9 +199,13 @@ public class LogroService {
                             .progreso(0)
                             .obtenido(false)
                             .build());
-            boolean obtenido = valor >= logro.getValorCondicion();
-            boolean transicion = !Boolean.TRUE.equals(usuarioLogro.getObtenido()) && obtenido;
-            usuarioLogro.setProgreso(Math.min(valor, logro.getValorCondicion()));
+            // Un logro ganado no se pierde: si el Elo baja de 1800 o una sancion
+            // quita una victoria, el logro queda. Antes se recalculaba y volvia a
+            // "ganarse" (con otra notificacion) cuando la metrica subia de nuevo.
+            boolean yaObtenido = Boolean.TRUE.equals(usuarioLogro.getObtenido());
+            boolean obtenido = yaObtenido || valor >= logro.getValorCondicion();
+            boolean transicion = !yaObtenido && obtenido;
+            usuarioLogro.setProgreso(obtenido ? logro.getValorCondicion() : Math.min(valor, logro.getValorCondicion()));
             usuarioLogro.setObtenido(obtenido);
             if (transicion) {
                 usuarioLogro.setFechaObtencion(LocalDateTime.now());
@@ -238,18 +281,5 @@ public class LogroService {
                 recompensa.getLogro().getId(),
                 recompensa.getDescripcion(),
                 recompensa.getTipo());
-    }
-
-    private UsuarioLogroResponse toUsuarioLogroResponse(Logro logro, UsuarioLogro usuarioLogro) {
-        return new UsuarioLogroResponse(
-                logro.getId(),
-                logro.getNombre(),
-                logro.getDescripcion(),
-                logro.getTipoCondicion(),
-                logro.getValorCondicion(),
-                logro.getIcono(),
-                usuarioLogro.getProgreso(),
-                usuarioLogro.getObtenido(),
-                usuarioLogro.getFechaObtencion());
     }
 }

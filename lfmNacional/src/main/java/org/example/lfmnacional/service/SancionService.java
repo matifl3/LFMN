@@ -39,6 +39,7 @@ public class SancionService {
     private final UsuarioService usuarioService;
     private final CarreraService carreraService;
     private final CampeonatoService campeonatoService;
+    private final LogroService logroService;
 
     public Sancion getEntity(Long id) {
         return sancionRepository.findById(id)
@@ -155,6 +156,7 @@ public class SancionService {
             default -> {
             }
         }
+        reevaluarLogros(sancion);
     }
 
     /**
@@ -183,6 +185,25 @@ public class SancionService {
         }
         sancion.setEfectosAplicados(false);
         sancionRepository.save(sancion);
+        reevaluarLogros(sancion);
+    }
+
+    /**
+     * Una sancion mueve Elo o reclasifica la carrera, y eso puede completar
+     * logros: del sancionado y, si cambiaron puestos, de los que subieron.
+     * Perderlos no, porque evaluarLogros no quita un logro ya obtenido.
+     */
+    private void reevaluarLogros(Sancion sancion) {
+        java.util.Map<Long, Usuario> afectados = new java.util.LinkedHashMap<>();
+        afectados.put(sancion.getUsuario().getId(), sancion.getUsuario());
+        boolean reclasifica = sancion.getTipo() == TipoSancion.PUESTOS || sancion.getTipo() == TipoSancion.SEGUNDOS;
+        if (reclasifica && sancion.getCarrera() != null) {
+            for (ResultadoCarrera r : resultadoCarreraRepository
+                    .findByCarrera_IdOrderByPosicionFinalAsc(sancion.getCarrera().getId())) {
+                afectados.putIfAbsent(r.getUsuario().getId(), r.getUsuario());
+            }
+        }
+        afectados.values().forEach(logroService::evaluarLogros);
     }
 
     /**

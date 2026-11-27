@@ -34,6 +34,7 @@ class SancionServiceTest {
     @Mock private UsuarioService usuarioService;
     @Mock private CarreraService carreraService;
     @Mock private CampeonatoService campeonatoService;
+    @Mock private LogroService logroService;
 
     @InjectMocks
     private SancionService sancionService;
