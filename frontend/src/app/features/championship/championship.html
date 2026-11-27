@@ -1,83 +1,228 @@
 <section class="container-wide section">
   <div class="section-head">
     <div>
-      <span class="eyebrow">Temporada 2026</span>
-      <h2>Campeonato</h2>
+      <span class="eyebrow"
+        >{{ champ()?.categoriaNombre || 'Campeonato'
+        }}{{ champ()?.temporada ? ' · Temporada ' + champ()!.temporada : '' }}</span
+      >
+      <h2>{{ champ()?.nombre || 'Campeonato' }}</h2>
     </div>
-  </div>
-
-  <div
-    class="champ-select-bar"
-    style="
-      display: flex;
-      align-items: center;
-      gap: var(--sp-4);
-      flex-wrap: wrap;
-      margin-bottom: var(--sp-6);
-    "
-  >
-    <select
-      class="select"
-      [value]="selectedId()"
-      (change)="onChange($event)"
-      style="min-width: 220px"
-    >
-      @if (cargando()) {
-        <option>Cargando campeonatos…</option>
-      } @else if (champs().length === 0) {
-        <option>Sin campeonatos</option>
-      } @else {
-        @for (c of champs(); track c.id) {
-          <option [value]="c.id">
-            {{ c.nombre }}{{ c.temporada ? ' (' + c.temporada + ')' : '' }}
-          </option>
+    @if (champs().length > 0) {
+      <select
+        class="select champ-select"
+        aria-label="Elegir campeonato"
+        [value]="selectedId()"
+        (change)="onChange($event)"
+      >
+        @if (champsConActividad().length > 0) {
+          <optgroup label="Con carreras">
+            @for (c of champsConActividad(); track c.id) {
+              <option [value]="c.id" [selected]="c.id === selectedId()">{{ c.nombre }}</option>
+            }
+          </optgroup>
         }
-      }
-    </select>
-    <span class="text-terciario mono" style="margin-left: auto">{{ champInfo() }}</span>
+        @if (champsSinCarreras().length > 0) {
+          <optgroup label="Sin carreras todavía">
+            @for (c of champsSinCarreras(); track c.id) {
+              <option [value]="c.id" [selected]="c.id === selectedId()">{{ c.nombre }}</option>
+            }
+          </optgroup>
+        }
+      </select>
+    }
   </div>
 
-  @if (bloqueado()) {
+  @if (cargando()) {
+    <div class="flex-col gap-3">
+      <div class="skeleton-card"><span class="skeleton skeleton-80"></span></div>
+      <div class="skeleton-card"><span class="skeleton skeleton-60"></span></div>
+    </div>
+  } @else if (errorCarga()) {
     <div class="card">
       <div class="empty-state">
-        <h3>Campeonato privado</h3>
-        <p>
-          El calendario es público, pero la tabla de posiciones y el resto del contenido solo están
-          disponibles para los pilotos que suma el administrador del campeonato.
-        </p>
+        <h3>No pudimos cargar los campeonatos</h3>
+        <p>Puede ser un problema de conexión o que el servidor esté arrancando.</p>
       </div>
     </div>
-  } @else if (tablaLoading()) {
-    <div class="skeleton-card" style="padding: var(--sp-5)">
-      <span class="skeleton" style="width: 80%"></span
-      ><span class="skeleton" style="width: 60%"></span>
+  } @else if (!champ()) {
+    <div class="card">
+      <div class="empty-state">
+        <h3>Todavía no hay campeonatos</h3>
+        <p>Cuando la liga publique uno, vas a ver acá su tabla y su calendario.</p>
+      </div>
     </div>
-  } @else if (tablaMsg()) {
-    <p class="text-terciario">{{ tablaMsg() }}</p>
   } @else {
-    <div class="table-wrap">
-      <table class="table">
-        <thead>
-          <tr>
-            <th>Pos</th>
-            <th>Piloto</th>
-            <th class="num">Puntos</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (t of tabla(); track t.usuarioId; let i = $index) {
-            <tr [class]="'podium-' + t.posicion">
-              <td><app-rank-badge [posicion]="t.posicion || i + 1" /></td>
-              <td>
-                <a [routerLink]="['/perfil', t.usuarioId]" class="detail-link">{{
-                  t.nombrePiloto
-                }}</a>
-              </td>
-              <td class="num mono glow-alerta" style="font-weight: 700">{{ t.puntos }}</td>
-            </tr>
+    @let c = champ()!;
+    <div class="card champ-resumen">
+      <div class="champ-resumen-info">
+        <div class="flex-center gap-2 champ-chips">
+          <span
+            class="chip"
+            [class.chip-upcoming]="c.estado === 'ACTIVO'"
+            [class.chip-closed]="c.estado !== 'ACTIVO'"
+            >{{ estadoLabel() }}</span
+          >
+          @if (c.visibilidad === 'PRIVADO') {
+            <span class="chip chip-closed">Privado</span>
           }
-        </tbody>
-      </table>
+          @if (c.sistemaPuntos) {
+            <span class="text-terciario champ-puntos">Puntos: {{ c.sistemaPuntos }}</span>
+          }
+        </div>
+        @if (progresoTxt(); as txt) {
+          <div class="champ-progreso">
+            <div class="progress-label">
+              <span>Temporada</span>
+              <span class="mono">{{ txt }}</span>
+            </div>
+            <div
+              class="progress"
+              role="progressbar"
+              aria-label="Rondas corridas"
+              [attr.aria-valuenow]="progresoPct()"
+              aria-valuemin="0"
+              aria-valuemax="100"
+            >
+              <div class="progress-bar" [style.width.%]="progresoPct()"></div>
+            </div>
+          </div>
+        }
+      </div>
+      @if (proxima(); as p) {
+        <a [routerLink]="['/carreras', p.carrera.id]" class="champ-proxima">
+          <span class="eyebrow alerta">Próxima · Ronda {{ p.numero }}</span>
+          <strong>{{ p.carrera.nombre }}</strong>
+          <span class="text-secondary">{{ p.carrera.fecha | fmtFechaHora }}</span>
+          @if (cuentaRegresiva(p.carrera); as cr) {
+            <span class="mono glow-alerta champ-countdown">{{ cr }}</span>
+          }
+        </a>
+      }
+    </div>
+
+    <div class="champ-grid">
+      <div class="card">
+        <div class="card-header">
+          <h3>Posiciones</h3>
+          @if (miFila(); as mf) {
+            <button type="button" class="btn btn-ghost btn-sm" (click)="irAMiFila()">
+              Vas P{{ mf.posicion }} · ir a mi fila
+            </button>
+          }
+        </div>
+        @switch (estadoTabla()) {
+          @case ('cargando') {
+            <div class="flex-col gap-3">
+              @for (i of [1, 2, 3, 4]; track i) {
+                <div class="skeleton-card"><span class="skeleton skeleton-60"></span></div>
+              }
+            </div>
+          }
+          @case ('privado') {
+            <div class="empty-state">
+              <h3>Campeonato privado</h3>
+              <p>
+                El calendario es público, pero la tabla y los resultados solo los ven los pilotos
+                que suma el administrador del campeonato.
+              </p>
+            </div>
+          }
+          @case ('login') {
+            <p class="text-terciario">
+              <a routerLink="/auth" class="detail-link">Ingresá</a> para ver la tabla de posiciones.
+            </p>
+          }
+          @case ('vacia') {
+            <p class="text-terciario">
+              Todavía no hay posiciones: se arman con la primera carrera.
+            </p>
+          }
+          @case ('error') {
+            <p class="text-terciario">No pudimos cargar la tabla. Probá recargar la página.</p>
+          }
+          @default {
+            <div class="table-wrap">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th scope="col">Pos</th>
+                    <th scope="col">Piloto</th>
+                    <th scope="col" class="num">Puntos</th>
+                    <th scope="col" class="num" title="Puntos detrás del líder">Dif.</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (t of tabla(); track t.usuarioId; let i = $index) {
+                    <tr
+                      [class]="'podium-' + t.posicion"
+                      [class.mi-fila]="esMiFila(t)"
+                      [attr.id]="esMiFila(t) ? 'mi-fila' : null"
+                    >
+                      <td><app-rank-badge [posicion]="t.posicion || i + 1" /></td>
+                      <td>
+                        <a [routerLink]="['/perfil', t.usuarioId]" class="detail-link">{{
+                          t.nombrePiloto
+                        }}</a>
+                        @if (esMiFila(t)) {
+                          <span class="chip chip-category mi-fila-chip">Vos</span>
+                        }
+                      </td>
+                      <td class="num mono glow-alerta tabla-puntos">{{ t.puntos }}</td>
+                      <td class="num mono text-terciario">{{ diferencia(t) }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        }
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h3>Calendario</h3>
+          <span class="text-terciario mono">{{ calendario().length }} carreras</span>
+        </div>
+        @if (calendario().length === 0) {
+          <p class="text-terciario">Este campeonato todavía no tiene carreras publicadas.</p>
+        } @else {
+          <ol class="calendario">
+            @for (r of calendario(); track r.carrera.id) {
+              <li
+                class="calendario-fila"
+                [class.es-proxima]="proxima()?.carrera?.id === r.carrera.id"
+                [class.cancelada]="r.carrera.estado === 'CANCELADA'"
+              >
+                <div class="race-date">
+                  <span class="day">{{ dia(r.carrera) }}</span>
+                  <span class="mon">{{ mes(r.carrera) }}</span>
+                </div>
+                <div class="calendario-info">
+                  <span class="text-terciario calendario-ronda">{{
+                    r.numero ? 'Ronda ' + r.numero : 'Cancelada'
+                  }}</span>
+                  <a [routerLink]="['/carreras', r.carrera.id]" class="detail-link">{{
+                    r.carrera.nombre
+                  }}</a>
+                  @if (r.carrera.estado === 'FINALIZADA' && podio(r.carrera.id).length > 0) {
+                    <ol class="calendario-podio">
+                      @for (pr of podio(r.carrera.id); track pr.id; let j = $index) {
+                        <li>
+                          <span class="mono text-terciario">P{{ j + 1 }}</span>
+                          <a [routerLink]="['/perfil', pr.usuarioId]" class="detail-link">{{
+                            pr.nombrePiloto
+                          }}</a>
+                        </li>
+                      }
+                    </ol>
+                  }
+                </div>
+                <app-chip [estado]="r.carrera.estado" tipo="carrera" />
+              </li>
+            }
+          </ol>
+        }
+      </div>
     </div>
   }
 </section>

@@ -313,7 +313,12 @@
     <div class="card">
       <div class="card-header">
         <h3>{{ campeonato()?.nombre || 'Campeonato' }}</h3>
-        <a [routerLink]="['/campeonato']" class="btn btn-ghost btn-sm">Ver tabla</a>
+        <a
+          [routerLink]="['/campeonato']"
+          [queryParams]="campeonato() ? { id: campeonato()!.id } : {}"
+          class="btn btn-ghost btn-sm"
+          >Ver tabla</a
+        >
       </div>
       @if (cargando() || cargandoTabla()) {
         <div class="flex-col gap-3">
