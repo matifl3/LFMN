@@ -172,11 +172,6 @@ public class UsuarioService {
         if (!usuario.getEmail().equals(request.email()) && usuarioRepository.existsByEmail(request.email())) {
             throw new BusinessException("Ya existe un usuario con el email " + request.email());
         }
-        if (request.guidSteam() != null
-                && !request.guidSteam().equals(usuario.getGuidSteam())
-                && usuarioRepository.existsByGuidSteam(request.guidSteam())) {
-            throw new BusinessException("Ya existe un usuario vinculado a esa cuenta de Steam");
-        }
         if (request.nombrePiloto() != null && !request.nombrePiloto().isBlank()
                 && !request.nombrePiloto().equals(usuario.getNombrePiloto())
                 && usuarioRepository.existsByNombrePiloto(request.nombrePiloto())) {
@@ -184,7 +179,7 @@ public class UsuarioService {
         }
         usuario.setEmail(request.email());
         usuario.setNombrePiloto(request.nombrePiloto());
-        usuario.setGuidSteam(request.guidSteam());
+        // guidSteam NO se toca aca: se gestiona solo via OpenID (/api/steam) y DELETE /{id}/steam.
         return toResponse(usuarioRepository.save(usuario));
     }
 

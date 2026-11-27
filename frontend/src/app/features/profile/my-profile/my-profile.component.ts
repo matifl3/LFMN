@@ -6,14 +6,8 @@ import { ToastService } from '../../../core/services/toast.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { Chip } from '../../../shared/components/chip/chip';
 import { EmptyState } from '../../../shared/components/empty-state/empty-state';
-import { Inscripcion, Usuario } from '../../../core/models/models';
+import { Inscripcion, Usuario, UsuarioRecompensa } from '../../../core/models/models';
 import { fmtDia, fmtMes } from '../../../core/utils/formato';
-
-interface RecompensaDisponible {
-  id?: number;
-  recompensaId?: number;
-  descripcion?: string;
-}
 
 @Component({
   selector: 'app-my-profile',
@@ -37,7 +31,7 @@ export class MyProfileComponent implements OnInit {
   readonly passwordNueva = signal('');
   readonly passwordActualEdit = signal(false);
   readonly inscripciones = signal<Inscripcion[]>([]);
-  readonly recompensas = signal<RecompensaDisponible[]>([]);
+  readonly recompensas = signal<UsuarioRecompensa[]>([]);
   readonly tab = signal<'datos' | 'password' | 'steam'>('datos');
   readonly steamOk = signal<string | null>(null);
   readonly cargando = signal(false);
@@ -83,17 +77,23 @@ export class MyProfileComponent implements OnInit {
   private cargarInscripciones(): void {
     const id = this.auth.user()?.id;
     if (!id) return;
-    this.api.list<Inscripcion>(`/inscripciones/usuario/${id}`).pipe(this.carga.siFalla([])).subscribe({
-      next: (l) => this.inscripciones.set(l.filter((i) => i.estado !== 'CANCELADA')),
-    });
+    this.api
+      .list<Inscripcion>(`/inscripciones/usuario/${id}`)
+      .pipe(this.carga.siFalla([]))
+      .subscribe({
+        next: (l) => this.inscripciones.set(l.filter((i) => i.estado !== 'CANCELADA')),
+      });
   }
 
   private cargarRecompensas(): void {
     const id = this.auth.user()?.id;
     if (!id) return;
-    this.api.list<RecompensaDisponible>(`/usuarios/${id}/recompensas/no-reclamadas`).pipe(this.carga.siFalla([])).subscribe({
-      next: (l) => this.recompensas.set(l),
-    });
+    this.api
+      .list<UsuarioRecompensa>(`/usuarios/${id}/recompensas/no-reclamadas`)
+      .pipe(this.carga.siFalla([]))
+      .subscribe({
+        next: (l) => this.recompensas.set(l),
+      });
   }
 
   fechaDia(ins: Inscripcion): string {
@@ -107,23 +107,34 @@ export class MyProfileComponent implements OnInit {
   guardar(): void {
     const id = this.auth.user()?.id;
     if (!id) return;
+    const email = this.email().trim();
+    // El JWT usa el email como subject: si cambia, el token actual deja de ser valido.
+    const cambiaEmail = email !== (this.user()?.email ?? '');
     this.cargando.set(true);
-    this.api.put<Usuario>(`/usuarios/${id}/perfil`, {
-      email: this.email().trim(),
-      nombrePiloto: this.nombre().trim(),
-    }).subscribe({
-      next: (u) => {
-        this.cargando.set(false);
-        this.user.set(u);
-        this.auth.updateUser(u);
-        this.passwordActualEdit.set(!!u.passwordEstablecida);
-        this.toast.success('Perfil actualizado');
-      },
-      error: (err) => {
-        this.cargando.set(false);
-        this.toast.error(apiError(err));
-      },
-    });
+    this.api
+      .put<Usuario>(`/usuarios/${id}/perfil`, {
+        email,
+        nombrePiloto: this.nombre().trim(),
+      })
+      .subscribe({
+        next: (u) => {
+          this.cargando.set(false);
+          if (cambiaEmail) {
+            this.auth.clearSesion();
+            this.toast.success('Email actualizado. Ingresá de nuevo con tu nuevo email.');
+            void this.router.navigate(['/auth']);
+            return;
+          }
+          this.user.set(u);
+          this.auth.updateUser(u);
+          this.passwordActualEdit.set(!!u.passwordEstablecida);
+          this.toast.success('Perfil actualizado');
+        },
+        error: (err) => {
+          this.cargando.set(false);
+          this.toast.error(apiError(err));
+        },
+      });
   }
 
   cambiarPassword(): void {
@@ -196,15 +207,17 @@ export class MyProfileComponent implements OnInit {
     });
   }
 
-  reclamar(r: RecompensaDisponible): void {
+  reclamar(r: UsuarioRecompensa): void {
     const id = this.auth.user()?.id;
     if (!id || !r.recompensaId) return;
-    this.api.post<void>(`/recompensas/usuario/${id}/recompensas/${r.recompensaId}/reclamar`).subscribe({
-      next: () => {
-        this.toast.success('¡Recompensa reclamada!');
-        this.cargarRecompensas();
-      },
-      error: (err) => this.toast.error(apiError(err)),
-    });
+    this.api
+      .post<void>(`/recompensas/usuario/${id}/recompensas/${r.recompensaId}/reclamar`)
+      .subscribe({
+        next: () => {
+          this.toast.success('¡Recompensa reclamada!');
+          this.cargarRecompensas();
+        },
+        error: (err) => this.toast.error(apiError(err)),
+      });
   }
 }

@@ -478,12 +478,14 @@ export interface ArchivoCarrera {
   tipo: string;
 }
 
+/** UsuarioRecompensaResponse: GET /api/usuarios/{id}/recompensas[/no-reclamadas]. */
 export interface UsuarioRecompensa {
-  id?: number;
-  usuarioId?: number;
-  recompensaId?: number;
-  reclamada?: boolean;
-  fechaReclamada?: string;
+  recompensaId: number;
+  logroId: number;
+  descripcion: string;
+  tipo: string;
+  reclamada: boolean;
+  fecha?: string;
 }
 
 /** GET /api/estadisticas/resumen (público): números del hero del home. */
