@@ -465,14 +465,17 @@
 }
 
 // ---- Tabs -------------------------------------------------------------
+// .tabs: pestañas de sección, mismo lenguaje que el nav del header
+// (fondo sutil + barra roja en la activa).
+// .tabs-pill: interruptor de 2 opciones, sin rojo (el rojo queda para lo activo).
 .tabs {
   display: flex;
-  gap: var(--sp-6);
+  gap: var(--sp-1);
   border-bottom: 1px solid var(--borde-metal);
   overflow-x: auto;
 }
 .tab {
-  padding-block: var(--sp-3);
+  padding: var(--sp-3);
   font-family: var(--font-display);
   font-size: var(--fs-sm);
   letter-spacing: 0.05em;
@@ -488,6 +491,15 @@
   border-left: 0;
   border-right: 0;
   border-top: 0;
+  white-space: nowrap;
+  transition:
+    color var(--dur-base) var(--ease),
+    background-color var(--dur-base) var(--ease),
+    border-color var(--dur-base) var(--ease);
+}
+.tab:focus-visible {
+  outline: 2px solid var(--lbm-rojo);
+  outline-offset: -2px;
 }
 .tab .count {
   font-family: var(--font-mono);
@@ -498,14 +510,17 @@
   border-radius: var(--r-pill);
 }
 .tab:hover {
-  color: var(--texto-secundario);
+  color: var(--texto-principal);
+  background: rgba(255, 255, 255, 0.03);
 }
 .tab.active {
-  color: var(--lbm-rojo-hi);
+  color: var(--texto-principal);
+  background: linear-gradient(to top, rgba(255, 255, 255, 0.06), transparent);
   border-color: var(--lbm-rojo);
 }
 .tab.active .count {
-  color: var(--lbm-rojo-hi);
+  color: var(--texto-principal);
+  background: var(--lbm-rojo-dim);
 }
 
 .tabs-pill {
@@ -523,9 +538,13 @@
   border-bottom: none;
   margin-bottom: 0;
 }
+.tabs-pill .tab:focus-visible {
+  outline-offset: 2px;
+}
 .tabs-pill .tab.active {
-  background: var(--lbm-rojo);
-  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--texto-principal);
+  box-shadow: inset 0 0 0 1px var(--borde-brillo);
 }
 
 // ---- Formularios -------------------------------------------------------------
