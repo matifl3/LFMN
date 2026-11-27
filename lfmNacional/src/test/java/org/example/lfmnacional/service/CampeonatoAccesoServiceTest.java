@@ -248,4 +248,38 @@ class CampeonatoAccesoServiceTest {
         assertThat(acceso.filtroVeCarrera(adminGlobal).test(dePrivado)).isTrue();
         verify(miembroRepository, never()).existsByCampeonato_IdAndUsuario_Id(any(), any());
     }
+
+    // ---- recursos personales (Fase 1 GRASP: los chequeos salen de los controllers)
+
+    @Test
+    void exigirPropioSoloDejaAlDueno() {
+        assertThatCode(() -> acceso.exigirPropio(piloto, 5L, "x")).doesNotThrowAnyException();
+        assertThatThrownBy(() -> acceso.exigirPropio(adminGlobal, 5L, "ver esta notificacion"))
+                .isInstanceOf(org.example.lfmnacional.exception.PermisoDenegadoException.class)
+                .hasMessage("No tenes permiso para ver esta notificacion");
+        assertThatThrownBy(() -> acceso.exigirPropio(null, 5L, "x"))
+                .isInstanceOf(org.example.lfmnacional.exception.PermisoDenegadoException.class);
+    }
+
+    @Test
+    void exigirPropioOAdminDejaAlDuenoYAlAdmin() {
+        assertThatCode(() -> acceso.exigirPropioOAdmin(piloto, 5L, "x")).doesNotThrowAnyException();
+        assertThatCode(() -> acceso.exigirPropioOAdmin(adminGlobal, 5L, "x")).doesNotThrowAnyException();
+        assertThatThrownBy(() -> acceso.exigirPropioOAdmin(comisario, 5L, "editar este setup"))
+                .isInstanceOf(org.example.lfmnacional.exception.PermisoDenegadoException.class);
+    }
+
+    @Test
+    void laInscripcionLaCancelaElPilotoOQuienAdministraElCampeonato() {
+        Carrera dePrivado = Carrera.builder().id(101L).nombre("Fecha 1").campeonato(privado).build();
+
+        assertThatCode(() -> acceso.exigirPropioOAdministraCarrera(piloto, 5L, dePrivado, "x"))
+                .doesNotThrowAnyException();
+        assertThatCode(() -> acceso.exigirPropioOAdministraCarrera(dueno, 5L, dePrivado, "x"))
+                .doesNotThrowAnyException();
+        assertThatCode(() -> acceso.exigirPropioOAdministraCarrera(adminGlobal, 5L, dePrivado, "x"))
+                .doesNotThrowAnyException();
+        assertThatThrownBy(() -> acceso.exigirPropioOAdministraCarrera(duenoAjeno, 5L, dePrivado, "x"))
+                .isInstanceOf(org.example.lfmnacional.exception.PermisoDenegadoException.class);
+    }
 }

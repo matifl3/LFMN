@@ -1,5 +1,6 @@
 package org.example.lfmnacional.service;
 
+import org.example.lfmnacional.entity.Usuario;
 import lombok.RequiredArgsConstructor;
 import org.example.lfmnacional.dto.logro.RecompensaRequest;
 import org.example.lfmnacional.dto.logro.RecompensaResponse;
@@ -25,6 +26,7 @@ public class RecompensaService {
     private final UsuarioRecompensaRepository usuarioRecompensaRepository;
     private final LogroService logroService;
     private final UsuarioService usuarioService;
+    private final CampeonatoAccesoService accesoService;
 
     public Recompensa getEntity(Long id) {
         return recompensaRepository.findById(id)
@@ -85,7 +87,8 @@ public class RecompensaService {
     }
 
     @Transactional
-    public UsuarioRecompensaResponse reclamarRecompensa(Long usuarioId, Long recompensaId) {
+    public UsuarioRecompensaResponse reclamarRecompensa(Long usuarioId, Long recompensaId, Usuario actor) {
+        accesoService.exigirPropio(actor, usuarioId, "reclamar recompensas de otro usuario");
         usuarioService.getEntity(usuarioId);
         recompensaRepository.findById(recompensaId)
                 .orElseThrow(() -> new ResourceNotFoundException("Recompensa no encontrada con id " + recompensaId));

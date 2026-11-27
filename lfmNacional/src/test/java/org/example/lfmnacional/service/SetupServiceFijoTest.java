@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -36,6 +37,10 @@ class SetupServiceFijoTest {
     private UsuarioService usuarioService;
     @Mock
     private CategoriaService categoriaService;
+
+    /** Real: los chequeos de dueno/admin no tocan repositorios. */
+    @Spy
+    private CampeonatoAccesoService accesoService = new CampeonatoAccesoService(null, null, null);
 
     @InjectMocks
     private SetupService setupService;
@@ -106,9 +111,34 @@ class SetupServiceFijoTest {
         when(setupRepository.findById(5L)).thenReturn(java.util.Optional.of(setup));
         when(setupRepository.save(any(Setup.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        setupService.update(5L, request(null));
+        setupService.update(5L, request(null), piloto);
 
         // El archivo solo lo asigna el upload; editar no puede apuntarlo a otro ni perderlo.
         assertThat(setup.getArchivo()).isEqualTo("propio.zip");
+    }
+
+    @Test
+    void otroUsuarioNoPuedeEditarNiBorrarUnSetupAjeno() {
+        Usuario otro = Usuario.builder().id(3L).nombrePiloto("Otro").rol(Rol.USUARIO).build();
+        Setup setup = Setup.builder().id(5L).titulo("Ajeno").autor(piloto).build();
+        when(setupRepository.findById(5L)).thenReturn(java.util.Optional.of(setup));
+
+        assertThatThrownBy(() -> setupService.update(5L, request(null), otro))
+                .isInstanceOf(org.example.lfmnacional.exception.PermisoDenegadoException.class);
+        assertThatThrownBy(() -> setupService.delete(5L, otro))
+                .isInstanceOf(org.example.lfmnacional.exception.PermisoDenegadoException.class);
+        verify(setupRepository, never()).save(any(Setup.class));
+    }
+
+    @Test
+    void elAdminPuedeEditarUnSetupAjeno() {
+        Setup setup = Setup.builder().id(5L).titulo("Ajeno").circuito("Termas").vehiculo("Ferrari 296")
+                .autor(piloto).build();
+        when(setupRepository.findById(5L)).thenReturn(java.util.Optional.of(setup));
+        when(setupRepository.save(any(Setup.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        setupService.update(5L, request(null), admin);
+
+        assertThat(setup.getTitulo()).isEqualTo("Mi setup");
     }
 }

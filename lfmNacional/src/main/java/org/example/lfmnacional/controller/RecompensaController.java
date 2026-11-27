@@ -6,7 +6,6 @@ import org.example.lfmnacional.dto.logro.RecompensaRequest;
 import org.example.lfmnacional.dto.logro.RecompensaResponse;
 import org.example.lfmnacional.dto.logro.UsuarioRecompensaResponse;
 import org.example.lfmnacional.entity.Usuario;
-import org.example.lfmnacional.exception.BusinessException;
 import org.example.lfmnacional.service.RecompensaService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -69,9 +68,6 @@ public class RecompensaController {
             @PathVariable Long usuarioId,
             @PathVariable Long recompensaId,
             @AuthenticationPrincipal Usuario actual) {
-        if (!usuarioId.equals(actual.getId())) {
-            throw new BusinessException("No tenes permiso para reclamar recompensas de otro usuario");
-        }
-        return recompensaService.reclamarRecompensa(usuarioId, recompensaId);
+        return recompensaService.reclamarRecompensa(usuarioId, recompensaId, actual);
     }
 }

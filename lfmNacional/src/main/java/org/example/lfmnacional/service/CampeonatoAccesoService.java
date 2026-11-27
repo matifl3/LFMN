@@ -1,5 +1,6 @@
 package org.example.lfmnacional.service;
 
+import org.example.lfmnacional.exception.PermisoDenegadoException;
 import lombok.RequiredArgsConstructor;
 import org.example.lfmnacional.entity.Campeonato;
 import org.example.lfmnacional.entity.Carrera;
@@ -202,6 +203,36 @@ public class CampeonatoAccesoService {
         if (!veCarrera(usuario, carrera)) {
             throw new BusinessException("La carrera '" + carrera.getNombre()
                     + "' pertenece a un campeonato privado del que no sos miembro");
+        }
+    }
+
+    // ------------------------------------------------- recursos personales
+
+    /**
+     * Recursos con dueno (perfil, setup, notificacion, inscripcion, recompensa):
+     * mismo lugar que el resto de la autorizacion (Controlador GRASP: el controller
+     * no decide permisos). Lanzan {@link PermisoDenegadoException} (403).
+     */
+    public boolean esPropio(Usuario actor, Long duenoId) {
+        return actor != null && actor.getId() != null && actor.getId().equals(duenoId);
+    }
+
+    public void exigirPropio(Usuario actor, Long duenoId, String accion) {
+        if (!esPropio(actor, duenoId)) {
+            throw new PermisoDenegadoException("No tenes permiso para " + accion);
+        }
+    }
+
+    public void exigirPropioOAdmin(Usuario actor, Long duenoId, String accion) {
+        if (!esPropio(actor, duenoId) && !esAdminGlobal(actor)) {
+            throw new PermisoDenegadoException("No tenes permiso para " + accion);
+        }
+    }
+
+    /** El dueno, o quien administra el campeonato de esa carrera (ADMIN incluido). */
+    public void exigirPropioOAdministraCarrera(Usuario actor, Long duenoId, Carrera carrera, String accion) {
+        if (!esPropio(actor, duenoId) && !administraCarrera(actor, carrera)) {
+            throw new PermisoDenegadoException("No tenes permiso para " + accion);
         }
     }
 

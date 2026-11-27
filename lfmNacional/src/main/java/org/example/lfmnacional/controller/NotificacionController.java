@@ -4,9 +4,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.lfmnacional.dto.notificacion.NotificacionRequest;
 import org.example.lfmnacional.dto.notificacion.NotificacionResponse;
-import org.example.lfmnacional.entity.Notificacion;
 import org.example.lfmnacional.entity.Usuario;
-import org.example.lfmnacional.exception.BusinessException;
 import org.example.lfmnacional.service.NotificacionService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,11 +30,7 @@ public class NotificacionController {
     @GetMapping("/{id}")
     public NotificacionResponse getById(@PathVariable Long id,
                                         @AuthenticationPrincipal Usuario actual) {
-        Notificacion notificacion = notificacionService.getEntity(id);
-        if (!notificacion.getUsuario().getId().equals(actual.getId())) {
-            throw new BusinessException("No tenes permiso para ver esta notificacion");
-        }
-        return notificacionService.getById(id);
+        return notificacionService.getById(id, actual);
     }
 
     @GetMapping("/me")
@@ -57,11 +51,7 @@ public class NotificacionController {
     @PutMapping("/{id}/leida")
     public NotificacionResponse marcarLeida(@PathVariable Long id,
                                             @AuthenticationPrincipal Usuario actual) {
-        Notificacion notificacion = notificacionService.getEntity(id);
-        if (!notificacion.getUsuario().getId().equals(actual.getId())) {
-            throw new BusinessException("No tenes permiso para marcar esta notificacion");
-        }
-        return notificacionService.marcarLeida(id);
+        return notificacionService.marcarLeida(id, actual);
     }
 
     @PutMapping("/me/leidas")
@@ -73,11 +63,7 @@ public class NotificacionController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id,
                                        @AuthenticationPrincipal Usuario actual) {
-        Notificacion notificacion = notificacionService.getEntity(id);
-        if (!notificacion.getUsuario().getId().equals(actual.getId())) {
-            throw new BusinessException("No tenes permiso para borrar esta notificacion");
-        }
-        notificacionService.delete(id);
+        notificacionService.delete(id, actual);
         return ResponseEntity.noContent().build();
     }
 }

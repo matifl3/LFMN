@@ -5,7 +5,6 @@ import lombok.RequiredArgsConstructor;
 import org.example.lfmnacional.dto.setup.SetupComentarioRequest;
 import org.example.lfmnacional.dto.setup.SetupComentarioResponse;
 import org.example.lfmnacional.entity.Usuario;
-import org.example.lfmnacional.exception.BusinessException;
 import org.example.lfmnacional.service.SetupComentarioService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

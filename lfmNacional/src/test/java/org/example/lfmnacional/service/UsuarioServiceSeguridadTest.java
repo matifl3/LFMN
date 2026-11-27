@@ -46,6 +46,10 @@ class UsuarioServiceSeguridadTest {
     @Spy
     private LoginIntentos loginIntentos = new LoginIntentos();
 
+    /** Real: los chequeos de dueno/admin no tocan repositorios. */
+    @Spy
+    private CampeonatoAccesoService accesoService = new CampeonatoAccesoService(null, null, null);
+
     @InjectMocks
     private UsuarioService usuarioService;
 

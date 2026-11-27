@@ -72,6 +72,7 @@ public class UsuarioService {
     private final JwtUtil jwtUtil;
     private final SteamService steamService;
     private final LoginIntentos loginIntentos;
+    private final CampeonatoAccesoService accesoService;
 
     @Transactional
     @CacheEvict(value = "usuarios", allEntries = true)
@@ -190,6 +191,7 @@ public class UsuarioService {
     @Transactional
     @CacheEvict(value = "usuarios", allEntries = true)
     public UsuarioResponse updatePerfil(Long id, UsuarioRequest request, Usuario actor) {
+        accesoService.exigirPropioOAdmin(actor, id, "editar el perfil de otro usuario");
         Usuario usuario = getEntity(id);
         boolean cambiaEmail = !usuario.getEmail().equalsIgnoreCase(request.email());
         // El email es la llave de la recuperacion de password: cambiarlo exige la
@@ -216,7 +218,8 @@ public class UsuarioService {
     }
 
     @Transactional
-    public void updatePassword(Long id, CambioPasswordRequest request) {
+    public void updatePassword(Long id, CambioPasswordRequest request, Usuario actor) {
+        accesoService.exigirPropio(actor, id, "cambiar la password de otro usuario");
         Usuario usuario = getEntity(id);
         if (usuario.isPasswordEstablecida() && !passwordEncoder.matches(request.passwordActual(), usuario.getPassword())) {
             throw new BusinessException("La contrasena actual es incorrecta");
@@ -227,7 +230,8 @@ public class UsuarioService {
     }
 
     @Transactional
-    public UsuarioResponse desvincularSteam(Long id) {
+    public UsuarioResponse desvincularSteam(Long id, Usuario actor) {
+        accesoService.exigirPropio(actor, id, "desvincular Steam de otro usuario");
         Usuario usuario = getEntity(id);
         usuario.setGuidSteam(null);
         return toResponse(usuarioRepository.save(usuario));
@@ -281,7 +285,10 @@ public class UsuarioService {
 
     @Transactional
     @CacheEvict(value = "usuarios", allEntries = true)
-    public void delete(Long id) {
+    public void delete(Long id, Usuario actor) {
+        if (accesoService.esPropio(actor, id)) {
+            throw new BusinessException("No podes eliminar tu propia cuenta");
+        }
         getEntity(id);
         // Referencias directas hacia el usuario
         votoComisarioRepository.deleteByComisario_Id(id);

@@ -37,10 +37,6 @@ public class InscripcionService {
                 .orElseThrow(() -> new ResourceNotFoundException("Inscripcion no encontrada con id " + id));
     }
 
-    public Carrera carrera(Long carreraId) {
-        return carreraService.getEntity(carreraId);
-    }
-
     @Transactional
     public InscripcionResponse inscribirse(Long carreraId, Long usuarioId) {
         Carrera carrera = carreraService.getEntity(carreraId);
@@ -68,9 +64,16 @@ public class InscripcionService {
         return toResponse(inscripcionRepository.save(inscripcion));
     }
 
+    /** Baja por id: el propio piloto o quien administra el campeonato de la carrera. */
     @Transactional
-    public InscripcionResponse baja(Long id) {
+    public InscripcionResponse baja(Long id, Usuario actor) {
         Inscripcion inscripcion = getEntity(id);
+        accesoService.exigirPropioOAdministraCarrera(actor, inscripcion.getUsuario().getId(),
+                inscripcion.getCarrera(), "cancelar la inscripcion de otro usuario");
+        return darDeBaja(inscripcion);
+    }
+
+    private InscripcionResponse darDeBaja(Inscripcion inscripcion) {
         if (inscripcion.getEstado() == EstadoInscripcion.CANCELADA) {
             throw new BusinessException("La inscripcion ya fue cancelada");
         }
@@ -84,15 +87,17 @@ public class InscripcionService {
     }
 
     @Transactional
-    public InscripcionResponse cancelar(Long carreraId, Long usuarioId) {
+    public InscripcionResponse cancelar(Long carreraId, Long usuarioId, Usuario actor) {
         Carrera carrera = carreraService.getEntity(carreraId);
+        accesoService.exigirPropioOAdministraCarrera(actor, usuarioId, carrera,
+                "cancelar la inscripcion de otro usuario");
         if (!carrera.getFecha().isAfter(LocalDateTime.now().plusMinutes(MINUTOS_CIERRE_PREVIO))) {
             throw new BusinessException("Las inscripciones ya estan cerradas para esta carrera");
         }
         Inscripcion inscripcion = inscripcionRepository.findByCarrera_IdAndUsuario_Id(carreraId, usuarioId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "No existe inscripcion del usuario en la carrera"));
-        return baja(inscripcion.getId());
+        return darDeBaja(inscripcion);
     }
 
     @Transactional(readOnly = true)

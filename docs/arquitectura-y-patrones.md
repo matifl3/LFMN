@@ -145,6 +145,10 @@ memoizado por carrera (una consulta de membresía por carrera, no por fila; ADMI
 consultan). Lo que no tiene carrera (una sanción manual) es visible. Para un recurso puntual,
 `exigirVeCarreraSiHay`. Ambos navegan relaciones lazy: se llaman dentro del `@Transactional` del servicio.
 
+Los **recursos con dueño** (perfil, setup, notificación, inscripción, recompensa) usan
+`exigirPropio`, `exigirPropioOAdmin` y `exigirPropioOAdministraCarrera`, llamados desde el servicio.
+Ningún controller decide permisos (GRASP Controlador): solo traduce HTTP y pasa el `@AuthenticationPrincipal`.
+
 Y la visibilidad distingue **el campeonato** de **su contenido**. El nombre, temporada y categoría
 son públicos siempre; el roster, la tabla, las carreras y los resultados exigen membresía:
 
@@ -199,7 +203,8 @@ Jerarquía corta, mapeada en `GlobalExceptionHandler`:
 |---|---|---|
 | `BusinessException` | 400 | regla de negocio (privado, ELO, estado) |
 | `ResourceNotFoundException` | 404 | no existe |
-| `AccessDeniedException` | 403 | rol insuficiente |
+| `AccessDeniedException` | 403 | rol insuficiente (`@PreAuthorize`): mensaje genérico |
+| `PermisoDenegadoException` | 403 | regla sobre un recurso ("este setup no es tuyo"): su mensaje viaja al front |
 | `DataIntegrityViolationException` | 409 | FK o unique violada |
 | `Exception` | 500 | todo lo demás, mensaje genérico |
 

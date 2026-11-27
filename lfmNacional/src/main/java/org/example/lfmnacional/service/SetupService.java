@@ -47,6 +47,7 @@ public class SetupService {
     private final SetupComentarioRepository setupComentarioRepository;
     private final UsuarioService usuarioService;
     private final CategoriaService categoriaService;
+    private final CampeonatoAccesoService accesoService;
 
     @Value("${archivos.base-dir}")
     private String baseDir;
@@ -115,8 +116,9 @@ public class SetupService {
     }
 
     @Transactional
-    public SetupResponse update(Long id, SetupRequest request) {
+    public SetupResponse update(Long id, SetupRequest request, Usuario actor) {
         Setup setup = getEntity(id);
+        accesoService.exigirPropioOAdmin(actor, setup.getAutor().getId(), "editar este setup");
         setup.setTitulo(request.titulo());
         setup.setDescripcion(request.descripcion());
         setup.setCircuito(request.circuito());
@@ -126,8 +128,9 @@ public class SetupService {
     }
 
     @Transactional
-    public void delete(Long id) {
+    public void delete(Long id, Usuario actor) {
         Setup setup = getEntity(id);
+        accesoService.exigirPropioOAdmin(actor, setup.getAutor().getId(), "borrar este setup");
         eliminarArchivo(setup);
         setupCalificacionRepository.deleteBySetup_Id(setup.getId());
         setupComentarioRepository.deleteBySetup_Id(setup.getId());
@@ -135,7 +138,9 @@ public class SetupService {
     }
 
     @Transactional
-    public void guardarArchivo(Long setupId, MultipartFile archivo) {
+    public void guardarArchivo(Long setupId, MultipartFile archivo, Usuario actor) {
+        accesoService.exigirPropioOAdmin(actor, getEntity(setupId).getAutor().getId(),
+                "subir archivos a este setup");
         if (archivo == null || archivo.isEmpty()) {
             throw new BusinessException("El archivo no puede estar vacio");
         }

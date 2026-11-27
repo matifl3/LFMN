@@ -120,7 +120,9 @@ export function apiError(err: unknown): string {
     return 'El servidor respondió inesperadamente. Reintentá en unos segundos.';
   }
   if (body && typeof body === 'object') {
-    const msg = body.mensaje || body.error || body.message;
+    // ApiError trae el texto en `message` y la frase HTTP ("Bad Request") en `error`:
+    // `error` va ultimo o tapa el mensaje real. `mensaje` es el de los 401/403 del filtro.
+    const msg = body.mensaje || body.message || body.error;
     if (msg) return msg;
   }
   const status = e?.status;

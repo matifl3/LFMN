@@ -4,10 +4,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.lfmnacional.dto.inscripcion.InscripcionRequest;
 import org.example.lfmnacional.dto.inscripcion.InscripcionResponse;
-import org.example.lfmnacional.entity.Carrera;
-import org.example.lfmnacional.entity.Inscripcion;
 import org.example.lfmnacional.entity.Usuario;
-import org.example.lfmnacional.exception.BusinessException;
 import org.example.lfmnacional.service.CampeonatoAccesoService;
 import org.example.lfmnacional.service.InscripcionService;
 import org.springframework.http.HttpStatus;
@@ -36,31 +33,14 @@ public class InscripcionController {
     @DeleteMapping("/{id}")
     public ResponseEntity<InscripcionResponse> baja(@PathVariable Long id,
                                                     @AuthenticationPrincipal Usuario actual) {
-        Inscripcion inscripcion = inscripcionService.getEntity(id);
-        boolean esPropia = inscripcion.getUsuario().getId().equals(actual.getId());
-        if (!esPropia && !puedeAdministrarCarrera(actual, inscripcion.getCarrera())) {
-            throw new BusinessException("No tenes permiso para cancelar la inscripcion de otro usuario");
-        }
-        return ResponseEntity.ok(inscripcionService.baja(id));
+        return ResponseEntity.ok(inscripcionService.baja(id, actual));
     }
 
     @DeleteMapping("/carrera/{carreraId}/usuario/{usuarioId}")
     public ResponseEntity<InscripcionResponse> cancelar(@PathVariable Long carreraId,
                                                         @PathVariable Long usuarioId,
                                                         @AuthenticationPrincipal Usuario actual) {
-        boolean esPropia = actual.getId().equals(usuarioId);
-        if (!esPropia && !puedeAdministrarCarrera(actual, inscripcionService.carrera(carreraId))) {
-            throw new BusinessException("No tenes permiso para cancelar la inscripcion de otro usuario");
-        }
-        return ResponseEntity.ok(inscripcionService.cancelar(carreraId, usuarioId));
-    }
-
-    /** ADMIN global o el dueno del campeonato al que pertenece la carrera. */
-    private boolean puedeAdministrarCarrera(Usuario actual, Carrera carrera) {
-        if (accesoService.esAdminGlobal(actual)) {
-            return true;
-        }
-        return accesoService.administraCarrera(actual, carrera);
+        return ResponseEntity.ok(inscripcionService.cancelar(carreraId, usuarioId, actual));
     }
 
     @GetMapping("/carrera/{carreraId}")
