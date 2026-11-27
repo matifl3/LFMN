@@ -41,6 +41,10 @@ public class SetupCalificacionService {
     @Transactional
     public SetupCalificacionResponse calificar(Long setupId, SetupCalificacionRequest request, Usuario usuario) {
         Setup setup = setupService.getEntity(setupId);
+        // Si el autor se puntua a si mismo, el promedio deja de reflejar a la comunidad.
+        if (setup.getAutor() != null && setup.getAutor().getId().equals(usuario.getId())) {
+            throw new BusinessException("No podes calificar tu propio setup");
+        }
         SetupCalificacion calificacion = setupCalificacionRepository
                 .findBySetup_IdAndUsuario_Id(setupId, usuario.getId())
                 .orElseGet(() -> SetupCalificacion.builder()
