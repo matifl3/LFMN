@@ -40,7 +40,7 @@ npx prettier --write src   # formateo: singleQuote, printWidth 100, parser angul
 
 ## Gotchas operativos
 
-- **DataSeeder corre en cada arranque, también en prod** (`config/DataSeeder.java`, sin `@Profile`). Es idempotente. Crea `admin@lfm.local / admin123` y pilotos de prueba `piloto1/piloto2@lfm.local / piloto123`, todas las categorías, logros y campeonatos. El README dice "sin DataSeeder en prod" — **está desactualizado**.
+- **DataSeeder corre en cada arranque, también en prod** (`config/DataSeeder.java`, sin `@Profile`). Es idempotente. Siempre crea categorías, logros y campeonatos. El admin `admin@lfm.local` usa `app.seed.admin-password` (dev: `admin123`; prod: `ADMIN_PASSWORD`, **sin default**): en prod, sin esa variable no se crea, y si ya existe con `admin123` queda deshabilitado (con la variable, se rota a ella). Los pilotos de prueba (`piloto1/piloto2/organizador@lfm.local / piloto123`) solo se crean con `app.seed.usuarios-demo=true` (dev); en prod los existentes con esa password se deshabilitan. El README dice "sin DataSeeder en prod" — **está desactualizado**.
 - Backend local: `spring.datasource.password=${DB_PASSWORD}` **no tiene default** → falla sin esa variable. Usa usuario `root` por default en `localhost:3306/lfm`.
 - Schema: dev y prod usan `ddl-auto=update` (Flyway deshabilitado, starter igual presente en el pom). Los `V*.sql` de `db/migration` (hoy V1–V3) quedan reservados para un switch futuro; por ahora editar entidades JPA aplica solo.
 - **Push a `main` redeployea en producción**: frontend en Vercel (`lfmn.vercel.app`) y API en Render (`lfmn.onrender.com`, API url real: `https://lfmn.onrender.com`). El único workflow es `.github/workflows/ci.yml` (solo CI).

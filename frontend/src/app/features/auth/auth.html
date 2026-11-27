@@ -129,7 +129,7 @@
       </div>
 
       <form [formGroup]="steamForm" (ngSubmit)="crearCuentaSteam()" style="margin-top: var(--sp-5)" novalidate>
-        <input type="hidden" formControlName="guidSteam" />
+        <input type="hidden" formControlName="tokenRegistro" />
         <div class="field" [class.invalid]="invalido(steamForm, 'nombrePiloto')">
           <label for="steam-nombre">Nombre de piloto</label>
           <input

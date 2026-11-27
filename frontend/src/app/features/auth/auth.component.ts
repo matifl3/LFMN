@@ -32,7 +32,8 @@ export class AuthComponent implements OnInit {
   });
 
   readonly steamForm = this.fb.nonNullable.group({
-    guidSteam: ['', Validators.required],
+    // JWT firmado por el backend tras el OpenID de Steam (no el GUID suelto).
+    tokenRegistro: ['', Validators.required],
     nombrePiloto: ['', Validators.required],
     email: ['', [Validators.required, Validators.email]],
   });
@@ -151,7 +152,7 @@ export class AuthComponent implements OnInit {
     this.api.post<LoginResponseLFM>('/usuarios/registro-steam', {
       email: v.email.trim(),
       nombrePiloto: v.nombrePiloto.trim(),
-      guidSteam: v.guidSteam,
+      tokenRegistro: v.tokenRegistro,
     }).subscribe({
       next: (data) => {
         this.cargando.set(false);
@@ -208,7 +209,7 @@ export class AuthComponent implements OnInit {
     const steam = q.get('steam');
     if (!steam) return;
     const codigo = q.get('codigo');
-    const guid = q.get('guid');
+    const registro = q.get('registro');
     this.router.navigate([], { replaceUrl: true, relativeTo: this.route });
 
     if (steam === 'ok' && codigo) {
@@ -226,8 +227,8 @@ export class AuthComponent implements OnInit {
         },
         error: (err) => this.toast.error(apiError(err)),
       });
-    } else if (steam === 'nuevo' && guid) {
-      this.steamForm.patchValue({ guidSteam: guid });
+    } else if (steam === 'nuevo' && registro) {
+      this.steamForm.patchValue({ tokenRegistro: registro });
       this.modoSteamSetup.set(true);
     } else {
       this.toast.error(

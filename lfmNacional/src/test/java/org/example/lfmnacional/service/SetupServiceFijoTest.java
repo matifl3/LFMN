@@ -54,7 +54,7 @@ class SetupServiceFijoTest {
     }
 
     private SetupRequest request(Long categoriaId) {
-        return new SetupRequest("Mi setup", "Desc", "Termas", "Ferrari 296", null, categoriaId);
+        return new SetupRequest("Mi setup", "Desc", "Termas", "Ferrari 296", categoriaId);
     }
 
     @Test
@@ -97,5 +97,18 @@ class SetupServiceFijoTest {
         var response = setupService.create(request(2L), piloto);
 
         assertThat(response.titulo()).isEqualTo("Mi setup");
+    }
+
+    @Test
+    void editarSetupNoCambiaNiBorraSuArchivo() {
+        Setup setup = Setup.builder().id(5L).titulo("Viejo").circuito("Termas").vehiculo("Ferrari 296")
+                .archivo("propio.zip").autor(piloto).build();
+        when(setupRepository.findById(5L)).thenReturn(java.util.Optional.of(setup));
+        when(setupRepository.save(any(Setup.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        setupService.update(5L, request(null));
+
+        // El archivo solo lo asigna el upload; editar no puede apuntarlo a otro ni perderlo.
+        assertThat(setup.getArchivo()).isEqualTo("propio.zip");
     }
 }

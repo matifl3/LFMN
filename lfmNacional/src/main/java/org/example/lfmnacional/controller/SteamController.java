@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.view.RedirectView;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 @RestController
@@ -51,7 +53,8 @@ public class SteamController {
             String codigo = steamService.generarCodigoAuth(resultado.usuarioId());
             url = frontendUrl + "/auth?steam=ok&codigo=" + codigo;
         } else if ("nuevo".equals(resultado.resultado())) {
-            url = frontendUrl + "/auth?steam=nuevo&guid=" + resultado.guidSteam();
+            url = frontendUrl + "/auth?steam=nuevo&registro="
+                    + URLEncoder.encode(resultado.tokenRegistro(), StandardCharsets.UTF_8);
         } else {
             url = frontendUrl + "/auth?steam=" + resultado.resultado();
         }

@@ -3,6 +3,7 @@ package org.example.lfmnacional.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.lfmnacional.entity.Usuario;
+import org.example.lfmnacional.exception.BusinessException;
 import org.example.lfmnacional.repository.UsuarioRepository;
 import org.example.lfmnacional.security.JwtUtil;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,7 +31,12 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 public class SteamService {
 
-    public record SteamAuthResult(String resultado, Long usuarioId, String guidSteam) {
+    /**
+     * Resultado del callback de ingreso. Para un Steam sin cuenta, {@code tokenRegistro}
+     * es un JWT firmado que prueba que ese GUID salio de un login OpenID valido: el
+     * GUID nunca viaja suelto al front, asi nadie puede registrar el Steam de otro.
+     */
+    public record SteamAuthResult(String resultado, Long usuarioId, String tokenRegistro) {
     }
 
     private record CodigoAuth(Long usuarioId, long expiraEn) {
@@ -43,6 +49,8 @@ public class SteamService {
             Pattern.compile("^https?://steamcommunity\\.com/openid/id/(\\d{17})$");
     private static final String SCOPE_VINCULACION = "steam-vinculacion";
     private static final String SCOPE_AUTH = "steam-auth";
+    private static final String SCOPE_REGISTRO = "steam-registro";
+    private static final long REGISTRO_VIGENCIA_MINUTOS = 15;
     private static final String SUFFIX_EMAIL = "@steam.local";
     private static final long STATE_TIMEOUT_MINUTOS = 10;
     private static final long CODIGO_VIGENCIA_MILIS = 60_000;
@@ -142,12 +150,34 @@ public class SteamService {
                 log.info("Steam auth: guidSteam vinculado a usuario existente id={}", usuario.getId());
             } else {
                 log.info("Steam auth: usuario nuevo detectado, guiando a completar perfil");
-                return new SteamAuthResult("nuevo", null, guidSteam);
+                return new SteamAuthResult("nuevo", null, generarTokenRegistro(guidSteam));
             }
         } else {
             log.info("Steam auth: usuario existente id={}", usuario.getId());
         }
         return new SteamAuthResult("ok", usuario.getId(), null);
+    }
+
+    /** Token que acredita la propiedad de un GUID de Steam verificado por OpenID. */
+    public String generarTokenRegistro(String guidSteam) {
+        return jwtUtil.generarToken(guidSteam, Map.of("scope", SCOPE_REGISTRO), REGISTRO_VIGENCIA_MINUTOS);
+    }
+
+    /**
+     * GUID de Steam acreditado por un token de {@link #generarTokenRegistro}. Es la
+     * unica forma de asociar un GUID a una cuenta fuera del callback de vinculacion.
+     */
+    public String extraerGuidRegistro(String tokenRegistro) {
+        String guid;
+        try {
+            guid = jwtUtil.extraerSubject(tokenRegistro, SCOPE_REGISTRO);
+        } catch (Exception e) {
+            throw new BusinessException("El ingreso con Steam expiro o es invalido. Volve a ingresar con Steam.");
+        }
+        if (guid == null || !guid.matches("\\d{17}")) {
+            throw new BusinessException("El ingreso con Steam expiro o es invalido. Volve a ingresar con Steam.");
+        }
+        return guid;
     }
 
     public String generarCodigoAuth(Long usuarioId) {

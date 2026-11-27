@@ -1,11 +1,13 @@
 package org.example.lfmnacional.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.example.lfmnacional.dto.apelacion.ApelacionRequest;
 import org.example.lfmnacional.dto.apelacion.ApelacionResolucionRequest;
 import org.example.lfmnacional.dto.apelacion.ApelacionResponse;
 import org.example.lfmnacional.entity.Apelacion;
 import org.example.lfmnacional.entity.Notificacion;
+import org.example.lfmnacional.entity.Sancion;
 import org.example.lfmnacional.entity.Usuario;
 import org.example.lfmnacional.enums.EstadoApelacion;
 import org.example.lfmnacional.enums.TipoNotificacion;
@@ -56,11 +58,16 @@ public class ApelacionService {
 
     @Transactional
     public ApelacionResponse create(ApelacionRequest request, Usuario usuario) {
+        Sancion sancion = sancionService.getEntity(request.sancionId());
+        // Solo el sancionado puede apelar su propia sancion.
+        if (!sancion.getUsuario().getId().equals(usuario.getId())) {
+            throw new AccessDeniedException("Solo podes apelar tus propias sanciones");
+        }
         if (apelacionRepository.existsBySancion_IdAndUsuario_Id(request.sancionId(), usuario.getId())) {
             throw new BusinessException("Ya existe una apelacion para esta sancion");
         }
         Apelacion apelacion = Apelacion.builder()
-                .sancion(sancionService.getEntity(request.sancionId()))
+                .sancion(sancion)
                 .usuario(usuario)
                 .motivo(request.motivo())
                 .build();

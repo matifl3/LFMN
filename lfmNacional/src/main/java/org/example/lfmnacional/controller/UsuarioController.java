@@ -34,7 +34,7 @@ public class UsuarioController {
 
     @PostMapping("/vincular-steam-login")
     public LoginResponse vincularSteamConLogin(@Valid @RequestBody SteamVinculacionLoginRequest request) {
-        return usuarioService.vincularSteamConLogin(request.email(), request.password(), request.guidSteam());
+        return usuarioService.vincularSteamConLogin(request.email(), request.password(), request.tokenRegistro());
     }
 
     @PostMapping("/login")
@@ -59,8 +59,8 @@ public class UsuarioController {
     }
 
     @GetMapping("/{id}")
-    public UsuarioResponse getById(@PathVariable Long id) {
-        return usuarioService.getById(id);
+    public UsuarioResponse getById(@PathVariable Long id, @AuthenticationPrincipal Usuario visor) {
+        return usuarioService.getById(id, visor);
     }
 
     @PutMapping("/{id}/perfil")
@@ -83,15 +83,9 @@ public class UsuarioController {
         usuarioService.updatePassword(id, request);
     }
 
-    @PutMapping("/{id}/steam")
-    public UsuarioResponse vincularSteam(@PathVariable Long id,
-                                         @AuthenticationPrincipal Usuario actual,
-                                         @Valid @RequestBody SteamRequest request) {
-        if (!actual.getId().equals(id)) {
-            throw new BusinessException("No tenes permiso para vincular Steam de otro usuario");
-        }
-        return usuarioService.vincularSteam(id, request);
-    }
+    // Vincular Steam solo via OpenID (GET /api/steam/vincular-url): no hay PUT que
+    // acepte un GUID del cliente, porque el GUID es la identidad del piloto en las
+    // sesiones importadas.
 
     @DeleteMapping("/{id}/steam")
     public UsuarioResponse desvincularSteam(@PathVariable Long id,
