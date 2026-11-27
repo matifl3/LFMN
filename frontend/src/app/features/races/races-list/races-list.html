@@ -81,14 +81,8 @@
               </div>
             </div>
             <div>
-              @if (r.estado === 'CANCELADA') {
-                <app-chip estado="CANCELADA" tipo="carrera" />
-              } @else if (r.estado === 'PROGRAMADA' || r.estado === 'INSCRIPCIONES_ABIERTAS') {
-                @if (isFull(r)) {
-                  <span class="chip chip-closed">Cupo lleno</span>
-                } @else {
-                  <app-chip estado="INSCRIPCIONES_ABIERTAS" tipo="carrera" />
-                }
+              @if (chipDe(r); as ch) {
+                <span class="chip {{ ch.clase }}">{{ ch.label }}</span>
               } @else {
                 <app-chip [estado]="r.estado" tipo="carrera" />
               }

@@ -26,15 +26,26 @@ export class RacesListComponent implements OnInit {
   readonly view = signal<'proximas' | 'pasadas'>('proximas');
   readonly filtroCat = signal<string | null>(null);
 
+  /**
+   * El backend separa próximas/pasadas solo por fecha, así que una carrera EN_CURSO
+   * (ya arrancó) llega en /pasadas. La subimos a Próximas, primera, para que no
+   * quede enterrada entre las corridas.
+   */
+  private readonly enCurso = computed(() =>
+    this.pasadasRaw().filter((c) => c.estado === 'EN_CURSO'),
+  );
+
   readonly proximasFiltradas = computed(() =>
-    this.proximasRaw().filter((c) => !this.filtroCat() || String(c.categoriaId) === this.filtroCat())
+    [...this.enCurso(), ...this.proximasRaw()].filter((c) => this.pasaFiltro(c)),
   );
 
   readonly pasadasFiltradas = computed(() =>
-    this.pasadasRaw().filter((c) => !this.filtroCat() || String(c.categoriaId) === this.filtroCat())
+    this.pasadasRaw().filter((c) => c.estado !== 'EN_CURSO' && this.pasaFiltro(c)),
   );
 
-  readonly listaActual = computed(() => (this.view() === 'proximas' ? this.proximasFiltradas() : this.pasadasFiltradas()));
+  readonly listaActual = computed(() =>
+    this.view() === 'proximas' ? this.proximasFiltradas() : this.pasadasFiltradas(),
+  );
 
   ngOnInit(): void {
     const cat = this.route.snapshot.queryParamMap.get('cat');
@@ -89,5 +100,25 @@ export class RacesListComponent implements OnInit {
 
   isFull(c: Carrera): boolean {
     return typeof c.cupoMaximo === 'number' && c.cupoMaximo > 0 && this.cupoN(c) >= c.cupoMaximo;
+  }
+
+  /**
+   * Chip de la fila. Respeta el estado real (antes PROGRAMADA salía como
+   * "Inscripciones abiertas") y marca las que ya pasaron de fecha sin cerrarse.
+   */
+  chipDe(c: Carrera): { clase: string; label: string } | null {
+    if (c.estado === 'EN_CURSO') return { clase: 'chip-live', label: 'En vivo' };
+    const abierta = c.estado === 'PROGRAMADA' || c.estado === 'INSCRIPCIONES_ABIERTAS';
+    if (abierta && this.view() === 'pasadas') {
+      return { clase: 'chip-pending', label: 'Sin resultados' };
+    }
+    if (c.estado === 'INSCRIPCIONES_ABIERTAS' && this.isFull(c)) {
+      return { clase: 'chip-closed', label: 'Cupo lleno' };
+    }
+    return null; // el resto lo resuelve <app-chip> con el mapa de estados
+  }
+
+  private pasaFiltro(c: Carrera): boolean {
+    return !this.filtroCat() || String(c.categoriaId) === this.filtroCat();
   }
 }

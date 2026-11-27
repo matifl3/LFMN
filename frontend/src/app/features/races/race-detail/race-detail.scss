@@ -1,0 +1,153 @@
+.skeleton-80 {
+  width: 80%;
+}
+.skeleton-60 {
+  width: 60%;
+}
+
+.volver {
+  margin-bottom: var(--sp-5);
+}
+
+.empty-cta {
+  margin-top: var(--sp-4);
+}
+
+.detail-header-acciones {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--sp-3);
+}
+
+.detail-tabs {
+  margin-bottom: var(--sp-6);
+}
+
+.panel-titulo {
+  margin-bottom: var(--sp-4);
+}
+
+.panel-vacio {
+  margin-top: var(--sp-4);
+}
+
+// Info
+.info-tile-ancho {
+  grid-column: span 2;
+}
+
+.servidor-host {
+  margin-top: var(--sp-2);
+  font-size: var(--fs-2xs);
+}
+
+.password-fila {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+.cupo-espera {
+  margin-left: var(--sp-2);
+  font-size: var(--fs-xs);
+}
+
+.cupo-barra {
+  margin-top: var(--sp-3);
+}
+
+.elo-fila {
+  display: flex;
+  gap: var(--sp-4);
+  flex-wrap: wrap;
+}
+
+.elo-casos {
+  font-size: var(--fs-xs);
+}
+
+// Inscriptos
+.entrant-info {
+  flex: 1;
+}
+
+.entrant-stats {
+  font-size: var(--fs-xs);
+}
+
+// Análisis
+.resumen-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: var(--sp-4);
+  margin-bottom: var(--sp-5);
+}
+
+.resumen-card {
+  padding: var(--sp-4);
+
+  h4 {
+    margin-bottom: var(--sp-3);
+  }
+}
+
+.resumen-nota {
+  font-size: var(--fs-xs);
+  margin-bottom: var(--sp-3);
+}
+
+.resumen-tabla {
+  margin-bottom: var(--sp-3);
+}
+
+.kv-lista {
+  display: grid;
+  gap: var(--sp-2);
+}
+
+.kv {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+
+.chart-card {
+  margin-bottom: var(--sp-5);
+  padding: var(--sp-4);
+
+  h4 {
+    margin-bottom: var(--sp-2);
+  }
+}
+
+.chart-con-eje {
+  display: flex;
+  gap: var(--sp-2);
+}
+
+// Alineado con el PAD de 24/200 del SVG para que P-mejor y P-peor caigan sobre
+// el primer y el último valor graficado.
+.chart-eje {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 18px 0;
+  font-size: var(--fs-2xs);
+  min-width: 2.5em;
+  text-align: right;
+}
+
+.chart-svg {
+  flex: 1;
+  min-width: 0;
+}
+
+@media (max-width: 640px) {
+  .info-tile-ancho {
+    grid-column: auto;
+  }
+  .detail-header-acciones {
+    align-items: flex-start;
+  }
+}
