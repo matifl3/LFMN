@@ -70,8 +70,10 @@ public class UsuarioService {
     private final VueltaRepository vueltaRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final SteamService steamService;
 
     @Transactional
+    @CacheEvict(value = "usuarios", allEntries = true)
     public LoginResponse registrar(RegistroRequest request) {
         if (usuarioRepository.existsByEmail(request.email())) {
             throw new BusinessException("Ya existe un usuario con el email " + request.email());
@@ -90,11 +92,13 @@ public class UsuarioService {
     }
 
     @Transactional
+    @CacheEvict(value = "usuarios", allEntries = true)
     public LoginResponse registrarSteam(SteamRegistroRequest request) {
+        String guidSteam = steamService.extraerGuidRegistro(request.tokenRegistro());
         if (usuarioRepository.existsByEmail(request.email())) {
             throw new BusinessException("Ya existe un usuario con el email " + request.email());
         }
-        if (usuarioRepository.existsByGuidSteam(request.guidSteam())) {
+        if (usuarioRepository.existsByGuidSteam(guidSteam)) {
             throw new BusinessException("Ya existe un usuario vinculado a esa cuenta de Steam");
         }
         if (usuarioRepository.existsByNombrePiloto(request.nombrePiloto())) {
@@ -104,7 +108,7 @@ public class UsuarioService {
                 .email(request.email())
                 .password(passwordEncoder.encode(UUID.randomUUID().toString()))
                 .nombrePiloto(request.nombrePiloto())
-                .guidSteam(request.guidSteam())
+                .guidSteam(guidSteam)
                 .passwordEstablecida(false)
                 .build();
         usuario = usuarioRepository.save(usuario);
@@ -112,7 +116,8 @@ public class UsuarioService {
     }
 
     @Transactional
-    public LoginResponse vincularSteamConLogin(String email, String password, String guidSteam) {
+    public LoginResponse vincularSteamConLogin(String email, String password, String tokenRegistro) {
+        String guidSteam = steamService.extraerGuidRegistro(tokenRegistro);
         Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new BusinessException("No existe una cuenta con ese email"));
         if (!usuario.isHabilitado()) {
@@ -145,8 +150,16 @@ public class UsuarioService {
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con id " + id));
     }
 
-    public UsuarioResponse getById(Long id) {
-        return toResponse(getEntity(id));
+    /**
+     * Perfil por id. El endpoint es publico (perfil de piloto), asi que solo el
+     * propio usuario o un ADMIN reciben los datos privados (email, GUID de Steam,
+     * estado de la password); el resto ve la version publica.
+     */
+    public UsuarioResponse getById(Long id, Usuario visor) {
+        Usuario usuario = getEntity(id);
+        boolean completo = visor != null
+                && (visor.getId().equals(id) || visor.getRol() == Rol.ADMIN);
+        return completo ? toResponse(usuario) : toResponsePublico(usuario);
     }
 
     public UsuarioResponse me(Usuario usuario) {
@@ -196,16 +209,6 @@ public class UsuarioService {
         usuario.setPasswordEstablecida(true);
         usuario.setTokenVersion((usuario.getTokenVersion() != null ? usuario.getTokenVersion() : 0) + 1);
         usuarioRepository.save(usuario);
-    }
-
-    @Transactional
-    public UsuarioResponse vincularSteam(Long id, SteamRequest request) {
-        Usuario usuario = getEntity(id);
-        if (usuarioRepository.existsByGuidSteam(request.guidSteam())) {
-            throw new BusinessException("Ya existe un usuario vinculado a esa cuenta de Steam");
-        }
-        usuario.setGuidSteam(request.guidSteam());
-        return toResponse(usuarioRepository.save(usuario));
     }
 
     @Transactional
@@ -347,6 +350,21 @@ public class UsuarioService {
                 sancion.getMotivo(),
                 sancion.getFecha(),
                 sancion.getCarrera() != null ? sancion.getCarrera().getId() : null);
+    }
+
+    private UsuarioResponse toResponsePublico(Usuario usuario) {
+        return new UsuarioResponse(
+                usuario.getId(),
+                null,
+                usuario.getNombrePiloto(),
+                usuario.getFotoPerfil(),
+                null,
+                usuario.getElo(),
+                usuario.getSafetyRating(),
+                usuario.getRol(),
+                usuario.getFechaRegistro(),
+                null,
+                usuario.isHabilitado());
     }
 
     private UsuarioResponse toResponse(Usuario usuario) {

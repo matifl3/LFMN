@@ -52,6 +52,11 @@ public class JwtUtil {
     }
 
     public Long extraerUserId(String token, String scopeEsperado) {
+        return Long.valueOf(extraerSubject(token, scopeEsperado));
+    }
+
+    /** Subject de un token de proposito unico, exigiendo que su scope sea el esperado. */
+    public String extraerSubject(String token, String scopeEsperado) {
         if (token == null || token.isBlank()) {
             throw new JwtException("Token de estado invalido");
         }
@@ -60,7 +65,7 @@ public class JwtUtil {
         if (!scopeEsperado.equals(scope)) {
             throw new JwtException("Scope de estado invalido");
         }
-        return Long.valueOf(claims.getSubject());
+        return claims.getSubject();
     }
 
     public void validarState(String token, String scopeEsperado) {

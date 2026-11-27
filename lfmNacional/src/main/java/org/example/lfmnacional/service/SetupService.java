@@ -107,7 +107,6 @@ public class SetupService {
                 .descripcion(request.descripcion())
                 .circuito(request.circuito())
                 .vehiculo(request.vehiculo())
-                .archivo(request.archivo())
                 .autor(autor)
                 .categoria(categoria)
                 .fechaPublicacion(LocalDateTime.now())
@@ -122,7 +121,6 @@ public class SetupService {
         setup.setDescripcion(request.descripcion());
         setup.setCircuito(request.circuito());
         setup.setVehiculo(request.vehiculo());
-        setup.setArchivo(request.archivo());
         setup.setCategoria(request.categoriaId() != null ? categoriaService.getEntity(request.categoriaId()) : null);
         return toResponse(setupRepository.save(setup));
     }

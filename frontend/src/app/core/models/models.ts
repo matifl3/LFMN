@@ -10,7 +10,8 @@ export type Rol = 'USUARIO' | 'ADMIN' | 'ADMIN_CAMPEONATO' | 'COMISARIO';
 
 export interface Usuario {
   id: number;
-  email: string;
+  /** Solo para el propio usuario o un ADMIN: el perfil publico de otro llega sin email. */
+  email?: string;
   nombrePiloto: string;
   fotoPerfil?: string;
   guidSteam?: string;
