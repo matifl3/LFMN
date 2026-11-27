@@ -135,6 +135,7 @@
 .site-header .container-wide {
   display: flex;
   align-items: center;
+  align-self: stretch;
   justify-content: space-between;
   width: 100%;
   gap: var(--sp-4);
@@ -164,27 +165,36 @@
   font-weight: 500;
 }
 
+// Pestañas: ocupan todo el alto del header y la barra roja del activo
+// queda pegada al borde inferior (margin-bottom: -1px pisa el borde-hair).
 .main-nav {
   display: flex;
-  gap: var(--sp-6);
+  align-self: stretch;
+  gap: var(--sp-1);
 }
 .main-nav a {
+  display: flex;
+  align-items: center;
+  padding-inline: var(--sp-3);
+  margin-bottom: -1px;
   font-family: var(--font-display);
   font-size: var(--fs-sm);
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--texto-secundario);
-  padding-block: var(--sp-2);
   border-bottom: 2px solid transparent;
   transition:
     color var(--dur-base) var(--ease),
+    background-color var(--dur-base) var(--ease),
     border-color var(--dur-base) var(--ease);
 }
 .main-nav a:hover {
   color: var(--texto-principal);
+  background: rgba(255, 255, 255, 0.03);
 }
 .main-nav a.active {
-  color: var(--lbm-rojo-hi);
+  color: var(--texto-principal);
+  background: linear-gradient(to top, rgba(255, 255, 255, 0.06), transparent);
   border-color: var(--lbm-rojo);
 }
 
@@ -209,6 +219,25 @@
 .icon-btn:hover {
   color: var(--texto-principal);
   border-color: var(--borde-brillo);
+}
+// En el header la campanita va sin caja: el fondo aparece solo en hover/foco.
+.header-actions .icon-btn {
+  background: transparent;
+  border-color: transparent;
+  border-radius: 50%;
+  transition:
+    color var(--dur-base) var(--ease),
+    background-color var(--dur-base) var(--ease);
+}
+.header-actions .icon-btn:hover,
+.header-actions .icon-btn.active {
+  color: var(--texto-principal);
+  background: var(--bg-superficie);
+  border-color: transparent;
+}
+.header-actions .icon-btn:focus-visible {
+  outline: 2px solid var(--lbm-rojo);
+  outline-offset: 2px;
 }
 .icon-btn .dot {
   position: absolute;
@@ -279,6 +308,11 @@
     gap: var(--sp-3);
     border-bottom: 1px solid var(--borde-metal);
     box-shadow: var(--shadow-lift);
+  }
+  .main-nav a {
+    padding: var(--sp-2) 0;
+    margin-bottom: 0;
+    background: none;
   }
   .main-nav.open {
     display: flex;
