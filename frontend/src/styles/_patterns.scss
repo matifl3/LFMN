@@ -208,6 +208,30 @@
     grid-template-columns: 1fr;
   }
 }
+// Lista de carreras: columnas de ancho fijo para que todas las filas queden
+// alineadas. Con "auto" y fr sin minmax(0, ...), cada fila media su propio
+// contenido (titulo largo, chip de estado mas ancho) y las columnas se corrian.
+@media (min-width: 901px) {
+  .race-row--lista {
+    grid-template-columns: 64px minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr) 13rem 18px;
+  }
+  .race-row--lista .race-row-estado {
+    justify-self: end;
+  }
+}
+// Titulo arriba, circuito y hora abajo: sin esto el <strong> y el <span> iban
+// en la misma linea y la categoria quedaba pegada al circuito ("LFM Demotermas").
+.race-row--lista .race-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sp-1);
+  min-width: 0;
+}
+.race-row--lista .race-meta > span:not(.chip) {
+  font-size: var(--fs-sm);
+  color: var(--texto-terciario);
+}
 
 // ---- Race detail header -----------------------------------------
 .detail-header {
@@ -520,8 +544,10 @@
   position: relative;
   overflow: hidden;
 }
+// Fija a la ventana, no a .auth-shell: si la foto medía lo mismo que la caja,
+// cada mensaje de error que agrandaba el formulario la reescalaba y se corria.
 .auth-photo {
-  position: absolute;
+  position: fixed;
   inset: 0;
   width: 100%;
   height: 100%;

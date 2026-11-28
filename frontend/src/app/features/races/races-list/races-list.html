@@ -50,7 +50,7 @@
         <app-empty-state [texto]="'carreras.lista.vacio' | transloco" />
       } @else {
         @for (r of listaActual(); track r.id) {
-          <a [routerLink]="['/carreras', r.id]" class="race-row row-link">
+          <a [routerLink]="['/carreras', r.id]" class="race-row race-row--lista row-link">
             <div class="race-date">
               <span class="day">{{ raceDay(r) }}</span>
               <span class="mon">{{ raceMon(r) }}</span>
@@ -61,7 +61,7 @@
               >
               <span>{{ r.circuito }}{{ r.fecha ? ' · ' + raceHora(r) : '' }}</span>
               @if (r.practicaFecha) {
-                <span class="chip chip-category" style="margin-top: var(--sp-2)">{{
+                <span class="chip chip-category" style="margin-top: var(--sp-1)">{{
                   'carreras.lista.practica' | transloco: { hora: racePracticaHora(r) }
                 }}</span>
               }
@@ -82,7 +82,7 @@
                 ></div>
               </div>
             </div>
-            <div>
+            <div class="race-row-estado">
               @if (chipDe(r); as ch) {
                 <span class="chip {{ ch.clase }}">{{ ch.label }}</span>
               } @else {
