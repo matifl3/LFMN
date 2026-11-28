@@ -87,20 +87,32 @@ a {
   text-decoration-thickness: 1px;
 }
 
-::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+:root {
+  // #6b6b6b: ~3.4:1 contra --bg-inset y ~3.5:1 contra --bg-principal (WCAG 1.4.11
+  // pide 3:1). --borde-metal daba ~1.4:1 y el thumb casi no se veia.
+  --scrollbar-thumb: #6b6b6b;
+  --scrollbar-track: var(--bg-inset);
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
 }
-::-webkit-scrollbar-track {
-  background: var(--bg-inset);
-}
-::-webkit-scrollbar-thumb {
-  background: var(--borde-metal);
-  border: 2px solid var(--bg-inset);
-  border-radius: var(--r-pill);
-}
-::-webkit-scrollbar-thumb:hover {
-  background: var(--lbm-rojo-dim);
+
+// Fallback para navegadores sin `scrollbar-color` (Safari < 26.2). Va dentro del
+// @supports para que no compita con la propiedad estandar donde existen ambas.
+@supports not (scrollbar-color: auto) {
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border: 2px solid var(--scrollbar-track);
+    border-radius: var(--r-pill);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--lbm-rojo-dim);
+  }
 }
 
 :focus-visible {
