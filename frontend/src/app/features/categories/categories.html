@@ -133,12 +133,14 @@
         class="btn btn-ghost btn-sm"
         >{{ 'categorias.verCarreras' | transloco }}</a
       >
-      @if (t.campeonato) {
+      <!-- Con uno solo, el boton generico de siempre; con varios, uno por campeonato con su nombre. -->
+      @for (c of t.campeonatos; track c.id) {
         <a
           [routerLink]="['/campeonato']"
-          [queryParams]="{ id: t.campeonato.id }"
+          [queryParams]="{ id: c.id }"
           class="btn btn-ghost btn-sm"
-          >{{ 'categorias.campeonato' | transloco }}</a
+          [title]="c.nombre"
+          >{{ t.campeonatos.length > 1 ? c.nombre : ('categorias.campeonato' | transloco) }}</a
         >
       }
     </div>
