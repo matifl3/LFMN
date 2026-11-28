@@ -128,6 +128,7 @@ export interface Campeonato {
   id: number;
   nombre: string;
   temporada?: string;
+  descripcion?: string | null;
   categoriaId: number;
   categoriaNombre?: string;
   estado: string;

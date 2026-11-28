@@ -21,6 +21,8 @@ import java.util.List;
 @Builder
 public class Campeonato {
 
+    public static final int MAX_DESCRIPCION = 2000;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -30,6 +32,10 @@ public class Campeonato {
 
     @Column(length = 50)
     private String temporada;
+
+    /** Texto libre que presenta el campeonato (formato, reglas, premios). Opcional. */
+    @Column(length = Campeonato.MAX_DESCRIPCION)
+    private String descripcion;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "categoria_id", nullable = false)

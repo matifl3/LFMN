@@ -2,6 +2,8 @@ package org.example.lfmnacional.dto.campeonato;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import org.example.lfmnacional.entity.Campeonato;
 import org.example.lfmnacional.enums.EstadoCampeonato;
 import org.example.lfmnacional.enums.VisibilidadCampeonato;
 
@@ -19,6 +21,12 @@ public record CampeonatoRequest(
          * (publico de liga); enviar el id quita el dueno anterior.
          */
         Long adminId,
-        VisibilidadCampeonato visibilidad
+        VisibilidadCampeonato visibilidad,
+        /**
+         * En el PUT, {@code null} (o ausente) conserva la descripcion actual: asi un
+         * cliente que no conoce el campo (o el "Cerrar/Reabrir" del admin, que arma
+         * el body a mano) no la borra. Para quitarla se manda {@code ""}.
+         */
+        @Size(max = Campeonato.MAX_DESCRIPCION) String descripcion
 ) {
 }

@@ -7,6 +7,7 @@ public record CampeonatoResponse(
         Long id,
         String nombre,
         String temporada,
+        String descripcion,
         Long categoriaId,
         String categoriaNombre,
         EstadoCampeonato estado,

@@ -141,6 +141,7 @@ public class CampeonatoService {
         Campeonato campeonato = Campeonato.builder()
                 .nombre(request.nombre())
                 .temporada(request.temporada())
+                .descripcion(normalizarDescripcion(request.descripcion()))
                 .categoria(categoria)
                 .estado(request.estado())
                 .sistemaPuntos(request.sistemaPuntos())
@@ -168,10 +169,21 @@ public class CampeonatoService {
         }
         campeonato.setNombre(request.nombre());
         campeonato.setTemporada(request.temporada());
+        if (request.descripcion() != null) {
+            campeonato.setDescripcion(normalizarDescripcion(request.descripcion()));
+        }
         campeonato.setCategoria(categoriaService.getEntity(request.categoriaId()));
         campeonato.setEstado(request.estado() != null ? request.estado() : campeonato.getEstado());
         campeonato.setSistemaPuntos(request.sistemaPuntos());
         return toResponse(campeonatoRepository.save(campeonato), usuario, Set.of());
+    }
+
+    /** Recorta espacios; una descripcion en blanco se guarda como {@code null}. */
+    private static String normalizarDescripcion(String descripcion) {
+        if (descripcion == null || descripcion.isBlank()) {
+            return null;
+        }
+        return descripcion.strip();
     }
 
     /**
@@ -351,6 +363,7 @@ public class CampeonatoService {
                 campeonato.getId(),
                 campeonato.getNombre(),
                 campeonato.getTemporada(),
+                campeonato.getDescripcion(),
                 campeonato.getCategoria().getId(),
                 campeonato.getCategoria().getNombre(),
                 campeonato.getEstado(),

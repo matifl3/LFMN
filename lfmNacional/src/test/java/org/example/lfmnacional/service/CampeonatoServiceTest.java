@@ -276,7 +276,7 @@ class CampeonatoServiceTest {
 
         assertThatThrownBy(() -> campeonatoService.create(
                 new org.example.lfmnacional.dto.campeonato.CampeonatoRequest(
-                        "Copa Nocturna", "2026", 1L, null, null, null, null),
+                        "Copa Nocturna", "2026", 1L, null, null, null, null, null),
                 dueno))
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("administrador global");
@@ -292,7 +292,7 @@ class CampeonatoServiceTest {
 
         campeonatoService.create(
                 new org.example.lfmnacional.dto.campeonato.CampeonatoRequest(
-                        "Liga Abierta", "2026", 1L, null, null, null, VisibilidadCampeonato.PUBLICO),
+                        "Liga Abierta", "2026", 1L, null, null, null, VisibilidadCampeonato.PUBLICO, null),
                 admin);
 
         ArgumentCaptor<Campeonato> captor = ArgumentCaptor.forClass(Campeonato.class);
@@ -312,7 +312,7 @@ class CampeonatoServiceTest {
 
         campeonatoService.create(
                 new org.example.lfmnacional.dto.campeonato.CampeonatoRequest(
-                        "Liga Abierta", "2026", 1L, null, null, 7L, VisibilidadCampeonato.PUBLICO),
+                        "Liga Abierta", "2026", 1L, null, null, 7L, VisibilidadCampeonato.PUBLICO, null),
                 admin);
 
         ArgumentCaptor<Campeonato> captor = ArgumentCaptor.forClass(Campeonato.class);
@@ -328,7 +328,7 @@ class CampeonatoServiceTest {
 
         assertThatThrownBy(() -> campeonatoService.create(
                 new org.example.lfmnacional.dto.campeonato.CampeonatoRequest(
-                        "Liga Abierta", "2026", 1L, null, null, 1L, VisibilidadCampeonato.PUBLICO),
+                        "Liga Abierta", "2026", 1L, null, null, 1L, VisibilidadCampeonato.PUBLICO, null),
                 admin))
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("ADMIN_CAMPEONATO");
@@ -347,7 +347,7 @@ class CampeonatoServiceTest {
 
         campeonatoService.update(1L,
                 new org.example.lfmnacional.dto.campeonato.CampeonatoRequest(
-                        "Liga Abierta", "2026", 1L, null, null, 7L, null),
+                        "Liga Abierta", "2026", 1L, null, null, 7L, null, null),
                 admin);
 
         assertThat(campeonato.getAdmin()).isSameAs(organizador);
@@ -363,7 +363,7 @@ class CampeonatoServiceTest {
 
         campeonatoService.update(1L,
                 new org.example.lfmnacional.dto.campeonato.CampeonatoRequest(
-                        "Liga Abierta", "2026", 1L, EstadoCampeonato.CERRADO, null, null, null),
+                        "Liga Abierta", "2026", 1L, EstadoCampeonato.CERRADO, null, null, null, null),
                 admin);
 
         assertThat(campeonato.getEstado()).isEqualTo(EstadoCampeonato.CERRADO);
@@ -380,11 +380,85 @@ class CampeonatoServiceTest {
 
         campeonatoService.update(1L,
                 new org.example.lfmnacional.dto.campeonato.CampeonatoRequest(
-                        "Test Championship", "2026", 1L, null, null, 1L, null),
+                        "Test Championship", "2026", 1L, null, null, 1L, null, null),
                 dueno);
 
         assertThat(campeonato.getAdmin()).isNull();
         verify(usuarioRepository, never()).findById(anyLong());
+    }
+
+    // ------------------------------------------------------------ descripcion
+
+    private org.example.lfmnacional.dto.campeonato.CampeonatoRequest requestConDescripcion(String descripcion) {
+        return new org.example.lfmnacional.dto.campeonato.CampeonatoRequest(
+                "Test Championship", "2026", 1L, null, null, null, null, descripcion);
+    }
+
+    private void stubUpdate() {
+        when(campeonatoRepository.findById(1L)).thenReturn(Optional.of(campeonato));
+        when(accesoService.esAdminGlobal(admin)).thenReturn(true);
+        when(categoriaService.getEntity(1L)).thenReturn(categoria);
+        when(campeonatoRepository.save(any(Campeonato.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+    }
+
+    @Test
+    void crearGuardaLaDescripcionRecortada() {
+        when(accesoService.puedeCrearCampeonato(admin)).thenReturn(true);
+        when(categoriaService.getEntity(1L)).thenReturn(categoria);
+        when(campeonatoRepository.save(any(Campeonato.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+
+        var response = campeonatoService.create(requestConDescripcion("  Formato sprint + carrera  "), admin);
+
+        ArgumentCaptor<Campeonato> captor = ArgumentCaptor.forClass(Campeonato.class);
+        verify(campeonatoRepository).save(captor.capture());
+        assertThat(captor.getValue().getDescripcion()).isEqualTo("Formato sprint + carrera");
+        assertThat(response.descripcion()).isEqualTo("Formato sprint + carrera");
+    }
+
+    @Test
+    void crearConDescripcionEnBlancoLaGuardaComoNull() {
+        when(accesoService.puedeCrearCampeonato(admin)).thenReturn(true);
+        when(categoriaService.getEntity(1L)).thenReturn(categoria);
+        when(campeonatoRepository.save(any(Campeonato.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+
+        campeonatoService.create(requestConDescripcion("   "), admin);
+
+        ArgumentCaptor<Campeonato> captor = ArgumentCaptor.forClass(Campeonato.class);
+        verify(campeonatoRepository).save(captor.capture());
+        assertThat(captor.getValue().getDescripcion()).isNull();
+    }
+
+    @Test
+    void editarSinDescripcionConservaLaActual() {
+        campeonato.setDescripcion("Reglamento 2026");
+        stubUpdate();
+
+        campeonatoService.update(1L, requestConDescripcion(null), admin);
+
+        assertThat(campeonato.getDescripcion()).isEqualTo("Reglamento 2026");
+    }
+
+    @Test
+    void editarConDescripcionVaciaLaBorra() {
+        campeonato.setDescripcion("Reglamento 2026");
+        stubUpdate();
+
+        campeonatoService.update(1L, requestConDescripcion(""), admin);
+
+        assertThat(campeonato.getDescripcion()).isNull();
+    }
+
+    @Test
+    void editarConDescripcionNuevaLaReemplaza() {
+        campeonato.setDescripcion("Reglamento 2026");
+        stubUpdate();
+
+        campeonatoService.update(1L, requestConDescripcion("Reglamento 2027"), admin);
+
+        assertThat(campeonato.getDescripcion()).isEqualTo("Reglamento 2027");
     }
 
     // ------------------------------------------------------- recalcularPuntos
