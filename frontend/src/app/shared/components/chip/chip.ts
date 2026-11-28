@@ -4,6 +4,7 @@ import { EstadoChipPipe } from '../../../core/pipes/estado-chip.pipe';
 @Component({
   selector: 'app-chip',
   standalone: true,
+  // `info` lee t() (vía el pipe), así que se recalcula al cambiar de idioma.
   template: `<span class="chip {{ info().clase }}">{{ info().label }}</span>`,
 })
 export class Chip {

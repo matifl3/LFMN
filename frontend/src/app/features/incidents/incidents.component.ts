@@ -1,3 +1,5 @@
+import { TranslocoPipe } from '@jsverse/transloco';
+import { t } from '../../core/i18n/t';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { forkJoin, of } from 'rxjs';
@@ -28,16 +30,17 @@ type FiltroIncidente = 'TODOS' | 'PENDIENTES' | 'RESUELTOS';
 /** Sanción que se arma en el panel de resolución y viaja con ella (no se crea sola). */
 type SancionBorrador = Pick<Sancion, 'usuarioId' | 'tipo' | 'valor' | 'motivo'>;
 
+/** Clave de traducción de cada decisión (las mismas etiquetas que el chip de voto). */
 const DECISION_LABEL: Record<string, string> = {
-  A_FAVOR: 'A favor',
-  EN_CONTRA: 'En contra',
-  ABSTENCION: 'Abstención',
+  A_FAVOR: 'comun.chip.voto.A_FAVOR',
+  EN_CONTRA: 'comun.chip.voto.EN_CONTRA',
+  ABSTENCION: 'comun.chip.voto.ABSTENCION',
 };
 
 @Component({
   selector: 'app-incidents',
   standalone: true,
-  imports: [FormsModule, Chip, EmptyState, LockedState, Modal, FechaRelativaPipe],
+  imports: [TranslocoPipe, FormsModule, Chip, EmptyState, LockedState, Modal, FechaRelativaPipe],
   styleUrl: './incidents.component.scss',
   templateUrl: './incidents.component.html',
 })
@@ -205,14 +208,14 @@ export class IncidentsComponent implements OnInit {
     const id = this.detalleIncidente()?.id;
     const usuarioId = Number(this.asignarPilotoId());
     if (!id || !usuarioId) {
-      this.toast.error('Seleccioná un piloto.');
+      this.toast.error(t('incidentes.toast.elegiPiloto'));
       return;
     }
     this.api
       .post('/incidentes/' + id + '/pilotos', [{ usuarioId, rol: this.asignarRol() }])
       .subscribe({
         next: () => {
-          this.toast.success('Piloto asignado.');
+          this.toast.success(t('incidentes.toast.pilotoAsignado'));
           this.abrirDetalle(id);
         },
         error: (err) => this.toast.error(apiError(err)),
@@ -231,7 +234,7 @@ export class IncidentsComponent implements OnInit {
       .subscribe({
         next: () => {
           this.votando.set(false);
-          this.toast.success('Voto registrado.');
+          this.toast.success(t('incidentes.toast.votoRegistrado'));
           this.votoComentario.set('');
           this.abrirDetalle(id);
           this.cargar();
@@ -248,7 +251,7 @@ export class IncidentsComponent implements OnInit {
     if (!id) return;
     const explicacion = this.resolucionExplicacion()?.trim();
     if (!explicacion) {
-      this.toast.error('Explicá la resolución del incidente.');
+      this.toast.error(t('incidentes.toast.explicaResolucion'));
       return;
     }
     this.resolviendo.set(true);
@@ -261,7 +264,7 @@ export class IncidentsComponent implements OnInit {
       .subscribe({
         next: () => {
           this.resolviendo.set(false);
-          this.toast.success('Incidente resuelto.');
+          this.toast.success(t('incidentes.toast.incidenteResuelto'));
           this.modalDetalle.set(false);
           this.cargar();
         },
@@ -282,14 +285,14 @@ export class IncidentsComponent implements OnInit {
     const sancion = this.apelarSancion();
     const motivo = this.apelarMotivo()?.trim();
     if (!sancion || !motivo) {
-      this.toast.error('Escribí el motivo de la apelación.');
+      this.toast.error(t('incidentes.toast.motivoApelacion'));
       return;
     }
     this.enviando.set(true);
     this.api.post<Apelacion>('/apelaciones', { sancionId: sancion.id, motivo }).subscribe({
       next: () => {
         this.enviando.set(false);
-        this.toast.success('Apelación enviada.');
+        this.toast.success(t('incidentes.toast.apelacionEnviada'));
         this.modalApelar.set(false);
         this.cargarApelacionesYSanciones();
       },
@@ -312,14 +315,14 @@ export class IncidentsComponent implements OnInit {
     const estado = this.resolverEstado();
     const respuesta = this.resolverRespuesta()?.trim();
     if (!a || !estado || !respuesta) {
-      this.toast.error('Elegí un estado y escribí una respuesta.');
+      this.toast.error(t('incidentes.toast.estadoYRespuesta'));
       return;
     }
     this.api
       .put<Apelacion>('/apelaciones/' + a.id + '/resolucion', { estado, respuestaAdmin: respuesta })
       .subscribe({
         next: () => {
-          this.toast.success('Apelación resuelta.');
+          this.toast.success(t('incidentes.toast.apelacionResuelta'));
           this.modalResolverApelacion.set(false);
           this.cargar();
         },
@@ -350,7 +353,7 @@ export class IncidentsComponent implements OnInit {
     const usuarioId = Number(this.sanPilotoId());
     const motivo = this.sanMotivo()?.trim();
     if (!usuarioId || !motivo) {
-      this.toast.error('Seleccioná un piloto y escribí un motivo.');
+      this.toast.error(t('incidentes.toast.pilotoYMotivo'));
       return;
     }
     if (this.sancionParaResolucion()) {
@@ -375,7 +378,7 @@ export class IncidentsComponent implements OnInit {
       .subscribe({
         next: () => {
           this.enviando.set(false);
-          this.toast.success('Sanción creada.');
+          this.toast.success(t('incidentes.toast.sancionCreada'));
           this.modalNuevaSancion.set(false);
           this.limpiarFormSancion();
           this.cargar();
@@ -391,7 +394,7 @@ export class IncidentsComponent implements OnInit {
     const carreraId = Number(this.reportCarreraId());
     const descripcion = this.reportDesc()?.trim();
     if (!carreraId || !descripcion) {
-      this.toast.error('Seleccioná una carrera y describí el incidente.');
+      this.toast.error(t('incidentes.toast.carreraYDescripcion'));
       return;
     }
     this.enviando.set(true);
@@ -405,7 +408,7 @@ export class IncidentsComponent implements OnInit {
       .subscribe({
         next: () => {
           this.enviando.set(false);
-          this.toast.success('Incidente reportado.');
+          this.toast.success(t('incidentes.toast.incidenteReportado'));
           this.reportCarreraId.set('');
           this.reportVuelta.set(null);
           this.reportDesc.set('');
@@ -420,23 +423,28 @@ export class IncidentsComponent implements OnInit {
   }
 
   usuarioNombre(id: number): string {
-    return this.usuariosBase().find((u) => u.id === id)?.nombrePiloto || 'Comisario #' + id;
+    return (
+      this.usuariosBase().find((u) => u.id === id)?.nombrePiloto ||
+      t('incidentes.comisarioN', { id })
+    );
   }
 
   sancionDetalle(s: Pick<Sancion, 'tipo' | 'valor'>): string {
     if (s.valor === null || s.valor === undefined) {
-      return (s.tipo || 'sanción').toLowerCase().replace(/_/g, ' ');
+      return s.tipo
+        ? s.tipo.toLowerCase().replace(/_/g, ' ')
+        : t('incidentes.detalleSancion.generica');
     }
     const val = s.valor > 0 ? '+' + s.valor : String(s.valor);
     switch (s.tipo) {
       case 'ELO':
-        return val + ' elo';
+        return t('incidentes.detalleSancion.elo', { v: val });
       case 'SAFETY_RATING':
-        return val + ' SR';
+        return t('incidentes.detalleSancion.sr', { v: val });
       case 'PUESTOS':
-        return val + ' puestos';
+        return t('incidentes.detalleSancion.puestos', { v: val });
       case 'SEGUNDOS':
-        return val + ' segundos';
+        return t('incidentes.detalleSancion.segundos', { v: val });
       default:
         return val + ' ' + (s.tipo || '').toLowerCase().replace(/_/g, ' ');
     }

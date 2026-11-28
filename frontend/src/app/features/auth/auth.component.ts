@@ -5,12 +5,14 @@ import { AuthService } from '../../core/services/auth.service';
 import { ApiService, apiError } from '../../core/services/api.service';
 import { ToastService } from '../../core/services/toast.service';
 import { Usuario } from '../../core/models/models';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { PasswordInput } from '../../shared/components/password-input/password-input';
+import { SelectorIdioma } from '../../shared/components/selector-idioma/selector-idioma';
 
 @Component({
   selector: 'app-auth',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, PasswordInput],
+  imports: [ReactiveFormsModule, RouterLink, PasswordInput, TranslocoPipe, SelectorIdioma],
   styleUrl: './auth.scss',
   templateUrl: './auth.html',
 })
@@ -21,6 +23,7 @@ export class AuthComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly fb = inject(FormBuilder);
+  private readonly transloco = inject(TranslocoService);
 
   readonly tab = signal<'login' | 'register'>('login');
   readonly modoSteamSetup = signal(false);
@@ -49,7 +52,7 @@ export class AuthComponent implements OnInit {
     if (this.route.snapshot.queryParamMap.get('tab') === 'registro') this.tab.set('register');
     if (sessionStorage.getItem('lfm_msg_pass_changed')) {
       sessionStorage.removeItem('lfm_msg_pass_changed');
-      this.toast.success('Contraseña actualizada. Ingresá con tu nueva contraseña.');
+      this.toast.success(this.t('auth.toast.passwordActualizada'));
     }
     setTimeout(() => this.procesarSteam(), 0);
   }
@@ -63,16 +66,16 @@ export class AuthComponent implements OnInit {
     if (!c || c.valid || (!c.touched && !c.dirty) || c.disabled) return [];
     const out: string[] = [];
     if (c.errors?.['required']) {
-      const msgs: Record<string, string> = {
-        email: 'Ingresá tu email.',
-        password: 'Ingresá tu contraseña.',
-        nombrePiloto: 'Ingresá tu nombre de piloto.',
+      const claves: Record<string, string> = {
+        email: 'auth.errores.emailRequerido',
+        password: 'auth.errores.passwordRequerida',
+        nombrePiloto: 'auth.errores.nombreRequerido',
       };
-      out.push(msgs[campo] ?? 'Este campo es obligatorio.');
+      out.push(this.t(claves[campo] ?? 'auth.errores.obligatorio'));
     }
-    if (c.errors?.['email']) out.push('El email no es válido.');
+    if (c.errors?.['email']) out.push(this.t('auth.errores.emailInvalido'));
     if (c.errors?.['minlength'])
-      out.push(`Mínimo ${c.errors['minlength'].requiredLength} caracteres.`);
+      out.push(this.t('auth.errores.minimo', { n: c.errors['minlength'].requiredLength }));
     return out;
   }
 
@@ -107,7 +110,7 @@ export class AuthComponent implements OnInit {
   login(): void {
     if (this.loginForm.invalid) {
       this.marcarTocados(this.loginForm);
-      this.toast.error('Completá tu email y contraseña.');
+      this.toast.error(this.t('auth.toast.completarLogin'));
       return;
     }
     this.cargando.set(true);
@@ -116,7 +119,7 @@ export class AuthComponent implements OnInit {
       next: (data) => {
         this.cargando.set(false);
         this.auth.setSesion(data.token, data.usuario);
-        this.toast.success(`¡Bienvenido, ${data.usuario.nombrePiloto || 'piloto'}!`);
+        this.toast.success(this.t('auth.toast.bienvenido', { nombre: this.nombre(data.usuario) }));
         this.avisarSteamVinculacion(data.usuario);
         this.redirigir();
       },
@@ -136,7 +139,7 @@ export class AuthComponent implements OnInit {
         if (data?.url) {
           window.location.href = data.url;
         } else {
-          this.toast.error('No se pudo iniciar el ingreso con Steam.');
+          this.toast.error(this.t('auth.toast.steamNoIniciado'));
         }
       },
       error: (err) => {
@@ -149,7 +152,7 @@ export class AuthComponent implements OnInit {
   crearCuentaSteam(): void {
     if (this.steamForm.invalid) {
       this.marcarTocados(this.steamForm);
-      this.toast.error('Completá tu nombre de piloto y email.');
+      this.toast.error(this.t('auth.toast.completarSteam'));
       return;
     }
     this.cargando.set(true);
@@ -164,7 +167,7 @@ export class AuthComponent implements OnInit {
         next: (data) => {
           this.cargando.set(false);
           this.auth.setSesion(data.token, data.usuario);
-          this.toast.success('Cuenta creada correctamente');
+          this.toast.success(this.t('auth.toast.cuentaCreada'));
           this.redirigir();
         },
         error: (err) => {
@@ -177,7 +180,7 @@ export class AuthComponent implements OnInit {
   registrar(): void {
     if (this.registerForm.invalid) {
       this.marcarTocados(this.registerForm);
-      this.toast.error('Completá nombre de piloto, email y contraseña (mínimo 6 caracteres).');
+      this.toast.error(this.t('auth.toast.completarRegistro'));
       return;
     }
     this.cargando.set(true);
@@ -193,9 +196,7 @@ export class AuthComponent implements OnInit {
           this.cargando.set(false);
           this.auth.setSesion(data.token, data.usuario);
           this.toast.success(
-            'Cuenta creada correctamente. ¡Bienvenido, ' +
-              (data.usuario.nombrePiloto || 'piloto') +
-              '!',
+            this.t('auth.toast.cuentaCreadaBienvenido', { nombre: this.nombre(data.usuario) }),
           );
           this.avisarSteamVinculacion(data.usuario);
           this.redirigir();
@@ -207,13 +208,17 @@ export class AuthComponent implements OnInit {
       });
   }
 
+  private t(clave: string, params?: Record<string, unknown>): string {
+    return this.transloco.translate(clave, params);
+  }
+
+  private nombre(usuario: Usuario | null | undefined): string {
+    return usuario?.nombrePiloto || this.t('auth.toast.piloto');
+  }
+
   private avisarSteamVinculacion(usuario: Usuario): void {
     if (!usuario.guidSteam) {
-      this.toast.mostrar(
-        'No tenés Steam vinculado: los resultados de carrera no se sumarán a tu perfil. Vinculalo desde Mi perfil',
-        '',
-        6000,
-      );
+      this.toast.mostrar(this.t('auth.toast.sinSteam'), '', 6000);
     }
   }
 
@@ -232,7 +237,7 @@ export class AuthComponent implements OnInit {
           this.api.get<Usuario>('/usuarios/me').subscribe({
             next: (usuario) => {
               this.auth.updateUser(usuario);
-              this.toast.success(`¡Bienvenido, ${usuario.nombrePiloto || 'piloto'}!`);
+              this.toast.success(this.t('auth.toast.bienvenido', { nombre: this.nombre(usuario) }));
               this.redirigir();
             },
             error: (err) => {
@@ -249,9 +254,7 @@ export class AuthComponent implements OnInit {
       this.modoSteamSetup.set(true);
     } else {
       this.toast.error(
-        steam === 'expirado'
-          ? 'El enlace de ingreso con Steam expiró. Intentá de nuevo.'
-          : 'No se pudo ingresar con Steam.',
+        steam === 'expirado' ? this.t('auth.toast.steamExpirado') : this.t('auth.toast.steamError'),
       );
     }
   }

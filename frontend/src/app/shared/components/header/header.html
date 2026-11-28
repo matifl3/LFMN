@@ -8,19 +8,21 @@
     <nav class="main-nav" [class.open]="menuAbierto()">
       @for (link of navLinks; track link.path) {
         <a [routerLink]="link.path" routerLinkActive="active" (click)="menuAbierto.set(false)">
-          {{ link.label }}
+          {{ link.label | transloco }}
         </a>
       }
     </nav>
 
     <div class="header-actions">
+      <app-selector-idioma class="header-idioma" />
+
       <button
         type="button"
         class="nav-toggle"
         [class.open]="menuAbierto()"
         [attr.aria-expanded]="menuAbierto()"
         aria-controls="menu-nav-drawer"
-        [attr.aria-label]="menuAbierto() ? 'Cerrar menú' : 'Abrir menú'"
+        [attr.aria-label]="(menuAbierto() ? 'header.cerrarMenu' : 'header.abrirMenu') | transloco"
         (click)="alternarMenu()"
       >
         <span class="hamb"><span></span></span>
@@ -30,7 +32,7 @@
         routerLink="/notificaciones"
         routerLinkActive="active"
         class="icon-btn"
-        aria-label="Notificaciones"
+        [attr.aria-label]="'header.notificaciones' | transloco"
       >
         <svg
           width="18"
@@ -55,7 +57,7 @@
           <button
             type="button"
             class="user-menu-toggle"
-            aria-label="Menú de usuario"
+            [attr.aria-label]="'header.menuUsuario' | transloco"
             aria-controls="menu-usuario"
             [attr.aria-expanded]="menuUsuarioAbierto()"
             (click)="alternarMenuUsuario()"
@@ -66,22 +68,30 @@
           @if (menuUsuarioAbierto()) {
             <div id="menu-usuario" class="user-menu-panel">
               <div class="user-menu-head">
-                <strong>{{ auth.user()?.nombrePiloto || 'Mi cuenta' }}</strong>
+                <strong>{{ auth.user()?.nombrePiloto || ('header.miCuenta' | transloco) }}</strong>
                 <span class="text-terciario">{{ auth.user()?.email }}</span>
               </div>
-              <a [routerLink]="miPerfil()" routerLinkActive="active">Mi perfil</a>
+              <a [routerLink]="miPerfil()" routerLinkActive="active">{{
+                'header.miPerfil' | transloco
+              }}</a>
               @if (auth.esOrganizador()) {
-                <a routerLink="/mis-campeonatos" routerLinkActive="active">Mis campeonatos</a>
+                <a routerLink="/mis-campeonatos" routerLinkActive="active">{{
+                  'header.misCampeonatos' | transloco
+                }}</a>
               }
               @if (auth.esModerador()) {
-                <a routerLink="/admin" routerLinkActive="active">Admin</a>
+                <a routerLink="/admin" routerLinkActive="active">{{
+                  'header.admin' | transloco
+                }}</a>
               }
-              <button type="button" class="user-menu-salir" (click)="salir()">Salir</button>
+              <button type="button" class="user-menu-salir" (click)="salir()">
+                {{ 'header.salir' | transloco }}
+              </button>
             </div>
           }
         </div>
       } @else {
-        <a routerLink="/auth" class="btn btn-primary btn-sm">Ingresar</a>
+        <a routerLink="/auth" class="btn btn-primary btn-sm">{{ 'header.ingresar' | transloco }}</a>
       }
     </div>
   </div>
@@ -93,7 +103,7 @@
       class="nav-drawer"
       role="dialog"
       aria-modal="true"
-      aria-label="Menú principal"
+      [attr.aria-label]="'header.menuPrincipal' | transloco"
       [attr.aria-hidden]="!menuAbierto()"
     >
       <div class="drawer-brand">
@@ -102,19 +112,28 @@
       </div>
       @for (link of navLinks; track link.path) {
         <a [routerLink]="link.path" routerLinkActive="active" (click)="menuAbierto.set(false)">
-          {{ link.label }}
+          {{ link.label | transloco }}
         </a>
       }
       <div class="drawer-foot">
+        <app-selector-idioma />
         @if (auth.autenticado()) {
           <span class="text-terciario">{{ auth.user()?.nombrePiloto || auth.user()?.email }}</span>
-          <a [routerLink]="miPerfil()" (click)="menuAbierto.set(false)">Mi perfil</a>
-          <a routerLink="/notificaciones" (click)="menuAbierto.set(false)">Notificaciones</a>
+          <a [routerLink]="miPerfil()" (click)="menuAbierto.set(false)">{{
+            'header.miPerfil' | transloco
+          }}</a>
+          <a routerLink="/notificaciones" (click)="menuAbierto.set(false)">{{
+            'header.notificaciones' | transloco
+          }}</a>
           @if (auth.esOrganizador()) {
-            <a routerLink="/mis-campeonatos" (click)="menuAbierto.set(false)">Mis campeonatos</a>
+            <a routerLink="/mis-campeonatos" (click)="menuAbierto.set(false)">{{
+              'header.misCampeonatos' | transloco
+            }}</a>
           }
           @if (auth.esModerador()) {
-            <a routerLink="/admin" (click)="menuAbierto.set(false)">Admin</a>
+            <a routerLink="/admin" (click)="menuAbierto.set(false)">{{
+              'header.admin' | transloco
+            }}</a>
           }
           <button
             type="button"
@@ -122,14 +141,14 @@
             style="color: var(--lbm-rojo-hi)"
             (click)="salir()"
           >
-            Salir
+            {{ 'header.salir' | transloco }}
           </button>
         } @else {
           <a
             routerLink="/auth"
             class="btn btn-primary btn-sm btn-block"
             (click)="menuAbierto.set(false)"
-            >Ingresar</a
+            >{{ 'header.ingresar' | transloco }}</a
           >
         }
       </div>

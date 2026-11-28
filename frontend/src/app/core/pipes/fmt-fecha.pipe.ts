@@ -1,21 +1,21 @@
 import { Pipe, PipeTransform } from '@angular/core';
 import { fmtFecha, fmtFechaHora, fmtHora } from '../utils/formato';
 
-@Pipe({ name: 'fmtFecha', standalone: true })
+@Pipe({ name: 'fmtFecha', standalone: true, pure: false })
 export class FmtFechaPipe implements PipeTransform {
   transform(iso: string | null | undefined): string {
     return fmtFecha(iso);
   }
 }
 
-@Pipe({ name: 'fmtFechaHora', standalone: true })
+@Pipe({ name: 'fmtFechaHora', standalone: true, pure: false })
 export class FmtFechaHoraPipe implements PipeTransform {
   transform(iso: string | null | undefined): string {
     return fmtFechaHora(iso);
   }
 }
 
-@Pipe({ name: 'fmtHora', standalone: true })
+@Pipe({ name: 'fmtHora', standalone: true, pure: false })
 export class FmtHoraPipe implements PipeTransform {
   transform(iso: string | null | undefined): string {
     return fmtHora(iso);

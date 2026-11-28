@@ -1,3 +1,5 @@
+import { TranslocoPipe } from '@jsverse/transloco';
+import { t } from '../../core/i18n/t';
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ApiService, apiError } from '../../core/services/api.service';
@@ -15,7 +17,7 @@ interface IconoNotif {
 @Component({
   selector: 'app-notifications',
   standalone: true,
-  imports: [EmptyState, FechaRelativaPipe],
+  imports: [TranslocoPipe, EmptyState, FechaRelativaPipe],
   styleUrl: './notifications.component.scss',
   templateUrl: './notifications.component.html',
 })
@@ -85,7 +87,7 @@ export class NotificationsComponent implements OnInit {
   marcarTodas(): void {
     this.api.put<void>('/notificaciones/me/leidas').subscribe({
       next: () => {
-        this.toast.success('Todas marcadas como leídas');
+        this.toast.success(t('pantallas.notif.todasMarcadas'));
         this.cargar();
       },
       error: (err) => this.toast.error(apiError(err)),
@@ -97,6 +99,9 @@ export class NotificationsComponent implements OnInit {
   }
 
   tituloTipo(tipo: string): string {
+    const clave = 'pantallas.notif.tipo.' + tipo;
+    const traducido = t(clave);
+    if (traducido !== clave) return traducido;
     return tipo
       .split('_')
       .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())

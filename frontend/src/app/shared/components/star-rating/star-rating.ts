@@ -1,11 +1,15 @@
+import { TranslocoPipe } from '@jsverse/transloco';
 import { Component, computed, input } from '@angular/core';
 
 @Component({
   selector: 'app-star-rating',
   standalone: true,
+  imports: [TranslocoPipe],
   template: `
     @if (puntaje() === null || puntaje() === undefined) {
-      <span class="text-terciario mono" style="font-size: var(--fs-2xs)">Sin calificar</span>
+      <span class="text-terciario mono" style="font-size: var(--fs-2xs)">{{
+        'comun.sinCalificar' | transloco
+      }}</span>
     } @else {
       <span class="stars" [title]="puntaje()!.toFixed(1)">
         @for (i of [1, 2, 3, 4, 5]; track i) {

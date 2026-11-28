@@ -1,3 +1,5 @@
+import { TranslocoPipe } from '@jsverse/transloco';
+import { t } from '../../core/i18n/t';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -20,31 +22,29 @@ import { Chip } from '../../shared/components/chip/chip';
 import { Avatar } from '../../shared/components/avatar/avatar';
 import { FmtFechaHoraPipe } from '../../core/pipes/fmt-fecha.pipe';
 
-const ESTADO_LABEL: Record<string, string> = {
-  PROGRAMADA: 'Programada',
-  INSCRIPCIONES_ABIERTAS: 'Inscripciones abiertas',
-  INSCRIPCIONES_CERRADAS: 'Inscripciones cerradas',
-  EN_CURSO: 'En curso',
-  FINALIZADA: 'Finalizada',
-  CANCELADA: 'Cancelada',
-};
+const ESTADOS = [
+  'PROGRAMADA',
+  'INSCRIPCIONES_ABIERTAS',
+  'INSCRIPCIONES_CERRADAS',
+  'EN_CURSO',
+  'FINALIZADA',
+  'CANCELADA',
+];
+const CONDICIONES_LOGRO = [
+  'VICTORIAS',
+  'PODIOS',
+  'CARRERAS',
+  'POLES',
+  'VUELTAS_RAPIDAS',
+  'CARRERAS_COMPLETADAS',
+  'ELO',
+];
+const TIPOS_RECOMPENSA = ['VIRTUAL', 'FISICA', 'DESCUENTO', 'OTRA'];
 
-const COND_LOGRO_LABEL: Record<string, string> = {
-  VICTORIAS: 'Victorias',
-  PODIOS: 'Podios',
-  CARRERAS: 'Carreras',
-  POLES: 'Poles',
-  VUELTAS_RAPIDAS: 'Vueltas rápidas',
-  CARRERAS_COMPLETADAS: 'Carreras completadas',
-  ELO: 'Elo',
-};
-
-const RECOMPENSA_LABEL: Record<string, string> = {
-  VIRTUAL: 'Virtual',
-  FISICA: 'Física',
-  DESCUENTO: 'Descuento',
-  OTRA: 'Otra',
-};
+/** `{ VALOR: 'etiqueta' }` en el idioma activo (claves `admin.<prefijo><VALOR>`). */
+function etiquetas(valores: string[], prefijo: string): Record<string, string> {
+  return Object.fromEntries(valores.map((v) => [v, t('admin.' + prefijo + v)]));
+}
 
 interface SesionProcesada {
   id: number;
@@ -67,7 +67,7 @@ type Tab =
 @Component({
   selector: 'app-admin',
   standalone: true,
-  imports: [FormsModule, RouterLink, Chip, Avatar, FmtFechaHoraPipe],
+  imports: [TranslocoPipe, FormsModule, RouterLink, Chip, Avatar, FmtFechaHoraPipe],
   styleUrl: './admin.component.scss',
   templateUrl: './admin.component.html',
 })
@@ -93,9 +93,15 @@ export class AdminComponent implements OnInit {
   readonly carrerasCats = signal<Categoria[]>([]);
   readonly campeonatosForm = signal<Campeonato[]>([]);
 
-  readonly ESTADO_LABEL = ESTADO_LABEL;
-  readonly COND_LOGRO_LABEL = COND_LOGRO_LABEL;
-  readonly RECOMPENSA_LABEL = RECOMPENSA_LABEL;
+  get ESTADO_LABEL(): Record<string, string> {
+    return etiquetas(ESTADOS, 'estado.');
+  }
+  get COND_LOGRO_LABEL(): Record<string, string> {
+    return etiquetas(CONDICIONES_LOGRO, 'cond.');
+  }
+  get RECOMPENSA_LABEL(): Record<string, string> {
+    return etiquetas(TIPOS_RECOMPENSA, 'recompensa.');
+  }
   readonly objectKeys = Object.keys;
   /** Cuentas a las que se puede asignar la organizacion de un campeonato. */
   readonly organizadores = computed(() =>
@@ -253,7 +259,7 @@ export class AdminComponent implements OnInit {
     const nombre = this.cNombre()?.trim();
     const categoriaId = Number(this.cCategoriaId());
     if (!nombre || !categoriaId) {
-      this.toast.error('Nombre y categoría son obligatorios.');
+      this.toast.error(t('admin.toast.nombreYCategoria'));
       return;
     }
     const fecha =
@@ -278,7 +284,9 @@ export class AdminComponent implements OnInit {
       : this.api.post('/carreras', body);
     req.subscribe({
       next: () => {
-        this.toast.success(editing ? 'Carrera actualizada.' : 'Carrera creada.');
+        this.toast.success(
+          editing ? t('admin.toast.carreraActualizada') : t('admin.toast.carreraCreada'),
+        );
         this.limpiarFormCarrera();
         this.cargar();
       },
@@ -352,7 +360,7 @@ export class AdminComponent implements OnInit {
   cambiarEstadoCarrera(id: number, estado: string): void {
     this.api.put('/carreras/' + id + '/estado?estado=' + encodeURIComponent(estado)).subscribe({
       next: () => {
-        this.toast.success('Estado actualizado.');
+        this.toast.success(t('admin.toast.estadoActualizado'));
         this.cargar();
       },
       error: (err) => this.toast.error(apiError(err)),
@@ -360,10 +368,10 @@ export class AdminComponent implements OnInit {
   }
 
   eliminarCarrera(id: number): void {
-    if (!confirm('¿Eliminar esta carrera?')) return;
+    if (!confirm(t('admin.confirmar.carrera'))) return;
     this.api.del('/carreras/' + id).subscribe({
       next: () => {
-        this.toast.success('Carrera eliminada.');
+        this.toast.success(t('admin.toast.carreraEliminada'));
         this.cargar();
       },
       error: (err) => this.toast.error(apiError(err)),
@@ -374,7 +382,7 @@ export class AdminComponent implements OnInit {
     const nombre = this.chNombre()?.trim();
     const categoriaId = Number(this.chCategoriaId());
     if (!nombre || !categoriaId) {
-      this.toast.error('Nombre y categoría son obligatorios.');
+      this.toast.error(t('admin.toast.nombreYCategoria'));
       return;
     }
     const body: Record<string, unknown> = {
@@ -395,7 +403,9 @@ export class AdminComponent implements OnInit {
       : this.api.post('/campeonatos', body);
     req.subscribe({
       next: () => {
-        this.toast.success(editing ? 'Campeonato actualizado.' : 'Campeonato creado.');
+        this.toast.success(
+          editing ? t('admin.toast.campeonatoActualizado') : t('admin.toast.campeonatoCreado'),
+        );
         this.limpiarFormCampeonato();
         this.cargar();
       },
@@ -442,7 +452,9 @@ export class AdminComponent implements OnInit {
       .subscribe({
         next: () => {
           this.toast.success(
-            destino === 'CERRADO' ? 'Campeonato cerrado.' : 'Campeonato reabierto.',
+            destino === 'CERRADO'
+              ? t('admin.toast.campeonatoCerrado')
+              : t('admin.toast.campeonatoReabierto'),
           );
           this.cargar();
         },
@@ -451,10 +463,10 @@ export class AdminComponent implements OnInit {
   }
 
   eliminarCampeonato(id: number): void {
-    if (!confirm('¿Eliminar este campeonato?')) return;
+    if (!confirm(t('admin.confirmar.campeonato'))) return;
     this.api.del('/campeonatos/' + id).subscribe({
       next: () => {
-        this.toast.success('Campeonato eliminado.');
+        this.toast.success(t('admin.toast.campeonatoEliminado'));
         this.cargar();
       },
       error: (err) => this.toast.error(apiError(err)),
@@ -464,7 +476,7 @@ export class AdminComponent implements OnInit {
   crearOActualizarCategoria(): void {
     const nombre = this.catNombre()?.trim();
     if (!nombre) {
-      this.toast.error('El nombre es obligatorio.');
+      this.toast.error(t('admin.toast.nombreObligatorio'));
       return;
     }
     const setup = this.catSetup();
@@ -482,7 +494,9 @@ export class AdminComponent implements OnInit {
       : this.api.post('/categorias', body);
     req.subscribe({
       next: () => {
-        this.toast.success(editing ? 'Categoría actualizada.' : 'Categoría creada.');
+        this.toast.success(
+          editing ? t('admin.toast.categoriaActualizada') : t('admin.toast.categoriaCreada'),
+        );
         this.limpiarFormCategoria();
         this.cargar();
       },
@@ -511,10 +525,10 @@ export class AdminComponent implements OnInit {
   }
 
   eliminarCategoria(id: number): void {
-    if (!confirm('¿Eliminar esta categoría?')) return;
+    if (!confirm(t('admin.confirmar.categoria'))) return;
     this.api.del('/categorias/' + id).subscribe({
       next: () => {
-        this.toast.success('Categoría eliminada.');
+        this.toast.success(t('admin.toast.categoriaEliminada'));
         this.cargar();
       },
       error: (err) => this.toast.error(apiError(err)),
@@ -526,7 +540,9 @@ export class AdminComponent implements OnInit {
     const valor = Number(input.value);
     this.api.put('/usuarios/' + u.id + '/rating', { [campo]: valor }).subscribe({
       next: () => {
-        this.toast.success(campo === 'elo' ? 'Elo actualizado.' : 'Safety Rating actualizado.');
+        this.toast.success(
+          campo === 'elo' ? t('admin.toast.eloActualizado') : t('admin.toast.srActualizado'),
+        );
         this.cargar();
       },
       error: (err) => this.toast.error(apiError(err)),
@@ -536,7 +552,7 @@ export class AdminComponent implements OnInit {
   updateRol(u: Usuario, rol: string): void {
     this.api.put('/usuarios/' + u.id + '/rol?rol=' + encodeURIComponent(rol)).subscribe({
       next: () => {
-        this.toast.success('Rol actualizado.');
+        this.toast.success(t('admin.toast.rolActualizado'));
         this.cargar();
       },
       error: (err) => this.toast.error(apiError(err)),
@@ -545,19 +561,20 @@ export class AdminComponent implements OnInit {
 
   toggleHabilitado(u: Usuario): void {
     if (u.id === this.auth.user()?.id) {
-      this.toast.error('No podés deshabilitarte a vos mismo.');
+      this.toast.error(t('admin.toast.noDeshabilitarte'));
       return;
     }
-    if (
-      u.habilitado &&
-      !confirm('¿Deshabilitar a ' + u.nombrePiloto + '? Perderá el acceso al sistema.')
-    )
+    if (u.habilitado && !confirm(t('admin.confirmar.deshabilitar', { nombre: u.nombrePiloto })))
       return;
     this.api
       .put('/usuarios/' + u.id + '/habilitado?habilitado=' + (u.habilitado ? 'false' : 'true'))
       .subscribe({
         next: () => {
-          this.toast.success(u.habilitado ? 'Usuario deshabilitado.' : 'Usuario habilitado.');
+          this.toast.success(
+            u.habilitado
+              ? t('admin.toast.usuarioDeshabilitado')
+              : t('admin.toast.usuarioHabilitado'),
+          );
           this.cargar();
         },
         error: (err) => this.toast.error(apiError(err)),
@@ -566,13 +583,13 @@ export class AdminComponent implements OnInit {
 
   eliminarUsuario(u: Usuario): void {
     if (u.id === this.auth.user()?.id) {
-      this.toast.error('No podés eliminarte a vos mismo.');
+      this.toast.error(t('admin.toast.noEliminarte'));
       return;
     }
-    if (!confirm('¿Eliminar a ' + u.nombrePiloto + '?')) return;
+    if (!confirm(t('admin.confirmar.usuario', { nombre: u.nombrePiloto }))) return;
     this.api.del('/usuarios/' + u.id).subscribe({
       next: () => {
-        this.toast.success('Usuario eliminado.');
+        this.toast.success(t('admin.toast.usuarioEliminado'));
         this.cargar();
       },
       error: (err) => this.toast.error(apiError(err)),
@@ -582,7 +599,7 @@ export class AdminComponent implements OnInit {
   toggleDestacado(a: Anuncio): void {
     this.api.patch('/anuncios/' + a.id + '/destacar').subscribe({
       next: () => {
-        this.toast.success('Anuncio actualizado.');
+        this.toast.success(t('admin.toast.anuncioActualizado'));
         this.cargar();
       },
       error: (err) => this.toast.error(apiError(err)),
@@ -597,11 +614,11 @@ export class AdminComponent implements OnInit {
   crearAnuncio(): void {
     const titulo = this.aTitulo()?.trim();
     if (!titulo) {
-      this.toast.error('El título es obligatorio.');
+      this.toast.error(t('admin.toast.tituloObligatorio'));
       return;
     }
     if (!this.aContenido()?.trim()) {
-      this.toast.error('El contenido es obligatorio.');
+      this.toast.error(t('admin.toast.contenidoObligatorio'));
       return;
     }
     const file = this.aImagenFile();
@@ -629,7 +646,9 @@ export class AdminComponent implements OnInit {
       : this.api.post('/anuncios', body);
     req.subscribe({
       next: () => {
-        this.toast.success(editing ? 'Anuncio actualizado.' : 'Anuncio creado.');
+        this.toast.success(
+          editing ? t('admin.toast.anuncioActualizado') : t('admin.toast.anuncioCreado'),
+        );
         this.limpiarFormAnuncio();
         this.cargar();
       },
@@ -654,10 +673,10 @@ export class AdminComponent implements OnInit {
   }
 
   eliminarAnuncio(id: number): void {
-    if (!confirm('¿Eliminar este anuncio?')) return;
+    if (!confirm(t('admin.confirmar.anuncio'))) return;
     this.api.del('/anuncios/' + id).subscribe({
       next: () => {
-        this.toast.success('Anuncio eliminado.');
+        this.toast.success(t('admin.toast.anuncioEliminado'));
         this.cargar();
       },
       error: (err) => this.toast.error(apiError(err)),
@@ -667,7 +686,7 @@ export class AdminComponent implements OnInit {
   crearOActualizarLogro(): void {
     const nombre = this.lNombre()?.trim();
     if (!nombre) {
-      this.toast.error('El nombre es obligatorio.');
+      this.toast.error(t('admin.toast.nombreObligatorio'));
       return;
     }
     const body: Record<string, unknown> = {
@@ -681,7 +700,9 @@ export class AdminComponent implements OnInit {
     const req = editing ? this.api.put('/logros/' + editing, body) : this.api.post('/logros', body);
     req.subscribe({
       next: () => {
-        this.toast.success(editing ? 'Logro actualizado.' : 'Logro creado.');
+        this.toast.success(
+          editing ? t('admin.toast.logroActualizado') : t('admin.toast.logroCreado'),
+        );
         this.limpiarFormLogro();
         this.cargar();
       },
@@ -711,10 +732,10 @@ export class AdminComponent implements OnInit {
   }
 
   eliminarLogro(id: number): void {
-    if (!confirm('¿Eliminar este logro?')) return;
+    if (!confirm(t('admin.confirmar.logro'))) return;
     this.api.del('/logros/' + id).subscribe({
       next: () => {
-        this.toast.success('Logro eliminado.');
+        this.toast.success(t('admin.toast.logroEliminado'));
         this.cargar();
       },
       error: (err) => this.toast.error(apiError(err)),
@@ -730,14 +751,14 @@ export class AdminComponent implements OnInit {
   agregarRecompensa(l: Logro): void {
     const descripcion = this.rDescripcion()?.trim();
     if (!descripcion) {
-      this.toast.error('La descripción de la recompensa es obligatoria.');
+      this.toast.error(t('admin.toast.recompensaObligatoria'));
       return;
     }
     this.api
       .post('/logros/' + l.id + '/recompensas', { descripcion, tipo: this.rTipo() })
       .subscribe({
         next: () => {
-          this.toast.success('Recompensa añadida.');
+          this.toast.success(t('admin.toast.recompensaAnadida'));
           this.toggleAddRecompensa(l.id);
           this.cargar();
         },
@@ -746,10 +767,10 @@ export class AdminComponent implements OnInit {
   }
 
   quitarRecompensa(logroId: number, recompensaId: number): void {
-    if (!confirm('¿Quitar esta recompensa?')) return;
+    if (!confirm(t('admin.confirmar.recompensa'))) return;
     this.api.del('/logros/' + logroId + '/recompensas/' + recompensaId).subscribe({
       next: () => {
-        this.toast.success('Recompensa quitada.');
+        this.toast.success(t('admin.toast.recompensaQuitada'));
         this.cargar();
       },
       error: (err) => this.toast.error(apiError(err)),
@@ -779,24 +800,24 @@ export class AdminComponent implements OnInit {
   importarSesion(): void {
     const carreraId = this.sesionCarreraId();
     if (!carreraId) {
-      this.toast.error('Seleccioná una carrera.');
+      this.toast.error(t('admin.toast.elegiCarrera'));
       return;
     }
     const texto = this.sesionImportJson().trim();
     if (!texto) {
-      this.toast.error('Pegá o cargá el JSON de la sesión.');
+      this.toast.error(t('admin.toast.pegaJson'));
       return;
     }
     let sesion: unknown;
     try {
       sesion = JSON.parse(texto);
     } catch {
-      this.toast.error('El JSON es inválido. Revisá el contenido pegado.');
+      this.toast.error(t('admin.toast.jsonInvalido'));
       return;
     }
     const tipo = (sesion as { Type?: string })?.Type;
     if (!tipo) {
-      this.toast.error('El JSON no tiene el campo Type (QUALIFY / RACE / PRACTICE).');
+      this.toast.error(t('admin.toast.sinType'));
       return;
     }
     this.sesionImportando.set(true);
@@ -808,8 +829,8 @@ export class AdminComponent implements OnInit {
           this.sesionImportando.set(false);
           this.toast.success(
             tipoProcesado === 'PRACTICE'
-              ? 'Sesión PRACTICE procesada (no importa datos).'
-              : 'Sesión ' + tipoProcesado + ' importada.',
+              ? t('admin.toast.practice')
+              : t('admin.toast.importada', { tipo: tipoProcesado }),
           );
           this.sesionImportJson.set('');
           this.onSesionCarreraChange(carreraId);
@@ -833,17 +854,8 @@ export class AdminComponent implements OnInit {
     if (!this.isAdmin() && !this.isComisario()) return false;
     const tipo = e.error.tipo || '';
     const aviso =
-      tipo === 'RACE'
-        ? ' Se borran los resultados actuales, se revierte el Elo/SR que dieron y se rehace la tabla del campeonato.'
-        : ' Se reemplazan los tiempos de clasificación y la pole.';
-    if (
-      !confirm(
-        'La carrera ya tiene una sesión ' +
-          tipo +
-          ' importada. ¿Reemplazarla por este JSON?' +
-          aviso,
-      )
-    ) {
+      tipo === 'RACE' ? t('admin.reimportar.avisoRace') : t('admin.reimportar.avisoQualy');
+    if (!confirm(t('admin.reimportar.pregunta', { tipo, aviso }))) {
       return true;
     }
     this.sesionImportando.set(true);
@@ -852,7 +864,7 @@ export class AdminComponent implements OnInit {
       .subscribe({
         next: (res) => {
           this.sesionImportando.set(false);
-          this.toast.success('Sesión ' + (res?.tipo || tipo) + ' reimportada.');
+          this.toast.success(t('admin.toast.reimportada', { tipo: res?.tipo || tipo }));
           this.sesionImportJson.set('');
           this.onSesionCarreraChange(carreraId);
         },

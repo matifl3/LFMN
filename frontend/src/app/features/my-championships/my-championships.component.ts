@@ -1,3 +1,5 @@
+import { TranslocoPipe } from '@jsverse/transloco';
+import { t } from '../../core/i18n/t';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
@@ -19,26 +21,36 @@ import { Avatar } from '../../shared/components/avatar/avatar';
 import { RankBadge } from '../../shared/components/rank-badge/rank-badge';
 import { fmtLap, fmtFecha } from '../../core/utils/formato';
 
-const ESTADO_CARRERA_LABEL: Record<string, string> = {
-  PROGRAMADA: 'Programada',
-  INSCRIPCIONES_ABIERTAS: 'Inscripciones abiertas',
-  INSCRIPCIONES_CERRADAS: 'Inscripciones cerradas',
-  EN_CURSO: 'En curso',
-  FINALIZADA: 'Finalizada',
-  CANCELADA: 'Cancelada',
-};
+const ESTADOS_CARRERA = [
+  'PROGRAMADA',
+  'INSCRIPCIONES_ABIERTAS',
+  'INSCRIPCIONES_CERRADAS',
+  'EN_CURSO',
+  'FINALIZADA',
+  'CANCELADA',
+];
+const ESTADOS_CAMPEONATO = ['ACTIVO', 'CERRADO'];
 
-const ESTADO_CAMPEONATO_LABEL: Record<string, string> = {
-  ACTIVO: 'Activo',
-  CERRADO: 'Cerrado',
-};
+/** Etiquetas traducidas en el idioma activo: `{ ESTADO: 'texto' }`. */
+function etiquetas(estados: string[], prefijo: string): Record<string, string> {
+  return Object.fromEntries(estados.map((e) => [e, t(prefijo + e)]));
+}
 
 type Panel = 'pilotos' | 'carreras' | 'tabla' | 'estadisticas' | 'importar';
 
 @Component({
   selector: 'app-mis-campeonatos',
   standalone: true,
-  imports: [FormsModule, RouterLink, SlicePipe, DecimalPipe, Chip, Avatar, RankBadge],
+  imports: [
+    TranslocoPipe,
+    FormsModule,
+    RouterLink,
+    SlicePipe,
+    DecimalPipe,
+    Chip,
+    Avatar,
+    RankBadge,
+  ],
   templateUrl: './my-championships.component.html',
   styleUrl: './my-championships.component.scss',
 })
@@ -79,9 +91,13 @@ export class MisCampeonatosComponent implements OnInit {
   readonly importJson = signal('');
   readonly importando = signal(false);
 
-  readonly ESTADO_CARRERA_LABEL = ESTADO_CARRERA_LABEL;
-  readonly ESTADO_CAMPEONATO_LABEL = ESTADO_CAMPEONATO_LABEL;
-  readonly estadosCarrera = Object.keys(ESTADO_CARRERA_LABEL);
+  get ESTADO_CARRERA_LABEL(): Record<string, string> {
+    return etiquetas(ESTADOS_CARRERA, 'misCampeonatos.estadoCarrera.');
+  }
+  get ESTADO_CAMPEONATO_LABEL(): Record<string, string> {
+    return etiquetas(ESTADOS_CAMPEONATO, 'misCampeonatos.estadoCampeonato.');
+  }
+  readonly estadosCarrera = ESTADOS_CARRERA;
   readonly fmtLap = fmtLap;
   readonly fmtFecha = fmtFecha;
 
@@ -175,7 +191,7 @@ export class MisCampeonatosComponent implements OnInit {
         this.tabla.set(r.tabla);
         this.stats.set(r.stats);
       },
-      error: () => this.toast.error('No se pudo cargar el detalle del campeonato.'),
+      error: () => this.toast.error(t('misCampeonatos.toast.errorDetalle')),
     });
   }
 
@@ -186,7 +202,7 @@ export class MisCampeonatosComponent implements OnInit {
   cerrarCampeonato(c: Campeonato): void {
     this.api.put(`/campeonatos/${c.id}/cerrar`).subscribe({
       next: () => {
-        this.toast.success('Campeonato cerrado.');
+        this.toast.success(t('misCampeonatos.toast.cerrado'));
         this.cargar();
       },
       error: (err) => this.toast.error(apiError(err)),
@@ -194,10 +210,10 @@ export class MisCampeonatosComponent implements OnInit {
   }
 
   eliminarCampeonato(c: Campeonato): void {
-    if (!confirm(`¿Eliminar el campeonato "${c.nombre}"?`)) return;
+    if (!confirm(t('misCampeonatos.confirmar.eliminarCampeonato', { nombre: c.nombre }))) return;
     this.api.del(`/campeonatos/${c.id}`).subscribe({
       next: () => {
-        this.toast.success('Campeonato eliminado.');
+        this.toast.success(t('misCampeonatos.toast.eliminado'));
         this.selectedId.set(null);
         this.cargar();
       },
@@ -211,14 +227,14 @@ export class MisCampeonatosComponent implements OnInit {
     const id = this.selectedId();
     const busqueda = this.busquedaPiloto().trim();
     if (!id || !busqueda) {
-      this.toast.error('Escribí el nombre de piloto o el email.');
+      this.toast.error(t('misCampeonatos.toast.escribiPiloto'));
       return;
     }
     const esEmail = busqueda.includes('@');
     const body = esEmail ? { email: busqueda } : { nombrePiloto: busqueda };
     this.api.post<MiembroCampeonato>(`/campeonatos/${id}/miembros`, body).subscribe({
       next: () => {
-        this.toast.success('Piloto sumado al campeonato.');
+        this.toast.success(t('misCampeonatos.toast.pilotoSumado'));
         this.busquedaPiloto.set('');
         this.cargarDetalle();
       },
@@ -229,10 +245,10 @@ export class MisCampeonatosComponent implements OnInit {
   quitarMiembro(m: MiembroCampeonato): void {
     const id = this.selectedId();
     if (!id) return;
-    if (!confirm(`¿Sacar a ${m.nombrePiloto} del campeonato?`)) return;
+    if (!confirm(t('misCampeonatos.confirmar.quitarPiloto', { nombre: m.nombrePiloto }))) return;
     this.api.del(`/campeonatos/${id}/miembros/${m.usuarioId}`).subscribe({
       next: () => {
-        this.toast.success('Piloto quitado.');
+        this.toast.success(t('misCampeonatos.toast.pilotoQuitado'));
         this.cargarDetalle();
       },
       error: (err) => this.toast.error(apiError(err)),
@@ -248,12 +264,12 @@ export class MisCampeonatosComponent implements OnInit {
     // campeonato). El backend lo rechaza igual, pero conviene cortarlo aca para no
     // dejar un formulario a medio llenar que va a fallar seguro.
     if (!editando && !this.esAdminGlobal()) {
-      this.toast.error('Solo el administrador global puede crear carreras.');
+      this.toast.error(t('misCampeonatos.toast.soloAdminGlobal'));
       return;
     }
     const nombre = this.cNombre().trim();
     if (!id || !nombre) {
-      this.toast.error('El nombre de la carrera es obligatorio.');
+      this.toast.error(t('misCampeonatos.toast.nombreObligatorio'));
       return;
     }
     const fecha = this.cFecha() && this.cHora() ? `${this.cFecha()}T${this.cHora()}:00` : undefined;
@@ -271,7 +287,11 @@ export class MisCampeonatosComponent implements OnInit {
       : this.api.post<Carrera>('/carreras', body);
     req.subscribe({
       next: () => {
-        this.toast.success(editando ? 'Carrera actualizada.' : 'Carrera creada.');
+        this.toast.success(
+          editando
+            ? t('misCampeonatos.toast.carreraActualizada')
+            : t('misCampeonatos.toast.carreraCreada'),
+        );
         this.limpiarFormCarrera();
         this.cargarDetalle();
       },
@@ -307,7 +327,7 @@ export class MisCampeonatosComponent implements OnInit {
   cambiarEstadoCarrera(c: Carrera, estado: string): void {
     this.api.put(`/carreras/${c.id}/estado?estado=${encodeURIComponent(estado)}`).subscribe({
       next: () => {
-        this.toast.success('Estado actualizado.');
+        this.toast.success(t('misCampeonatos.toast.estadoActualizado'));
         this.cargarDetalle();
       },
       error: (err) => this.toast.error(apiError(err)),
@@ -315,10 +335,10 @@ export class MisCampeonatosComponent implements OnInit {
   }
 
   eliminarCarrera(c: Carrera): void {
-    if (!confirm(`¿Eliminar la carrera "${c.nombre}"?`)) return;
+    if (!confirm(t('misCampeonatos.confirmar.eliminarCarrera', { nombre: c.nombre }))) return;
     this.api.del(`/carreras/${c.id}`).subscribe({
       next: () => {
-        this.toast.success('Carrera eliminada.');
+        this.toast.success(t('misCampeonatos.toast.carreraEliminada'));
         this.cargarDetalle();
       },
       error: (err) => this.toast.error(apiError(err)),
@@ -340,24 +360,24 @@ export class MisCampeonatosComponent implements OnInit {
   importarSesion(): void {
     const carreraId = this.importCarreraId();
     if (!carreraId) {
-      this.toast.error('Elegí la carrera a la que pertenece la sesión.');
+      this.toast.error(t('misCampeonatos.toast.elegiCarrera'));
       return;
     }
     const texto = this.importJson().trim();
     if (!texto) {
-      this.toast.error('Pegá o cargá el JSON de la sesión.');
+      this.toast.error(t('misCampeonatos.toast.pegaJson'));
       return;
     }
     let sesion: unknown;
     try {
       sesion = JSON.parse(texto);
     } catch {
-      this.toast.error('El JSON no es válido.');
+      this.toast.error(t('misCampeonatos.toast.jsonInvalido'));
       return;
     }
     const tipo = (sesion as { Type?: string })?.Type;
     if (!tipo) {
-      this.toast.error('El JSON no tiene el campo Type (QUALIFY / RACE / PRACTICE).');
+      this.toast.error(t('misCampeonatos.toast.sinType'));
       return;
     }
     this.importando.set(true);
@@ -369,8 +389,8 @@ export class MisCampeonatosComponent implements OnInit {
           const tipoProcesado = res?.tipo || tipo;
           this.toast.success(
             tipoProcesado === 'PRACTICE'
-              ? 'Sesión PRACTICE procesada (no importa datos de carrera).'
-              : `Sesión ${tipoProcesado} importada.`,
+              ? t('misCampeonatos.toast.practice')
+              : t('misCampeonatos.toast.importada', { tipo: tipoProcesado }),
           );
           this.importJson.set('');
           this.cargarDetalle();

@@ -5,28 +5,32 @@
       <div class="skeleton-card"><span class="skeleton skeleton-60"></span></div>
     </div>
   } @else if (bloqueado()) {
-    <a routerLink="/carreras" class="btn btn-ghost btn-sm volver">Volver a carreras</a>
+    <a routerLink="/carreras" class="btn btn-ghost btn-sm volver">{{
+      'carrera.volver' | transloco
+    }}</a>
     <div class="card">
       <div class="empty-state">
-        <h3>Carrera de campeonato privado</h3>
+        <h3>{{ 'carrera.privado.titulo' | transloco }}</h3>
         <p>
-          Esta carrera forma parte de un campeonato de lista cerrada. Para ver el detalle, los
-          resultados y la telemetría tenés que ser piloto del campeonato: pedile al administrador
-          que te sume.
+          {{ 'carrera.privado.texto' | transloco }}
         </p>
         @if (!auth.autenticado()) {
-          <a routerLink="/auth" class="btn btn-primary empty-cta">Iniciar sesión</a>
+          <a routerLink="/auth" class="btn btn-primary empty-cta">{{
+            'carrera.iniciarSesion' | transloco
+          }}</a>
         }
       </div>
     </div>
   } @else if (errorCarga()) {
-    <a routerLink="/carreras" class="btn btn-ghost btn-sm volver">Volver a carreras</a>
+    <a routerLink="/carreras" class="btn btn-ghost btn-sm volver">{{
+      'carrera.volver' | transloco
+    }}</a>
     <div class="card">
       <div class="empty-state">
-        <h3>No pudimos cargar la carrera</h3>
-        <p>Puede ser un problema de conexión o que el servidor esté arrancando.</p>
+        <h3>{{ 'carrera.error.titulo' | transloco }}</h3>
+        <p>{{ 'carrera.error.texto' | transloco }}</p>
         <button type="button" class="btn btn-primary empty-cta" (click)="cargar()">
-          Reintentar
+          {{ 'carrera.reintentar' | transloco }}
         </button>
       </div>
     </div>
@@ -45,16 +49,20 @@
       >
         <path d="m15 18-6-6 6-6"></path>
       </svg>
-      Volver a carreras
+      {{ 'carrera.volver' | transloco }}
     </a>
 
     <div class="detail-header">
       <div>
         <span class="eyebrow alerta"
-          >{{ c.categoriaNombre || 'Carrera'
-          }}{{ ronda() ? ' · Ronda ' + ronda()!.numero + ' de ' + ronda()!.total : '' }}</span
+          >{{ c.categoriaNombre || ('carrera.carrera' | transloco)
+          }}{{
+            ronda()
+              ? ('carrera.ronda' | transloco: { n: ronda()!.numero, total: ronda()!.total })
+              : ''
+          }}</span
         >
-        <h1>{{ c.nombre || 'Carrera' }}</h1>
+        <h1>{{ c.nombre || ('carrera.carrera' | transloco) }}</h1>
         <p class="text-secondary">{{ c.circuito || '—' }} — {{ c.fecha | fmtFechaHora }}</p>
       </div>
       <div class="detail-header-acciones">
@@ -70,7 +78,11 @@
       </div>
     </div>
 
-    <div class="tabs detail-tabs" role="group" aria-label="Secciones de la carrera">
+    <div
+      class="tabs detail-tabs"
+      role="group"
+      [attr.aria-label]="'carrera.seccionesAria' | transloco"
+    >
       <button
         type="button"
         class="tab"
@@ -78,7 +90,7 @@
         [attr.aria-pressed]="panel() === 'info'"
         (click)="abrirPanel('info')"
       >
-        Información
+        {{ 'carrera.tab.info' | transloco }}
       </button>
       <button
         type="button"
@@ -87,7 +99,7 @@
         [attr.aria-pressed]="panel() === 'archivos'"
         (click)="abrirPanel('archivos')"
       >
-        Archivos
+        {{ 'carrera.tab.archivos' | transloco }}
       </button>
       <button
         type="button"
@@ -96,7 +108,8 @@
         [attr.aria-pressed]="panel() === 'inscriptos'"
         (click)="abrirPanel('inscriptos')"
       >
-        Inscriptos <span class="count">{{ inscriptosVisibles().length }}</span>
+        {{ 'carrera.tab.inscriptos' | transloco }}
+        <span class="count">{{ inscriptosVisibles().length }}</span>
       </button>
       <button
         type="button"
@@ -105,7 +118,7 @@
         [attr.aria-pressed]="panel() === 'resultados'"
         (click)="abrirPanel('resultados')"
       >
-        Resultados
+        {{ 'carrera.tab.resultados' | transloco }}
       </button>
       <button
         type="button"
@@ -114,7 +127,7 @@
         [attr.aria-pressed]="panel() === 'clasificacion'"
         (click)="abrirPanel('clasificacion')"
       >
-        Clasificación
+        {{ 'carrera.tab.clasificacion' | transloco }}
       </button>
       <button
         type="button"
@@ -123,34 +136,34 @@
         [attr.aria-pressed]="panel() === 'analisis'"
         (click)="abrirPanel('analisis')"
       >
-        Análisis
+        {{ 'carrera.tab.analisis' | transloco }}
       </button>
     </div>
 
     @if (panel() === 'info') {
       <div class="info-grid">
         <div class="info-tile">
-          <div class="label">Fecha y hora</div>
+          <div class="label">{{ 'carrera.info.fecha' | transloco }}</div>
           <div class="value">{{ c.fecha | fmtFechaHora }}</div>
         </div>
         @if (c.practicaFecha) {
           <div class="info-tile">
-            <div class="label">Sesión de práctica</div>
+            <div class="label">{{ 'carrera.info.practica' | transloco }}</div>
             <div class="value">{{ c.practicaFecha | fmtFechaHora }}</div>
           </div>
         }
         <div class="info-tile">
-          <div class="label">Circuito</div>
+          <div class="label">{{ 'carrera.info.circuito' | transloco }}</div>
           <div class="value">{{ c.circuito || '—' }}</div>
         </div>
         <div class="info-tile">
-          <div class="label">Categoría</div>
+          <div class="label">{{ 'carrera.info.categoria' | transloco }}</div>
           <div class="value">
             <span class="chip chip-category">{{ c.categoriaNombre || '—' }}</span>
           </div>
         </div>
         <div class="info-tile">
-          <div class="label">Servidor</div>
+          <div class="label">{{ 'carrera.info.servidor' | transloco }}</div>
           @if (servidorUrl(); as url) {
             <div class="value">
               <a
@@ -173,7 +186,7 @@
                   <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
                   <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
                 </svg>
-                Conectarse al servidor
+                {{ 'carrera.info.conectarse' | transloco }}
               </a>
               <div class="mono text-terciario servidor-host">{{ servidorLabel() }}</div>
             </div>
@@ -183,7 +196,7 @@
         </div>
         @if (accesoVisible()) {
           <div class="info-tile">
-            <div class="label">Contraseña del servidor</div>
+            <div class="label">{{ 'carrera.info.passServidor' | transloco }}</div>
             <div class="value mono password-fila">
               <span>{{ mostrarPassword() ? acceso()?.contrasenaServidor : '••••••••' }}</span>
               <button
@@ -197,22 +210,24 @@
           </div>
         }
         <div class="info-tile info-tile-ancho">
-          <div class="label">Cupo</div>
+          <div class="label">{{ 'carrera.info.cupo' | transloco }}</div>
           <div class="value mono">
             @if (c.cupoMaximo) {
               {{ inscriptosActivos() }} / {{ c.cupoMaximo }}
             } @else {
-              {{ inscriptosActivos() }} inscriptos
+              {{ 'carrera.info.nInscriptos' | transloco: { n: inscriptosActivos() } }}
             }
             @if (enEspera() > 0) {
-              <span class="text-terciario cupo-espera">· {{ enEspera() }} en espera</span>
+              <span class="text-terciario cupo-espera">{{
+                'carrera.info.enEspera' | transloco: { n: enEspera() }
+              }}</span>
             }
           </div>
           @if (c.cupoMaximo) {
             <div
               class="progress cupo-barra"
               role="progressbar"
-              aria-label="Cupo ocupado"
+              [attr.aria-label]="'carrera.info.cupoAria' | transloco"
               [attr.aria-valuenow]="cupoPct()"
               aria-valuemin="0"
               aria-valuemax="100"
@@ -227,18 +242,19 @@
         </div>
         @if (eloEstimado(); as elo) {
           <div class="info-tile info-tile-ancho">
-            <div class="label">Elo estimado según tu posición</div>
+            <div class="label">{{ 'carrera.elo.titulo' | transloco }}</div>
             <div class="value elo-fila">
               <span
-                >Esperada: <b>P{{ elo.posicionEsperada }}</b>
+                >{{ 'carrera.elo.esperada' | transloco }} <b>P{{ elo.posicionEsperada }}</b>
                 <span class="mono" [style.color]="eloColor(elo.deltaEsperado)">{{
                   eloTxt(elo.deltaEsperado)
                 }}</span>
               </span>
-              <span class="text-secondary elo-casos"
-                >Mejor caso {{ eloTxt(elo.deltaMejorCaso) }} · Peor caso
-                {{ eloTxt(elo.deltaPeorCaso) }}</span
-              >
+              <span class="text-secondary elo-casos">{{
+                'carrera.elo.casos'
+                  | transloco
+                    : { mejor: eloTxt(elo.deltaMejorCaso), peor: eloTxt(elo.deltaPeorCaso) }
+              }}</span>
             </div>
           </div>
         }
@@ -246,10 +262,10 @@
     }
 
     @if (panel() === 'archivos') {
-      <h3 class="panel-titulo">Archivos de la carrera</h3>
+      <h3 class="panel-titulo">{{ 'carrera.archivos.titulo' | transloco }}</h3>
       @if (linkPista(); as url) {
         <a class="file-row" [href]="url" target="_blank" rel="noopener noreferrer">
-          <span>Descargar Pista</span>
+          <span>{{ 'carrera.archivos.pista' | transloco }}</span>
           <span class="btn btn-ghost btn-sm" aria-hidden="true">
             <svg
               width="16"
@@ -270,7 +286,7 @@
       }
       @if (linkAuto(); as url) {
         <a class="file-row" [href]="url" target="_blank" rel="noopener noreferrer">
-          <span>Descargar Auto</span>
+          <span>{{ 'carrera.archivos.auto' | transloco }}</span>
           <span class="btn btn-ghost btn-sm" aria-hidden="true">
             <svg
               width="16"
@@ -290,16 +306,17 @@
         </a>
       }
       @if (!linkPista() && !linkAuto()) {
-        <p class="text-terciario">No hay archivos publicados para esta carrera.</p>
+        <p class="text-terciario">{{ 'carrera.archivos.vacio' | transloco }}</p>
       }
     }
 
     @if (panel() === 'inscriptos') {
       <h3>
-        Inscriptos <span class="mono text-terciario">({{ inscriptosVisibles().length }})</span>
+        {{ 'carrera.tab.inscriptos' | transloco }}
+        <span class="mono text-terciario">({{ inscriptosVisibles().length }})</span>
       </h3>
       @if (inscriptosVisibles().length === 0) {
-        <p class="text-terciario panel-vacio">Todavía no hay inscriptos. ¡Sé el primero!</p>
+        <p class="text-terciario panel-vacio">{{ 'carrera.inscriptos.vacio' | transloco }}</p>
       } @else {
         <div class="card panel-vacio">
           @for (i of inscriptosVisibles(); track i.id) {
@@ -310,10 +327,13 @@
               />
               <div class="entrant-info">
                 <a [routerLink]="['/perfil', i.usuarioId]" class="detail-link">{{
-                  i.nombrePiloto || 'Piloto #' + i.usuarioId
+                  i.nombrePiloto || ('carrera.pilotoN' | transloco: { id: i.usuarioId })
                 }}</a>
                 <div class="text-terciario entrant-stats">
-                  Elo {{ i.elo ?? '—' }} · SR {{ i.safetyRating ?? '—' }}
+                  {{
+                    'carrera.inscriptos.stats'
+                      | transloco: { elo: i.elo ?? '—', sr: i.safetyRating ?? '—' }
+                  }}
                 </div>
               </div>
               <app-chip
@@ -327,20 +347,20 @@
     }
 
     @if (panel() === 'resultados') {
-      <h3 class="panel-titulo">Resultados</h3>
+      <h3 class="panel-titulo">{{ 'carrera.tab.resultados' | transloco }}</h3>
       @if (cargandoPanel() === 'resultados') {
         <div class="skeleton-card"><span class="skeleton skeleton-80"></span></div>
       } @else if (resultados().length === 0) {
-        <p class="text-terciario">Sin resultados publicados.</p>
+        <p class="text-terciario">{{ 'carrera.resultados.vacio' | transloco }}</p>
       } @else {
         <div class="table-wrap">
           <table class="table">
             <thead>
               <tr>
                 <th scope="col">Pos</th>
-                <th scope="col">Piloto</th>
-                <th scope="col" class="num">Tiempo</th>
-                <th scope="col" class="num">Mejor vuelta</th>
+                <th scope="col">{{ 'carrera.col.piloto' | transloco }}</th>
+                <th scope="col" class="num">{{ 'carrera.col.tiempo' | transloco }}</th>
+                <th scope="col" class="num">{{ 'carrera.col.mejorVuelta' | transloco }}</th>
                 <th scope="col" class="num">Pole</th>
                 <th scope="col" class="num">Elo</th>
               </tr>
@@ -357,7 +377,7 @@
                   </td>
                   <td>
                     <a [routerLink]="['/perfil', r.usuarioId]" class="detail-link">{{
-                      r.nombrePiloto || 'Piloto #' + r.usuarioId
+                      r.nombrePiloto || ('carrera.pilotoN' | transloco: { id: r.usuarioId })
                     }}</a>
                   </td>
                   <td class="num mono">{{ r.tiempoTotal | fmtLap }}</td>
@@ -375,21 +395,21 @@
     }
 
     @if (panel() === 'clasificacion') {
-      <h3 class="panel-titulo">Clasificación</h3>
+      <h3 class="panel-titulo">{{ 'carrera.tab.clasificacion' | transloco }}</h3>
       @if (cargandoPanel() === 'clasificacion') {
         <div class="skeleton-card"><span class="skeleton skeleton-80"></span></div>
       } @else if (clasificaciones().length === 0) {
-        <p class="text-terciario">Sin tiempos registrados.</p>
+        <p class="text-terciario">{{ 'carrera.clasificacion.vacio' | transloco }}</p>
       } @else {
         <div class="table-wrap">
           <table class="table">
             <thead>
               <tr>
                 <th scope="col">Pos</th>
-                <th scope="col">Piloto</th>
-                <th scope="col" class="num">Vuelta</th>
-                <th scope="col" class="num">Dif.</th>
-                <th scope="col" class="num">Auto</th>
+                <th scope="col">{{ 'carrera.col.piloto' | transloco }}</th>
+                <th scope="col" class="num">{{ 'carrera.col.vuelta' | transloco }}</th>
+                <th scope="col" class="num">{{ 'carrera.col.dif' | transloco }}</th>
+                <th scope="col" class="num">{{ 'carrera.col.auto' | transloco }}</th>
               </tr>
             </thead>
             <tbody>
@@ -398,7 +418,7 @@
                   <td><app-rank-badge [posicion]="$index + 1" /></td>
                   <td>
                     <a [routerLink]="['/perfil', q.usuarioId]" class="detail-link">{{
-                      q.nombrePiloto || 'Piloto #' + q.usuarioId
+                      q.nombrePiloto || ('carrera.pilotoN' | transloco: { id: q.usuarioId })
                     }}</a>
                   </td>
                   <td class="num mono">{{ q.tiempo | fmtLap }}</td>
@@ -415,34 +435,39 @@
     }
 
     @if (panel() === 'analisis') {
-      <h3 class="panel-titulo">Análisis por vuelta</h3>
+      <h3 class="panel-titulo">{{ 'carrera.analisis.titulo' | transloco }}</h3>
       @if (!auth.autenticado()) {
         <p class="text-terciario">
-          <a routerLink="/auth" class="detail-link">Ingresá</a> para ver tu análisis por vuelta.
+          <a routerLink="/auth" class="detail-link">{{ 'carrera.analisis.ingresa' | transloco }}</a>
+          {{ 'carrera.analisis.ingresaResto' | transloco }}
         </p>
       } @else if (cargandoPanel() === 'analisis') {
         <div class="skeleton-card"><span class="skeleton skeleton-80"></span></div>
       } @else if (analisis().length === 0) {
-        <p class="text-terciario">Sin vueltas registradas de carrera.</p>
+        <p class="text-terciario">{{ 'carrera.analisis.vacio' | transloco }}</p>
       } @else {
         @if (resumen(); as r) {
           <div class="resumen-grid">
             <div class="card resumen-card">
-              <h4>Vuelta teórica</h4>
+              <h4>{{ 'carrera.analisis.teorica' | transloco }}</h4>
               <p class="text-terciario resumen-nota">
-                Suma de tus mejores sectores vs mejor vuelta real
+                {{ 'carrera.analisis.teoricaNota' | transloco }}
               </p>
               <div class="kv-lista">
                 <div class="kv">
-                  <span class="text-secondary">Teórica</span
+                  <span class="text-secondary">{{
+                    'carrera.analisis.teoricaCorta' | transloco
+                  }}</span
                   ><b class="mono">{{ r.teoricaMs | fmtLap }}</b>
                 </div>
                 <div class="kv">
-                  <span class="text-secondary">Mejor real · V{{ r.numeroVueltaMejor }}</span
+                  <span class="text-secondary">{{
+                    'carrera.analisis.mejorReal' | transloco: { n: r.numeroVueltaMejor }
+                  }}</span
                   ><b class="mono">{{ r.mejorVueltaMs | fmtLap }}</b>
                 </div>
                 <div class="kv">
-                  <span class="text-secondary">Potencial perdido</span
+                  <span class="text-secondary">{{ 'carrera.analisis.potencial' | transloco }}</span
                   ><b
                     class="mono"
                     [style.color]="
@@ -454,15 +479,15 @@
               </div>
             </div>
             <div class="card resumen-card">
-              <h4>Sectores vs mejor sector</h4>
+              <h4>{{ 'carrera.analisis.sectores' | transloco }}</h4>
               <div class="table-wrap resumen-tabla">
                 <table class="table">
                   <thead>
                     <tr>
-                      <th>Sector</th>
-                      <th class="num">Vos</th>
-                      <th class="num">Mejor sector</th>
-                      <th class="num">Dif.</th>
+                      <th>{{ 'carrera.col.sector' | transloco }}</th>
+                      <th class="num">{{ 'carrera.col.vos' | transloco }}</th>
+                      <th class="num">{{ 'carrera.col.mejorSector' | transloco }}</th>
+                      <th class="num">{{ 'carrera.col.dif' | transloco }}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -488,27 +513,29 @@
                 </table>
               </div>
               <p class="text-terciario resumen-nota">
-                Vuelta teórica del mejor sector:
+                {{ 'carrera.analisis.teoricaParrilla' | transloco }}
                 <b class="mono">{{ r.teoricaParrillaMs | fmtLap }}</b>
               </p>
             </div>
             <div class="card resumen-card">
-              <h4>Consistencia</h4>
+              <h4>{{ 'carrera.analisis.consistencia' | transloco }}</h4>
               <div class="kv-lista">
                 <div class="kv">
-                  <span class="text-secondary">Promedio</span
+                  <span class="text-secondary">{{ 'carrera.analisis.promedio' | transloco }}</span
                   ><b class="mono">{{ r.mediaMs | fmtLap }}</b>
                 </div>
                 <div class="kv">
-                  <span class="text-secondary">Desvío estándar</span
+                  <span class="text-secondary">{{ 'carrera.analisis.desvio' | transloco }}</span
                   ><b class="mono">{{ r.desvioMs | fmtLap }}</b>
                 </div>
                 <div class="kv">
-                  <span class="text-secondary">Vueltas completadas</span
+                  <span class="text-secondary">{{
+                    'carrera.analisis.vueltasCompletadas' | transloco
+                  }}</span
                   ><b class="mono">{{ r.vueltasTotales }}</b>
                 </div>
                 <div class="kv">
-                  <span class="text-secondary">Dentro de ±0.5s</span
+                  <span class="text-secondary">{{ 'carrera.analisis.dentro05' | transloco }}</span
                   ><b class="mono"
                     >{{ r.dentroDe500ms }}
                     <span class="text-terciario"
@@ -517,7 +544,7 @@
                   >
                 </div>
                 <div class="kv">
-                  <span class="text-secondary">Dentro de ±1s</span
+                  <span class="text-secondary">{{ 'carrera.analisis.dentro1' | transloco }}</span
                   ><b class="mono"
                     >{{ r.dentroDe1s }}
                     <span class="text-terciario"
@@ -528,24 +555,26 @@
               </div>
             </div>
             <div class="card resumen-card">
-              <h4>Posiciones</h4>
+              <h4>{{ 'carrera.analisis.posiciones' | transloco }}</h4>
               <div class="kv-lista">
                 <div class="kv">
-                  <span class="text-secondary">Grilla</span
+                  <span class="text-secondary">{{ 'carrera.analisis.grilla' | transloco }}</span
                   ><b class="mono">{{ posTxt(r.posicionGrilla) }}</b>
                 </div>
                 <div class="kv">
-                  <span class="text-secondary">Final</span
+                  <span class="text-secondary">{{ 'carrera.analisis.final' | transloco }}</span
                   ><b class="mono">{{ posTxt(r.posicionFinal) }}</b>
                 </div>
                 <div class="kv">
-                  <span class="text-secondary">Ganadas / perdidas</span
+                  <span class="text-secondary">{{ 'carrera.analisis.ganadas' | transloco }}</span
                   ><b class="mono" [style.color]="eloColor(r.posicionesGanadas)">{{
                     posGanadasTxt(r.posicionesGanadas)
                   }}</b>
                 </div>
                 <div class="kv">
-                  <span class="text-secondary">Mejor posición en carrera</span
+                  <span class="text-secondary">{{
+                    'carrera.analisis.mejorPosicion' | transloco
+                  }}</span
                   ><b class="mono">{{ posTxt(r.posicionPico) }}</b>
                 </div>
               </div>
@@ -553,7 +582,7 @@
           </div>
         }
         <div class="card chart-card">
-          <h4>Evolución de posición</h4>
+          <h4>{{ 'carrera.analisis.evolucion' | transloco }}</h4>
           @if (posicionesChart(); as svg) {
             <div class="chart-con-eje">
               @if (rangoPosiciones(); as rp) {
@@ -565,30 +594,30 @@
               <div class="chart-svg" [innerHTML]="svg"></div>
             </div>
           } @else {
-            <p class="text-terciario">Hace falta más de una vuelta para graficar.</p>
+            <p class="text-terciario">{{ 'carrera.analisis.masDeUnaVuelta' | transloco }}</p>
           }
         </div>
         <div class="card chart-card">
-          <h4>Diferencia con el líder (seg)</h4>
+          <h4>{{ 'carrera.analisis.difLider' | transloco }}</h4>
           @if (deltasChart(); as svg) {
             <div [innerHTML]="svg"></div>
           } @else {
-            <p class="text-terciario">Hace falta más de una vuelta para graficar.</p>
+            <p class="text-terciario">{{ 'carrera.analisis.masDeUnaVuelta' | transloco }}</p>
           }
         </div>
         <div class="table-wrap">
           <table class="table">
             <thead>
               <tr>
-                <th class="num">Vuelta</th>
+                <th class="num">{{ 'carrera.col.vuelta' | transloco }}</th>
                 <th class="num">Pos</th>
-                <th class="num">Tiempo</th>
-                <th class="num">Dif. líder</th>
+                <th class="num">{{ 'carrera.col.tiempo' | transloco }}</th>
+                <th class="num">{{ 'carrera.col.difLider' | transloco }}</th>
                 <th class="num">S1</th>
                 <th class="num">S2</th>
                 <th class="num">S3</th>
-                <th class="num">Cortes</th>
-                <th>Neum.</th>
+                <th class="num">{{ 'carrera.col.cortes' | transloco }}</th>
+                <th>{{ 'carrera.col.neumaticos' | transloco }}</th>
               </tr>
             </thead>
             <tbody>
@@ -613,17 +642,19 @@
 
     <app-confirm-dialog
       [abierto]="confirmandoBaja()"
-      titulo="Darte de baja"
+      [titulo]="'carrera.baja.titulo' | transloco"
       [mensaje]="mensajeBaja()"
-      confirmarTexto="Darme de baja"
+      [confirmarTexto]="'carrera.boton.baja' | transloco"
       (aceptado)="confirmarBaja()"
       (cancelado)="confirmandoBaja.set(false)"
     />
   } @else {
     <div class="empty-state">
-      <h3>Carrera no encontrada</h3>
-      <p>Puede que se haya eliminado o que el link esté mal.</p>
-      <a routerLink="/carreras" class="btn btn-primary empty-cta">Ver todas las carreras</a>
+      <h3>{{ 'carrera.noEncontrada.titulo' | transloco }}</h3>
+      <p>{{ 'carrera.noEncontrada.texto' | transloco }}</p>
+      <a routerLink="/carreras" class="btn btn-primary empty-cta">{{
+        'carrera.noEncontrada.verTodas' | transloco
+      }}</a>
     </div>
   }
 </section>

@@ -13,28 +13,31 @@ import { filter } from 'rxjs';
 import { ApiService, apiError } from '../../../core/services/api.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { Avatar } from '../avatar/avatar';
+import { SelectorIdioma } from '../selector-idioma/selector-idioma';
 
 export interface NavLink {
   path: string;
+  /** Clave de traducción (ver core/i18n/es.ts). */
   label: string;
 }
 
 // Secciones públicas de la liga. "Inicio" no está: el logo ya lleva a "/".
 // Lo personal (perfil, mis campeonatos, admin) vive en el menú del avatar.
 const NAV_LINKS: NavLink[] = [
-  { path: '/carreras', label: 'Carreras' },
-  { path: '/campeonato', label: 'Campeonato' },
-  { path: '/categorias', label: 'Categorías' },
-  { path: '/incidentes', label: 'Incidentes' },
-  { path: '/setups', label: 'Setups' },
-  { path: '/logros', label: 'Logros' },
+  { path: '/carreras', label: 'nav.carreras' },
+  { path: '/campeonato', label: 'nav.campeonato' },
+  { path: '/categorias', label: 'nav.categorias' },
+  { path: '/incidentes', label: 'nav.incidentes' },
+  { path: '/setups', label: 'nav.setups' },
+  { path: '/logros', label: 'nav.logros' },
 ];
 
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [RouterLink, RouterLinkActive, Avatar],
+  imports: [RouterLink, RouterLinkActive, Avatar, TranslocoPipe, SelectorIdioma],
   styleUrl: './header.scss',
   templateUrl: './header.html',
 })
@@ -43,6 +46,7 @@ export class Header {
   private readonly api = inject(ApiService);
   private readonly toast = inject(ToastService);
   private readonly router = inject(Router);
+  private readonly transloco = inject(TranslocoService);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
   readonly navLinks = NAV_LINKS;
@@ -110,7 +114,7 @@ export class Header {
     this.auth.logout();
     this.menuAbierto.set(false);
     this.menuUsuarioAbierto.set(false);
-    this.toast.success('Sesión cerrada');
+    this.toast.success(this.transloco.translate('header.sesionCerrada'));
     this.router.navigate(['/']);
   }
 }

@@ -14,10 +14,12 @@
       >
         <path d="m15 18-6-6 6-6"></path>
       </svg>
-      Volver
+      {{ 'perfil.volver' | transloco }}
     </a>
     @if (esMio()) {
-      <a routerLink="/mi-perfil" class="btn btn-primary btn-sm">Datos personales</a>
+      <a routerLink="/mi-perfil" class="btn btn-primary btn-sm">{{
+        'perfil.datosPersonales' | transloco
+      }}</a>
     }
   </div>
 
@@ -27,12 +29,14 @@
         <app-avatar [user]="u" [size]="108" />
       </div>
       <div class="profile-name-block" style="flex: 1">
-        <span class="eyebrow">{{ categoria(u) || 'PILOTO' }} · LBM NACIONAL</span>
+        <span class="eyebrow">{{
+          'perfil.eyebrow' | transloco: { categoria: categoria(u) || ('perfil.piloto' | transloco) }
+        }}</span>
         <h1>{{ u.nombrePiloto }}</h1>
         <div class="profile-tagline">{{ tagline(u) }}</div>
         <div class="profile-ratings">
           <div class="rating-block">
-            <div class="rating-label">Elo</div>
+            <div class="rating-label">{{ 'perfil.elo' | transloco }}</div>
             <div class="rating-value mono glow-alerta">{{ u.elo ?? '—' }}</div>
           </div>
           <div class="rating-block">
@@ -46,15 +50,15 @@
     @if (stats(); as s) {
       <div class="stat-grid">
         <div class="stat-card">
-          <div class="stat-label">Carreras</div>
+          <div class="stat-label">{{ 'perfil.stats.carreras' | transloco }}</div>
           <div class="stat-value mono">{{ s.carrerasDisputadas }}</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">Victorias</div>
+          <div class="stat-label">{{ 'perfil.stats.victorias' | transloco }}</div>
           <div class="stat-value mono">{{ s.victorias }}</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">Podios</div>
+          <div class="stat-label">{{ 'perfil.stats.podios' | transloco }}</div>
           <div class="stat-value mono">{{ s.podios }}</div>
         </div>
         <div class="stat-card">
@@ -62,11 +66,11 @@
           <div class="stat-value mono">{{ s.poles }}</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">Vueltas rápidas</div>
+          <div class="stat-label">{{ 'perfil.stats.vueltasRapidas' | transloco }}</div>
           <div class="stat-value mono">{{ s.vueltasRapidas }}</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">% Finalización</div>
+          <div class="stat-label">{{ 'perfil.stats.finalizacion' | transloco }}</div>
           <div class="stat-value mono">{{ s.porcentajeFinalizacion | number: '1.0-1' }}%</div>
         </div>
       </div>
@@ -74,10 +78,10 @@
 
     <div class="tabs" style="margin-bottom: var(--sp-6)">
       <button type="button" class="tab" [class.active]="tab() === 'elo'" (click)="tab.set('elo')">
-        Historial Elo
+        {{ 'perfil.tab.historialElo' | transloco }}
       </button>
       <button type="button" class="tab" [class.active]="tab() === 'sr'" (click)="tab.set('sr')">
-        Historial SR
+        {{ 'perfil.tab.historialSr' | transloco }}
       </button>
       <button
         type="button"
@@ -85,7 +89,7 @@
         [class.active]="tab() === 'resultados'"
         (click)="tab.set('resultados')"
       >
-        Resultados
+        {{ 'perfil.tab.resultados' | transloco }}
       </button>
       <button
         type="button"
@@ -93,15 +97,15 @@
         [class.active]="tab() === 'logros'"
         (click)="tab.set('logros')"
       >
-        Logros
+        {{ 'perfil.tab.logros' | transloco }}
       </button>
     </div>
 
     @if (tab() === 'elo') {
       <div class="card" style="margin-bottom: var(--sp-8)">
-        <h3 style="margin-bottom: var(--sp-5)">Evolución de Elo</h3>
+        <h3 style="margin-bottom: var(--sp-5)">{{ 'perfil.evolucionElo' | transloco }}</h3>
         @if (eloCum().length < 2) {
-          <p class="text-terciario">No hay datos suficientes para graficar.</p>
+          <p class="text-terciario">{{ 'perfil.sinDatosGrafico' | transloco }}</p>
         } @else {
           <div [innerHTML]="chartSvg(eloCum(), '#e63946')"></div>
         }
@@ -110,9 +114,9 @@
 
     @if (tab() === 'sr') {
       <div class="card" style="margin-bottom: var(--sp-8)">
-        <h3 style="margin-bottom: var(--sp-5)">Evolución de Safety Rating</h3>
+        <h3 style="margin-bottom: var(--sp-5)">{{ 'perfil.evolucionSr' | transloco }}</h3>
         @if (srCum().length < 2) {
-          <p class="text-terciario">No hay datos suficientes para graficar.</p>
+          <p class="text-terciario">{{ 'perfil.sinDatosGrafico' | transloco }}</p>
         } @else {
           <div [innerHTML]="chartSvg(srCum(), 'var(--status-positivo-hi)')"></div>
         }
@@ -121,16 +125,16 @@
 
     @if (tab() === 'resultados') {
       @if (resultados().length === 0) {
-        <app-empty-state texto="Sin resultados registrados." />
+        <app-empty-state [texto]="'perfil.sinResultados' | transloco" />
       } @else {
         <div class="table-wrap">
           <table class="table">
             <thead>
               <tr>
-                <th>Carrera</th>
-                <th>Categoría</th>
+                <th>{{ 'perfil.col.carrera' | transloco }}</th>
+                <th>{{ 'perfil.col.categoria' | transloco }}</th>
                 <th class="num">Pos</th>
-                <th class="num">Elo</th>
+                <th class="num">{{ 'perfil.elo' | transloco }}</th>
                 <th class="num">SR</th>
               </tr>
             </thead>
@@ -160,7 +164,7 @@
 
     @if (tab() === 'logros') {
       @if (logros().length === 0) {
-        <app-empty-state texto="Sin logros obtenidos." />
+        <app-empty-state [texto]="'perfil.sinLogros' | transloco" />
       } @else {
         <div class="grid grid-3">
           @for (lg of logros(); track lg.logroId) {
@@ -182,6 +186,6 @@
       }
     }
   } @else {
-    <app-empty-state texto="No se pudo cargar el perfil del piloto." />
+    <app-empty-state [texto]="'perfil.errorCarga' | transloco" />
   }
 </section>

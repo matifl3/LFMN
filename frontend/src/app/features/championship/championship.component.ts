@@ -1,3 +1,5 @@
+import { TranslocoPipe } from '@jsverse/transloco';
+import { t } from '../../core/i18n/t';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Observable, forkJoin } from 'rxjs';
@@ -25,15 +27,13 @@ interface Ronda {
 
 type EstadoTabla = 'cargando' | 'ok' | 'vacia' | 'error' | 'login' | 'privado';
 
-const ESTADO_CAMPEONATO: Record<string, string> = {
-  ACTIVO: 'En curso',
-  CERRADO: 'Finalizado',
-};
+/** Estados con etiqueta propia (clave `campeonato.estado.<ESTADO>`). */
+const ESTADO_CAMPEONATO = new Set(['ACTIVO', 'CERRADO']);
 
 @Component({
   selector: 'app-championship',
   standalone: true,
-  imports: [RouterLink, RankBadge, Chip, FmtFechaHoraPipe],
+  imports: [TranslocoPipe, RouterLink, RankBadge, Chip, FmtFechaHoraPipe],
   styleUrl: './championship.scss',
   templateUrl: './championship.html',
 })
@@ -67,7 +67,7 @@ export class ChampionshipComponent implements OnInit {
 
   readonly estadoLabel = computed(() => {
     const e = this.champ()?.estado;
-    return e ? (ESTADO_CAMPEONATO[e] ?? e) : '';
+    return e ? (ESTADO_CAMPEONATO.has(e) ? t('campeonato.estado.' + e) : e) : '';
   });
 
   /** Campeonatos con al menos una carrera primero, para que el selector no abra en uno vacío. */
@@ -115,8 +115,8 @@ export class ChampionshipComponent implements OnInit {
     const p = this.progreso();
     if (!p || p.rondasTotales === 0) return null;
     if (p.rondasCorridas >= p.rondasTotales)
-      return `${p.rondasTotales} rondas · Temporada completa`;
-    return `${p.rondasCorridas} de ${p.rondasTotales} rondas corridas`;
+      return t('campeonato.progreso.completa', { total: p.rondasTotales });
+    return t('campeonato.progreso.parcial', { n: p.rondasCorridas, total: p.rondasTotales });
   });
 
   readonly progresoPct = computed(() => {

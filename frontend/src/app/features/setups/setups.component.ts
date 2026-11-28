@@ -1,3 +1,5 @@
+import { TranslocoPipe } from '@jsverse/transloco';
+import { t } from '../../core/i18n/t';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
@@ -25,7 +27,16 @@ type Confirmacion =
 @Component({
   selector: 'app-setups',
   standalone: true,
-  imports: [RouterLink, Avatar, EmptyState, StarRating, Modal, ConfirmDialog, FechaRelativaPipe],
+  imports: [
+    TranslocoPipe,
+    RouterLink,
+    Avatar,
+    EmptyState,
+    StarRating,
+    Modal,
+    ConfirmDialog,
+    FechaRelativaPipe,
+  ],
   styleUrl: './setups.scss',
   templateUrl: './setups.html',
 })
@@ -144,8 +155,8 @@ export class SetupsComponent implements OnInit {
     const c = this.aConfirmar();
     if (!c) return '';
     return c.tipo === 'setup'
-      ? `¿Eliminar "${c.titulo}" con su archivo, calificaciones y comentarios?`
-      : '¿Eliminar este comentario?';
+      ? t('setups.confirmar.setup', { titulo: c.titulo })
+      : t('setups.confirmar.comentario');
   });
 
   ngOnInit(): void {
@@ -204,9 +215,9 @@ export class SetupsComponent implements OnInit {
 
   setupLabel(c: Categoria | null): string | null {
     if (!c) return null;
-    if (c.setupAbierto) return 'Setup abierto: cualquier piloto puede compartir el suyo.';
-    if (c.setupFijo) return 'Setup fijo: todos corren con el setup oficial de la liga.';
-    return 'Setup libre: cada piloto arma el suyo.';
+    if (c.setupAbierto) return t('setups.label.abierto');
+    if (c.setupFijo) return t('setups.label.fijo');
+    return t('setups.label.libre');
   }
 
   private unicos(valores: (string | undefined)[]): string[] {
@@ -303,11 +314,7 @@ export class SetupsComponent implements OnInit {
       },
       error: (err) => {
         this.descargando.set(false);
-        this.toast.error(
-          err?.status === 404
-            ? 'El archivo de este setup ya no está en el servidor. Pedile al autor que lo vuelva a subir.'
-            : apiError(err),
-        );
+        this.toast.error(err?.status === 404 ? t('setups.toast.archivoFaltante') : apiError(err));
       },
     });
   }
@@ -318,7 +325,7 @@ export class SetupsComponent implements OnInit {
     if (!this.autenticado() || this.esMio(s)) return;
     this.api.post('/setups/' + s.id + '/calificaciones', { puntaje }).subscribe({
       next: () => {
-        this.toast.success('Calificación guardada');
+        this.toast.success(t('setups.toast.calificacionGuardada'));
         this.reloadSetup(s.id);
         this.cargarCalificaciones(s.id);
       },
@@ -332,9 +339,8 @@ export class SetupsComponent implements OnInit {
     if (!f) return null;
     const punto = f.name.lastIndexOf('.');
     const ext = punto >= 0 ? f.name.slice(punto).toLowerCase() : '';
-    if (!EXTENSIONES.includes(ext))
-      return `Formato no permitido. Aceptados: ${this.extensionesTxt}.`;
-    if (f.size > MAX_BYTES) return 'El archivo supera los 10 MB.';
+    if (!EXTENSIONES.includes(ext)) return t('setups.toast.formato', { ext: this.extensionesTxt });
+    if (f.size > MAX_BYTES) return t('setups.toast.tamano');
     return null;
   }
 
@@ -374,7 +380,9 @@ export class SetupsComponent implements OnInit {
     this.api.post('/setups/' + s.id + '/archivo', fd).subscribe({
       next: () => {
         this.subiendoArchivo.set(false);
-        this.toast.success(s.archivo ? 'Archivo reemplazado' : 'Archivo subido');
+        this.toast.success(
+          s.archivo ? t('setups.toast.archivoReemplazado') : t('setups.toast.archivoSubido'),
+        );
         this.reloadSetup(s.id);
       },
       error: (err) => {
@@ -416,7 +424,7 @@ export class SetupsComponent implements OnInit {
           this.setups.update((l) => [nuevo, ...l]);
           const archivo = this.archivo();
           if (!archivo) {
-            this.terminarAlta(nuevo, 'Setup publicado');
+            this.terminarAlta(nuevo, t('setups.toast.publicado'));
             return;
           }
           const fd = new FormData();
@@ -424,16 +432,14 @@ export class SetupsComponent implements OnInit {
           this.api.post('/setups/' + nuevo.id + '/archivo', fd).subscribe({
             next: () => {
               this.reloadSetup(nuevo.id);
-              this.terminarAlta(nuevo, 'Setup publicado');
+              this.terminarAlta(nuevo, t('setups.toast.publicado'));
             },
             // El setup ya existe: no se pierde, y el autor ve "Subir archivo" en el detalle.
             error: (err) =>
               this.terminarAlta(
                 nuevo,
                 null,
-                'El setup se publicó pero el archivo no se pudo subir: ' +
-                  apiError(err) +
-                  ' Podés subirlo desde el detalle.',
+                t('setups.toast.publicadoSinArchivo', { error: apiError(err) }),
               ),
           });
         },
@@ -464,12 +470,12 @@ export class SetupsComponent implements OnInit {
   publicarComentario(id: number): void {
     const texto = this.fComentario().trim();
     if (!texto) {
-      this.toast.error('Escribí un comentario primero.');
+      this.toast.error(t('setups.toast.escribiComentario'));
       return;
     }
     this.api.post('/setups/' + id + '/comentarios', { texto }).subscribe({
       next: () => {
-        this.toast.success('Comentario publicado');
+        this.toast.success(t('setups.toast.comentarioPublicado'));
         this.fComentario.set('');
         this.cargarComentarios(id);
       },
@@ -495,7 +501,7 @@ export class SetupsComponent implements OnInit {
     if (c.tipo === 'setup') {
       this.api.del('/setups/' + c.id).subscribe({
         next: () => {
-          this.toast.success('Setup eliminado');
+          this.toast.success(t('setups.toast.setupEliminado'));
           this.setups.update((l) => l.filter((s) => s.id !== c.id));
           if (this.selectedId() === c.id) {
             const siguiente = this.filtered()[0]?.id;
@@ -508,7 +514,7 @@ export class SetupsComponent implements OnInit {
     } else {
       this.api.del(`/setups/${c.setupId}/comentarios/${c.id}`).subscribe({
         next: () => {
-          this.toast.success('Comentario eliminado');
+          this.toast.success(t('setups.toast.comentarioEliminado'));
           this.comentarios.update((l) => l.filter((x) => x.id !== c.id));
         },
         error: (err) => this.toast.error(apiError(err)),
@@ -538,7 +544,7 @@ export class SetupsComponent implements OnInit {
     const circuito = this.eCircuito().trim();
     const vehiculo = this.eVehiculo().trim();
     if (!titulo || !circuito || !vehiculo) {
-      this.toast.error('Completá título, circuito y vehículo.');
+      this.toast.error(t('setups.toast.completa'));
       return;
     }
     this.api
@@ -551,7 +557,7 @@ export class SetupsComponent implements OnInit {
       })
       .subscribe({
         next: () => {
-          this.toast.success('Setup actualizado');
+          this.toast.success(t('setups.toast.actualizado'));
           this.editingId.set(null);
           this.reloadSetup(id);
         },

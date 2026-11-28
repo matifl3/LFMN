@@ -9,24 +9,28 @@
         <span class="eyebrow alerta">{{ eyebrowTemporada() }}</span>
       }
       <h1>
-        Compite. Subí de Elo. <br />
-        <span class="glow-rojo">Hacete un nombre.</span>
+        {{ 'home.hero.linea1' | transloco }} <br />
+        <span class="glow-rojo">{{ 'home.hero.linea2' | transloco }}</span>
       </h1>
       <p class="hero-lede">
-        La liga de sim racing más competitiva de Argentina. Carreras semanales, categorías por nivel
-        de Elo y un sistema de Safety Rating que premia el respeto en pista.
+        {{ 'home.hero.lede' | transloco }}
       </p>
       <div class="hero-ctas">
         @if (modoHero() === 'visitante') {
-          <a routerLink="/auth" [queryParams]="{ tab: 'registro' }" class="btn btn-primary btn-lg"
-            >Crear cuenta</a
+          <a
+            routerLink="/auth"
+            [queryParams]="{ tab: 'registro' }"
+            class="btn btn-primary btn-lg"
+            >{{ 'home.crearCuenta' | transloco }}</a
           >
-          <a routerLink="/carreras" class="btn btn-secondary btn-lg">Ver calendario</a>
+          <a routerLink="/carreras" class="btn btn-secondary btn-lg">{{
+            'home.verCalendario' | transloco
+          }}</a>
         } @else {
           @if (miProximaCarrera(); as mia) {
-            <a [routerLink]="['/carreras', mia.id]" class="btn btn-primary btn-lg"
-              >Ver mi carrera</a
-            >
+            <a [routerLink]="['/carreras', mia.id]" class="btn btn-primary btn-lg">{{
+              'home.verMiCarrera' | transloco
+            }}</a>
           }
           @if (
             cargando() ||
@@ -47,7 +51,8 @@
                 (keydown)="teclaTrigger($event)"
               >
                 {{
-                  modoHero() === 'inscripto' ? 'Inscribirme a otra' : 'Inscribirme a una carrera'
+                  (modoHero() === 'inscripto' ? 'home.inscribirmeOtra' : 'home.inscribirmeUna')
+                    | transloco
                 }}
                 <svg
                   width="14"
@@ -68,7 +73,7 @@
                   <div
                     id="cta-panel"
                     role="menu"
-                    aria-label="Carreras con inscripción abierta"
+                    [attr.aria-label]="'home.abiertasAria' | transloco"
                     (keydown)="teclaMenu($event)"
                   >
                     @for (c of inscribibles(); track c.id) {
@@ -94,9 +99,13 @@
                             >
                           </div>
                           @if (yaInscripto(c)) {
-                            <span class="chip chip-confirmed cta-item-chip">Inscripto</span>
+                            <span class="chip chip-confirmed cta-item-chip">{{
+                              'home.inscripto' | transloco
+                            }}</span>
                           } @else if (autenticado()) {
-                            <span class="chip chip-upcoming cta-item-chip">Inscribirme</span>
+                            <span class="chip chip-upcoming cta-item-chip">{{
+                              'home.inscribirme' | transloco
+                            }}</span>
                           }
                         </div>
                       </button>
@@ -107,32 +116,40 @@
                       tabindex="-1"
                       class="cta-dropdown-item cta-dropdown-todas"
                       (click)="ctaAbierto.set(false)"
-                      >Ver calendario completo</a
+                      >{{ 'home.verCalendarioCompleto' | transloco }}</a
                     >
                   </div>
                 </div>
               }
             </div>
           } @else if (modoHero() === 'libre') {
-            <a routerLink="/carreras" class="btn btn-primary btn-lg">Ver calendario</a>
+            <a routerLink="/carreras" class="btn btn-primary btn-lg">{{
+              'home.verCalendario' | transloco
+            }}</a>
           }
           @if (modoHero() === 'libre' || (!cargando() && otrasInscribibles().length === 0)) {
-            <a routerLink="/campeonato" class="btn btn-secondary btn-lg">Ver campeonato</a>
+            <a routerLink="/campeonato" class="btn btn-secondary btn-lg">{{
+              'home.verCampeonato' | transloco
+            }}</a>
           }
         }
       </div>
       <div class="hero-stats">
         <div class="hero-stat">
           <div class="stat-value glow-rojo">{{ statTxt(resumen()?.pilotosActivos) }}</div>
-          <span class="text-terciario hero-stat-label">Pilotos activos</span>
+          <span class="text-terciario hero-stat-label">{{ 'home.stats.pilotos' | transloco }}</span>
         </div>
         <div class="hero-stat">
           <div class="stat-value">{{ statTxt(resumen()?.carrerasCorridas) }}</div>
-          <span class="text-terciario hero-stat-label">Carreras corridas</span>
+          <span class="text-terciario hero-stat-label">{{
+            'home.stats.carreras' | transloco
+          }}</span>
         </div>
         <div class="hero-stat">
           <div class="stat-value">{{ statTxt(resumen()?.categoriasActivas) }}</div>
-          <span class="text-terciario hero-stat-label">Categorías activas</span>
+          <span class="text-terciario hero-stat-label">{{
+            'home.stats.categorias' | transloco
+          }}</span>
         </div>
       </div>
     </div>
@@ -143,8 +160,8 @@
   <section class="container-wide section section-piloto">
     <div class="section-head">
       <div>
-        <span class="eyebrow">Tu temporada</span>
-        <h2>Hola, {{ nombrePiloto() }}</h2>
+        <span class="eyebrow">{{ 'home.tuTemporada' | transloco }}</span>
+        <h2>{{ 'home.hola' | transloco: { nombre: nombrePiloto() } }}</h2>
       </div>
     </div>
     <app-panel-piloto
@@ -160,8 +177,8 @@
   <section class="container-wide section section-como" aria-labelledby="como-titulo">
     <div class="section-head">
       <div>
-        <span class="eyebrow">Cómo funciona</span>
-        <h2 id="como-titulo">De tu primera carrera a pelear el campeonato</h2>
+        <span class="eyebrow">{{ 'home.como.eyebrow' | transloco }}</span>
+        <h2 id="como-titulo">{{ 'home.como.titulo' | transloco }}</h2>
       </div>
     </div>
     <ol class="como-pasos">
@@ -171,13 +188,13 @@
           <circle cx="12" cy="8" r="4"></circle>
           <path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"></path>
         </svg>
-        <h3>Creá tu cuenta</h3>
+        <h3>{{ 'home.como.paso1' | transloco }}</h3>
         <p class="text-secondary">
-          Registrate y vinculá tu Steam: así cada resultado de carrera se suma solo a tu perfil.
+          {{ 'home.como.paso1Texto' | transloco }}
         </p>
-        <a routerLink="/auth" [queryParams]="{ tab: 'registro' }" class="detail-link"
-          >Crear cuenta →</a
-        >
+        <a routerLink="/auth" [queryParams]="{ tab: 'registro' }" class="detail-link">{{
+          'home.como.paso1Cta' | transloco
+        }}</a>
       </li>
       <li class="card como-paso">
         <span class="como-num mono" aria-hidden="true">02</span>
@@ -185,12 +202,11 @@
           <path d="M5 21V4"></path>
           <path d="M5 4h12l-2 4 2 4H5"></path>
         </svg>
-        <h3>Corré tu primera carrera</h3>
+        <h3>{{ 'home.como.paso2' | transloco }}</h3>
         <p class="text-secondary">
-          Elegí una fecha del calendario, inscribite y entrá al servidor con el acceso que ves al
-          quedar inscripto.
+          {{ 'home.como.paso2Texto' | transloco }}
         </p>
-        <a routerLink="/carreras" class="detail-link">Ver calendario →</a>
+        <a routerLink="/carreras" class="detail-link">{{ 'home.como.paso2Cta' | transloco }}</a>
       </li>
       <li class="card como-paso">
         <span class="como-num mono" aria-hidden="true">03</span>
@@ -198,12 +214,11 @@
           <path d="M3 17l6-6 4 4 8-8"></path>
           <path d="M15 7h6v6"></path>
         </svg>
-        <h3>Subí de Elo y de categoría</h3>
+        <h3>{{ 'home.como.paso3' | transloco }}</h3>
         <p class="text-secondary">
-          Tus resultados mueven tu Elo y correr limpio sube tu Safety Rating. Con más Elo accedés a
-          categorías más rápidas.
+          {{ 'home.como.paso3Texto' | transloco }}
         </p>
-        <a routerLink="/categorias" class="detail-link">Ver categorías →</a>
+        <a routerLink="/categorias" class="detail-link">{{ 'home.como.paso3Cta' | transloco }}</a>
       </li>
     </ol>
   </section>
@@ -213,15 +228,15 @@
   <div class="section-head">
     <div>
       <span class="eyebrow">{{
-        enCurso().length > 0 ? 'En vivo ahora' : 'Esta semana en la liga'
+        (enCurso().length > 0 ? 'home.semana.enVivoAhora' : 'home.semana.estaSemana') | transloco
       }}</span>
-      <h2>Lo que está pasando en la liga</h2>
+      <h2>{{ 'home.semana.titulo' | transloco }}</h2>
     </div>
   </div>
 
   @if (enCurso().length > 0) {
     <div class="live-banner" role="status">
-      <span class="chip chip-live">En vivo</span>
+      <span class="chip chip-live">{{ 'home.enVivo' | transloco }}</span>
       <div class="live-banner-carreras">
         @for (c of enCurso(); track c.id) {
           <a [routerLink]="['/carreras', c.id]" class="live-banner-item">
@@ -238,8 +253,8 @@
   <div class="grid grid-3">
     <div class="card">
       <div class="card-header">
-        <h3>Próximas carreras</h3>
-        <a routerLink="/carreras" class="btn btn-ghost btn-sm">Ver todas</a>
+        <h3>{{ 'home.proximas' | transloco }}</h3>
+        <a routerLink="/carreras" class="btn btn-ghost btn-sm">{{ 'home.verTodas' | transloco }}</a>
       </div>
       @if (cargando()) {
         <div class="flex-col gap-3">
@@ -248,7 +263,7 @@
           }
         </div>
       } @else if (proximas().length === 0) {
-        <p class="text-terciario">No hay carreras próximas publicadas todavía.</p>
+        <p class="text-terciario">{{ 'home.sinProximas' | transloco }}</p>
       } @else {
         @let dest = proximas()[0];
         <a [routerLink]="['/carreras', dest.id]" class="card card-hover proxima-destacada">
@@ -271,13 +286,13 @@
           @if (cupoPct(dest) !== null) {
             <div class="proxima-cupo">
               <div class="progress-label">
-                <span>Cupo</span>
+                <span>{{ 'home.cupo' | transloco }}</span>
                 <span class="mono">{{ cupoTxt(dest) }}</span>
               </div>
               <div
                 class="progress"
                 role="progressbar"
-                aria-label="Cupo ocupado"
+                [attr.aria-label]="'home.cupoAria' | transloco"
                 [attr.aria-valuenow]="cupoPct(dest)"
                 aria-valuemin="0"
                 aria-valuemax="100"
@@ -317,7 +332,7 @@
           [routerLink]="['/campeonato']"
           [queryParams]="campeonato() ? { id: campeonato()!.id } : {}"
           class="btn btn-ghost btn-sm"
-          >Ver tabla</a
+          >{{ 'home.verTabla' | transloco }}</a
         >
       </div>
       @if (cargando() || cargandoTabla()) {
@@ -327,13 +342,14 @@
           }
         </div>
       } @else if (!campeonato()) {
-        <p class="text-terciario">No hay campeonatos activos en este momento.</p>
+        <p class="text-terciario">{{ 'home.sinCampeonatos' | transloco }}</p>
       } @else if (!autenticado()) {
         <p class="text-terciario">
-          <a routerLink="/auth" class="detail-link">Ingresá</a> para ver la tabla de posiciones.
+          <a routerLink="/auth" class="detail-link">{{ 'home.ingresa' | transloco }}</a>
+          {{ 'home.ingresaTabla' | transloco }}
         </p>
       } @else if (top3().length === 0) {
-        <p class="text-terciario">Aún no hay posiciones registradas.</p>
+        <p class="text-terciario">{{ 'home.sinPosiciones' | transloco }}</p>
       } @else {
         <div class="flex-col gap-3">
           @for (t of top3(); track $index) {
@@ -344,7 +360,9 @@
                   t.nombrePiloto
                 }}</a>
               </div>
-              <span class="mono glow-alerta top3-puntos">{{ t.puntos }} pts</span>
+              <span class="mono glow-alerta top3-puntos">{{
+                'home.pts' | transloco: { n: t.puntos }
+              }}</span>
             </div>
           }
         </div>
@@ -353,9 +371,9 @@
 
     <div class="card">
       <div class="card-header">
-        <h3>Anuncios</h3>
+        <h3>{{ 'home.anuncios' | transloco }}</h3>
         @if (anuncioPrincipal()?.destacado) {
-          <span class="chip chip-upcoming">Destacado</span>
+          <span class="chip chip-upcoming">{{ 'home.destacado' | transloco }}</span>
         }
       </div>
       @if (cargando()) {
@@ -377,7 +395,7 @@
           class="btn btn-secondary btn-sm anuncio-leer"
           (click)="anuncioSeleccionado.set(an)"
         >
-          Leer completo
+          {{ 'home.leerCompleto' | transloco }}
         </button>
         @if (otrosAnuncios().length > 0) {
           <ul class="anuncios-otros">
@@ -394,7 +412,7 @@
           </ul>
         }
       } @else {
-        <p class="text-terciario">Todavía no hay anuncios.</p>
+        <p class="text-terciario">{{ 'home.sinAnuncios' | transloco }}</p>
       }
     </div>
   </div>
@@ -421,9 +439,9 @@
 
 <app-confirm-dialog
   [abierto]="!!aConfirmar()"
-  titulo="Confirmar inscripción"
+  [titulo]="'home.confirmarInscripcion' | transloco"
   [mensaje]="mensajeConfirmacion()"
-  [confirmarTexto]="inscribiendo() ? 'Inscribiendo…' : 'Inscribirme'"
+  [confirmarTexto]="(inscribiendo() ? 'home.inscribiendo' : 'home.inscribirme') | transloco"
   (aceptado)="confirmarInscripcion()"
   (cancelado)="aConfirmar.set(null)"
 />

@@ -1,11 +1,11 @@
 <main class="container-wide section">
   <div class="section-head">
     <div>
-      <span class="eyebrow">Calendario</span>
-      <h2>Carreras</h2>
+      <span class="eyebrow">{{ 'carreras.lista.eyebrow' | transloco }}</span>
+      <h2>{{ 'carreras.lista.titulo' | transloco }}</h2>
     </div>
     <select class="select" (change)="onChangeCategoria($event)">
-      <option value="">Todas las categorías</option>
+      <option value="">{{ 'carreras.lista.todasCategorias' | transloco }}</option>
       @for (c of cats(); track c.id) {
         <option [value]="c.id">{{ c.nombre }}</option>
       }
@@ -20,7 +20,8 @@
       [attr.aria-pressed]="view() === 'proximas'"
       (click)="setView('proximas')"
     >
-      Próximas <span class="count">{{ proximasFiltradas().length }}</span>
+      {{ 'carreras.lista.proximas' | transloco }}
+      <span class="count">{{ proximasFiltradas().length }}</span>
     </button>
     <button
       type="button"
@@ -29,7 +30,8 @@
       [attr.aria-pressed]="view() === 'pasadas'"
       (click)="setView('pasadas')"
     >
-      Pasadas <span class="count">{{ pasadasFiltradas().length }}</span>
+      {{ 'carreras.lista.pasadas' | transloco }}
+      <span class="count">{{ pasadasFiltradas().length }}</span>
     </button>
   </div>
 
@@ -45,7 +47,7 @@
   } @else {
     <div class="flex-col gap-3">
       @if (listaActual().length === 0) {
-        <app-empty-state texto="No hay carreras para mostrar." />
+        <app-empty-state [texto]="'carreras.lista.vacio' | transloco" />
       } @else {
         @for (r of listaActual(); track r.id) {
           <a [routerLink]="['/carreras', r.id]" class="race-row row-link">
@@ -59,9 +61,9 @@
               >
               <span>{{ r.circuito }}{{ r.fecha ? ' · ' + raceHora(r) : '' }}</span>
               @if (r.practicaFecha) {
-                <span class="chip chip-category" style="margin-top: var(--sp-2)"
-                  >Práctica {{ racePracticaHora(r) }}</span
-                >
+                <span class="chip chip-category" style="margin-top: var(--sp-2)">{{
+                  'carreras.lista.practica' | transloco: { hora: racePracticaHora(r) }
+                }}</span>
               }
             </div>
             <div>
@@ -69,7 +71,7 @@
             </div>
             <div class="col-cupo" style="min-width: 110px">
               <div class="progress-label">
-                <span>Inscriptos</span
+                <span>{{ 'carreras.lista.inscriptos' | transloco }}</span
                 ><span class="mono">{{ cupoN(r) }} / {{ r.cupoMaximo || '—' }}</span>
               </div>
               <div class="progress">

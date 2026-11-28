@@ -1,3 +1,4 @@
+import { TranslocoPipe } from '@jsverse/transloco';
 import { Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
@@ -5,7 +6,7 @@ import { AuthService } from '../../../core/services/auth.service';
 @Component({
   selector: 'app-footer',
   standalone: true,
-  imports: [RouterLink],
+  imports: [TranslocoPipe, RouterLink],
   template: `
     <footer class="site-footer">
       <div class="container-wide footer-grid">
@@ -15,25 +16,25 @@ import { AuthService } from '../../../core/services/auth.service';
             <span class="brand-name">LBM Nacional<small>Late Brake Motorsport</small></span>
           </div>
           <p class="text-terciario" style="font-size: var(--fs-sm); max-width: 30ch">
-            Liga argentina de sim racing. Carreras semanales, categorías por Elo y Safety Rating.
+            {{ 'comun.footer.descripcion' | transloco }}
           </p>
         </div>
         <div class="footer-col">
-          <h4>Navegación</h4>
-          <a routerLink="/">Inicio</a>
-          <a routerLink="/carreras">Carreras</a>
-          <a routerLink="/campeonato">Campeonato</a>
-          <a routerLink="/categorias">Categorías</a>
-          <a routerLink="/incidentes">Incidentes</a>
-          <a routerLink="/setups">Setups</a>
-          <a routerLink="/logros">Logros</a>
+          <h4>{{ 'comun.footer.navegacion' | transloco }}</h4>
+          <a routerLink="/">{{ 'comun.footer.inicio' | transloco }}</a>
+          <a routerLink="/carreras">{{ 'nav.carreras' | transloco }}</a>
+          <a routerLink="/campeonato">{{ 'nav.campeonato' | transloco }}</a>
+          <a routerLink="/categorias">{{ 'nav.categorias' | transloco }}</a>
+          <a routerLink="/incidentes">{{ 'nav.incidentes' | transloco }}</a>
+          <a routerLink="/setups">{{ 'nav.setups' | transloco }}</a>
+          <a routerLink="/logros">{{ 'nav.logros' | transloco }}</a>
         </div>
         <div class="footer-col">
-          <h4>Cuenta</h4>
-          <a [routerLink]="miPerfil()">Mi perfil</a>
-          <a routerLink="/notificaciones">Notificaciones</a>
+          <h4>{{ 'comun.footer.cuenta' | transloco }}</h4>
+          <a [routerLink]="miPerfil()">{{ 'header.miPerfil' | transloco }}</a>
+          <a routerLink="/notificaciones">{{ 'header.notificaciones' | transloco }}</a>
           @if (auth.esModerador()) {
-            <a routerLink="/admin">Panel admin</a>
+            <a routerLink="/admin">{{ 'comun.footer.panelAdmin' | transloco }}</a>
           }
         </div>
       </div>
@@ -41,8 +42,12 @@ import { AuthService } from '../../../core/services/auth.service';
         class="container-wide"
         style="margin-top: var(--sp-6); padding-top: var(--sp-4); border-top: 1px solid var(--borde-hair); display: flex; justify-content: space-between; flex-wrap: wrap; gap: var(--sp-2)"
       >
-        <span class="text-terciario" style="font-size: var(--fs-sm)">© 2026 LBM Nacional — Late Brake Motorsport</span>
-        <span class="text-terciario" style="font-size: var(--fs-sm)">Temporada 2026</span>
+        <span class="text-terciario" style="font-size: var(--fs-sm)"
+          >© 2026 LBM Nacional — Late Brake Motorsport</span
+        >
+        <span class="text-terciario" style="font-size: var(--fs-sm)">{{
+          'comun.footer.temporada' | transloco
+        }}</span>
       </div>
     </footer>
   `,

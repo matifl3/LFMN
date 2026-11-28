@@ -1,48 +1,64 @@
 <section class="container-wide section">
   <div class="section-head">
     <div>
-      <span class="eyebrow">Taller comunitario</span>
+      <span class="eyebrow">{{ 'setups.eyebrow' | transloco }}</span>
       <h2>Setups</h2>
     </div>
     @if (autenticado()) {
-      <button type="button" class="btn btn-primary" (click)="abrirUpload()">Subir setup</button>
+      <button type="button" class="btn btn-primary" (click)="abrirUpload()">
+        {{ 'setups.subir' | transloco }}
+      </button>
     } @else {
-      <a routerLink="/auth" class="btn btn-secondary">Ingresá para subir el tuyo</a>
+      <a routerLink="/auth" class="btn btn-secondary">{{
+        'setups.ingresaParaSubir' | transloco
+      }}</a>
     }
   </div>
 
   <div class="setup-filters">
     <input
       class="input setup-buscar"
-      aria-label="Buscar setups"
-      placeholder="Buscar por vehículo, circuito, categoría o título…"
+      [attr.aria-label]="'setups.buscarAria' | transloco"
+      [placeholder]="'setups.buscarPh' | transloco"
       (input)="searchText.set(inputVal($event))"
     />
-    <select class="select" aria-label="Categoría" (change)="setFiltroCategoria($event)">
-      <option value="">Todas las categorías</option>
+    <select
+      class="select"
+      [attr.aria-label]="'setups.filtro.categoria' | transloco"
+      (change)="setFiltroCategoria($event)"
+    >
+      <option value="">{{ 'setups.filtro.todasCategorias' | transloco }}</option>
       @for (c of catsConSetups(); track c.id) {
         <option [value]="c.id" [selected]="c.id === filterCategoria()">{{ c.nombre }}</option>
       }
     </select>
-    <select class="select" aria-label="Circuito" (change)="filterCircuito.set(selectStr($event))">
-      <option value="">Todos los circuitos</option>
+    <select
+      class="select"
+      [attr.aria-label]="'setups.filtro.circuito' | transloco"
+      (change)="filterCircuito.set(selectStr($event))"
+    >
+      <option value="">{{ 'setups.filtro.todosCircuitos' | transloco }}</option>
       @for (c of circuitos(); track c) {
         <option [value]="c">{{ c }}</option>
       }
     </select>
-    <select class="select" aria-label="Vehículo" (change)="filterVehiculo.set(selectStr($event))">
-      <option value="">Todos los vehículos</option>
+    <select
+      class="select"
+      [attr.aria-label]="'setups.filtro.vehiculo' | transloco"
+      (change)="filterVehiculo.set(selectStr($event))"
+    >
+      <option value="">{{ 'setups.filtro.todosVehiculos' | transloco }}</option>
       @for (v of vehiculos(); track v) {
         <option [value]="v">{{ v }}</option>
       }
     </select>
     <select
       class="select setup-orden"
-      aria-label="Orden"
+      [attr.aria-label]="'setups.filtro.orden' | transloco"
       (change)="filterOrder.set($any(selectStr($event)))"
     >
-      <option value="rating">Mejor puntuados</option>
-      <option value="recientes">Más recientes</option>
+      <option value="rating">{{ 'setups.orden.puntuados' | transloco }}</option>
+      <option value="recientes">{{ 'setups.orden.recientes' | transloco }}</option>
     </select>
   </div>
 
@@ -56,9 +72,9 @@
           </div>
         }
       } @else if (setups().length === 0) {
-        <app-empty-state texto="Aún no hay setups publicados." />
+        <app-empty-state [texto]="'setups.vacio' | transloco" />
       } @else if (filtered().length === 0) {
-        <app-empty-state texto="No hay setups que coincidan con la búsqueda." />
+        <app-empty-state [texto]="'setups.vacioBusqueda' | transloco" />
       } @else {
         @for (s of filtered(); track s.id) {
           <div
@@ -76,10 +92,10 @@
                 <span class="chip">{{ s.categoriaNombre }}</span>
               }
               @if (esSetupFijo(s)) {
-                <span class="chip chip-upcoming">Setup fijo</span>
+                <span class="chip chip-upcoming">{{ 'setups.setupFijo' | transloco }}</span>
               }
               @if (!s.archivo) {
-                <span class="chip chip-closed">Sin archivo</span>
+                <span class="chip chip-closed">{{ 'setups.sinArchivo' | transloco }}</span>
               }
             </div>
             <h4>{{ s.titulo }}</h4>
@@ -89,19 +105,23 @@
                   [user]="{ nombrePiloto: s.autorNombre, fotoPerfil: s.autorFoto }"
                   [size]="24"
                 />
-                {{ s.autorNombre || 'Piloto #' + s.autorId }}
+                {{ s.autorNombre || ('setups.pilotoN' | transloco: { id: s.autorId }) }}
               </span>
               <app-star-rating [puntaje]="s.promedioCalificacion" />
             </div>
             <div class="text-terciario mono setup-meta">
-              {{ s.vehiculo }} · publicado {{ s.fechaPublicacion | fechaRelativa }}
+              {{
+                'setups.publicado'
+                  | transloco
+                    : { vehiculo: s.vehiculo, cuando: (s.fechaPublicacion | fechaRelativa) }
+              }}
             </div>
             @if (puedeEditar(s)) {
               <button
                 type="button"
                 class="btn btn-danger btn-sm btn-icon setup-borrar"
-                title="Eliminar setup"
-                aria-label="Eliminar setup"
+                [title]="'setups.eliminarSetup' | transloco"
+                [attr.aria-label]="'setups.eliminarSetup' | transloco"
                 (click)="pedirBorrarSetup($event, s)"
               >
                 <svg
@@ -139,7 +159,7 @@
               <div class="flex-between setup-detalle-top">
                 <span class="eyebrow">{{ s.vehiculo }}</span>
                 @if (esSetupFijo(s)) {
-                  <span class="chip chip-upcoming">Setup fijo</span>
+                  <span class="chip chip-upcoming">{{ 'setups.setupFijo' | transloco }}</span>
                 }
               </div>
               <h3 class="setup-detalle-titulo">{{ s.titulo }}</h3>
@@ -148,7 +168,14 @@
                   [user]="{ nombrePiloto: s.autorNombre, fotoPerfil: s.autorFoto }"
                   [size]="24"
                 />
-                Subido por {{ s.autorNombre || 'Piloto #' + s.autorId }} ·
+                {{
+                  'setups.subidoPor'
+                    | transloco
+                      : {
+                          nombre:
+                            s.autorNombre || ('setups.pilotoN' | transloco: { id: s.autorId }),
+                        }
+                }}
                 {{ s.fechaPublicacion | fechaRelativa }}
               </span>
             </div>
@@ -161,22 +188,25 @@
                     [disabled]="descargando()"
                     (click)="descargar(s)"
                   >
-                    {{ descargando() ? 'Descargando…' : 'Descargar setup' }}
+                    {{ (descargando() ? 'setups.descargando' : 'setups.descargar') | transloco }}
                   </button>
                 } @else {
-                  <a routerLink="/auth" class="btn btn-primary">Ingresá para descargar</a>
+                  <a routerLink="/auth" class="btn btn-primary">{{
+                    'setups.ingresaParaDescargar' | transloco
+                  }}</a>
                 }
               } @else {
-                <span class="chip chip-closed">Sin archivo</span>
+                <span class="chip chip-closed">{{ 'setups.sinArchivo' | transloco }}</span>
               }
               @if (puedeEditar(s)) {
                 <label class="btn btn-ghost btn-sm" [class.disabled]="subiendoArchivo()">
                   {{
-                    subiendoArchivo()
-                      ? 'Subiendo…'
+                    (subiendoArchivo()
+                      ? 'setups.subiendo'
                       : s.archivo
-                        ? 'Reemplazar archivo'
-                        : 'Subir archivo'
+                        ? 'setups.reemplazarArchivo'
+                        : 'setups.subirArchivo'
+                    ) | transloco
                   }}
                   <input
                     type="file"
@@ -187,7 +217,7 @@
                   />
                 </label>
                 <button type="button" class="btn btn-ghost btn-sm" (click)="editarSetup(s)">
-                  Editar
+                  {{ 'setups.editar' | transloco }}
                 </button>
               }
             </div>
@@ -196,11 +226,11 @@
           @if (editingId() === s.id) {
             <div class="card setup-editar">
               <div class="card-header">
-                <h4>Editar setup</h4>
+                <h4>{{ 'setups.editarSetup' | transloco }}</h4>
               </div>
               <div class="grid grid-2 form-grid">
                 <div class="field">
-                  <label for="e-titulo">Título</label>
+                  <label for="e-titulo">{{ 'setups.campo.titulo' | transloco }}</label>
                   <input
                     id="e-titulo"
                     class="input"
@@ -209,7 +239,7 @@
                   />
                 </div>
                 <div class="field">
-                  <label for="e-circuito">Circuito</label>
+                  <label for="e-circuito">{{ 'setups.filtro.circuito' | transloco }}</label>
                   <input
                     id="e-circuito"
                     class="input"
@@ -219,7 +249,7 @@
                   />
                 </div>
                 <div class="field">
-                  <label for="e-vehiculo">Vehículo</label>
+                  <label for="e-vehiculo">{{ 'setups.filtro.vehiculo' | transloco }}</label>
                   <input
                     id="e-vehiculo"
                     class="input"
@@ -229,7 +259,7 @@
                   />
                 </div>
                 <div class="field">
-                  <label for="e-categoria">Categoría</label>
+                  <label for="e-categoria">{{ 'setups.filtro.categoria' | transloco }}</label>
                   <select
                     id="e-categoria"
                     class="select"
@@ -245,7 +275,7 @@
                 </div>
               </div>
               <div class="field">
-                <label for="e-desc">Descripción</label>
+                <label for="e-desc">{{ 'setups.campo.descripcion' | transloco }}</label>
                 <textarea
                   id="e-desc"
                   class="textarea"
@@ -255,24 +285,26 @@
               </div>
               <div class="flex gap-2">
                 <button type="button" class="btn btn-primary" (click)="guardarEdit()">
-                  Guardar cambios
+                  {{ 'setups.guardar' | transloco }}
                 </button>
                 <button type="button" class="btn btn-ghost" (click)="cancelarEdit()">
-                  Cancelar
+                  {{ 'setups.cancelar' | transloco }}
                 </button>
               </div>
             </div>
           }
 
-          <p class="text-secondary setup-desc">{{ s.descripcion || 'Sin descripción.' }}</p>
+          <p class="text-secondary setup-desc">
+            {{ s.descripcion || ('setups.sinDescripcion' | transloco) }}
+          </p>
 
           <div class="grid grid-3 setup-stats">
             <div class="stat-card">
-              <div class="stat-label">Circuito</div>
+              <div class="stat-label">{{ 'setups.filtro.circuito' | transloco }}</div>
               <div class="stat-value">{{ s.circuito }}</div>
             </div>
             <div class="stat-card">
-              <div class="stat-label">Calificación</div>
+              <div class="stat-label">{{ 'setups.calificacion' | transloco }}</div>
               <div class="stat-value">
                 {{ promedio(s) }}
                 @if (autenticado() && calificaciones().length > 0) {
@@ -284,19 +316,20 @@
               </div>
             </div>
             <div class="stat-card">
-              <div class="stat-label">Categoría</div>
+              <div class="stat-label">{{ 'setups.filtro.categoria' | transloco }}</div>
               <div class="stat-value">{{ s.categoriaNombre || '—' }}</div>
             </div>
           </div>
 
           <div class="field">
-            <label id="tu-calif">Tu calificación</label>
+            <label id="tu-calif">{{ 'setups.tuCalificacion' | transloco }}</label>
             @if (!autenticado()) {
               <p class="text-terciario setup-nota">
-                <a routerLink="/auth" class="detail-link">Ingresá</a> para calificar este setup.
+                <a routerLink="/auth" class="detail-link">{{ 'setups.ingresa' | transloco }}</a>
+                {{ 'setups.paraCalificar' | transloco }}
               </p>
             } @else if (esMio(s)) {
-              <p class="text-terciario setup-nota">No podés calificar tu propio setup.</p>
+              <p class="text-terciario setup-nota">{{ 'setups.noPropio' | transloco }}</p>
             } @else {
               <div
                 class="estrellas"
@@ -310,7 +343,9 @@
                     class="estrella"
                     role="radio"
                     [attr.aria-checked]="miPuntaje() === n"
-                    [attr.aria-label]="n + (n === 1 ? ' estrella' : ' estrellas')"
+                    [attr.aria-label]="
+                      (n === 1 ? 'setups.estrella' : 'setups.estrellas') | transloco: { n }
+                    "
                     [class.llena]="n <= (puntajeHover() ?? miPuntaje() ?? 0)"
                     (mouseenter)="puntajeHover.set(n)"
                     (focus)="puntajeHover.set(n)"
@@ -321,14 +356,16 @@
                   </button>
                 }
                 <span class="text-terciario setup-nota">{{
-                  miPuntaje() ? 'Tu nota: ' + miPuntaje() : 'Todavía no lo calificaste'
+                  miPuntaje()
+                    ? ('setups.tuNota' | transloco: { n: miPuntaje() })
+                    : ('setups.sinNota' | transloco)
                 }}</span>
               </div>
             }
           </div>
 
           <h4 class="setup-comentarios-titulo">
-            Comentarios
+            {{ 'setups.comentarios' | transloco }}
             @if (autenticado()) {
               <span class="text-terciario mono">({{ comentarios().length }})</span>
             }
@@ -336,11 +373,12 @@
 
           @if (!autenticado()) {
             <p class="text-terciario setup-nota">
-              <a routerLink="/auth" class="detail-link">Ingresá</a> para leer y dejar comentarios.
+              <a routerLink="/auth" class="detail-link">{{ 'setups.ingresa' | transloco }}</a>
+              {{ 'setups.paraComentarios' | transloco }}
             </p>
           } @else {
             @if (comentarios().length === 0) {
-              <p class="text-terciario setup-nota">Todavía no hay comentarios.</p>
+              <p class="text-terciario setup-nota">{{ 'setups.sinComentarios' | transloco }}</p>
             } @else {
               @for (c of comentarios(); track c.id) {
                 <div class="comment">
@@ -351,7 +389,7 @@
                   <div class="comment-cuerpo">
                     <div class="flex-between">
                       <strong class="comment-autor">{{
-                        c.nombrePiloto || 'Piloto #' + c.usuarioId
+                        c.nombrePiloto || ('setups.pilotoN' | transloco: { id: c.usuarioId })
                       }}</strong>
                       <span class="text-terciario mono comment-fecha">{{
                         c.fecha | fechaRelativa
@@ -363,8 +401,8 @@
                     <button
                       type="button"
                       class="btn btn-danger btn-sm btn-icon comment-borrar"
-                      title="Eliminar comentario"
-                      aria-label="Eliminar comentario"
+                      [title]="'setups.eliminarComentario' | transloco"
+                      [attr.aria-label]="'setups.eliminarComentario' | transloco"
                       (click)="pedirBorrarComentario(s.id, c)"
                     >
                       <svg
@@ -387,11 +425,11 @@
               }
             }
             <div class="field setup-comentar">
-              <label for="nuevo-comentario">Agregar comentario</label>
+              <label for="nuevo-comentario">{{ 'setups.agregarComentario' | transloco }}</label>
               <textarea
                 id="nuevo-comentario"
                 class="textarea"
-                placeholder="Contá cómo te fue con este setup…"
+                [placeholder]="'setups.comentarioPh' | transloco"
                 [value]="fComentario()"
                 (input)="fComentario.set(inputVal($event))"
               ></textarea>
@@ -400,12 +438,12 @@
                 class="btn btn-secondary setup-comentar-btn"
                 (click)="publicarComentario(s.id)"
               >
-                Publicar comentario
+                {{ 'setups.publicarComentario' | transloco }}
               </button>
             </div>
           }
         } @else if (!cargando()) {
-          <p class="text-terciario">Seleccioná un setup de la lista para ver el detalle.</p>
+          <p class="text-terciario">{{ 'setups.elegiUno' | transloco }}</p>
         }
       }
     </div>
@@ -423,29 +461,33 @@
   }
 </datalist>
 
-<app-modal [abierto]="uploadVisible()" titulo="Subir un setup" (cerrado)="cerrarUpload()">
+<app-modal
+  [abierto]="uploadVisible()"
+  [titulo]="'setups.modal.titulo' | transloco"
+  (cerrado)="cerrarUpload()"
+>
   <div class="grid grid-2 form-grid">
     <div class="field">
-      <label for="f-titulo">Título *</label>
+      <label for="f-titulo">{{ 'setups.modal.tituloReq' | transloco }}</label>
       <input
         id="f-titulo"
         class="input"
-        placeholder="Ej. Ferrari 296 — Seco / alta velocidad"
+        [placeholder]="'setups.modal.tituloPh' | transloco"
         [class.invalido]="intentoPublicar() && faltanCampos().titulo"
         [value]="fTitulo()"
         (input)="fTitulo.set(inputVal($event))"
       />
       @if (intentoPublicar() && faltanCampos().titulo) {
-        <p class="hint hint-error">Poné un título.</p>
+        <p class="hint hint-error">{{ 'setups.modal.tituloError' | transloco }}</p>
       }
     </div>
     <div class="field">
-      <label for="f-categoria">Categoría</label>
+      <label for="f-categoria">{{ 'setups.filtro.categoria' | transloco }}</label>
       <select id="f-categoria" class="select" (change)="fCategoria.set(selectNum($event))">
         <option value="">—</option>
         @for (c of cats(); track c.id) {
           <option [value]="c.id" [selected]="c.id === fCategoria()">
-            {{ c.nombre }}{{ c.setupFijo ? ' (setup fijo)' : '' }}
+            {{ c.nombre }}{{ c.setupFijo ? ('setups.modal.setupFijoSufijo' | transloco) : '' }}
           </option>
         }
       </select>
@@ -453,49 +495,45 @@
         <p class="hint">
           {{ txt }}
           @if (fCategoriaFija()) {
-            {{
-              esAdmin()
-                ? 'Podés publicarlo como comité.'
-                : 'Solo el comité puede publicar en esta categoría.'
-            }}
+            {{ (esAdmin() ? 'setups.modal.comite' : 'setups.modal.soloComite') | transloco }}
           }
         </p>
       }
     </div>
     <div class="field">
-      <label for="f-circuito">Circuito *</label>
+      <label for="f-circuito">{{ 'setups.modal.circuitoReq' | transloco }}</label>
       <input
         id="f-circuito"
         class="input"
         list="lista-circuitos"
-        placeholder="Ej. Termas de Río Hondo"
+        [placeholder]="'setups.modal.circuitoPh' | transloco"
         [class.invalido]="intentoPublicar() && faltanCampos().circuito"
         [value]="fCircuito()"
         (input)="fCircuito.set(inputVal($event))"
       />
       @if (intentoPublicar() && faltanCampos().circuito) {
-        <p class="hint hint-error">Indicá el circuito.</p>
+        <p class="hint hint-error">{{ 'setups.modal.circuitoError' | transloco }}</p>
       }
     </div>
     <div class="field">
-      <label for="f-vehiculo">Vehículo *</label>
+      <label for="f-vehiculo">{{ 'setups.modal.vehiculoReq' | transloco }}</label>
       <input
         id="f-vehiculo"
         class="input"
         list="lista-vehiculos"
-        placeholder="Ej. Ferrari 296 GT3"
+        [placeholder]="'setups.modal.vehiculoPh' | transloco"
         [class.invalido]="intentoPublicar() && faltanCampos().vehiculo"
         [value]="fVehiculo()"
         (input)="fVehiculo.set(inputVal($event))"
       />
       @if (intentoPublicar() && faltanCampos().vehiculo) {
-        <p class="hint hint-error">Indicá el vehículo.</p>
+        <p class="hint hint-error">{{ 'setups.modal.vehiculoError' | transloco }}</p>
       }
     </div>
   </div>
 
   <div class="field">
-    <label for="f-archivo">Archivo del setup</label>
+    <label for="f-archivo">{{ 'setups.modal.archivo' | transloco }}</label>
     <div
       class="dropzone"
       role="button"
@@ -510,9 +548,14 @@
       @if (archivo(); as f) {
         <span>{{ f.name }}</span>
       } @else {
-        <span>Arrastrá el archivo acá o <strong>hacé click para elegirlo</strong></span>
+        <span
+          >{{ 'setups.modal.arrastra' | transloco }}
+          <strong>{{ 'setups.modal.clickElegir' | transloco }}</strong></span
+        >
       }
-      <span class="text-terciario dropzone-ayuda">{{ extensionesTxt }} · hasta 10 MB</span>
+      <span class="text-terciario dropzone-ayuda">{{
+        'setups.modal.limite' | transloco: { ext: extensionesTxt }
+      }}</span>
     </div>
     <input
       #fileInput
@@ -528,35 +571,37 @@
   </div>
 
   <div class="field">
-    <label for="f-desc">Descripción</label>
+    <label for="f-desc">{{ 'setups.campo.descripcion' | transloco }}</label>
     <textarea
       id="f-desc"
       class="textarea"
-      placeholder="Comportamiento, condiciones de uso, tips…"
+      [placeholder]="'setups.modal.descripcionPh' | transloco"
       [value]="fDescripcion()"
       (input)="fDescripcion.set(inputVal($event))"
     ></textarea>
   </div>
 
   <div class="flex gap-2 modal-acciones">
-    <button type="button" class="btn btn-ghost" (click)="cerrarUpload()">Cancelar</button>
+    <button type="button" class="btn btn-ghost" (click)="cerrarUpload()">
+      {{ 'setups.cancelar' | transloco }}
+    </button>
     <button
       type="button"
       class="btn btn-primary"
       [disabled]="!puedePublicar() || publicando()"
-      [title]="!puedePublicar() ? 'Solo el comité puede publicar setups fijos' : ''"
+      [title]="!puedePublicar() ? ('setups.modal.soloComiteFijos' | transloco) : ''"
       (click)="publicar()"
     >
-      {{ publicando() ? 'Publicando…' : 'Publicar setup' }}
+      {{ (publicando() ? 'setups.modal.publicando' : 'setups.modal.publicar') | transloco }}
     </button>
   </div>
 </app-modal>
 
 <app-confirm-dialog
   [abierto]="!!aConfirmar()"
-  titulo="Confirmar"
+  [titulo]="'setups.confirmar.titulo' | transloco"
   [mensaje]="mensajeConfirmacion()"
-  confirmarTexto="Eliminar"
+  [confirmarTexto]="'setups.confirmar.eliminar' | transloco"
   (aceptado)="confirmarBorrado()"
   (cancelado)="aConfirmar.set(null)"
 />
