@@ -3,10 +3,12 @@
 // ==========================================================================
 
 // ---- Hero (Home) -------------------------------------------------------
+// Sin overflow: hidden: recortaba el desplegable "Inscribirme a otra", que quedaba
+// cortado al final del hero y sin forma de ver el resto. Las capas de fondo
+// (checker, grilla, foto, overlay) son inset: 0, así que no se salen igual.
 .hero {
   position: relative;
   padding-block: var(--sp-10) var(--sp-9);
-  overflow: hidden;
   background:
     linear-gradient(180deg, rgba(18, 18, 18, 0) 0%, var(--bg-principal) 92%),
     linear-gradient(115deg, #1a0e0e 0%, #121212 46%, #1a1212 100%);
@@ -43,6 +45,23 @@
   display: flex;
   gap: var(--sp-3);
   flex-wrap: wrap;
+}
+// En celular los botones van uno debajo del otro y a todo el ancho: así el
+// desplegable "Inscribirme a otra" arranca en el borde y no se sale de la pantalla.
+@media (max-width: 600px) {
+  .hero-ctas {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .hero-ctas > .btn,
+  .hero-ctas .cta-dropdown,
+  .hero-ctas .cta-trigger {
+    width: 100%;
+    justify-content: center;
+  }
+  .hero-ctas .cta-dropdown-panel {
+    width: 100%;
+  }
 }
 .hero-stats {
   display: flex;
@@ -81,13 +100,17 @@
   position: absolute;
   top: calc(100% + var(--sp-2));
   left: 0;
-  min-width: 320px;
+  // Ancho para que el nombre de la carrera entre en 1-2 líneas, sin pasarse de la
+  // pantalla en celular; y alto tope con scroll propio por si hay muchas abiertas.
+  width: min(420px, calc(100vw - 2 * var(--sp-5)));
+  max-height: min(60vh, 420px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
   background: var(--bg-superficie);
   border: 1px solid var(--borde-metal);
   border-radius: var(--r-md);
   box-shadow: var(--shadow-lift);
   z-index: 50;
-  overflow: hidden;
 }
 .cta-dropdown-panel.open {
   animation: dropdownIn 180ms var(--ease-out);
