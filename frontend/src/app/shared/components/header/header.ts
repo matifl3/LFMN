@@ -10,7 +10,7 @@ import {
 import { NavigationStart, Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { filter } from 'rxjs';
-import { ApiService, apiError } from '../../../core/services/api.service';
+import { NotificacionesService } from '../../../core/services/notificaciones.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
@@ -43,14 +43,15 @@ const NAV_LINKS: NavLink[] = [
 })
 export class Header {
   readonly auth = inject(AuthService);
-  private readonly api = inject(ApiService);
+  private readonly notificaciones = inject(NotificacionesService);
   private readonly toast = inject(ToastService);
   private readonly router = inject(Router);
   private readonly transloco = inject(TranslocoService);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
   readonly navLinks = NAV_LINKS;
-  readonly noLeidas = signal(0);
+  /** Compartido con la pantalla de notificaciones: se actualiza al marcar o eliminar. */
+  readonly noLeidas = this.notificaciones.noLeidas;
   readonly menuAbierto = signal(false);
   readonly menuUsuarioAbierto = signal(false);
   readonly miPerfil = computed(() => {
@@ -61,9 +62,9 @@ export class Header {
   constructor() {
     effect(() => {
       if (this.auth.autenticado()) {
-        this.cargarNoLeidas();
+        this.notificaciones.refrescar();
       } else {
-        this.noLeidas.set(0);
+        this.notificaciones.limpiar();
         this.menuAbierto.set(false);
         this.menuUsuarioAbierto.set(false);
       }
@@ -75,14 +76,6 @@ export class Header {
         takeUntilDestroyed(),
       )
       .subscribe(() => this.menuUsuarioAbierto.set(false));
-  }
-
-  cargarNoLeidas(): void {
-    if (!this.auth.autenticado()) return;
-    this.api.get<number>('/notificaciones/me/no-leidas/contar').subscribe({
-      next: (n) => this.noLeidas.set(n > 0 ? n : 0),
-      error: () => this.noLeidas.set(0),
-    });
   }
 
   alternarMenu(): void {

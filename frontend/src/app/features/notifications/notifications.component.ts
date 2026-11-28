@@ -4,6 +4,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ApiService, apiError } from '../../core/services/api.service';
 import { ToastService } from '../../core/services/toast.service';
+import { NotificacionesService } from '../../core/services/notificaciones.service';
 import { EmptyState } from '../../shared/components/empty-state/empty-state';
 import { FechaRelativaPipe } from '../../core/pipes/fecha-relativa.pipe';
 import { Notificacion } from '../../core/models/models';
@@ -25,6 +26,7 @@ export class NotificationsComponent implements OnInit {
   private readonly api = inject(ApiService);
   private readonly toast = inject(ToastService);
   private readonly sanitizer = inject(DomSanitizer);
+  private readonly contador = inject(NotificacionesService);
 
   readonly notificaciones = signal<Notificacion[]>([]);
   readonly cargando = signal(true);
@@ -62,6 +64,9 @@ export class NotificationsComponent implements OnInit {
       next: (l) => {
         this.notificaciones.set(l);
         this.cargando.set(false);
+        // Cada cambio (marcar una, todas, eliminar) termina recargando: así la
+        // campanita del header queda igual que esta lista.
+        this.contador.refrescar();
       },
       error: (err) => {
         this.cargando.set(false);
