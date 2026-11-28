@@ -78,6 +78,9 @@ public class SecurityConfig {
                         // al crear/editar campeonato. Es metadato de configuracion,
                         // no dato de usuario, asi que va publico como /api/setups.
                         .requestMatchers(HttpMethod.GET, "/api/sistemas-puntos").permitAll()
+                        // Imagenes de anuncios: se piden desde <img src>, que no manda el
+                        // JWT. Son publicas como los anuncios que las muestran.
+                        .requestMatchers(HttpMethod.GET, "/api/imagenes/{nombre}").permitAll()
                         // Static frontend files (public)
                         .requestMatchers("/*.html").permitAll()
                         .requestMatchers("/**/*.html").permitAll()

@@ -70,7 +70,15 @@ public class InscripcionService {
         Inscripcion inscripcion = getEntity(id);
         accesoService.exigirPropioOAdministraCarrera(actor, inscripcion.getUsuario().getId(),
                 inscripcion.getCarrera(), "cancelar la inscripcion de otro usuario");
+        exigirInscripcionesAbiertas(inscripcion.getCarrera());
         return darDeBaja(inscripcion);
+    }
+
+    /** Las dos rutas de baja (por id y por carrera/usuario) cierran a la misma hora. */
+    private void exigirInscripcionesAbiertas(Carrera carrera) {
+        if (!carrera.getFecha().isAfter(LocalDateTime.now().plusMinutes(MINUTOS_CIERRE_PREVIO))) {
+            throw new BusinessException("Las inscripciones ya estan cerradas para esta carrera");
+        }
     }
 
     private InscripcionResponse darDeBaja(Inscripcion inscripcion) {
@@ -91,9 +99,7 @@ public class InscripcionService {
         Carrera carrera = carreraService.getEntity(carreraId);
         accesoService.exigirPropioOAdministraCarrera(actor, usuarioId, carrera,
                 "cancelar la inscripcion de otro usuario");
-        if (!carrera.getFecha().isAfter(LocalDateTime.now().plusMinutes(MINUTOS_CIERRE_PREVIO))) {
-            throw new BusinessException("Las inscripciones ya estan cerradas para esta carrera");
-        }
+        exigirInscripcionesAbiertas(carrera);
         Inscripcion inscripcion = inscripcionRepository.findByCarrera_IdAndUsuario_Id(carreraId, usuarioId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "No existe inscripcion del usuario en la carrera"));
