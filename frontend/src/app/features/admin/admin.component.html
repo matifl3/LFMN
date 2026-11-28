@@ -832,6 +832,15 @@
                 />
               </div>
               <div class="field">
+                <label>{{ 'admin.col.descripcion' | transloco }}</label
+                ><textarea
+                  class="textarea"
+                  maxlength="2000"
+                  [ngModel]="chDescripcion()"
+                  (ngModelChange)="chDescripcion.set($event)"
+                ></textarea>
+              </div>
+              <div class="field">
                 <label>{{ 'admin.form.categoria' | transloco }}</label>
                 <select
                   class="select"

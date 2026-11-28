@@ -1,18 +1,4 @@
 <section class="container-wide section">
-  <div class="section-head">
-    <div>
-      <span class="eyebrow"
-        >{{ champ()?.categoriaNombre || ('campeonato.campeonato' | transloco)
-        }}{{
-          champ()?.temporada
-            ? ('campeonato.eyebrowTemporada' | transloco: { anio: champ()!.temporada })
-            : ''
-        }}</span
-      >
-      <h2>{{ champ()?.nombre || ('campeonato.campeonato' | transloco) }}</h2>
-    </div>
-  </div>
-
   @if (!cargando() && champs().length > 0) {
     <nav class="champ-picker" [attr.aria-label]="'campeonato.elegir' | transloco">
       @if (champsActivos().length > 0) {
@@ -36,6 +22,23 @@
       }
     </nav>
   }
+
+  <div class="section-head">
+    <div>
+      <span class="eyebrow"
+        >{{ champ()?.categoriaNombre || ('campeonato.campeonato' | transloco)
+        }}{{
+          champ()?.temporada
+            ? ('campeonato.eyebrowTemporada' | transloco: { anio: champ()!.temporada })
+            : ''
+        }}</span
+      >
+      <h2>{{ champ()?.nombre || ('campeonato.campeonato' | transloco) }}</h2>
+      @if (champ()?.descripcion; as descripcion) {
+        <p class="champ-descripcion">{{ descripcion }}</p>
+      }
+    </div>
+  </div>
 
   <ng-template #tarjeta let-c>
     <button

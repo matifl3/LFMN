@@ -153,6 +153,7 @@ export class AdminComponent implements OnInit {
 
   readonly chNombre = signal('');
   readonly chTemporada = signal('');
+  readonly chDescripcion = signal('');
   readonly chCategoriaId = signal('');
   readonly chSistemaPuntos = signal('');
   readonly chAdminId = signal('');
@@ -393,6 +394,9 @@ export class AdminComponent implements OnInit {
     const body: Record<string, unknown> = {
       nombre,
       temporada: this.chTemporada()?.trim() || undefined,
+      // Se manda siempre (también ''): en el PUT, null conserva la descripción y
+      // '' la borra, así que vaciar el campo tiene que viajar como ''.
+      descripcion: this.chDescripcion().trim(),
       categoriaId,
       sistemaPuntos: this.chSistemaPuntos() || undefined,
       // Se mandan SIEMPRE, incluso en null: el PUT reemplaza el dueno, y si el
@@ -422,6 +426,7 @@ export class AdminComponent implements OnInit {
     this.editingCampeonatoId.set(c.id);
     this.chNombre.set(c.nombre);
     this.chTemporada.set(c.temporada || '');
+    this.chDescripcion.set(c.descripcion || '');
     this.chCategoriaId.set(String(c.categoriaId));
     this.chSistemaPuntos.set(c.sistemaPuntos || this.claveSistemaPuntosDefault());
     this.chAdminId.set(c.adminId ? String(c.adminId) : '');
@@ -433,6 +438,7 @@ export class AdminComponent implements OnInit {
     this.editingCampeonatoId.set(null);
     this.chNombre.set('');
     this.chTemporada.set('');
+    this.chDescripcion.set('');
     this.chCategoriaId.set('');
     this.chSistemaPuntos.set(this.claveSistemaPuntosDefault());
     this.chAdminId.set('');

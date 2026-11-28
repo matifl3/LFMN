@@ -5,6 +5,18 @@
   width: 60%;
 }
 
+// Descripción bajo el título: respeta los saltos de línea que cargó el admin,
+// corta URLs largas y limita el ancho de línea para que se lea bien.
+.champ-descripcion {
+  margin-top: var(--sp-2);
+  max-inline-size: 60ch;
+  color: var(--texto-secundario);
+  line-height: 1.5;
+  white-space: pre-line;
+  overflow-wrap: break-word;
+  text-wrap: pretty;
+}
+
 // Selector de campeonato: tarjetas en una fila con scroll horizontal (activos) y
 // las temporadas cerradas plegadas debajo.
 .champ-picker {
