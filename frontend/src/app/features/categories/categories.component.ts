@@ -26,7 +26,7 @@ interface Tarjeta {
   /** Posición del Elo del piloto dentro del rango, 0..100, para la barra. */
   posicionPct: number | null;
   proximas: Carrera[];
-  campeonato: Campeonato | null;
+  campeonatos: Campeonato[];
 }
 
 @Component({
@@ -128,8 +128,19 @@ export class CategoriesComponent implements OnInit {
       proximas: this.proximas()
         .filter((c) => c.categoriaId === cat.id)
         .sort((a, b) => (a.fecha ?? '').localeCompare(b.fecha ?? '')),
-      campeonato: champsCat.find((c) => c.estado === 'ACTIVO') ?? champsCat[0] ?? null,
+      campeonatos: this.campeonatosDeTarjeta(champsCat),
     };
+  }
+
+  /**
+   * Todos los activos de la categoria (puede haber varios: el publico y ligas
+   * privadas). Si no hay ninguno activo, el primero, para no perder el acceso
+   * a la tabla de un campeonato cerrado.
+   */
+  private campeonatosDeTarjeta(champsCat: Campeonato[]): Campeonato[] {
+    const activos = champsCat.filter((c) => c.estado === 'ACTIVO');
+    if (activos.length) return activos;
+    return champsCat.length ? [champsCat[0]] : [];
   }
 
   /** Un límite null es "sin límite", igual que RequisitosEloValidador en el backend. */
