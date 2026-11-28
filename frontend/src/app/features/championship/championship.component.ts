@@ -1,5 +1,6 @@
 import { TranslocoPipe } from '@jsverse/transloco';
 import { t } from '../../core/i18n/t';
+import { NgTemplateOutlet } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Observable, forkJoin } from 'rxjs';
@@ -33,7 +34,7 @@ const ESTADO_CAMPEONATO = new Set(['ACTIVO', 'CERRADO']);
 @Component({
   selector: 'app-championship',
   standalone: true,
-  imports: [TranslocoPipe, RouterLink, RankBadge, Chip, FmtFechaHoraPipe],
+  imports: [TranslocoPipe, RouterLink, RankBadge, Chip, FmtFechaHoraPipe, NgTemplateOutlet],
   styleUrl: './championship.scss',
   templateUrl: './championship.html',
 })
@@ -79,12 +80,49 @@ export class ChampionshipComponent implements OnInit {
           .filter((id): id is number => !!id),
       ),
   );
-  readonly champsConActividad = computed(() =>
-    this.champs().filter((c) => this.idsConCarreras().has(c.id)),
+  /** Activos para las tarjetas: los que tienen carreras primero, así no abre en uno vacío. */
+  readonly champsActivos = computed(() => {
+    const activos = this.champs().filter((c) => c.estado === 'ACTIVO');
+    const conCarreras = this.idsConCarreras();
+    return [
+      ...activos.filter((c) => conCarreras.has(c.id)),
+      ...activos.filter((c) => !conCarreras.has(c.id)),
+    ];
+  });
+
+  /** Cerrados: van plegados en "Temporadas anteriores". */
+  readonly champsAnteriores = computed(() => this.champs().filter((c) => c.estado !== 'ACTIVO'));
+
+  /** Se abre solo si el campeonato elegido (por URL o por defecto) es de una temporada anterior. */
+  readonly verAnteriores = computed(() =>
+    this.champsAnteriores().some((c) => c.id === this.selectedId()),
   );
-  readonly champsSinCarreras = computed(() =>
-    this.champs().filter((c) => !this.idsConCarreras().has(c.id)),
-  );
+
+  /**
+   * Rondas corridas / totales de cada campeonato, para la barra de su tarjeta. Sale
+   * de las carreras ya cargadas (sin pedir /progreso por cada uno); las canceladas
+   * no cuentan, igual que en el calendario.
+   */
+  readonly rondasPorCampeonato = computed(() => {
+    const mapa = new Map<number, { corridas: number; total: number }>();
+    for (const c of this.carreras()) {
+      if (!c.campeonatoId || c.estado === 'CANCELADA') continue;
+      const r = mapa.get(c.campeonatoId) ?? { corridas: 0, total: 0 };
+      r.total++;
+      if (c.estado === 'FINALIZADA') r.corridas++;
+      mapa.set(c.campeonatoId, r);
+    }
+    return mapa;
+  });
+
+  rondasDe(id: number): { corridas: number; total: number; pct: number } | null {
+    const r = this.rondasPorCampeonato().get(id);
+    return r ? { ...r, pct: Math.round((r.corridas / r.total) * 100) } : null;
+  }
+
+  estadoDe(c: Campeonato): string {
+    return ESTADO_CAMPEONATO.has(c.estado) ? t('campeonato.estado.' + c.estado) : c.estado;
+  }
 
   readonly calendario = computed<Ronda[]>(() => {
     const id = this.selectedId();
@@ -181,8 +219,8 @@ export class ChampionshipComponent implements OnInit {
     return (champs.find((c) => c.estado === 'ACTIVO') ?? champs[0]).id;
   }
 
-  onChange(e: Event): void {
-    this.seleccionar(Number((e.target as HTMLSelectElement).value), true);
+  elegir(id: number): void {
+    if (id !== this.selectedId()) this.seleccionar(id, true);
   }
 
   private seleccionar(id: number, actualizarUrl: boolean): void {

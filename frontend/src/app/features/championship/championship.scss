@@ -5,8 +5,99 @@
   width: 60%;
 }
 
-.champ-select {
-  min-width: 240px;
+// Selector de campeonato: tarjetas en una fila con scroll horizontal (activos) y
+// las temporadas cerradas plegadas debajo.
+.champ-picker {
+  margin-bottom: var(--sp-6);
+}
+.champ-cards {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(240px, 280px);
+  gap: var(--sp-3);
+  overflow-x: auto;
+  padding-bottom: var(--sp-2);
+  scrollbar-width: thin;
+}
+.champ-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--sp-2);
+  padding: var(--sp-4);
+  text-align: left;
+  color: var(--texto-principal);
+  background: var(--bg-paneles);
+  border: 1px solid var(--borde-hair);
+  border-radius: var(--r-md);
+  cursor: pointer;
+  transition:
+    border-color var(--dur-base) var(--ease),
+    background-color var(--dur-base) var(--ease);
+}
+.champ-card:hover {
+  border-color: var(--borde-brillo);
+  background: var(--bg-superficie);
+}
+.champ-card:focus-visible {
+  outline: 2px solid var(--lbm-rojo);
+  outline-offset: 2px;
+}
+.champ-card.active {
+  border-color: var(--lbm-rojo);
+  box-shadow: inset 0 0 0 1px var(--lbm-rojo);
+}
+.champ-card-meta {
+  font-family: var(--font-mono);
+  font-size: var(--fs-2xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--texto-terciario);
+}
+.champ-card-nombre {
+  font-size: var(--fs-base);
+  line-height: 1.25;
+}
+.champ-card-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+.champ-card-rondas {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  width: 100%;
+  margin-top: auto;
+  font-size: var(--fs-2xs);
+  color: var(--texto-terciario);
+
+  // Son <span> (un <button> no admite <div>): sin display block el ancho no aplica.
+  .progress {
+    display: block;
+    flex: 1;
+  }
+  .progress-bar {
+    display: block;
+  }
+}
+.champ-anteriores {
+  margin-top: var(--sp-4);
+
+  summary {
+    cursor: pointer;
+    width: fit-content;
+    margin-bottom: var(--sp-3);
+    font-family: var(--font-display);
+    font-size: var(--fs-xs);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--texto-terciario);
+
+    &:hover {
+      color: var(--texto-principal);
+    }
+  }
 }
 
 // Resumen: estado + progreso a la izquierda, próxima carrera a la derecha.

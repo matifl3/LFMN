@@ -4,15 +4,9 @@
       <span class="eyebrow">{{ 'carreras.lista.eyebrow' | transloco }}</span>
       <h2>{{ 'carreras.lista.titulo' | transloco }}</h2>
     </div>
-    <select class="select" (change)="onChangeCategoria($event)">
-      <option value="">{{ 'carreras.lista.todasCategorias' | transloco }}</option>
-      @for (c of cats(); track c.id) {
-        <option [value]="c.id">{{ c.nombre }}</option>
-      }
-    </select>
   </div>
 
-  <div class="tabs-pill" style="margin-bottom: var(--sp-5)" role="group">
+  <div class="tabs-pill" style="margin-bottom: var(--sp-4)" role="group">
     <button
       type="button"
       class="tab"
@@ -34,6 +28,37 @@
       <span class="count">{{ pasadasFiltradas().length }}</span>
     </button>
   </div>
+
+  @if (!cargando() && chipsCategoria().length > 0) {
+    <div
+      class="filtro-chips"
+      role="group"
+      [attr.aria-label]="'carreras.lista.filtroCategoria' | transloco"
+    >
+      <button
+        type="button"
+        class="filtro-chip"
+        [class.active]="esCategoriaElegida(null)"
+        [attr.aria-pressed]="esCategoriaElegida(null)"
+        (click)="elegirCategoria(null)"
+      >
+        {{ 'carreras.lista.todas' | transloco }}
+        <span class="count">{{ totalVista() }}</span>
+      </button>
+      @for (x of chipsCategoria(); track x.cat.id) {
+        <button
+          type="button"
+          class="filtro-chip"
+          [class.active]="esCategoriaElegida(x.cat.id)"
+          [attr.aria-pressed]="esCategoriaElegida(x.cat.id)"
+          (click)="elegirCategoria(x.cat.id)"
+        >
+          {{ x.cat.nombre }}
+          <span class="count">{{ x.n }}</span>
+        </button>
+      }
+    </div>
+  }
 
   @if (cargando()) {
     <div class="flex-col gap-3">

@@ -1,7 +1,7 @@
 import { TranslocoPipe } from '@jsverse/transloco';
 import { t } from '../../../core/i18n/t';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { ApiService } from '../../../core/services/api.service';
 import { ErrorCargaService } from '../../../core/services/error-carga.service';
@@ -20,6 +20,7 @@ export class RacesListComponent implements OnInit {
   private readonly api = inject(ApiService);
   private readonly carga = inject(ErrorCargaService);
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
 
   readonly cats = signal<Categoria[]>([]);
   readonly proximasRaw = signal<Carrera[]>([]);
@@ -37,17 +38,41 @@ export class RacesListComponent implements OnInit {
     this.pasadasRaw().filter((c) => c.estado === 'EN_CURSO'),
   );
 
-  readonly proximasFiltradas = computed(() =>
-    [...this.enCurso(), ...this.proximasRaw()].filter((c) => this.pasaFiltro(c)),
+  private readonly proximas = computed(() => [...this.enCurso(), ...this.proximasRaw()]);
+  private readonly pasadas = computed(() =>
+    this.pasadasRaw().filter((c) => c.estado !== 'EN_CURSO'),
   );
 
-  readonly pasadasFiltradas = computed(() =>
-    this.pasadasRaw().filter((c) => c.estado !== 'EN_CURSO' && this.pasaFiltro(c)),
-  );
+  readonly proximasFiltradas = computed(() => this.proximas().filter((c) => this.pasaFiltro(c)));
+  readonly pasadasFiltradas = computed(() => this.pasadas().filter((c) => this.pasaFiltro(c)));
 
   readonly listaActual = computed(() =>
     this.view() === 'proximas' ? this.proximasFiltradas() : this.pasadasFiltradas(),
   );
+
+  /** Carreras de la pestaña actual sin filtrar por categoría: base de los contadores. */
+  private readonly vistaSinFiltro = computed(() =>
+    this.view() === 'proximas' ? this.proximas() : this.pasadas(),
+  );
+
+  readonly totalVista = computed(() => this.vistaSinFiltro().length);
+
+  /**
+   * Chips de categoría: solo las que tienen carreras en la pestaña actual, las de
+   * más carreras primero. La elegida se muestra siempre (aunque tenga 0 en esta
+   * pestaña) para que se vea qué filtro está activo y se pueda sacar.
+   */
+  readonly chipsCategoria = computed(() => {
+    const cuenta = new Map<number, number>();
+    for (const c of this.vistaSinFiltro()) {
+      if (c.categoriaId != null) cuenta.set(c.categoriaId, (cuenta.get(c.categoriaId) ?? 0) + 1);
+    }
+    const elegida = this.filtroCat();
+    return this.cats()
+      .map((cat) => ({ cat, n: cuenta.get(cat.id) ?? 0 }))
+      .filter((x) => x.n > 0 || String(x.cat.id) === elegida)
+      .sort((a, b) => b.n - a.n || a.cat.nombre.localeCompare(b.cat.nombre));
+  });
 
   ngOnInit(): void {
     const cat = this.route.snapshot.queryParamMap.get('cat');
@@ -71,8 +96,19 @@ export class RacesListComponent implements OnInit {
     this.view.set(v);
   }
 
-  onChangeCategoria(e: Event): void {
-    this.filtroCat.set((e.target as HTMLSelectElement).value || null);
+  /** Filtra y deja la categoría en la URL (?cat=), igual que el link desde Categorías. */
+  elegirCategoria(id: number | null): void {
+    this.filtroCat.set(id == null ? null : String(id));
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { cat: id },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+  }
+
+  esCategoriaElegida(id: number | null): boolean {
+    return id == null ? !this.filtroCat() : this.filtroCat() === String(id);
   }
 
   raceDay(c: Carrera): string {

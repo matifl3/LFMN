@@ -547,6 +547,63 @@
   box-shadow: inset 0 0 0 1px var(--borde-brillo);
 }
 
+// .filtro-chips: fila de filtros de un toque (ej. categorías en Carreras). Una sola
+// línea con scroll horizontal, así no crece en alto con muchas opciones.
+.filtro-chips {
+  display: flex;
+  gap: var(--sp-2);
+  overflow-x: auto;
+  padding-bottom: var(--sp-2);
+  margin-bottom: var(--sp-4);
+  scrollbar-width: thin;
+}
+.filtro-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex-shrink: 0;
+  padding: 0.4rem 0.9rem;
+  font-family: var(--font-display);
+  font-size: var(--fs-xs);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--texto-terciario);
+  background: var(--bg-superficie);
+  border: 1px solid var(--borde-metal);
+  border-radius: var(--r-pill);
+  cursor: pointer;
+  transition:
+    color var(--dur-base) var(--ease),
+    border-color var(--dur-base) var(--ease),
+    background-color var(--dur-base) var(--ease);
+}
+.filtro-chip:hover {
+  color: var(--texto-principal);
+  border-color: var(--borde-brillo);
+}
+.filtro-chip:focus-visible {
+  outline: 2px solid var(--lbm-rojo);
+  outline-offset: 2px;
+}
+.filtro-chip.active {
+  color: var(--texto-principal);
+  border-color: var(--lbm-rojo);
+  background: rgba(255, 255, 255, 0.06);
+}
+.filtro-chip .count {
+  font-family: var(--font-mono);
+  font-size: var(--fs-2xs);
+  padding: 0.05em 0.45em;
+  border-radius: var(--r-pill);
+  background: var(--bg-inset);
+  color: var(--texto-terciario);
+}
+.filtro-chip.active .count {
+  color: var(--texto-principal);
+  background: var(--lbm-rojo-dim);
+}
+
 // ---- Formularios -------------------------------------------------------------
 .field {
   display: flex;

@@ -11,30 +11,71 @@
       >
       <h2>{{ champ()?.nombre || ('campeonato.campeonato' | transloco) }}</h2>
     </div>
-    @if (champs().length > 0) {
-      <select
-        class="select champ-select"
-        [attr.aria-label]="'campeonato.elegir' | transloco"
-        [value]="selectedId()"
-        (change)="onChange($event)"
-      >
-        @if (champsConActividad().length > 0) {
-          <optgroup [label]="'campeonato.conCarreras' | transloco">
-            @for (c of champsConActividad(); track c.id) {
-              <option [value]="c.id" [selected]="c.id === selectedId()">{{ c.nombre }}</option>
-            }
-          </optgroup>
-        }
-        @if (champsSinCarreras().length > 0) {
-          <optgroup [label]="'campeonato.sinCarreras' | transloco">
-            @for (c of champsSinCarreras(); track c.id) {
-              <option [value]="c.id" [selected]="c.id === selectedId()">{{ c.nombre }}</option>
-            }
-          </optgroup>
-        }
-      </select>
-    }
   </div>
+
+  @if (!cargando() && champs().length > 0) {
+    <nav class="champ-picker" [attr.aria-label]="'campeonato.elegir' | transloco">
+      @if (champsActivos().length > 0) {
+        <div class="champ-cards">
+          @for (c of champsActivos(); track c.id) {
+            <ng-container *ngTemplateOutlet="tarjeta; context: { $implicit: c }" />
+          }
+        </div>
+      }
+      @if (champsAnteriores().length > 0) {
+        <details class="champ-anteriores" [open]="verAnteriores() || champsActivos().length === 0">
+          <summary>
+            {{ 'campeonato.temporadasAnteriores' | transloco: { n: champsAnteriores().length } }}
+          </summary>
+          <div class="champ-cards">
+            @for (c of champsAnteriores(); track c.id) {
+              <ng-container *ngTemplateOutlet="tarjeta; context: { $implicit: c }" />
+            }
+          </div>
+        </details>
+      }
+    </nav>
+  }
+
+  <ng-template #tarjeta let-c>
+    <button
+      type="button"
+      class="champ-card"
+      [class.active]="c.id === selectedId()"
+      [attr.aria-pressed]="c.id === selectedId()"
+      (click)="elegir(c.id)"
+    >
+      <span class="champ-card-meta"
+        >{{ c.categoriaNombre }}{{ c.temporada ? ' · ' + c.temporada : '' }}</span
+      >
+      <strong class="champ-card-nombre">{{ c.nombre }}</strong>
+      <span class="champ-card-chips">
+        <span
+          class="chip"
+          [class.chip-upcoming]="c.estado === 'ACTIVO'"
+          [class.chip-closed]="c.estado !== 'ACTIVO'"
+          >{{ estadoDe(c) }}</span
+        >
+        @if (c.visibilidad === 'PRIVADO') {
+          <span class="chip chip-closed">{{ 'campeonato.privado' | transloco }}</span>
+        }
+      </span>
+      @if (rondasDe(c.id); as r) {
+        <span class="champ-card-rondas">
+          <span class="progress" aria-hidden="true">
+            <span class="progress-bar" [style.width.%]="r.pct"></span>
+          </span>
+          <span class="mono">{{
+            'campeonato.rondasCard' | transloco: { n: r.corridas, total: r.total }
+          }}</span>
+        </span>
+      } @else {
+        <span class="champ-card-rondas text-terciario">{{
+          'campeonato.sinCarreras' | transloco
+        }}</span>
+      }
+    </button>
+  </ng-template>
 
   @if (cargando()) {
     <div class="flex-col gap-3">
