@@ -160,9 +160,10 @@
                       <td>
                         @if (isAdmin()) {
                           <select
+                            #estadoSel
                             class="select"
                             [ngModel]="c.estado"
-                            (ngModelChange)="cambiarEstadoCarrera(c.id, $event)"
+                            (ngModelChange)="cambiarEstadoCarrera(c, $event, estadoSel)"
                             style="min-width: 170px"
                           >
                             @for (e of objectKeys(ESTADO_LABEL); track e) {
@@ -441,9 +442,11 @@
                       </td>
                       <td>
                         <select
+                          #rolSel
                           class="select"
                           [ngModel]="u.rol"
-                          (ngModelChange)="updateRol(u, $event)"
+                          [disabled]="u.id === auth.user()?.id"
+                          (ngModelChange)="updateRol(u, $event, rolSel)"
                           style="min-width: 120px"
                         >
                           <option value="USUARIO">{{ 'admin.rol.USUARIO' | transloco }}</option>

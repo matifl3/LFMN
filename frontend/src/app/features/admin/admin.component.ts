@@ -46,6 +46,26 @@ function etiquetas(valores: string[], prefijo: string): Record<string, string> {
   return Object.fromEntries(valores.map((v) => [v, t('admin.' + prefijo + v)]));
 }
 
+/** `'2026-11-28T21:30:00'` -> `{ fecha: '2026-11-28', hora: '21:30' }` en hora local; vacio si no hay. */
+function partirFechaHora(iso: string | null | undefined): { fecha: string; hora: string } {
+  if (!iso) return { fecha: '', hora: '' };
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return { fecha: '', hora: '' };
+  const p = (n: number) => String(n).padStart(2, '0');
+  return {
+    fecha: d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()),
+    hora: p(d.getHours()) + ':' + p(d.getMinutes()),
+  };
+}
+
+/**
+ * Vuelve un control al valor guardado. Tras un error o un "cancelar", `ngModel`
+ * no lo repinta solo: el valor bindeado no cambio, asi que Angular no detecta nada.
+ */
+function revertir(el: HTMLInputElement | HTMLSelectElement, valor: unknown): void {
+  el.value = valor === null || valor === undefined ? '' : String(valor);
+}
+
 interface SesionProcesada {
   id: number;
   carreraId: number;
@@ -301,32 +321,14 @@ export class AdminComponent implements OnInit {
     this.cCupo.set(c.cupoMaximo || 32);
     this.cServidor.set(c.servidor || '');
     this.cLinkPista.set(c.linkPista || '');
-    if (c.fecha) {
-      const d = new Date(c.fecha);
-      this.cFecha.set(
-        d.getFullYear() +
-          '-' +
-          String(d.getMonth() + 1).padStart(2, '0') +
-          '-' +
-          String(d.getDate()).padStart(2, '0'),
-      );
-      this.cHora.set(
-        String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'),
-      );
-    }
-    if (c.practicaFecha) {
-      const d = new Date(c.practicaFecha);
-      this.cPracticaFecha.set(
-        d.getFullYear() +
-          '-' +
-          String(d.getMonth() + 1).padStart(2, '0') +
-          '-' +
-          String(d.getDate()).padStart(2, '0'),
-      );
-      this.cPracticaHora.set(
-        String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'),
-      );
-    }
+    // Se setean siempre: si la carrera no tiene fecha, los campos quedaban con
+    // la de la carrera editada antes y se guardaban con ella.
+    const fecha = partirFechaHora(c.fecha);
+    this.cFecha.set(fecha.fecha);
+    this.cHora.set(fecha.hora);
+    const practica = partirFechaHora(c.practicaFecha);
+    this.cPracticaFecha.set(practica.fecha);
+    this.cPracticaHora.set(practica.hora);
     this.cCategoriaId.set(String(c.categoriaId));
     this.campeonatosForm.set([]);
     this.cCampeonatoId.set('');
@@ -357,13 +359,16 @@ export class AdminComponent implements OnInit {
     this.campeonatosForm.set([]);
   }
 
-  cambiarEstadoCarrera(id: number, estado: string): void {
-    this.api.put('/carreras/' + id + '/estado?estado=' + encodeURIComponent(estado)).subscribe({
+  cambiarEstadoCarrera(c: Carrera, estado: string, el: HTMLSelectElement): void {
+    this.api.put('/carreras/' + c.id + '/estado?estado=' + encodeURIComponent(estado)).subscribe({
       next: () => {
         this.toast.success(t('admin.toast.estadoActualizado'));
         this.cargar();
       },
-      error: (err) => this.toast.error(apiError(err)),
+      error: (err) => {
+        revertir(el, c.estado);
+        this.toast.error(apiError(err));
+      },
     });
   }
 
@@ -537,7 +542,16 @@ export class AdminComponent implements OnInit {
 
   updateRating(u: Usuario, campo: 'elo' | 'safetyRating', event: Event): void {
     const input = event.target as HTMLInputElement;
-    const valor = Number(input.value);
+    const actual = u[campo];
+    const texto = input.value.trim();
+    const valor = Number(texto);
+    // `Number('')` es 0: un input vaciado le ponia Elo 0 al piloto.
+    if (texto === '' || !Number.isFinite(valor) || valor < 0) {
+      revertir(input, actual);
+      this.toast.error(t('admin.toast.ratingInvalido'));
+      return;
+    }
+    if (valor === actual) return;
     this.api.put('/usuarios/' + u.id + '/rating', { [campo]: valor }).subscribe({
       next: () => {
         this.toast.success(
@@ -545,17 +559,38 @@ export class AdminComponent implements OnInit {
         );
         this.cargar();
       },
-      error: (err) => this.toast.error(apiError(err)),
+      error: (err) => {
+        revertir(input, actual);
+        this.toast.error(apiError(err));
+      },
     });
   }
 
-  updateRol(u: Usuario, rol: string): void {
+  updateRol(u: Usuario, rol: string, el: HTMLSelectElement): void {
+    if (rol === u.rol) return;
+    // Cambiarse el rol a uno mismo deja al admin sin acceso al panel.
+    if (u.id === this.auth.user()?.id) {
+      revertir(el, u.rol);
+      this.toast.error(t('admin.toast.noCambiarTuRol'));
+      return;
+    }
+    const pregunta =
+      rol === 'ADMIN'
+        ? t('admin.confirmar.rolAdmin', { nombre: u.nombrePiloto })
+        : t('admin.confirmar.rol', { nombre: u.nombrePiloto, rol: t('admin.rol.' + rol) });
+    if (!confirm(pregunta)) {
+      revertir(el, u.rol);
+      return;
+    }
     this.api.put('/usuarios/' + u.id + '/rol?rol=' + encodeURIComponent(rol)).subscribe({
       next: () => {
         this.toast.success(t('admin.toast.rolActualizado'));
         this.cargar();
       },
-      error: (err) => this.toast.error(apiError(err)),
+      error: (err) => {
+        revertir(el, u.rol);
+        this.toast.error(apiError(err));
+      },
     });
   }
 
